@@ -1,4 +1,3 @@
-<!doctype html><html><head><!-- frame-runtime --><script>window.__FRAME_PREAMBLE={"capabilities":{"downloads":"downloads.DUzXFHNF.js","mcp":"mcp.Djj5DQjZ.js","self":"self.DqF_PxOe.js"},"transforms":"_transforms.DYk1Ltlh.js"}</script><script>(function(){"use strict";const X="modulepreload",Y=function(e){return"/"+e},Z={},U=function(t,n,u){let o=Promise.resolve();function i(f){const a=new Event("vite:preloadError",{cancelable:!0});if(a.payload=f,window.dispatchEvent(a),!a.defaultPrevented)throw f}return o.then(f=>{for(const a of f||[])a.status==="rejected"&&i(a.reason);return t().catch(i)})},D=["light","dark","system"];function $(e){if(e==null||typeof e!="object")return!1;const t=e.__frame_init;return t!=null&&typeof t=="object"}function q(e){if(e==null||typeof e!="object")return!1;const t=e.__frame_theme;if(t==null||typeof t!="object")return!1;const n=t.theme;return typeof n=="string"&&D.includes(n)}function M(e){if(window===top||e.type==="auxclick"&&e.button!==1)return;const t=e.composedPath?e.composedPath():[e.target];let n=null;for(let f=0;f<t.length;f++){const a=t[f];if(a&&a.matches&&a.matches("a[href],area[href]")){n=a;break}}if(!n&&e.target&&e.target.closest&&(n=e.target.closest("a[href],area[href]")),!n)return;const u=n.getAttribute("href");if(!u)return;let o,i;try{o=new URL(u,document.baseURI),i=new URL(document.baseURI).origin}catch{return}(o.protocol==="http:"||o.protocol==="https:")&&o.origin!==i&&(e.preventDefault(),parent.postMessage({__frame_nav:!0,url:o.href},"*"))}const L={};function y(e){if(window===top)return;const t=Date.now();t-(L[e]||0)<500||(L[e]=t,parent.postMessage({__frame_engaged:!0,kind:e},"*"))}const F=2e3,T=["wheel","touchstart","touchmove","keydown","pointerdown"];let k=0;function B(e){e.isTrusted&&(k=Date.now())}function z(){addEventListener("click",M,!0),addEventListener("auxclick",M,!0)}function W(){for(let e=0;e<T.length;e++)addEventListener(T[e],B,{capture:!0,passive:!0});addEventListener("scroll",e=>{e.isTrusted&&Date.now()-k<F&&y("scroll")},{capture:!0,passive:!0}),addEventListener("pointermove",e=>{e.isTrusted&&y("pointer")},{capture:!0,passive:!0}),addEventListener("click",e=>{e.isTrusted&&y("click")},{capture:!0,passive:!0})}function x(e,t,n){const u=[...t.values()].filter(o=>o.targets.some(i=>i.startsWith(e+".")));return{wrap(o,i){const f=`${e}.${o}`,a=u.filter(s=>s.targets.includes(f));return a.length===0?(...s)=>{try{return i(...s)}catch(d){return Promise.reject(d)}}:(...s)=>{let d=s;for(const c of a){const l=c.module.parameters;if(l)try{d=l(d)}catch{return Promise.reject({code:"transform_error",id:c.id,scope:e,message:"parameters transform failed"})}}let m;try{m=i(...d)}catch(c){m=Promise.reject(c)}return m.then(c=>{for(let l=a.length-1;l>=0;l--){const h=a[l],p=h.module.returns;if(p)try{c=p(c)}catch{return n({id:h.id,scope:e,leg:"returns"}),c}}return c},c=>{for(let l=a.length-1;l>=0;l--){const h=a[l],p=h.module.throws;if(p)try{c=p(c)}catch{return n({id:h.id,scope:e,leg:"throws"}),Promise.reject(c)}}return Promise.reject(c)})}}}}function H(e,t,n,u=()=>{}){const o=new Set(e.changes??[]),i=new Map;for(const f of o){const a=t[f];a&&i.set(f,a)}return{contract:e.contract,changes:o,flags:new Set(e.flags??[]),capabilities:e.capabilities??{},transforms:i,shellOrigin:n.shellOrigin,mount:n.mount,pipe:f=>x(f,i,u)}}(function(){const e=Object.defineProperty,t=globalThis,n=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let u=0;for(let o=0;o<n.length;o++){const i=n[o];try{e(t,i,{value:void 0,writable:!1,configurable:!1})}catch{try{delete t[i]}catch{}try{e(t,i,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof t[i]=="function"&&u++}if(u&&window!==top)try{parent.postMessage({__frame_rtc_lockdown_failed:u},"*")}catch{}})();const K=1e4,G=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function J(e){for(const t of G)if(t.endsWith(":*"))try{const n=new URL(e);if(`${n.protocol}//${n.hostname}:*`===t)return!0}catch{}else if(e===t)return!0;return!1}const w=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities??{}}),E=window.__FRAME_PREAMBLE?.transforms,C=/^[\w.-]+\.js$/,V=/^[a-z][a-z0-9_-]{0,63}$/;let A=null,g=null;function P(e,t,n){try{Object.defineProperty(e,t,{value:n,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(e,t,{value:n,writable:!1,configurable:!0,enumerable:!0})}catch{}}}let R=!1;function N(e){const t=document.documentElement;e==="light"||e==="dark"?(t.dataset.theme=e,t.style.colorScheme=e,R=!0):R&&(delete t.dataset.theme,t.style.colorScheme="",R=!1)}const _=new Map;function Q(e,t){const n=_.get(e);if(!n)return;Object.assign(n.impl,t),n.impl.__settled=()=>Promise.reject({code:"capability_removed",message:`${e}: method not in this runtime`});const u=n.queue;n.queue=[];for(const o of u){const i=t[o.method];i?i(...o.args).then(o.resolve,o.reject):o.reject({code:"capability_removed",message:`${e}.${o.method} is not in this runtime`})}}function O(e,t){const n=_.get(e);if(!n)return;n.impl.__settled=()=>Promise.reject(t);const u=n.queue;n.queue=[];for(const o of u)o.reject(t)}const j=Object.getOwnPropertyDescriptor(window,"claude");if(window!==top&&!(j&&j.writable===!1)){z(),W();const e=j?.value??{};P(window,"claude",e);const t=s=>{const d={impl:Object.create(null),queue:[]};_.set(s,d);const m=new Proxy(d.impl,{get:(c,l)=>{if(typeof l=="string"&&!(l==="then"||l==="toJSON"||l==="valueOf"))return l==="toString"?Object.prototype.toString:(...h)=>{const p=c[l]??c.__settled;return p?p(...h):new Promise((b,S)=>{d.queue.push({method:l,args:h,resolve:b,reject:S})})}},set:()=>!1});P(e,s,m)};for(const s of Object.keys(w)){if(e[s]!==void 0){P(e,s,e[s]);continue}t(s)}let n=null,u=null,o=0;const i=s=>{s.source!==parent||!J(s.origin)||$(s.data)&&(n=s.data.__frame_init,g=s.origin,removeEventListener("message",i),clearTimeout(o),u?.())};addEventListener("message",i),parent.postMessage({__frame_connect:!0},"*");const f=new Promise(s=>{u=s,o=setTimeout(()=>{removeEventListener("message",i),s()},K)}),a=document.readyState==="loading"?new Promise(s=>document.addEventListener("DOMContentLoaded",()=>s(),{once:!0})):Promise.resolve();f.then(async()=>{if(!n||!g){for(const r of _.keys())O(r,{code:"not_granted",message:"frame initialization did not arrive - capability unavailable"});return}N(n.theme);const s=g;addEventListener("message",r=>{r.source!==parent||r.origin!==s||q(r.data)&&N(r.data.__frame_theme.theme)});const d=r=>U(()=>import("/_runtime/"+r),void 0),m=Object.keys(n.capabilities??{});for(const r of m)Object.hasOwn(w,r)||V.test(r)&&e[r]===void 0&&(t(r),O(r,{code:"capability_disabled",message:"capability not in this runtime generation"}));const c=m.filter(r=>Object.hasOwn(w,r)).map(r=>[r,w[r]]).filter(r=>typeof r[1]=="string"&&C.test(r[1])),[l,...h]=await Promise.allSettled([E&&C.test(E)?d(E):Promise.resolve({}),...c.map(([,r])=>d(r))]),p=g;A=H(n,l.status==="fulfilled"&&l.value?.TRANSFORMS||{},{shellOrigin:p,mount:Q},r=>parent.postMessage({__frame_cap_telemetry:r},p));const b=r=>parent.postMessage({__frame_cap_telemetry:{kind:"cap-load-error",cap:r}},p),S=A;h.forEach((r,v)=>{const I=c[v][0];if(r.status!=="fulfilled"){b(I);return}try{r.value?.install?.(S)}catch{b(I)}});for(const[r,v]of _)v.queue.length===0&&Object.keys(v.impl).length>0||O(r,{code:m.includes(r)?"capability_disabled":"not_granted",message:"capability not available in this session"});await a,parent.postMessage({__frame_ready:!0},g)})}})();</script><!-- /frame-runtime --><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
 <title>Apollo Track Pod — Split-Frame Suspension Blueprint (Rev 001)</title>
 <style>
   :root{
@@ -219,15 +218,15 @@
   <div class="hd-top">
     <div class="hd-cell">Project<b>Apollo Track Pod</b></div>
     <div class="hd-cell">Document<b>Fabrication Blueprint</b></div>
-    <div class="hd-cell">Revision<b>001a</b></div>
-    <div class="hd-cell">Date<b>2026-07-10</b></div>
+    <div class="hd-cell">Revision<b>001b</b></div>
+    <div class="hd-cell">Date<b>2026-07-12</b></div>
     <div class="hd-cell">Units<b>mm [in]</b></div>
     <div class="hd-cell">Sheets<b>7 + Schedules</b></div>
   </div>
   <div class="hd-main">
     <p class="eyebrow">Modification Type — Articulated Split-Frame</p>
     <h1>Articulated "Split-Frame" Suspension&nbsp;Mod</h1>
-    <p class="sub">Converts a rigid bolt-on rubber-track pod (spoked drive sprocket on a hex axle, two bearing-mounted lower idlers, lugged rubber band) into an independently articulating suspension: a central pivot below the drive hub, a leading and a trailing arm, and two internal coil-over shocks. Every fabrication dimension is derived from eight measurements you take off your actual pod — Sheet 0 first, then cut metal.</p>
+    <p class="sub">Converts a rigid bolt-on rubber-track pod (spoked drive sprocket on a hex axle, two bearing-mounted lower idlers, lugged rubber band) into an independently articulating suspension: a central pivot below the drive hub, a leading and a trailing arm, and two coil-over shocks outboard of the carriers. Every fabrication dimension derives from the Sheet-0 datums; the load-bearing ones (track, sprocket, idler, hub height) were measured off the real pod on 2026-07-12 — measure the rest (F, lug profile, J) before cutting metal.</p>
   </div>
 </header>
 
@@ -303,28 +302,29 @@
     <text x="435" y="105" class="lbl-s">HEX BORE — MATCHES VEHICLE AXLE</text>
     <!-- idler bearing -->
     <line x1="150" y1="313" x2="92" y2="240" class="ldr"/>
-    <text x="20" y="230" class="lbl-s">G — BEARING BORE (READ NUMBER OFF SEAL, e.g. 6203 = Ø17)</text>
+    <text x="20" y="230" class="lbl-s">G — BEARING BORE — MEASURED: 6302-2RS = Ø15</text>
     <text x="20" y="30" class="lbl">STOCK POD — RIGID CONFIGURATION (FOR MEASUREMENT ONLY)</text>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 0</b>Datum survey — stock pod</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm</div></div>
+  <div class="tb"><div><b>Sheet 0</b>Datum survey — stock pod</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm</div></div>
   </div>
 
   <h3>Datum table — fill in with calipers</h3>
   <div class="tbl-wrap"><table>
     <thead><tr><th>Datum</th><th>What to measure</th><th>How</th><th>Typical*</th><th>Yours</th></tr></thead>
     <tbody>
-      <tr><td class="mono">A</td><td>Idler axle centre-to-centre distance</td><td>Bearing centre to bearing centre, pod on floor</td><td class="mono">230–300</td><td class="fillme">____</td></tr>
-      <tr><td class="mono">B</td><td>Drive-hub centre height above idler axle line</td><td>Square + ruler from floor; B = hub height − idler height</td><td class="mono">150–200</td><td class="fillme">____</td></tr>
-      <tr><td class="mono">D</td><td>Idler wheel outside diameter</td><td>Calipers across the wheel</td><td class="mono">90–120</td><td class="fillme">____</td></tr>
-      <tr><td class="mono">G</td><td>Idler bearing bore (axle Ø)</td><td>Read bearing number off seal: 6202→Ø15, 6203→Ø17, 6204→Ø20</td><td class="mono">15–20</td><td class="fillme">____</td></tr>
-      <tr><td class="mono">F</td><td>Belt inner width between guide lugs</td><td>Calipers inside the two lug rows</td><td class="mono">60–90</td><td class="fillme">____</td></tr>
-      <tr><td class="mono">H</td><td>Idler hub width (bearing-to-bearing over the wheel)</td><td>Calipers over the wheel hub</td><td class="mono">40–60</td><td class="fillme">____</td></tr>
+      <tr><td class="mono">L</td><td>Belt inner circumference × overall width</td><td>Links × pitch off the belt spec</td><td class="mono">—</td><td class="mono"><strong>1083 × 118</strong> (60&nbsp;mm pitch × 18 links, 2.1&nbsp;kg)</td></tr>
+      <tr><td class="mono">A</td><td>Idler axle centre-to-centre distance</td><td>Solved from L by the OpenSCAD model (belt-path bisection) — tensioner absorbs the residue</td><td class="mono">230–300</td><td class="mono"><strong>≈ 243</strong> (solved)</td></tr>
+      <tr><td class="mono">B</td><td>Drive-hub centre height above idler axle line</td><td>Square + ruler from floor; B = hub height − idler height</td><td class="mono">150–200</td><td class="mono"><strong>170</strong></td></tr>
+      <tr><td class="mono">D</td><td>Idler wheel outside diameter</td><td>Calipers across the wheel</td><td class="mono">90–120</td><td class="mono"><strong>108</strong> (WJ wheel)</td></tr>
+      <tr><td class="mono">G</td><td>Idler bearing bore (axle Ø)</td><td>Read bearing number off seal: 6202→Ø15, 6203→Ø17, 6204→Ø20</td><td class="mono">15–20</td><td class="mono"><strong>15</strong> — 6302-2RS (15×42×13); caliper read 14.86 = Ø15 nominal</td></tr>
+      <tr><td class="mono">F</td><td>Belt inner width between guide lugs + lug height/width</td><td>Calipers inside the two lug rows — <strong>feeds the belt-clearance guard</strong></td><td class="mono">60–90</td><td class="fillme">____</td></tr>
+      <tr><td class="mono">H</td><td>Idler hub width (bearing-to-bearing over the wheel)</td><td>Calipers over the wheel hub</td><td class="mono">40–60</td><td class="mono"><strong>58</strong> (57.85)</td></tr>
       <tr><td class="mono">T</td><td>Belt carcass thickness (not incl. lugs)</td><td>Calipers on a straight span edge</td><td class="mono">8–14</td><td class="fillme">____</td></tr>
       <tr><td class="mono">J</td><td>Vehicle axle Ø / stock pod mounting interface</td><td>Disassemble one pod; photograph + measure everything between sprocket and idlers, incl. anti-rotation feature</td><td class="mono">—</td><td class="fillme">____</td></tr>
     </tbody>
   </table></div>
-  <p class="fignote">*Typical ranges for this class of pod — for sanity-checking only, never for cutting. Derived values used on later sheets: <code>P = B − 20</code> (pivot drop below hub centre) and <code>C = √((A/2)² + 20²)</code> (pivot-to-wheel arm length). The 20&nbsp;mm term puts the pivot just above the idler axle line so the arms sit near-horizontal at ride height.</p>
+  <p class="fignote">*Typical ranges for this class of pod — for sanity-checking only, never for cutting. Derived values used on later sheets: <code>P = B − 30</code> (pivot drop below hub centre) and <code>C = √((A/2)² + 30²)</code> (pivot-to-wheel arm length). The 30&nbsp;mm term (rev 001b — was 20) puts the pivot above the idler axle line so the arms sit near-horizontal at ride height <em>and</em> keeps the carrier tongue clear of the belt's bottom run at full bump. Measured pod: P = 140, C ≈ 125.</p>
 </section>
 
 <!-- ============================================================ -->
@@ -393,9 +393,9 @@
     <text x="14" y="46" class="lbl-s">OUTER CARRIER PLATE REMOVED FOR CLARITY ON NEAR SIDE</text>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 1</b>General arrangement</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm</div></div>
+  <div class="tb"><div><b>Sheet 1</b>General arrangement</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm</div></div>
   </div>
-  <p class="fignote">Arms drawn at neutral. Vertical wheel travel at ±15° is <code>C·sin15° ≈ 0.26·C</code> — for C = 150&nbsp;mm that's ≈ ±39&nbsp;mm at each wheel, a huge improvement over the rigid pod's zero.</p>
+  <p class="fignote">Arms drawn at neutral. On the measured pod (C ≈ 125) each wheel gets <strong>+32&nbsp;mm bump / −30&nbsp;mm droop</strong> at ±15° — a huge improvement over the rigid pod's zero. Rev 001b: at full bump the belt's bottom run rises the same ~32&nbsp;mm toward the carrier — the pivot height and keel position on Sheets 2/4 exist to clear it; verify with the OpenSCAD clearance guard (all lines must read PASS).</p>
 </section>
 
 <!-- ============================================================ -->
@@ -463,7 +463,7 @@
     <text x="14" y="318" class="lbl-s">SECTION X–X THROUGH PIVOT AXLE — ARMS OMITTED BEYOND BOSSES. AXLE LENGTH = OUTSIDE FACE-TO-FACE OF CARRIERS + 55</text>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 2</b>Pivot stack — section X–X</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm</div></div>
+  <div class="tb"><div><b>Sheet 2</b>Pivot stack — section X–X</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm</div></div>
   </div>
 
   <ul>
@@ -499,7 +499,7 @@
     <line x1="150" y1="170" x2="150" y2="250" class="ext"/>
     <line x1="520" y1="190" x2="520" y2="250" class="ext"/>
     <line x1="150" y1="242" x2="520" y2="242" class="dl" marker-start="url(#da)" marker-end="url(#da)"/>
-    <text x="335" y="234" text-anchor="middle" class="dimtxt">C = √((A/2)² + 20²)  — PIVOT ¢ TO WHEEL ¢</text>
+    <text x="335" y="234" text-anchor="middle" class="dimtxt">C = √((A/2)² + 30²) ≈ 125  — PIVOT ¢ TO WHEEL ¢</text>
     <line x1="394" y1="124" x2="394" y2="212" class="ext"/>
     <line x1="150" y1="204" x2="394" y2="204" class="dl" marker-start="url(#da)" marker-end="url(#da)"/>
     <text x="272" y="198" text-anchor="middle" class="dimtxt">a = 0.68·C  (SHOCK TAB)</text>
@@ -537,7 +537,7 @@
     </g>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 3</b>Arm weldments — profile + fork</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm</div></div>
+  <div class="tb"><div><b>Sheet 3</b>Arm weldments — profile + fork</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm</div></div>
   </div>
 
   <ul>
@@ -583,7 +583,7 @@
     <line x1="344" y1="150" x2="560" y2="150" class="ext"/>
     <line x1="344" y1="332" x2="560" y2="332" class="ext"/>
     <line x1="548" y1="150" x2="548" y2="332" class="dl" marker-start="url(#da)" marker-end="url(#da)"/>
-    <text x="556" y="245" class="dimtxt" transform="rotate(90 556 245)" text-anchor="middle">P = B − 20</text>
+    <text x="556" y="245" class="dimtxt" transform="rotate(90 556 245)" text-anchor="middle">P = B − 30 = 140</text>
     <!-- callouts -->
     <line x1="352" y1="128" x2="470" y2="70" class="ldr"/>
     <text x="474" y="60" class="lbl-s">CENTRE BORE — HOUSES 6205-2RS BEARING</text>
@@ -602,15 +602,16 @@
     <text x="14" y="190" class="lbl-s">MIRROR-DRILL BOTH PLATES</text>
     <text x="14" y="204" class="lbl-s">AS A CLAMPED PAIR</text>
     <text x="14" y="30" class="lbl">CARRIER PLATE — MAKE 2 (MIRRORED), 6MM A36</text>
-    <text x="14" y="404" class="lbl-s">TONGUE WIDTH 56 AT PIVOT. RELIEVE PLATE EDGES 15 CLEAR OF BELT LUGS AT FULL ARTICULATION — CHECK WITH BELT FITTED.</text>
+    <text x="14" y="404" class="lbl-s">TONGUE WIDTH 48 AT PIVOT (REV 001b). NOTHING EXTENDS BELOW THE PIVOT BOSS — BELT BOTTOM RUN RISES ~32 AT FULL BUMP. CHECK WITH BELT FITTED.</text>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 4</b>Carrier plate — profile</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm</div></div>
+  <div class="tb"><div><b>Sheet 4</b>Carrier plate — profile</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm</div></div>
   </div>
 
   <div class="note">
     <span class="stamp">Fit-Up Note</span>
-    <p>The two carrier plates are joined into one rigid box by: the centre axle sleeve, the pivot axle assembly, and one M8 <strong>keel standoff below the pivot</strong> (rev 001a — standoffs at the bolt circle would pass through the sprocket's swept disc; the only clear tie points are on the centreline above the arms' swing or below it). Extend the tongue ~45&nbsp;mm below the pivot to carry the keel. Weld nothing between the plates until the sprocket has been test-fitted spinning freely between them with ≥3&nbsp;mm side clearance each face.</p>
+    <p>The two carrier plates are joined into one rigid box by: the centre axle sleeve, the pivot axle assembly, and one M8 <strong>keel standoff between the sprocket's swept disc and the pivot boss</strong> (rev 001b — the 001a keel hung 45&nbsp;mm below the pivot and would have hit the rising belt at full bump by ~40&nbsp;mm; the sprocket-to-boss window on the centreline is the only tie point that clears both). Weld nothing between the plates until the sprocket has been test-fitted spinning freely between them with ≥3&nbsp;mm side clearance each face.</p>
+    <p>The companion OpenSCAD model prints a <strong>PASS/WARN belt-clearance line for every hanging part</strong> (tongue, keel, pivot spacer, boss) at full bump — all must PASS with ≥5&nbsp;mm before cutting steel, and the check must be re-run once the belt's guide-lug height is measured (datum F row).</p>
   </div>
 </section>
 
@@ -655,16 +656,16 @@
     <text x="380" y="66" class="lbl-s">CLEARANCE ≥ 10 — HARD REQUIREMENT</text>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 5</b>Shock geometry + travel</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm / N·mm⁻¹</div></div>
+  <div class="tb"><div><b>Sheet 5</b>Shock geometry + travel</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm / N·mm⁻¹</div></div>
   </div>
 
   <h3>Spring rate — worked method</h3>
   <ol>
     <li>Weigh the corner: put the vehicle's wheel-position on a bathroom scale, loaded (rider + cargo). Call it <code>M</code> kg → force <code>F = 9.81·M</code> N. That corner load splits across the pod's two arms roughly 50/50 → <code>F_arm = F/2</code>.</li>
-    <li>Wheel rate target: static sag should be 25–30% of total wheel travel. With C = 150 → travel ≈ 39&nbsp;mm, sag ≈ 11&nbsp;mm → <code>k_wheel = F_arm / 11</code> N/mm.</li>
+    <li>Wheel rate target: static sag should be 25–30% of bump travel. Measured pod (C ≈ 125) → bump travel ≈ 32&nbsp;mm, sag ≈ 10&nbsp;mm → <code>k_wheel = F_arm / 10</code> N/mm.</li>
     <li>Spring rate: <code>k_spring = k_wheel / MR²</code> with MR ≈ 0.58 → <code>k_spring ≈ 3.0 × k_wheel</code>.</li>
   </ol>
-  <p><strong>Example</strong> — 160&nbsp;kg loaded vehicle on 4 pods → M = 40&nbsp;kg, F = 392&nbsp;N, F_arm = 196&nbsp;N → k_wheel ≈ 18&nbsp;N/mm → <strong>k_spring ≈ 54&nbsp;N/mm ≈ 310&nbsp;lb/in</strong>. That's a normal heavy e-scooter / mini-moto spring. Buy adjustable-preload coil-overs, 150&nbsp;mm eye-to-eye, ~35&nbsp;mm stroke, and buy one spare spring one step stiffer and one softer.</p>
+  <p><strong>Example</strong> — 160&nbsp;kg loaded vehicle on 4 pods → M = 40&nbsp;kg, F = 392&nbsp;N, F_arm = 196&nbsp;N → k_wheel ≈ 20&nbsp;N/mm → <strong>k_spring ≈ 58&nbsp;N/mm ≈ 330&nbsp;lb/in</strong>. That's a normal heavy e-scooter / mini-moto spring. Buy adjustable-preload coil-overs, 150&nbsp;mm eye-to-eye, ~35&nbsp;mm stroke, and buy one spare spring one step stiffer and one softer.</p>
 </section>
 
 <!-- ============================================================ -->
@@ -705,7 +706,7 @@
     <text x="40" y="244" class="lbl-s">RE-CHECK AFTER FIRST HOUR OF RUNNING. A NEW BELT SEATS AND LOOSENS.</text>
   </svg>
   </div>
-  <div class="tb"><div><b>Sheet 6</b>Tensioner — trailing axle</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001</div><div><b>Units</b>mm</div></div>
+  <div class="tb"><div><b>Sheet 6</b>Tensioner — trailing axle</div><div><b>Scale</b>NTS</div><div><b>Rev</b>001b</div><div><b>Units</b>mm</div></div>
   </div>
 </section>
 
@@ -727,12 +728,13 @@
       <tr><td class="mono">8</td><td>Coil-over shocks</td><td class="mono">2</td><td class="mono">150mm eye-to-eye, ~35mm stroke, adj. preload</td><td>Spring per Sheet 5 calc (~310 lb/in example); e-scooter/mini-moto type</td></tr>
       <tr><td class="mono">9</td><td>Shock mounts</td><td class="mono">2+2</td><td class="mono">2 upper tabs 6mm w/ Ø10 hole; 2 lower spacer sleeves Ø15×Ø10</td><td>Tabs welded to carrier outer faces; lower eyes on through-bolts + sleeves (rev 001a)</td></tr>
       <tr><td class="mono">10</td><td>Carrier bearings</td><td class="mono">2</td><td class="mono">6205-2RS (Ø25×Ø52×15) — adjust to datum J</td><td>Carrier must rotate freely on the drive axle sleeve</td></tr>
-      <tr><td class="mono">11</td><td>Keel standoff</td><td class="mono">1</td><td class="mono">Ø16 tube + M8 through-bolt cl.10.9</td><td>Below pivot; with axle sleeve + pivot axle it boxes the carriers (rev 001a)</td></tr>
+      <tr><td class="mono">11</td><td>Keel standoff</td><td class="mono">1</td><td class="mono">Ø16 tube + M8 through-bolt cl.10.9</td><td>Between sprocket swept disc and pivot boss (rev 001b); with axle sleeve + pivot axle it boxes the carriers</td></tr>
       <tr><td class="mono">12</td><td>Jack bolts</td><td class="mono">2</td><td class="mono">M8×40 + lock nuts</td><td>Tensioner, Sheet 6</td></tr>
       <tr><td class="mono">13</td><td>Anti-rotation link</td><td class="mono">1</td><td class="mono">Copy stock pod's provision (datum J)</td><td>Rod-end link to chassis recommended if stock was a fixed tab</td></tr>
       <tr><td class="mono">14</td><td>Hardware kit</td><td class="mono">—</td><td class="mono">Cl.10.9 (Gr8) bolts, nylock nuts, washers</td><td>Every fastener nylock or thread-locked; nothing plain-nut</td></tr>
       <tr><td class="mono">15</td><td>Grease fittings</td><td class="mono">2</td><td class="mono">M6 zerk + EP2 lithium grease</td><td>Optional but recommended, into fork bosses</td></tr>
-      <tr><td class="mono">—</td><td>Re-used from stock pod</td><td class="mono">—</td><td class="mono">Sprocket, 2 idlers + bearings, belt, axle hardware</td><td>Inspect idler bearings; replace 2RS sealed if rough</td></tr>
+      <tr><td class="mono">16</td><td>Idler axles</td><td class="mono">2</td><td class="mono">Ø15 — 15×100 MTB thru-axle (M15×1.5) or 15&nbsp;mm shaft + collars</td><td>Idler bearings are 6302-2RS (15×42×13); ~90–120 axle length needed</td></tr>
+      <tr><td class="mono">—</td><td>Re-used from stock pod</td><td class="mono">—</td><td class="mono">Sprocket, 2 idlers + bearings, belt, axle hardware</td><td>Idler bearings 6302-2RS — inspect; replace if rough</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -793,13 +795,12 @@
     <li>This drawing set describes one pod; mirror-image the carrier plates and repeat for the opposite side of the vehicle. Arms and stack-up are symmetric and do not change.</li>
     <li>Rev 001 supersedes the AI-concept sketch it was derived from. Known deltas: arms changed from single plates to fork weldments (keeps idlers centred on the belt), shock tab moved from 0.45·C to 0.68·C (sane spring rates), tensioner changed from eccentric cam to slot + jack bolt (easier to fabricate accurately), carrier bearing + anti-rotation link added (the concept had no torque path to the chassis).</li>
     <li><strong>Rev 001a</strong> (from the 3D fit-check in the companion OpenSCAD model): shocks moved outboard of the carrier plates and the four cross-standoffs replaced by a single keel standoff below the pivot — both original placements collided with the sprocket's swept volume.</li>
+    <li><strong>Rev 001b</strong> (measured datums, 2026-07-12): track 1083×118 (60&nbsp;mm pitch × 18 links) — idler spacing A now solved from belt length (≈&nbsp;243); sprocket OD 180; idlers Ø108×58 on 6302-2RS bearings → Ø15 axles. <strong>Belt-clearance fix:</strong> at full bump the belt bottom run rises ~32&nbsp;mm and the 001a keel would have collided by ~40&nbsp;mm — keel relocated between sprocket and pivot boss, pivot raised (P&nbsp;=&nbsp;B&nbsp;−&nbsp;30), carrier tongue slimmed Ø56→Ø48. The OpenSCAD model prints a PASS/WARN clearance check per hanging part on every render.</li>
   </ul>
 </section>
 
 <footer>
-  APOLLO TRACK POD — ARTICULATED SPLIT-FRAME SUSPENSION · REV 001a · 2026-07-10 · COMPANION 3D MODEL: apollo_track_pod.scad (OpenSCAD) · DRAWN FROM SELLER PHOTOS + PARAMETRIC DATUMS — NOT FROM A MEASURED UNIT. MEASURE, THEN CUT.
+  APOLLO TRACK POD — ARTICULATED SPLIT-FRAME SUSPENSION · REV 001b · 2026-07-12 · COMPANION 3D MODEL: apollo_track_pod.scad (OpenSCAD) · TRACK / SPROCKET / IDLER / HUB-HEIGHT DATUMS MEASURED 2026-07-12 — F, LUG PROFILE AND DATUM J STILL OPEN. MEASURE, THEN CUT.
 </footer>
 
 </div>
-
-</body></html>
