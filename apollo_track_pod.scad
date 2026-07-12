@@ -1,6 +1,6 @@
 // ============================================================================
 //  APOLLO TRACK POD — Articulated "Split-Frame" Suspension Mod
-//  Parametric OpenSCAD model · Rev 001b · 2026-07-12
+//  Parametric OpenSCAD model · Rev 002 · 2026-07-12
 //  Companion to the blueprint artifact (Sheets 0–6).
 //
 //  HOW TO USE
@@ -34,6 +34,25 @@
 //     between the sprocket swept disc and the pivot boss; pivot raised
 //     drop 20->30; carrier pivot circle slimmed 56->48. A clearance guard
 //     echoes PASS/WARN for every hanging part at bump_max each render.
+//
+//  REV 001c DELTA (2026-07-12): pivot raised further, drop 30->38 — lug-top
+//    margin at full bump ~7.6 -> ~15 mm, steel-contact angle +18.5° -> +22°.
+//    Keel moved up with it (still between sprocket and pivot boss; drop<=42
+//    is the hard limit for this window). Belt-path variation through travel
+//    grows 3.6 -> 5.7 mm — within tensioner range. Keel-to-boss and
+//    keel-to-sprocket gaps added to the guard echoes.
+//
+//  REV 002 DELTAS (owner interview, 2026-07-12):
+//   - The pod is a hub-motor scooter conversion: motor inside the sprocket on
+//     a static Ø10 flatted axle between fork legs (front gap 120, rear 140).
+//   - Carriers redesigned: fork-hung torque-arm plates bolted to the leg
+//     OUTER faces (axle slot + one M8 per leg). Carrier bearings (6205),
+//     axle sleeve and anti-rotation link DELETED — the fork does both jobs.
+//   - Carriers now sit outside the belt width: the tongue can never touch
+//     the track. Shocks moved back INBOARD (between belt edge and carrier).
+//   - Belt-length solver corrected to the cord line (10T x 60 pitch = Ø191):
+//     A = 222.2 (was 243 on the inner-surface assumption).
+//   - FIT RISK: 118 belt in 120 front fork gap = 1 mm/side. Verify.
 // ============================================================================
 
 /* [Render] */
@@ -46,25 +65,31 @@ lead_angle  = 0; // [-15:0.5:15]  front arm, + = bump (up)
 trail_angle = 0; // [-15:0.5:15]  rear arm,  + = bump (up)
 
 /* [Sheet-0 datums — measured 2026-07-12 unless marked PLACEHOLDER, mm] */
-A = 260;          // idler axle centre-to-centre — FALLBACK, used only if track_len == 0
-track_len = 1083; // belt inner circumference (18 links x 60 mm pitch) — solves A
+A = 260;          // idler axle centre-to-centre — FALLBACK, used only if belt_links == 0
+belt_pitch = 60;  // belt link pitch, mm (listing + confirmed by sprocket)
+belt_links = 18;  // link count — belt cord-line length = 18 x 60 = 1080; solves A
 track_w   = 118;  // belt overall width
 B = 170;   // hub centre height above idler axle line
 D = 108;   // idler wheel OD (WJ wheel)
 G = 15;    // idler bearing bore (6302-2RS = 15)
 brg_od = 42;      // idler bearing OD (6302)
 brg_w  = 13;      // idler bearing width (6302)
-F = 75;    // belt inner width between guide lugs — PLACEHOLDER, measure
-lug_w = 12;// guide lug row width — PLACEHOLDER, measure
-lug_h = 20;// guide lug height above belt inner surface — PLACEHOLDER, measure
+F = 62;    // belt inner width between guide lugs — derived: H + 4 (matched set)
+lug_w = 18;// guide lug row width — conservative estimate, measure
+lug_h = 20;// guide lug height — owner estimates 10-20; keeping pessimistic 20
 H = 58;    // idler hub width (measured 57.85)
-T = 12;    // belt carcass thickness
+T = 12;    // belt carcass thickness (confirmed ~12)
 
-/* [Stock sprocket] */
+/* [Stock sprocket — hub motor] */
 sprocket_od    = 180;
-sprocket_teeth = 23;
+sprocket_teeth = 10;   // counted. 10T x 60 pitch → pitch/cord circle Ø191,
+                       // i.e. the belt cord line rides 5.5 above the Ø180 surface
 sprocket_w     = 60;   // measure across the sprocket rim
-hex_af         = 24;   // vehicle axle hex across-flats
+
+/* [Fork mount — Rev 002: carriers hang from the scooter fork legs] */
+fork_gap = 120;  // inner spacing between fork legs: FRONT 120, REAR 140
+leg_t    = 30;   // fork leg thickness (z) — PLACEHOLDER, measure
+axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it)
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
@@ -79,11 +104,16 @@ bump_max   = 15;    // arm travel limit, deg (clearance guard checks this)
 $fa = 4; $fs = 0.7;
 
 // ---------------------------------------------------------------- derived --
-// Belt-path length for candidate idler spacing Av (sprocket at origin,
-// idlers at (±Av/2, −B)): sprocket wrap + 2 tangent runs + 2 idler wraps
-// + bottom span. Monotonic in Av → bisect to hit track_len.
-rs_belt = sprocket_od/2 + 2;          // belt wrap radius at sprocket
-ri_belt = (D + 2)/2;                  // belt wrap radius at idlers
+// Belt-path length for candidate idler spacing Av, measured along the belt's
+// inextensible CORD LINE (not the inner surface): 10T x 60 pitch → cord circle
+// Ø191 on the Ø180 sprocket → cords ride cord_off above the rubber's inner face.
+// Path = sprocket wrap + 2 tangent runs + 2 idler wraps + bottom span.
+// Monotonic in Av → bisect to hit track_len.
+track_len = belt_links * belt_pitch;             // 1080 — cord-line length
+pitch_r   = sprocket_teeth * belt_pitch / (2*PI);// 95.49 — cord radius at sprocket
+cord_off  = pitch_r - sprocket_od/2;             // 5.49 — cord height above rubber
+rs_belt = pitch_r;                    // cord-line wrap radius at sprocket
+ri_belt = D/2 + cord_off;             // cord-line wrap radius at idlers
 function belt_len(Av) = let(
     wx    = Av/2,
     dd    = sqrt(wx*wx + B*B),
@@ -93,10 +123,12 @@ function belt_len(Av) = let(
 function solve_A(lo, hi, n) = n <= 0 ? (lo + hi)/2 :
   belt_len((lo + hi)/2) < track_len ? solve_A((lo + hi)/2, hi, n-1)
                                     : solve_A(lo, (lo + hi)/2, n-1);
-A_eff  = (track_len > 0) ? solve_A(120, 800, 48) : A;
+A_eff  = (belt_links > 0) ? solve_A(120, 800, 48) : A;
 
 half   = A_eff/2;
-drop   = 30;                          // pivot sits 30 above idler axle line
+drop   = 38;                          // pivot sits 38 above idler axle line
+                                      // (raised 20->30->38 for belt clearance;
+                                      //  keel window closes at drop=42)
 P      = B - drop;                    // pivot drop below hub centre
 C      = sqrt(half*half + drop*drop); // pivot-to-wheel arm length
 na     = atan(drop/half);             // arm neutral droop angle, deg
@@ -105,13 +137,14 @@ pivot  = [0, -P];
 
 zi_tr  = H/2 + 1;                      // trailing fork inner face |z|
 zi_ld  = zi_tr + plate_t + 1.5;        // leading fork inner face |z|
-cz     = zi_ld + plate_t + 3;          // carrier plate inner face |z|
-sz     = cz + carrier_t + 13;          // shock centre plane |z|
+cz     = fork_gap/2 + leg_t;           // carrier inner face = fork-leg OUTER face
+sz     = track_w/2 + 14;               // shock plane: between belt edge and carrier
 Rc     = sprocket_od/2 - 17;           // carrier disc radius
-y_keel = -(rs_belt + 18);              // keel standoff BETWEEN sprocket swept
-                                       // disc and pivot boss (Rev 001b: was
-                                       // P+45 below pivot — hit belt at bump)
-r_wrap = rs_belt;                      // belt wrap radius at sprocket
+y_keel = -(sprocket_od/2 + 14);        // keel standoff BETWEEN sprocket swept
+                                       // disc (steel, r=90) and pivot boss
+                                       // (Rev 001b: was P+45 below pivot — hit
+                                       // belt at bump; 001c: raised with boss)
+r_wrap = sprocket_od/2 + 2;            // belt INNER surface at sprocket (visual)
 belt_w = track_w;                      // belt overall width (measured)
 ride_len = shock_ee - shock_sag;
 
@@ -144,14 +177,28 @@ y_w_bump    = -P + C*sin(bump_max - na);   // idler centre at full bump
 y_belt_bump = y_w_bump - D/2;              // belt inner surface, bottom run
 y_lug_bump  = y_belt_bump + lug_h;         // guide-lug tops
 lug_zone    = F/2 + lug_w;                 // |z| outer edge of lug rows
-clearances = [
-  ["carrier tongue Ø48", (pivot[1] - 24)   - ((cz < lug_zone) ? y_lug_bump : y_belt_bump)],
-  ["keel standoff  Ø16", (y_keel   -  8)   - y_lug_bump],
-  ["pivot spacer   Ø25", (pivot[1] - 12.5) - y_lug_bump],
-  ["pivot boss     Ø32", (pivot[1] - 16)   - y_lug_bump]];
+clearances = concat(
+  // Rev 002: carrier plates ride OUTSIDE the belt width — tongue check only
+  // applies if a future layout puts them back over the belt
+  (cz < track_w/2 + 3) ?
+    [["carrier tongue Ø48", (pivot[1] - 24) - ((cz < lug_zone) ? y_lug_bump : y_belt_bump)]] : [],
+  [["keel standoff  Ø16", (y_keel   -  8)   - y_lug_bump],
+   ["pivot spacer   Ø25", (pivot[1] - 12.5) - y_lug_bump],
+   ["pivot boss     Ø32", (pivot[1] - 16)   - y_lug_bump]]);
+if (cz >= track_w/2 + 3)
+  echo(str("NOTE carrier plates at |z|=", cz, " — outside the belt (half-width ",
+           track_w/2, "); they cannot contact the track at any bump"));
+echo(str(fork_gap/2 - track_w/2 < 3 ? "*** TIGHT " : "OK ",
+         "belt edge to fork leg: ", fork_gap/2 - track_w/2, " mm per side"));
 for (c = clearances)
   echo(str(c[1] < 5 ? "*** WARN " : "PASS ", c[0], ": ", c[1],
            " mm above track at +", bump_max, "° bump"));
+// keel window fit (both are static-to-static, small gaps acceptable)
+keel_gaps = [
+  ["keel to sprocket swept disc", abs(y_keel) - 8 - sprocket_od/2],
+  ["keel to pivot washers Ø36",   abs(y_keel - pivot[1]) - 18 - 8]];
+for (g = keel_gaps)
+  echo(str(g[1] < 2 ? "*** WARN " : "PASS ", g[0], ": ", g[1], " mm gap"));
 
 ex = (render_mode == "exploded") ? 1 : 0;
 
@@ -169,19 +216,25 @@ module arm_plate_2d(slot=false){
 }
 
 module carrier_2d(){
+  // Rev 002: fork-hung torque-arm plate. Same part both sides (symmetric).
   difference(){
     union(){
-      hull(){ circle(r=Rc);
+      hull(){ circle(d=44);                       // hub-motor axle boss
+              translate([0,52]) circle(d=32); }   // fork-leg bolt strap
+      hull(){ circle(d=44);
               translate(pivot)      circle(d=48);
               translate([0,y_keel]) circle(d=30); }
-      // anti-rotation lug (link exits laterally to chassis)
-      hull(){ translate([0, Rc+2]) circle(d=24);
-              translate([0, Rc-12]) square([44, 8], center=true); }
+      for (p = [upP, mx(upP)])                    // shock-tab weld lobes, both
+        hull(){ circle(d=44);                     // sides so L/R part is common
+                translate(p) circle(d=30);
+                translate(p + [8,-34]) circle(d=30); }
     }
-    circle(d=52);                               // carrier bearing 6205-2RS
+    // hub-motor axle slot: Ø10 with flats — the plate doubles as a torque arm
+    intersection(){ circle(d=axle_d+0.4);
+                    square([axle_d+0.4, 8.9], center=true); }
+    translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     translate([0, y_keel]) circle(d=8.5);       // keel standoff bolt M8
-    translate([0, Rc+2])   circle(d=8.5);       // anti-rotation link bolt
   }
 }
 
@@ -207,17 +260,16 @@ module idler_wheel(){
 }
 
 module sprocket(){
+  // Rev 002: the sprocket IS the hub motor — casing drawn, axle Ø10 static
   color([0.13,0.13,0.14]) difference(){
     union(){
       cylinder(h=sprocket_w, d=sprocket_od-14, center=true);
       for (i=[0:sprocket_teeth-1]) rotate([0,0,i*360/sprocket_teeth])
         translate([sprocket_od/2-8, 0, 0])
           cube([14, 12, sprocket_w-4], center=true);
-      cylinder(h=sprocket_w+14, d=72, center=true);
+      cylinder(h=sprocket_w+8, d=130, center=true);  // motor casing
     }
-    cylinder(h=sprocket_w+40, d=hex_af/cos(30), center=true, $fn=6);
-    for (i=[0:7]) rotate([0,0,i*45]) translate([56,0,0])
-      cylinder(h=sprocket_w+2, d=32, center=true);   // spoke windows
+    cylinder(h=sprocket_w+40, d=axle_d+0.5, center=true);
   }
 }
 
@@ -272,22 +324,22 @@ module arm3d(zi, slot, ang, szs){
 }
 
 module carrier_group(){
-  // plates
+  // plates (Rev 002: bolted to the fork-leg outer faces)
   color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? cz : -cz-carrier_t) + s*ex*55])
       linear_extrude(carrier_t) carrier_2d();
-  // upper shock tabs, welded to carrier OUTER faces
+  // upper shock tabs, welded to carrier INNER faces (shocks run between
+  // belt edge and carrier — Rev 002; they were outboard in 001a)
   color([0.36,0.43,0.56]) for (s=[1,-1])
-    translate([0,0, (s==1 ? cz+carrier_t : -(sz-5)) + s*ex*55])
-      linear_extrude((sz-5)-(cz+carrier_t)) upper_tab_2d(s==1 ? upP : mx(upP));
-  // centre axle sleeve + carrier bearings
-  color([0.55,0.55,0.58]) difference(){
-    cylinder(h=2*(cz+carrier_t), d=25, center=true);
-    cylinder(h=2*cz+40, d=hex_af/cos(30)+1, center=true, $fn=6); }
-  color([0.8,0.8,0.82]) for (s=[1,-1])
-    translate([0,0, s*(cz+carrier_t/2) + s*ex*55])
-      difference(){ cylinder(h=15, d=52, center=true);
-                    cylinder(h=17, d=25, center=true); }
+    translate([0,0, (s==1 ? sz+5 : -cz) + s*ex*55])
+      linear_extrude(cz-(sz+5)) upper_tab_2d(s==1 ? upP : mx(upP));
+  // hub-motor axle: static Ø10, spans fork legs + both plates
+  color([0.55,0.55,0.58])
+    cylinder(h=2*(cz+carrier_t)+24, d=axle_d, center=true);
+  // ghost fork legs (context only — measure leg_t)
+  color([0.45,0.50,0.60,0.35]) for (s=[1,-1])
+    translate([-20, -12, s==1 ? fork_gap/2 : -fork_gap/2-leg_t])
+      cube([40, 150, leg_t]);
   // keel standoff below pivot
   color([0.55,0.55,0.58]) translate([0, y_keel, -cz])
     difference(){ cylinder(h=2*cz, d=16); cylinder(h=2*cz+2, d=8.4); }

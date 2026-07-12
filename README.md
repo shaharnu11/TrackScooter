@@ -1,13 +1,12 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-**Rev 001b · 2026-07-12 · Status: key datums measured and baked in (track, sprocket, idler/bearing); belt-clearance-at-bump fix applied; F + lug profile still to measure**
+**Rev 002 · 2026-07-12 · Status: all load-bearing datums measured; carriers redesigned as fork-hung torque-arm plates (hub-motor scooter); remaining to measure: fork leg thickness, lug height**
 
-Converts a rigid bolt-on rubber-track pod (spoked drive sprocket on a hex axle, two
-bearing-mounted lower idlers, lugged rubber band — sold as a wheel-replacement track
-for mowers / small ATVs / mobility platforms) into an independently articulating
-suspension: a central pivot below the drive hub, a leading and a trailing arm, and
-two coil-over shocks. Each lower idler gets ~±0.26·C mm of independent vertical travel
-(≈ ±39 mm on a typical pod) instead of zero.
+Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
+between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
+into an independently articulating suspension: a central pivot below the drive hub,
+a leading and a trailing arm, and two coil-over shocks. Each lower idler gets
+**+30 / −27.5 mm** of independent vertical travel instead of zero.
 
 ---
 
@@ -43,27 +42,35 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 
 The stock pod's rigid internal frame is removed and replaced by:
 
-1. **Carrier plates ×2** (6 mm A36, mirrored) — the new backbone. Ride on the vehicle
-   axle via their own bearings (6205-2RS on an axle sleeve), so the axle spins the
-   sprocket while the carriers stay still. Boxed together by the axle sleeve (top),
-   the pivot axle (middle), and one **M8 keel standoff below the pivot** (bottom).
-   An **anti-rotation lug** at the top links to the chassis — mandatory, otherwise
-   drive torque spins the whole pod. The keel standoff sits **between the sprocket's
-   swept disc and the pivot boss** (Rev 001b) — nothing may hang low enough to touch
-   the belt's bottom run when the arms are at full bump.
+1. **Carrier plates ×2** (6 mm A36, identical symmetric part — Rev 002) — the new
+   backbone. Each hangs from a scooter-fork leg: the hub-motor's static Ø10 flatted
+   axle passes through a matching slot (the plate doubles as a torque arm) and one
+   M8 bolt into the leg 52 mm above locks rotation. No carrier bearings, no
+   anti-rotation link — the fork is the chassis anchor. Plates sit on the leg OUTER
+   faces (|z| = 90 front / 100 rear), completely outside the belt's 118 mm width,
+   so **the carrier can never touch the track at any articulation**. Boxed together
+   by the hub axle (top), the pivot axle (middle), and the **M8 keel standoff
+   between the sprocket's swept disc and the pivot boss** (bottom).
 2. **Central pivot axle** — M20×1.5 class-10.9 bolt through the carrier tongues,
-   30 mm above the idler axle line (Rev 001b: raised from 20 for belt clearance).
+   38 mm above the idler axle line (raised from 20 in two steps for belt clearance;
+   38 is near the max — the keel window closes at 42).
 3. **Leading + trailing arms** — fork weldments (2 plates each, ¼″ A36) nested on the
    pivot like scissors; 4 flanged SAE 841 bronze bushings (Ø20×Ø25). Fork shape keeps
    each idler centred on the belt. Trailing arm has a 25 mm slot + jack bolts = belt tensioner.
-4. **Coil-over shocks ×2** — run **outboard of the carrier plates**: upper eye on a tab
-   welded to the carrier outer face, lower eye on a Ø10 through-bolt + spacer sleeve
-   through both fork plates at 0.68·C, leaning ~57° to the arm.
+4. **Coil-over shocks ×2** — run **between the belt edge and the carrier plates**
+   (|z| = 73; Rev 002 — with the carriers moved out to the fork legs there's clean
+   room inboard): upper eye on a tab welded to the carrier inner face at (±47, −5)
+   from the hub centre, lower eye on a Ø10 through-bolt + spacer sleeve through
+   both arm-fork plates at a = 0.68·C = 79.8, leaning ~57° to the arm.
 
 ### Design risks (mitigations are mandatory, see blueprint §0)
-- **Belt derailment** — articulation changes belt path length. Mitigated by ±15° travel
-  limit, spring preload, and correct tensioner setting (10–15 mm mid-span sag).
-- **Anti-rotation** — the torque link to the chassis is not optional.
+- **Belt derailment** — articulation changes belt path length (~6 mm through travel).
+  Mitigated by ±15° travel limit, spring preload, and correct tensioner setting
+  (10–15 mm mid-span sag).
+- **Belt-to-fork fit** — the 118 mm belt runs in the front fork's 120 mm gap:
+  **1 mm per side**. Verify the belt tracks true before anything else; the rear
+  (140 mm gap) is comfortable.
+- ~~Anti-rotation~~ — resolved in Rev 002: the carriers bolt straight to the fork legs.
 
 ---
 
@@ -73,22 +80,26 @@ Everything is parametric on these.
 
 | Datum | What | Typical* | Measured |
 |---|---|---|---|
-| track | Belt: inner circumference × width × pitch × links | — | **1083 × 118 mm, 60 mm pitch, 18 links** (2.1 kg) |
-| A | Idler axle centre-to-centre | 230–300 | **≈ 243 — solved from track_len** (model bisects the belt path) |
+| track | Belt: cord-line circumference × width × pitch × links | — | **1080 × 118 mm, 60 mm pitch, 18 links** (2.1 kg) |
+| A | Idler axle centre-to-centre | 230–300 | **222.2 — solved from the belt cord line** (10T × 60 pitch = cord Ø191, 5.5 above the Ø180 face) |
 | B | Hub centre height above idler axle line | 150–200 | **170** |
 | D | Idler wheel OD | 90–120 | **108** (WJ wheel) |
 | G | Idler bearing bore | 15–20 | **15** — bearings are **6302-2RS (15×42×13)**; caliper read 14.86 = 15 nominal |
-| sprocket | Drive sprocket OD | — | **180** |
-| F | Belt inner width between guide lugs | 60–90 | ___ (75 placeholder) |
-| lug_h / lug_w | Guide lug height / row width | — | ___ (20 / 12 placeholders — **feeds the clearance guard, measure!**) |
+| sprocket | Drive sprocket OD × teeth | — | **180 × 10T** (hub motor inside) |
+| fork | Fork-leg inner gap (front / rear) | — | **120 / 140** — leg thickness ___ (leg_t = 30 placeholder, **measure**) |
+| axle | Hub-motor axle | — | **Ø10, flatted, static** — carrier plates slot onto it (torque-arm style) |
+| F | Belt inner width between guide lugs | 60–90 | **62 derived** (H + 4, matched wheel/belt set) |
+| lug_h / lug_w | Guide lug height / row width | — | ___ (20 / 18 conservative — owner estimates 10–20; **measure**) |
 | H | Idler hub width | 40–60 | **58** (57.85) |
-| T | Belt carcass thickness | 8–14 | ___ (12 placeholder) |
-| J | Vehicle axle Ø + stock mounting/anti-rotation interface (disassemble one pod, photograph everything) | — | ___ |
+| T | Belt carcass thickness | 8–14 | **~12** (confirmed) |
 
 \* sanity-check ranges only, never for cutting.
 
-**Derived:** `P = B − 30` (pivot drop below hub centre) · `C = √((A/2)² + 30²)` (arm length)
-· wheel travel `≈ +32/−30 mm` at ±15° · shock station `a = 0.68·C` · motion ratio `MR ≈ 0.57`.
+**Derived (all exact, from the .scad echoes):** `A = 222.2` · `P = B − 38 = 132` ·
+`C = 117.4` (arm length) · neutral droop `18.9°` · wheel travel `+30 / −27.5 mm` at ±15° ·
+shock station `a = 0.68·C = 79.8` · upper shock eye at `(±47, −5)` from hub centre ·
+keel centre `104` below hub centre · motion ratio `MR ≈ 0.57` ·
+fork widths: trailing arm `60` inner / leading arm `75.7` inner · carrier planes `|z| = 90` (front pod).
 
 **Idler axle:** the 6302 bearings take a **Ø15 mm axle** — a 15×100 MTB thru-axle
 (M15×1.5) or a 15 mm hardened shaft + collars, per the sourcing notes.
@@ -125,9 +136,9 @@ OpenSCAD model by setting `shock_ee`.
 1. Strip one donor pod; photograph/measure the internal frame + anti-rotation (datum J).
 2. Fill in datums → update `.scad` → export `plates.dxf` → laser-cut 8 plates.
 3. Press bushings; dry-stack the pivot (Sheet 2 order); cut spacer tube so idlers sit mid-belt.
-4. Box carriers (keel standoff + axle sleeve/bearings); sprocket must spin free, ≥3 mm/face.
+4. Bolt carriers to the fork legs (axle slot + M8 per leg) and fit the keel standoff; motor must spin free, ≥3 mm/face.
 5. Locate shock mounts with shocks held at ~30% compression; tack; hand-cycle ±15°; final-weld (bushings out).
-6. Paint → final assembly → fit idlers → wrap belt → tension (10–15 mm sag) → mount with anti-rotation link.
+6. Paint → final assembly → fit idlers → wrap belt → tension (10–15 mm sag) → torque axle nuts + fork M8s.
 7. Test protocol: bench articulation ×50 → bench spin 5 min (belt must not walk) → loaded creep over 50 mm plank → short ridden test → retorque at 1 h / 5 h / every 20 h.
 8. Only after the first pod passes: replicate for the other side (mirror carriers only).
 
@@ -150,14 +161,28 @@ Torque: M8 cl.10.9 — 30 N·m · M10 — 60 N·m · M12 — 105 N·m · M20 piv
   standoff would have hit it by ~40 mm — keel relocated between sprocket and pivot boss,
   pivot raised (drop 20→30), carrier pivot circle slimmed Ø56→Ø48. Automatic PASS/WARN
   clearance guard added to every render.
+- **Rev 001c** — pivot raised further (drop 30→38, near the 42 hard limit where the keel
+  window closes): lug-top margin at full bump 7.6→15.3 mm, steel-touches-belt angle
+  +18.5°→+22° (buffer against shock-travel overshoot). Keel moved up 6 mm with it;
+  keel-to-sprocket and keel-to-boss gaps added to the clearance guard. Cost: belt-path
+  variation through travel 3.6→5.7 mm — within tensioner range.
+- **Rev 002** — owner interview: the pod is a **hub-motor scooter conversion** (motor
+  inside the sprocket, static Ø10 flatted axle, fork gaps 120 front / 140 rear).
+  Carriers redesigned as fork-hung torque-arm plates (identical symmetric part, axle
+  slot + one M8 per leg); 6205 bearings, axle sleeve and anti-rotation link deleted;
+  shocks moved inboard of the carriers; sprocket counted 10T → belt solver corrected
+  to the cord line (A 243 → 222.2). Carriers now ride outside the belt width — the
+  original tongue-hits-track failure mode is geometrically impossible. New fit risk
+  flagged: 118 belt in 120 front fork gap (1 mm/side).
 
 ## Open items
 
-- [x] Take Sheet-0 measurements — done for track, A (solved), B, D, G, H, sprocket
-- [ ] Measure the remaining datums: **F, lug_h, lug_w** (drive the clearance guard), T, J
+- [x] Take Sheet-0 measurements — track, A (solved), B, D, G, H, sprocket 10T, fork gaps, axle
+- [ ] Measure: **fork leg thickness** (`leg_t`, assumed 30) and **lug height** (`lug_h`, assumed 20)
+- [ ] Verify belt runs true in the front fork's 120 mm gap (1 mm/side!)
 - [x] Plug datums into `.scad`, confirm fit (all clearance checks PASS at full bump)
-- [ ] Export final `plates.dxf` after F/lug/J are confirmed
-- [x] Shock length: B=170 → **150 mm eye-to-eye** per the purchasing spec above; weigh corner load → pick spring rate
+- [ ] Export final `plates.dxf` after leg_t is confirmed
+- [x] Shock length: B=170 → **150 mm eye-to-eye, 30 mm stroke (not longer)**; weigh corner load → pick spring rate (~330 lb/in at 40 kg/pod)
 - [ ] Order idler axles: 15 mm (thru-axle or shaft + collars)
-- [ ] Bake real numbers into the blueprint sheets (update artifact)
-- [ ] Confirm vehicle-side details: total loaded weight, 2 vs 4 pods, chassis point for anti-rotation link
+- [x] Bake real numbers into the blueprint sheets (artifact updated to Rev 002)
+- [ ] Confirm vehicle-side details: total loaded weight, 2 vs 4 pods
