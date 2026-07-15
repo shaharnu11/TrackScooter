@@ -1,6 +1,6 @@
 // ============================================================================
 //  APOLLO TRACK POD — Articulated "Split-Frame" Suspension Mod
-//  Parametric OpenSCAD model · Rev 002 · 2026-07-12
+//  Parametric OpenSCAD model · Rev 002b · 2026-07-13
 //  Companion to the blueprint artifact (Sheets 0–6).
 //
 //  HOW TO USE
@@ -10,6 +10,8 @@
 //        "assembly"  full pod at ride height (set lead_angle/trail_angle)
 //        "exploded"  parts separated for assembly reference
 //        "plates"    2D flat layout of all steel plates -> export DXF for laser
+//        "tensioner" Sheet-6 close-up: trailing-arm slot, adjuster block,
+//                    draw bolt + jam nut, welded tip lug (labeled in 3D)
 //   4. Animation: View > Animate, FPS 20, Steps 100, set animate = true.
 //
 //  CLI EXPORTS (from this folder):
@@ -53,16 +55,43 @@
 //   - Belt-length solver corrected to the cord line (10T x 60 pitch = Ø191):
 //     A = 222.2 (was 243 on the inner-surface assumption).
 //   - FIT RISK: 118 belt in 120 front fork gap = 1 mm/side. Verify.
+//
+//  REV 002b DELTA (2026-07-13): Sheet-6 belt tensioner modeled explicitly.
+//   The slot alone can't hold tension — the mechanism is a motorcycle
+//   chain adjuster: a lug welded across each trailing fork-plate tip, a
+//   small tapped ADJUSTER BLOCK riding on each protruding axle end, and an
+//   M8 draw bolt through the lug threading into the block. The bolt head
+//   bears on the lug's rear face, so advancing it DRAWS the axle rearward
+//   through the 25 mm slot (belt tension pulls the axle forward; the bolt
+//   holds it in tension). Jam nut locks against the lug. New parameter
+//   tension_pos (0-25) slides the axle through its take-up; new
+//   render_mode="tensioner" gives a labeled close-up of the mechanism.
+//
+//  REV 002c DELTAS (2026-07-13, fork legs MEASURED at 4 mm — was 30 assumed):
+//   - Carrier planes move in: |z| = 64 front / 74 rear (was 90 / 100).
+//   - Pivot axle shortens: stack ~162 front / ~182 rear -> M20x1.5 x 170/190
+//     (was 220 / 240). Keel tube 128/148, keel rod ~152/172 (was 180/205).
+//   - Shocks move back OUTBOARD of the carriers (upper tab on the carrier
+//     OUTER face): with cz=64 the belt edge (59) leaves only 5 mm inboard —
+//     the Rev 002 inboard placement no longer fits. Placement is now
+//     automatic: shocks_inboard flag picks the side from cz vs belt width;
+//     lower spacer sleeve grows to ~40. Geometry (a, theta, eye position in
+//     x-y, MR) is unchanged.
 // ============================================================================
 
 /* [Render] */
-render_mode = "assembly"; // [assembly, exploded, plates]
+render_mode = "assembly"; // [assembly, exploded, plates, tensioner, part]
+// render_mode="part": renders one BOM item alone (thumbnails for the §7
+// shopping guide). Pick the item with the part variable below.
+part = "bushing"; // [pivot_axle, arm_plates, carrier_plates, boss_tube, bushing, thrust_washer, spacer_tube, shock, shock_mounts, fork_hw, keel, draw_bolt, hardware, zerk, idler_axle, reused]
 show_track    = true;
 show_sprocket = true;
 show_shocks   = true;
 animate       = false;
 lead_angle  = 0; // [-15:0.5:15]  front arm, + = bump (up)
 trail_angle = 0; // [-15:0.5:15]  rear arm,  + = bump (up)
+tension_pos = 8; // [0:0.5:25]  trailing-axle slot position: 0 = most-forward
+                 //             (fit the belt), 25 = full take-up (Sheet 6)
 
 /* [Sheet-0 datums — measured 2026-07-12 unless marked PLACEHOLDER, mm] */
 A = 260;          // idler axle centre-to-centre — FALLBACK, used only if belt_links == 0
@@ -88,7 +117,7 @@ sprocket_w     = 60;   // measure across the sprocket rim
 
 /* [Fork mount — Rev 002: carriers hang from the scooter fork legs] */
 fork_gap = 120;  // inner spacing between fork legs: FRONT 120, REAR 140
-leg_t    = 30;   // fork leg thickness (z) — PLACEHOLDER, measure
+leg_t    = 4;    // fork leg thickness (z) — MEASURED 2026-07-13 (was 30 placeholder)
 axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it)
 
 /* [Design parameters — blueprint defaults] */
@@ -138,7 +167,12 @@ pivot  = [0, -P];
 zi_tr  = H/2 + 1;                      // trailing fork inner face |z|
 zi_ld  = zi_tr + plate_t + 1.5;        // leading fork inner face |z|
 cz     = fork_gap/2 + leg_t;           // carrier inner face = fork-leg OUTER face
-sz     = track_w/2 + 14;               // shock plane: between belt edge and carrier
+// Shock plane (Rev 002c): inboard of the carriers ONLY if there is room
+// between the belt edge and the carrier inner face (there was at leg_t=30,
+// cz=90; at the measured leg_t=4, cz=64 leaves 5 mm — shocks go OUTBOARD).
+shocks_inboard = (cz >= track_w/2 + 24);
+sz     = shocks_inboard ? track_w/2 + 14        // between belt edge and carrier
+                        : cz + carrier_t + 14;  // outboard of the carrier plate
 Rc     = sprocket_od/2 - 17;           // carrier disc radius
 y_keel = -(sprocket_od/2 + 14);        // keel standoff BETWEEN sprocket swept
                                        // disc (steel, r=90) and pivot boss
@@ -160,7 +194,7 @@ upP    = low0 + ride_len*[cos(up_dir), sin(up_dir)]; // upper eye (FIXED)
 aL = animate ? 15*sin($t*360)       : lead_angle;
 aT = animate ? 15*sin($t*360 + 180) : trail_angle;
 
-wheel_tr = arm_pt([C + 8, 0], aT);        // +8 = tensioner mid-slot
+wheel_tr = arm_pt([C + tension_pos, 0], aT);  // axle position in tensioner slot
 wheel_ld = mx(arm_pt([C, 0], aL));
 
 echo(str("BELT:     solved A=", A_eff, "  inner length=", belt_len(A_eff),
@@ -170,6 +204,25 @@ echo(str("SHOCK:    lower eye station a=", a, "  upper eye at ", upP));
 echo(str("TRAVEL:   bump +", C*(sin(bump_max-na)+sin(na)),
          " / droop -", C*(sin(bump_max+na)-sin(na)), " mm at ±", bump_max, "°"));
 echo(str("MOTION RATIO ≈ ", 0.68*sin(theta), "   (spring k = wheel k / MR²)"));
+echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
+         25 - tension_pos, " mm remaining (render_mode=\"tensioner\" for the ",
+         "Sheet-6 close-up; advance both draw bolts evenly)"));
+// draw-bolt head must stay radially inside the belt wrap at the wheel (D/2)
+tens_head_gap = D/2 - ((34 + 18) - tension_pos);
+echo(str(tens_head_gap < 2 ? "*** WARN " : "PASS ",
+         "draw-bolt head to belt wrap: ", tens_head_gap,
+         " mm at tension_pos=", tension_pos));
+// cut/buy lengths that follow from fork_gap + leg_t (echoed so the BOM can
+// be verified against the measured fork instead of the old 30 mm assumption)
+axle_stack = 2*(cz + carrier_t) + 22;   // carriers outer-to-outer + nut/head
+echo(str("PIVOT AXLE: stack ≈ ", axle_stack, " → buy M20×1.5 × ",
+         10*ceil((axle_stack + 3)/10), " part-threaded (this fork_gap=",
+         fork_gap, ", leg_t=", leg_t, ")"));
+echo(str("KEEL: tube Ø16 cut ", 2*cz, " · M8 rod cut ≈ ", 2*(cz+carrier_t)+12));
+echo(str("SHOCKS: run ", shocks_inboard ? "INBOARD" : "OUTBOARD",
+         " of the carriers at |z|=", sz, " — upper tab on carrier ",
+         shocks_inboard ? "INNER" : "OUTER", " face; lower sleeve ≈ ",
+         (sz - 5) - (zi_ld + plate_t), " long"));
 
 // ---- belt-clearance guard: nothing hanging from the carrier may touch the
 // ---- track when both arms hit full bump (belt bottom run at its highest)
@@ -247,6 +300,136 @@ module upper_tab_2d(p){
 }
 
 // ============================================================== components
+// Sheet-6 belt tensioner, local arm coords (pivot at origin, wheel end +x).
+// Motorcycle chain-adjuster style: welded lug across each fork-plate tip,
+// tapped adjuster block riding on the protruding axle end, M8 draw bolt
+// through the lug threading into the block. Head + jam nut bear on the lug's
+// REAR face -> advancing the bolt DRAWS the axle rearward through the slot;
+// belt tension (which pulls the axle forward) loads the bolt in tension.
+// Lug position: front face at C+34 — behind the slot's rear end (C+32.7),
+// forward of the plate tip (C+44). This keeps the bolt head within 52 mm of
+// the axle at every slot position (belt wrap radius at the wheel = D/2 = 54;
+// a tip-mounted lug would have pushed the head THROUGH the belt at slack).
+// Block-rear meets lug-front exactly at full 25 mm take-up = natural stop.
+xl_lug = 34;                      // lug front face, mm behind nominal axle (C)
+module tensioner_hw(zi){
+  zo = zi + plate_t;              // fork-plate outer face
+  xl = C + xl_lug;                // lug front face
+  bz = zo + 11;                   // draw-bolt axis, outboard of the plate
+  for (s=[1,-1]) scale([1,1,s]){
+    // welded lug: upright standing on the plate outer face, weld all around
+    color([0.30,0.36,0.48]) difference(){
+      translate([xl, -13, zo]) cube([6, 26, (bz - zo) + 7]);
+      translate([xl-1, 0, bz]) rotate([0,90,0]) cylinder(h=8, d=8.6);
+    }
+    // adjuster block on the protruding axle end — drilled ØG, tapped M8
+    color([0.45,0.45,0.48]) translate([C + tension_pos, 0, bz]) difference(){
+      cube([16, 22, 12], center=true);
+      cylinder(h=14, d=G+0.3, center=true);
+      rotate([0,90,0]) cylinder(h=18, d=6.8, center=true);
+    }
+    // M8 draw bolt: shank from the block, through the lug; jam nut + head
+    color([0.55,0.55,0.58]){
+      translate([C + tension_pos - 8, 0, bz]) rotate([0,90,0])
+        cylinder(h=(xl + 16) - (C + tension_pos - 8), d=7.8);
+      translate([xl + 6.5,  0, bz]) rotate([0,90,0])
+        cylinder(h=6.5, d=14.6, $fn=6);   // jam nut against the lug
+      translate([xl + 13.5, 0, bz]) rotate([0,90,0])
+        cylinder(h=5.5, d=14.6, $fn=6);   // bolt head
+    }
+  }
+}
+
+// ---------------------------------------------------------- part catalog --
+// Schematic renders of each purchased BOM item (render_mode="part"), used
+// as the thumbnail images in blueprint §7. Shapes are illustrative.
+cSteel  = [0.62,0.63,0.66];
+cBronze = [0.72,0.53,0.30];
+module cat_hexnut(af, h, bore){
+  difference(){ cylinder(h=h, d=af*1.1547, $fn=6);
+                translate([0,0,-1]) cylinder(h=h+2, d=bore); } }
+module cat_washer(od, id, t=1.5){
+  difference(){ cylinder(h=t, d=od); translate([0,0,-1]) cylinder(h=t+2, d=id); } }
+module cat_threads(d, l){           // schematic thread: ribbed cylinder
+  cylinder(h=l, d=d-0.6);
+  for (i=[0:1.6:l-1.4]) translate([0,0,i]) cylinder(h=0.8, d=d+0.4); }
+module cat_bolt(d, shank, thread, head_af, head_h){
+  cylinder(h=head_h, d=head_af*1.1547, $fn=6);
+  translate([0,0,head_h]) cylinder(h=shank, d=d);
+  translate([0,0,head_h+shank]) cat_threads(d, thread); }
+module cat_tube(od, id, l){
+  difference(){ cylinder(h=l, d=od); translate([0,0,-1]) cylinder(h=l+2, d=id); } }
+
+module part_catalog(name){
+  if (name == "pivot_axle"){                     // BOM 1 — M20 pivot bolt
+    color(cSteel) rotate([0,90,0]) cat_bolt(20, 110, 45, 30, 13);
+    color(cSteel) translate([60,-45,0]) cat_hexnut(30, 18, 17.6);
+    color(cSteel) for (i=[0:1]) translate([110+i*45,-45,0]) cat_washer(37,21,3);
+  } else if (name == "arm_plates"){              // BOM 2 — one of each profile
+    color(cSteel){ linear_extrude(plate_t) arm_plate_2d(true);
+                   translate([0,95,0]) linear_extrude(plate_t) arm_plate_2d(false); }
+  } else if (name == "carrier_plates"){          // BOM 3
+    color(cSteel) linear_extrude(carrier_t) carrier_2d();
+  } else if (name == "boss_tube"){               // BOM 4
+    color(cSteel) for (i=[0:1]) translate([i*55,0,0]) cat_tube(32,25,25);
+  } else if (name == "bushing"){                 // BOM 5 — flanged, bronze
+    color(cBronze) for (i=[0:1]) translate([i*45,0,0]){
+      cat_tube(25,20,20); cat_washer(32,20,3); }
+  } else if (name == "thrust_washer"){           // BOM 6
+    color(cSteel) for (i=[0:1]) translate([i*46,0,0]) cat_washer(36,20,1.5);
+  } else if (name == "spacer_tube"){             // BOM 7
+    color(cSteel) rotate([0,90,0]) cat_tube(25,20,60);
+  } else if (name == "shock"){                   // BOM 8 — coil-over
+    shock3d([0,0],[150,0],0);
+  } else if (name == "shock_mounts"){            // BOM 9 — tab + sleeve
+    color(cSteel) linear_extrude(6) translate(-upP) upper_tab_2d(upP);
+    color(cSteel) translate([55,-15,0]) cat_tube(15,10,35);
+  } else if (name == "fork_hw"){                 // BOM 10 — M8 bolt + nuts
+    color(cSteel) rotate([0,90,0]) cat_bolt(8, 12, 18, 13, 5.5);
+    color(cSteel) translate([20,-22,0]) cat_hexnut(13, 8, 6.9);
+    color(cSteel) translate([45,-22,0]) cat_hexnut(17, 10, 8.8);  // stock M10
+  } else if (name == "keel"){                    // BOM 11 — tube + rod + nuts
+    color(cSteel) rotate([0,90,0]) cat_tube(16,8.5,128);
+    color(cSteel) translate([0,30,0]) rotate([0,90,0]) cat_threads(8,152);
+    color(cSteel) for (i=[0:3]) translate([20+i*28,55,0]) cat_hexnut(13,7,6.9);
+  } else if (name == "draw_bolt"){               // BOM 12 — bolt + jam + block
+    color(cSteel) rotate([0,90,0]) cat_bolt(8, 4, 52, 13, 5.5);
+    color(cSteel) translate([25,-24,0]) cat_hexnut(13, 6.5, 6.9);
+    color([0.45,0.45,0.48]) translate([62,-24,0]) difference(){
+      cube([16,22,12], center=true);
+      cylinder(h=14, d=G+0.3, center=true);
+      rotate([0,90,0]) cylinder(h=18, d=6.8, center=true); }
+  } else if (name == "hardware"){                // BOM 14 — assortment
+    color(cSteel){ cat_hexnut(13,8,6.9);
+      translate([24,4,0])  cat_hexnut(17,10,8.8);
+      translate([4,26,0])  cat_washer(17,8.5);
+      translate([26,30,0]) cat_washer(21,10.5);
+      translate([-6,-26,0]) rotate([0,90,20]) cat_bolt(8,10,20,13,5.5); }
+  } else if (name == "zerk"){                    // BOM 15 — M6 grease nipple
+    color(cSteel) for (i=[0:1]) translate([i*16,0,0]){
+      cat_threads(6, 5);
+      translate([0,0,5]) cylinder(h=2.5, d=11, $fn=6);
+      translate([0,0,7.5]) cylinder(h=3.5, d1=6.5, d2=4.5);
+      translate([0,0,11.5]) sphere(d=5); }
+  } else if (name == "idler_axle"){              // BOM 16 — 15x100 thru-axle
+    color(cSteel) rotate([0,90,0]){
+      cylinder(h=5, d=21);                       // low-profile head
+      translate([0,0,5]) cylinder(h=83, d=15);
+      translate([0,0,88]) cat_threads(15, 12); }
+  } else if (name == "reused"){                  // stock sprocket/idler/belt
+    sprocket();
+    translate([160,0,0]) idler_wheel();
+  }
+}
+
+// red 3D leader + text for the "tensioner" detail view
+module flag(txt, tip, anchor){
+  color([0.70,0.18,0.12]){
+    hull(){ translate(tip) sphere(0.9); translate(anchor) sphere(0.9); }
+    translate(anchor + [2, -2.5, 0]) linear_extrude(1.2) text(txt, size=6);
+  }
+}
+
 module idler_wheel(){
   color([0.16,0.16,0.17]) difference(){
     cylinder(h=H, d=D, center=true);
@@ -313,13 +496,16 @@ module arm3d(zi, slot, ang, szs){
     color([0.55,0.55,0.58]) translate([a, 18, szs>0 ? zi+plate_t : -(sz-5)])
       difference(){ cylinder(h=(sz-5)-(zi+plate_t), d=15);
                     cylinder(h=sz, d=10); }
-    // wheel + axle
-    wx = slot ? C+8 : C;
+    // wheel + axle (trailing axle runs longer — it carries the adjuster blocks)
+    wx = slot ? C + tension_pos : C;
     translate([wx, 0, 0]){
       translate([0,0, ex* (szs>0 ? 0 : 0)]) idler_wheel();
       color([0.55,0.55,0.58])
-        cylinder(h=2*(zi+plate_t)+18, d=G, center=true);
+        cylinder(h = slot ? 2*(zi+plate_t+18) : 2*(zi+plate_t)+18,
+                 d=G, center=true);
     }
+    // Sheet-6 tensioner hardware on the slotted (trailing) arm
+    if (slot) tensioner_hw(zi);
   }
 }
 
@@ -328,11 +514,14 @@ module carrier_group(){
   color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? cz : -cz-carrier_t) + s*ex*55])
       linear_extrude(carrier_t) carrier_2d();
-  // upper shock tabs, welded to carrier INNER faces (shocks run between
-  // belt edge and carrier — Rev 002; they were outboard in 001a)
+  // upper shock tabs — welded to the carrier INNER face when the shocks run
+  // inboard (Rev 002, thick legs), to the OUTER face when outboard (Rev 002c,
+  // measured 4 mm legs leave no inboard room)
+  tab_z0 = shocks_inboard ? sz + 5 : cz + carrier_t;
+  tab_h  = shocks_inboard ? cz - (sz + 5) : (sz - 5) - (cz + carrier_t);
   color([0.36,0.43,0.56]) for (s=[1,-1])
-    translate([0,0, (s==1 ? sz+5 : -cz) + s*ex*55])
-      linear_extrude(cz-(sz+5)) upper_tab_2d(s==1 ? upP : mx(upP));
+    translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + tab_h)) + s*ex*55])
+      linear_extrude(tab_h) upper_tab_2d(s==1 ? upP : mx(upP));
   // hub-motor axle: static Ø10, spans fork legs + both plates
   color([0.55,0.55,0.58])
     cylinder(h=2*(cz+carrier_t)+24, d=axle_d, center=true);
@@ -391,6 +580,30 @@ if (render_mode == "plates"){
   }
   translate([0, -2.6*P]) for (i=[0:1])                      // upper tabs ×2
     translate([i*70, 0] - upP) upper_tab_2d(upP);
+} else if (render_mode == "part"){
+  part_catalog(part);
+} else if (render_mode == "tensioner"){
+  // ---- Sheet-6 close-up: trailing-arm belt tensioner, arm drawn level ----
+  // (local arm coords: pivot at x=0, wheel end +x = rearward)
+  zo = zi_tr + plate_t;
+  intersection(){                                    // fork plates, cropped
+    for (s=[1,-1]) translate([0,0, s==1 ? zi_tr : -zi_tr-plate_t])
+      linear_extrude(plate_t) arm_plate_2d(true);
+    translate([C-45, -65, -zo-40]) cube([150, 130, 2*zo+80]);
+  }
+  tensioner_hw(zi_tr);
+  color([0.55,0.55,0.58]) translate([C + tension_pos, 0, 0])   // axle
+    cylinder(h=2*(zo+18), d=G, center=true);
+  color([0.16,0.16,0.17,0.25]) translate([C + tension_pos, 0, 0])
+    cylinder(h=H, d=D, center=true);                           // ghost wheel
+  flag("AXLE IN SLOT (25 TAKE-UP)",
+       [C + tension_pos, -8, zo+2],  [C-52, -52, zo+26]);
+  flag("BLOCK ON AXLE END (TAP M8)",
+       [C + tension_pos, 9, zo+13],  [C-52, 42, zo+26]);
+  flag("WELDED LUG",
+       [C+37, -12, zo+9],            [C+50, -34, zo+26]);
+  flag("DRAW BOLT + JAM NUT",
+       [C+52, 0, zo+11],             [C+42, 24, zo+26]);
 } else {
   // trailing arm (rear, +x) and leading arm (front, -x, mirrored)
   translate([ ex*60, 0, 0]) arm3d(zi_tr, true,  aT, +1);

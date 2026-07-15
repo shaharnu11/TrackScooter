@@ -1,6 +1,6 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-**Rev 002 · 2026-07-12 · Status: all load-bearing datums measured; carriers redesigned as fork-hung torque-arm plates (hub-motor scooter); remaining to measure: fork leg thickness, lug height**
+**Rev 002c · 2026-07-13 · Status: all datums measured including fork legs (4 mm — axle/keel shortened, shocks moved outboard of the carriers); blueprint includes a full shopping guide (§7.1–§7.9) and per-component build chapters (§9.1–§9.8); belt tensioner detailed + modeled in 3D; remaining to measure: guide-lug height only**
 
 Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
 between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
@@ -14,7 +14,8 @@ a leading and a trailing arm, and two coil-over shocks. Each lower idler gets
 
 | File | What it is |
 |---|---|
-| **Blueprint (web)** | https://claude.ai/code/artifact/8435d971-16c0-4a02-9ff1-7adc27d6350e — 7 drawing sheets, BOM, fabrication specs, assembly sequence, test protocol. Readable, always-current version of record. |
+| **Blueprint (web)** | https://claude.ai/code/artifact/8435d971-16c0-4a02-9ff1-7adc27d6350e — 7 drawing sheets, BOM + shopping guide (§7.1–§7.9: per-part sourcing, substitutes, costs, receiving inspection), fabrication specs, per-component build chapters (§9.1–§9.8: tools, steps, checks, common mistakes), test protocol. Readable, always-current version of record. |
+| `apollo_track_pod_blueprint.html` / `.pdf` | Local copy of the blueprint; the PDF is printed from the HTML (one topic per page). |
 | `apollo_track_pod.scad` | Parametric OpenSCAD 3D model (companion to the blueprint). Assembly / exploded / flat-plate modes, articulation animation, DXF + STL export. Verified rendering in all modes. |
 | `README.md` | This file. |
 
@@ -26,6 +27,9 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
 
 - `render_mode = "assembly"` — full pod; `lead_angle` / `trail_angle` sliders (−15…+15) articulate the arms; `animate = true` + View→Animate (FPS 20, Steps 100) cycles the suspension.
 - `render_mode = "exploded"` — assembly reference.
+- `render_mode = "tensioner"` — labeled 3D close-up of the Sheet-6 belt tensioner
+  (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
+  axle through its take-up.
 - `render_mode = "plates"` — all 8 laser-cut steel parts flat. Export for the laser cutter:
 
 ```bash
@@ -47,7 +51,8 @@ The stock pod's rigid internal frame is removed and replaced by:
    axle passes through a matching slot (the plate doubles as a torque arm) and one
    M8 bolt into the leg 52 mm above locks rotation. No carrier bearings, no
    anti-rotation link — the fork is the chassis anchor. Plates sit on the leg OUTER
-   faces (|z| = 90 front / 100 rear), completely outside the belt's 118 mm width,
+   faces (|z| = 64 front / 74 rear — legs measured 4 mm, Rev 002c), still outside
+   the belt's 118 mm width (5 mm/side),
    so **the carrier can never touch the track at any articulation**. Boxed together
    by the hub axle (top), the pivot axle (middle), and the **M8 keel standoff
    between the sprocket's swept disc and the pivot boss** (bottom).
@@ -56,12 +61,16 @@ The stock pod's rigid internal frame is removed and replaced by:
    38 is near the max — the keel window closes at 42).
 3. **Leading + trailing arms** — fork weldments (2 plates each, ¼″ A36) nested on the
    pivot like scissors; 4 flanged SAE 841 bronze bushings (Ø20×Ø25). Fork shape keeps
-   each idler centred on the belt. Trailing arm has a 25 mm slot + jack bolts = belt tensioner.
-4. **Coil-over shocks ×2** — run **between the belt edge and the carrier plates**
-   (|z| = 73; Rev 002 — with the carriers moved out to the fork legs there's clean
-   room inboard): upper eye on a tab welded to the carrier inner face at (±47, −5)
-   from the hub centre, lower eye on a Ø10 through-bolt + spacer sleeve through
-   both arm-fork plates at a = 0.68·C = 79.8, leaning ~57° to the arm.
+   each idler centred on the belt. Trailing arm has a 25 mm slot + a motorcycle-style
+   chain adjuster (Rev 002b): tapped block on each axle end, M8 draw bolt through a
+   lug welded to the plate face — advancing the bolt draws the axle rearward.
+4. **Coil-over shocks ×2** — run **outboard of the carrier plates** (|z| = 84;
+   Rev 002c — with the measured 4 mm legs the carriers sit at 64, leaving only
+   5 mm inboard of them, so the Rev 002 inboard placement no longer fits):
+   upper eye on a tab welded to the carrier OUTER face at (±47, −5) from the
+   hub centre, lower eye on a Ø10 through-bolt + ≈35 mm spacer sleeve through
+   both arm-fork plates at a = 0.68·C = 79.8, leaning ~57° to the arm. Side-view
+   geometry and spring rates unchanged.
 
 ### Design risks (mitigations are mandatory, see blueprint §0)
 - **Belt derailment** — articulation changes belt path length (~6 mm through travel).
@@ -86,7 +95,7 @@ Everything is parametric on these.
 | D | Idler wheel OD | 90–120 | **108** (WJ wheel) |
 | G | Idler bearing bore | 15–20 | **15** — bearings are **6302-2RS (15×42×13)**; caliper read 14.86 = 15 nominal |
 | sprocket | Drive sprocket OD × teeth | — | **180 × 10T** (hub motor inside) |
-| fork | Fork-leg inner gap (front / rear) | — | **120 / 140** — leg thickness ___ (leg_t = 30 placeholder, **measure**) |
+| fork | Fork-leg inner gap (front / rear) | — | **120 / 140** — leg thickness **4** (measured 2026-07-13) |
 | axle | Hub-motor axle | — | **Ø10, flatted, static** — carrier plates slot onto it (torque-arm style) |
 | F | Belt inner width between guide lugs | 60–90 | **62 derived** (H + 4, matched wheel/belt set) |
 | lug_h / lug_w | Guide lug height / row width | — | ___ (20 / 18 conservative — owner estimates 10–20; **measure**) |
@@ -99,7 +108,8 @@ Everything is parametric on these.
 `C = 117.4` (arm length) · neutral droop `18.9°` · wheel travel `+30 / −27.5 mm` at ±15° ·
 shock station `a = 0.68·C = 79.8` · upper shock eye at `(±47, −5)` from hub centre ·
 keel centre `104` below hub centre · motion ratio `MR ≈ 0.57` ·
-fork widths: trailing arm `60` inner / leading arm `75.7` inner · carrier planes `|z| = 90` (front pod).
+fork widths: trailing arm `60` inner / leading arm `75.7` inner · carrier planes `|z| = 64` (front pod) ·
+pivot axle stack `≈162` front / `≈182` rear → **M20×1.5 × 170 / 190** · shock plane `|z| = 84` (outboard).
 
 **Idler axle:** the 6302 bearings take a **Ø15 mm axle** — a 15×100 MTB thru-axle
 (M15×1.5) or a 15 mm hardened shaft + collars, per the sourcing notes.
@@ -112,7 +122,8 @@ All must read PASS with ≥5 mm before cutting steel — re-check after measurin
 
 ## Shock (suspension) purchasing spec
 
-Two per pod, standard "e-scooter / mini-moto rear shock" type:
+Two per pod, standard "e-scooter / mini-moto rear shock" type
+(the expanded buying guide — sources, search terms, receipt checks — is blueprint **§7.4**):
 
 | Spec | Requirement |
 |---|---|
@@ -131,7 +142,7 @@ OpenSCAD model by setting `shock_ee`.
 
 ---
 
-## Build order (summary — full detail in blueprint §9–10)
+## Build order (summary — full per-component instructions in blueprint §9.1–§9.8, test protocol §10)
 
 1. Strip one donor pod; photograph/measure the internal frame + anti-rotation (datum J).
 2. Fill in datums → update `.scad` → export `plates.dxf` → laser-cut 8 plates.
@@ -174,14 +185,35 @@ Torque: M8 cl.10.9 — 30 N·m · M10 — 60 N·m · M12 — 105 N·m · M20 piv
   to the cord line (A 243 → 222.2). Carriers now ride outside the belt width — the
   original tongue-hits-track failure mode is geometrically impossible. New fit risk
   flagged: 118 belt in 120 front fork gap (1 mm/side).
+- **Rev 002a** (2026-07-13) — documentation only, no dimension changes: blueprint §7
+  expanded from a bare BOM into a shopping guide (§7.1–§7.9 — per-part spec, where to
+  buy, search terms, substitutes, rough cost, receiving-inspection table); §9 expanded
+  into per-component build chapters (§9.1–§9.8 — tools, numbered steps, pass/fail
+  checks, common mistakes); print CSS added so the PDF paginates one topic per page.
+- **Rev 002b** (2026-07-13) — Sheet-6 belt tensioner detailed and modeled explicitly in
+  the .scad: motorcycle chain-adjuster style (tapped adjuster block on each axle end,
+  M8×60 draw bolt through a lug welded to the fork-plate outer face, jam nut). The 3D
+  fit-check moved the lug from the plate tip to a station 34 mm behind the nominal axle
+  centre — a tip lug puts the bolt head outside the belt's 54 mm wrap radius at slack.
+  New: `tension_pos` parameter, `render_mode="tensioner"` labeled close-up, and a
+  "draw-bolt head to belt wrap" PASS/WARN guard echo. BOM #12 updated.
+- **Rev 002c** (2026-07-13) — fork legs **measured: 4 mm** (placeholder was 30).
+  Carrier planes move in to |z| = 64/74; pivot axle stack 162/182 → **M20×1.5 ×
+  170/190** (was 220/240); fork bolts M8×30; keel tube 128/148 + rod ≈152/172.
+  **Shocks return outboard of the carriers** (|z| = 84/94, tabs on the OUTER faces,
+  sleeves ≈35) — only 5 mm remain between belt edge and carrier, so the Rev 002
+  inboard placement no longer fits. Side-view shock geometry unchanged. The .scad
+  picks the shock side automatically and echoes buy/cut lengths per fork_gap.
+  Only open measurement: guide-lug height.
 
 ## Open items
 
 - [x] Take Sheet-0 measurements — track, A (solved), B, D, G, H, sprocket 10T, fork gaps, axle
-- [ ] Measure: **fork leg thickness** (`leg_t`, assumed 30) and **lug height** (`lug_h`, assumed 20)
+- [x] Measure: **fork leg thickness** — 4 mm (2026-07-13; axle/keel/shock placement updated, Rev 002c)
+- [ ] Measure: **lug height** (`lug_h`, assumed 20)
 - [ ] Verify belt runs true in the front fork's 120 mm gap (1 mm/side!)
 - [x] Plug datums into `.scad`, confirm fit (all clearance checks PASS at full bump)
-- [ ] Export final `plates.dxf` after leg_t is confirmed
+- [ ] Export final `plates.dxf` (leg_t confirmed; re-check after lug_h is measured)
 - [x] Shock length: B=170 → **150 mm eye-to-eye, 30 mm stroke (not longer)**; weigh corner load → pick spring rate (~330 lb/in at 40 kg/pod)
 - [ ] Order idler axles: 15 mm (thru-axle or shaft + collars)
 - [x] Bake real numbers into the blueprint sheets (artifact updated to Rev 002)
