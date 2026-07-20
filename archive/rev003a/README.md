@@ -1,6 +1,6 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-**Rev 004 (flat-bar edition) · 2026-07-21 · Status: every plate is now off-the-shelf rectangular flat bar — straight cuts + drilled holes, no laser/waterjet (arm bars 40×¼″, carrier strips 50×6 + tab stubs 40×6); shock geometry adjusted to suit (a = 0.46·C on the bar axis, θ = 72°, MR ≈ 0.44); all collision guards PASS; remaining to measure: guide-lug height only**
+**Rev 003a · 2026-07-20 · Status: pivot downsized M20 → M16 (bushings 16×22×20); fork gaps re-measured 140/140 — pods identical, belt-fit risk gone (11 mm/side); full 3D collision audit fixed 5 interferences (pivot stack made continuous with outboard sleeves; boss orientation; shock bolt, cross-brace and keel all moved out of collisions) — every clearance now guarded in the .scad; remaining to measure: guide-lug height only**
 
 Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
 between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
@@ -30,9 +30,7 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
 - `render_mode = "tensioner"` — labeled 3D close-up of the Sheet-6 belt tensioner
   (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
   axle through its take-up.
-- `render_mode = "plates"` — all 10 flat-bar rectangles laid out flat (4 arm bars,
-  2 carrier strips, 4 tab stubs — Rev 004). Print 1:1 as a drilling template, or
-  export DXF if you still want a shop to cut them:
+- `render_mode = "plates"` — all 8 laser-cut steel parts flat. Export for the laser cutter:
 
 ```bash
 openscad -o plates.dxf -D 'render_mode="plates"' apollo_track_pod.scad
@@ -48,8 +46,7 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 
 The stock pod's rigid internal frame is removed and replaced by:
 
-1. **Carriers ×2** (Rev 004: a 50 × 6 flat-bar strip ≈225 + two 40 × 6 × 55 tab
-   stubs lap-welded at hub level — identical symmetric weldment) — the new
+1. **Carrier plates ×2** (6 mm A36, identical symmetric part — Rev 002) — the new
    backbone. Each hangs from a scooter-fork leg: the hub-motor's static Ø10 flatted
    axle passes through a matching slot (the plate doubles as a torque arm) and one
    M8 bolt into the leg 52 mm above locks rotation. No carrier bearings, no
@@ -62,7 +59,7 @@ The stock pod's rigid internal frame is removed and replaced by:
 2. **Central pivot axle** — M16 class-10.9 bolt (Rev 003, was M20×1.5) through the carrier tongues,
    38 mm above the idler axle line (raised from 20 in two steps for belt clearance;
    38 is near the max — the keel window closes at 42).
-3. **Leading + trailing arms** — fork weldments (2 plain 40 × ¼″ flat-bar plates each — Rev 004, rectangles only) nested on the
+3. **Leading + trailing arms** — fork weldments (2 plates each, ¼″ A36) nested on the
    pivot like scissors; 4 flanged SAE 841 bronze bushings (Ø16×Ø22×20), one in a
    25 mm boss tube per fork plate — trailing bosses point inboard, leading bosses
    outboard, so the whole stack (centre spacer ≈14, 6 thrust washers, 2 outboard
@@ -73,11 +70,11 @@ The stock pod's rigid internal frame is removed and replaced by:
 4. **Coil-over shocks ×2** — run **outboard of the carrier plates** (|z| = 94;
    Rev 002c/003 — with the measured 4 mm legs the carriers sit at 74, leaving
    only 15 mm inboard of them, so the Rev 002 inboard placement doesn't fit):
-   upper eye on a 40×6×55 tab stub lap-welded to the carrier OUTER face (eye at
-   (±53, −9) from the hub centre), lower eye on a Ø10 through-bolt + ≈45 mm
-   spacer sleeve through both arm-fork plates at a = 0.46·C = 54.0 on the bar
-   centreline, leaning ~72° to the arm (Rev 004; the pre-003a 0.68·C bolt
-   passed through the Ø108 idler wheel). MR ≈ 0.44.
+   upper eye on a tab welded to the carrier OUTER face at (±52, +6) from the
+   hub centre, lower eye on a Ø10 through-bolt + ≈45 mm spacer sleeve through
+   both arm-fork plates at a = 0.485·C = 56.9, leaning ~68° to the arm
+   (Rev 003a: the old 0.68·C bolt passed through the Ø108 idler wheel; the old
+   57° line ran the coil spring into the carrier tongue). MR ≈ 0.45.
 
 ### Design risks (mitigations are mandatory, see blueprint §0)
 - **Belt derailment** — articulation changes belt path length (~6 mm through travel).
@@ -113,8 +110,8 @@ Everything is parametric on these.
 
 **Derived (all exact, from the .scad echoes):** `A = 222.2` · `P = B − 38 = 132` ·
 `C = 117.4` (arm length) · neutral droop `18.9°` · wheel travel `+30 / −27.5 mm` at ±15° ·
-shock station `a = 0.46·C = 54.0` (bar axis) · upper shock eye at `(±53, −9)` from hub centre ·
-keel centre `100` below hub centre (Ø12×1.5 tube) · motion ratio `MR ≈ 0.44` ·
+shock station `a = 0.485·C = 56.9` · upper shock eye at `(±52, +6)` from hub centre ·
+keel centre `100` below hub centre (Ø12×1.5 tube) · motion ratio `MR ≈ 0.45` ·
 fork widths: trailing arm `60` inner / leading arm `75.7` inner · carrier planes `|z| = 74` (both pods) ·
 pivot axle stack `≈182` → **M16 cl.10.9 × 190, part-threaded** (both pods) · shock plane `|z| = 94` (outboard).
 
@@ -139,10 +136,10 @@ Two per pod, standard "e-scooter / mini-moto rear shock" type
 | Stroke | ≥ 30 mm (uses ~24 mm at full ±15°; check short shocks' stroke in the listing) |
 | Eyelet bore | Ø10 mm (or with reducer bushings) |
 | Installed length | free length − ~10 mm sag — use this when positioning the upper tab |
-| Spring rate | `k [N/mm] ≈ 2.3 × (kg per pod, loaded)`; N/mm × 5.7 ≈ lb/in (Rev 004: MR ≈ 0.44 — the shock station sits at 0.46·C on the bar axis for wheel + flat-bar clearance) |
+| Spring rate | `k [N/mm] ≈ 2.15 × (kg per pod, loaded)`; N/mm × 5.7 ≈ lb/in (Rev 003a: was 1.35× — the shock station moved to 0.485·C for wheel clearance, MR 0.57 → 0.45) |
 
 Spring quick table (weight per pod, vehicle loaded with rider):
-30 kg → ~390 lb/in · 40 kg → ~520 lb/in · 50 kg → ~655 lb/in · 60 kg → ~785 lb/in.
+30 kg → ~370 lb/in · 40 kg → ~490 lb/in · 50 kg → ~615 lb/in · 60 kg → ~740 lb/in.
 Buy one spring a step softer and one stiffer at the same time. The upper tab is welded
 *after* the shock is in hand, so exact length has tolerance — verify placement in the
 OpenSCAD model by setting `shock_ee`.
@@ -152,7 +149,7 @@ OpenSCAD model by setting `shock_ee`.
 ## Build order (summary — full per-component instructions in blueprint §9.1–§9.8, test protocol §10)
 
 1. Strip one donor pod; photograph/measure the internal frame + anti-rotation (datum J).
-2. Fill in datums → update `.scad` → print the `plates` layout 1:1 as a drilling template → cut 10 flat-bar rectangles (4 arm bars, 2 carrier strips, 4 tab stubs) with straight cuts only.
+2. Fill in datums → update `.scad` → export `plates.dxf` → laser-cut 8 plates.
 3. Press bushings (trailing flanges inboard, leading flanges outboard); dry-stack the pivot (Sheet 2 order); cut the centre spacer + 2 outboard sleeves so idlers sit mid-belt and the stack is snug carrier-to-carrier.
 4. Bolt carriers to the fork legs (axle slot + M8 per leg) and fit the keel standoff; motor must spin free, ≥3 mm/face.
 5. Locate shock mounts with shocks held at ~30% compression; tack; hand-cycle ±15°; final-weld (bushings out).
@@ -229,7 +226,6 @@ Torque: M8 cl.10.9 — 30 N·m · M10 — 60 N·m · M12 — 105 N·m · M16 piv
   3. **Shock angle/coil vs carrier:** at 57° the coil spring (Ø~44) overlapped the carrier tongue edge and tab foot. **θ = 68°**, tab weld foot re-aimed at the hub boss, carrier tab lobe simplified — coil clears by 7.5 mm (guarded), and the steeper line recovers MR to **0.45** (springs ≈2.15×kg/pod, e.g. ~490 lb/in at 40 kg).
   4. **Cross-brace vs idler wheel:** the brace at a±25 also passed through the wheel — moved inboard to x = 28..58 (7 mm clear, guarded).
   5. **Keel vs arm plates:** the keel at −104 ran through the Ø64 plate boss discs (they span −100..−164). Plate boss disc slimmed to **Ø44**, keel tube **Ø16 → Ø12×1.5**, raised to −100 — 4 mm to the sprocket disc and 4 mm to the boss disc, both articulation-invariant (the disc is centred on the pivot), guarded. Shock-bolt Ø30 lobe added to the plate profile (the Ø10 hole was <1 mm from the tapered edge at the new station).
-- **Rev 004 (flat-bar edition)** (2026-07-21, owner request) — **every plate becomes off-the-shelf rectangular flat bar**: straight cuts + drilled holes only, no laser/waterjet, ~$15–35 of steel. **Arms:** plain 40 × ¼″ bars (trailing ≈185, leading ≈166). To suit the 40 mm width: lower shock bolt onto the bar centreline (was y = +18), station a → **0.46·C = 54.0** (4.4 mm wheel gap, guarded), **θ = 72°** (coil clears the carrier strip by 5.9 mm, guarded), cross-brace at y −18..−6, upper eyes at **(±53, −9)**; MR ≈ 0.44, springs ≈2.3×kg/pod (~655 lb/in worked example — the ordered 100 kg/8.5 mm shocks still fit). **Carriers:** 50 × 6 strip ≈225 (axle slot, M8, pivot, keel all on centreline) + two 40 × 6 × 55 tab stubs lap-welded on the OUTER face at hub level. Side benefits: keel-to-arm gap 4 → 6 mm; no tip rounding needed (bar half-width 20 < r34 lug wrap). All guards PASS. Backup of Rev 003a kept at `../TrackScooter-backup-rev003a`.
 
 ## Open items
 

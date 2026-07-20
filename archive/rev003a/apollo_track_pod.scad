@@ -1,6 +1,6 @@
 // ============================================================================
 //  APOLLO TRACK POD — Articulated "Split-Frame" Suspension Mod
-//  Parametric OpenSCAD model · Rev 004 (flat-bar edition) · 2026-07-21
+//  Parametric OpenSCAD model · Rev 003 · 2026-07-20
 //  Companion to the blueprint artifact (Sheets 0–6).
 //
 //  HOW TO USE
@@ -107,25 +107,6 @@
 //     the boss disc — both articulation-invariant, guarded.
 //   - Shock-bolt lobe (Ø30) added to the plate profile: at the new station
 //     the Ø10 hole was <1 mm from the tapered top edge.
-//
-//  REV 004 DELTAS (2026-07-21, FLAT-BAR EDITION — owner request: build every
-//  plate from off-the-shelf rectangular flat bar, straight cuts + drilled
-//  holes only, no laser/waterjet profiles):
-//   - ARM PLATES: plain 40 x 6.35 flat bar (trailing cut ~185, leading ~166).
-//     To fit the 40 bar: lower shock bolt moves onto the bar centreline
-//     (shock_y 18 -> 0), station a 0.485C -> 0.46C (keeps 4 mm wheel gap),
-//     theta 68 -> 71 deg (coil clears the carrier strip), cross-brace raised
-//     to y -18..-6. Upper eye lands at (~±51, -10). MR 0.45 -> ~0.435
-//     (springs ~5-8% stiffer; the owner's 100 kg / 8.5 mm units still fit).
-//     Bonus: keel-to-arm gap grows 4 -> 6 mm; no tip rounding needed
-//     (bar half-width 20 stays inside the r34 lug wrap).
-//   - CARRIERS: one 50 x 6 vertical strip, cut ~225 (axle slot, M8 hole,
-//     pivot bore, keel hole all on the centreline) + TWO 40 x 6 x 55 tab
-//     stubs per carrier, lap-welded on the OUTER face at hub level (17 mm
-//     lap, clear of the axle slot, above the coil-top line). Symmetric.
-//   - All clearance guards re-run and PASS. Steel order becomes: 40x6.35
-//     flat bar ~1 m + 50x6 ~0.5 m + 40x6 ~0.25 m — no plate stock, no
-//     cutting shop.
 // ============================================================================
 
 /* [Render] */
@@ -176,22 +157,18 @@ carrier_t  = 6;     // carrier plates
 pivot_d    = 16;    // pivot axle (Rev 003: M16 cl.10.9, was M20)
 bushing_od = 22;    // SAE 841 flanged bushing 16×22×20 (Rev 003, was 20×25×20)
 boss_len   = 25;    // boss tube length (trailing bosses point IN, leading OUT)
-boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
-                    // rectangles — was the Ø44 boss disc; guards use the same
-                    // half-width. 4 mm weld shelf beside the Ø32 boss tube.)
+boss_disc  = 44;    // arm-plate boss disc (Rev 003a: was 64 — slimmed to open
+                    // the keel window; 6 mm weld ring around the Ø32 tube)
 keel_od    = 12;    // keel standoff tube OD (Rev 003a: was 16 — Ø12×1.5, ID 9)
-a_frac     = 0.46;  // shock bolt station as fraction of C (Rev 004: was 0.485 —
-                    // the bolt moved onto the bar centreline (shock_y 18 -> 0),
-                    // which is closer to the wheel, so a comes in to keep the
-                    // 4 mm wheel clearance. Rev 003a: 0.68 was INSIDE the wheel.)
-shock_y    = 0;     // lower shock bolt offset from the arm axis (Rev 004: 0 —
-                    // a Ø10 hole at y=18 has <2 mm edge in a 40 mm bar)
+a_frac     = 0.485; // shock bolt station as fraction of C (Rev 003a: was 0.68 —
+                    // a through-bolt at 0.68·C passes INSIDE the idler wheel;
+                    // 0.485 clears the Ø108 wheel by 4 mm. Springs get stiffer.)
 shock_ee   = 150;   // shock eye-to-eye, free
 shock_sag  = 10;    // installed compression at ride height
-theta      = 72;    // shock angle to arm at neutral, deg (Rev 004: was 68 —
-                    // with the lower eye at shock_y=0 the shock line must stay
-                    // near-vertical so the coil (Ø~44) clears the 50 mm carrier
-                    // strip; upper eye lands at (±51, −10). MR ≈ 0.435)
+theta      = 68;    // shock angle to arm at neutral, deg (Rev 003a: was 57 —
+                    // with a=0.485C a 57° shock line runs its coil spring
+                    // (Ø~44) into the carrier tongue edge; 68° keeps the coil
+                    // 6+ mm clear AND recovers motion ratio: MR 0.41 -> 0.45)
 bump_max   = 15;    // arm travel limit, deg (clearance guard checks this)
 
 $fa = 4; $fs = 0.7;
@@ -258,7 +235,7 @@ function rot2(p, ang) = [ p[0]*cos(ang) - p[1]*sin(ang),
 function arm_pt(local, arm_ang) = pivot + rot2(local, -na + arm_ang);
 function mx(p) = [-p[0], p[1]];
 
-low0   = arm_pt([a, shock_y], 0);                  // lower shock eye, neutral
+low0   = arm_pt([a, 18], 0);                       // lower shock eye, neutral
 up_dir = -na + 180 - theta;                        // shock leans in toward hub
 upP    = low0 + ride_len*[cos(up_dir), sin(up_dir)]; // upper eye (FIXED)
 
@@ -311,7 +288,7 @@ clearances = concat(
     [["carrier tongue Ø48", (pivot[1] - 24) - ((cz < lug_zone) ? y_lug_bump : y_belt_bump)]] : [],
   [[str("keel standoff  Ø", keel_od), (y_keel - keel_od/2) - y_lug_bump],
    [str("pivot spacer   Ø", bushing_od), (pivot[1] - bushing_od/2) - y_lug_bump],
-   [str("arm bar (", boss_disc, " wide)  "), (pivot[1] - boss_disc/2) - y_lug_bump]]);
+   [str("arm boss disc  Ø", boss_disc), (pivot[1] - boss_disc/2) - y_lug_bump]]);
 if (cz >= track_w/2 + 3)
   echo(str("NOTE carrier plates at |z|=", cz, " — outside the belt (half-width ",
            track_w/2, "); they cannot contact the track at any bump"));
@@ -324,18 +301,18 @@ for (c = clearances)
 // every articulation; small values acceptable) + in-plane wheel clearances
 keel_gaps = [
   ["keel to sprocket swept disc", abs(y_keel) - keel_od/2 - sprocket_od/2],
-  [str("keel to arm bar (", boss_disc, " wide)"),
+  [str("keel to arm boss disc Ø", boss_disc),
         abs(y_keel - pivot[1]) - boss_disc/2 - keel_od/2],
   ["keel to pivot washers Ø30",   abs(y_keel - pivot[1]) - 15 - keel_od/2],
   // Rev 003a: the lower shock through-bolt and the cross-brace share the
   // space between the fork plates with the Ø108 idler wheel — check both
-  ["shock bolt Ø10 to idler wheel", sqrt(pow(C - a, 2) + shock_y*shock_y) - D/2 - 5],
-  ["cross-brace to idler wheel",    sqrt(pow(C - 58, 2) + 6*6) - D/2],
+  ["shock bolt Ø10 to idler wheel", sqrt(pow(C - a, 2) + 18*18) - D/2 - 5],
+  ["cross-brace to idler wheel",    sqrt(pow(C - 58, 2) + 14*14) - D/2],
   // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
   // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
   // the closest point since the line leans away from the tongue going down
-  ["shock coil Ø44 to carrier strip (50 wide)",
-     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 25 - 22]];
+  ["shock coil Ø44 to carrier tongue",
+     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 24 - 22]];
 for (g = keel_gaps)
   echo(str(g[1] < 2 ? "*** WARN " : "PASS ", g[0], ": ", g[1], " mm gap"));
 
@@ -343,11 +320,12 @@ ex = (render_mode == "exploded") ? 1 : 0;
 
 // ============================================================== 2D profiles
 module arm_plate_2d(slot=false){
-  // Rev 004: plain flat-bar rectangle, 40 wide — no profile cutting.
-  // Trailing bar cut ≈185, leading ≈166; only straight cuts + drilled holes.
   send = slot ? 18 : 0;
   difference(){
-    translate([-22, -boss_disc/2]) square([22 + C + send + 26, boss_disc]);
+    union(){
+      hull(){ circle(d=boss_disc); translate([C+send, 0]) circle(d=52); }
+      translate([a, 18]) circle(d=30);          // shock-bolt lobe (edge distance)
+    }
     circle(d=31.8);                             // pivot hole: the Ø32 boss tube
                                                 // passes THROUGH the plate and is
                                                 // welded on both faces (§9.2);
@@ -356,17 +334,25 @@ module arm_plate_2d(slot=false){
     if (slot) hull(){ translate([C,0])    circle(d=G+0.4);
                       translate([C+25,0]) circle(d=G+0.4); }
     else      translate([C,0]) circle(d=G+0.4); // wheel axle bore
-    translate([a, shock_y]) circle(d=10);       // lower shock bolt Ø10 (on axis)
+    translate([a, 18]) circle(d=10);            // lower shock bolt Ø10
   }
 }
 
 module carrier_2d(){
-  // Rev 004: plain 50-wide flat-bar strip, cut ≈225 — every centreline feature
-  // (axle slot, M8 fork bolt, pivot bore, keel hole) lands on it. The shock
-  // tabs are separate stubs (tab_stub_2d) lap-welded on the OUTER face at hub
-  // level. Same part both sides (symmetric).
+  // Rev 002: fork-hung torque-arm plate. Same part both sides (symmetric).
   difference(){
-    translate([-25, pivot[1]-24]) square([50, (52+16) - (pivot[1]-24)]);
+    union(){
+      hull(){ circle(d=44);                       // hub-motor axle boss
+              translate([0,52]) circle(d=32); }   // fork-leg bolt strap
+      hull(){ circle(d=44);
+              translate(pivot)      circle(d=48);
+              translate([0,y_keel]) circle(d=30); }
+      for (p = [upP, mx(upP)])                    // shock-tab weld lobes, both
+        hull(){ circle(d=44);                     // sides so L/R part is common
+                translate(p) circle(d=30); }      // (Rev 003a: the old down-rear
+                                                  // foot lobe sat inside the
+                                                  // coil-spring envelope)
+    }
     // hub-motor axle slot: Ø10 with flats — the plate doubles as a torque arm
     intersection(){ circle(d=axle_d+0.4);
                     square([axle_d+0.4, 8.9], center=true); }
@@ -376,14 +362,13 @@ module carrier_2d(){
   }
 }
 
-module tab_stub_2d(p){
-  // Rev 004: upper shock tab = 40×6 flat-bar stub, ≈55 long, lap-welded onto
-  // the carrier strip's OUTER face at hub level (17 mm lap onto the strip,
-  // clear of the axle slot). Ø10 eye pin hole at p. Sits ABOVE the coil-top
-  // line, so the spring corridor stays clear.
-  s = p[0] > 0 ? 1 : -1;
+module upper_tab_2d(p){
   difference(){
-    translate([s==1 ? 8 : -63, -20]) square([55, 40]);
+    hull(){ translate(p) circle(d=22);
+            translate(p + [-24,10]) circle(d=30); } // weld foot toward the hub
+                                                    // boss (Rev 003a: the old
+                                                    // [8,-34] foot sat inside
+                                                    // the coil-spring envelope)
     translate(p) circle(d=10);
   }
 }
@@ -473,7 +458,7 @@ module part_catalog(name){
   } else if (name == "shock"){                   // BOM 8 — coil-over
     shock3d([0,0],[150,0],0);
   } else if (name == "shock_mounts"){            // BOM 9 — tab + sleeve
-    color(cSteel) linear_extrude(6) translate([-8,20,0]) tab_stub_2d(upP);
+    color(cSteel) linear_extrude(6) translate(-upP) upper_tab_2d(upP);
     color(cSteel) translate([55,-15,0]) cat_tube(15,10,45);
   } else if (name == "fork_hw"){                 // BOM 10 — M8 bolt + nuts
     color(cSteel) rotate([0,90,0]) cat_bolt(8, 12, 18, 13, 5.5);
@@ -588,13 +573,13 @@ module arm3d(zi, slot, ang, szs){
           translate([0,0, slot ? fz-3 : fz])  cylinder(h=3,  d=28); }
         translate([0,0,fz-24]) cylinder(h=48, d=pivot_d); }
     }
-    // lower cross-brace (Rev 003a: inboard of the wheel; Rev 004: raised to
-    // y -18..-6 so it stays inside the 40 mm bar width)
-    color([0.30,0.36,0.48]) translate([28, -18, -zi]) cube([30, 12, 2*zi]);
+    // lower cross-brace (Rev 003a: moved inboard of the wheel — at the old
+    // a-25..a+25 station it passed through the Ø108 idler)
+    color([0.30,0.36,0.48]) translate([28, -26, -zi]) cube([30, 12, 2*zi]);
     // shock through-bolt + outboard spacer sleeve
-    color([0.55,0.55,0.58]) translate([a, shock_y, -(zi+plate_t)-4])
+    color([0.55,0.55,0.58]) translate([a, 18, -(zi+plate_t)-4])
       cylinder(h=(zi+plate_t)+4 + (sz-5), d=9.8);
-    color([0.55,0.55,0.58]) translate([a, shock_y, szs>0 ? zi+plate_t : -(sz-5)])
+    color([0.55,0.55,0.58]) translate([a, 18, szs>0 ? zi+plate_t : -(sz-5)])
       difference(){ cylinder(h=(sz-5)-(zi+plate_t), d=15);
                     cylinder(h=sz, d=10); }
     // wheel + axle (trailing axle runs longer — it carries the adjuster blocks)
@@ -618,13 +603,11 @@ module carrier_group(){
   // upper shock tabs — welded to the carrier INNER face when the shocks run
   // inboard (Rev 002, thick legs), to the OUTER face when outboard (Rev 002c,
   // measured 4 mm legs leave no inboard room)
-  // Rev 004: tab stubs (40×6 bar) lap-welded on the carrier OUTER faces; the
-  // eye pin cantilevers from the stub out to the shock plane through washers
-  tab_z0 = cz + carrier_t;
+  tab_z0 = shocks_inboard ? sz + 5 : cz + carrier_t;
+  tab_h  = shocks_inboard ? cz - (sz + 5) : (sz - 5) - (cz + carrier_t);
   color([0.36,0.43,0.56]) for (s=[1,-1])
-    translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
-      linear_extrude(6){ tab_stub_2d(s==1 ? upP : mx(upP));
-                         tab_stub_2d(s==1 ? mx(upP) : upP); }
+    translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + tab_h)) + s*ex*55])
+      linear_extrude(tab_h) upper_tab_2d(s==1 ? upP : mx(upP));
   // hub-motor axle: static Ø10, spans fork legs + both plates
   color([0.55,0.55,0.58])
     cylinder(h=2*(cz+carrier_t)+24, d=axle_d, center=true);
@@ -688,9 +671,8 @@ if (render_mode == "plates"){
     translate([0, 180]) arm_plate_2d(true);                 // trailing ×2
     translate([0, 270]) arm_plate_2d(true);
   }
-  translate([0, -2.6*P]) for (i=[0:3])                      // tab stubs ×4
-    translate([i*70, 0] - [8,-20]) intersection(){
-      tab_stub_2d(upP); translate([8,-20]) square([55,40]); }
+  translate([0, -2.6*P]) for (i=[0:1])                      // upper tabs ×2
+    translate([i*70, 0] - upP) upper_tab_2d(upP);
 } else if (render_mode == "part"){
   part_catalog(part);
 } else if (render_mode == "tensioner"){
@@ -724,8 +706,8 @@ if (render_mode == "plates"){
   pivot_axle_group();
 
   if (show_shocks){
-    translate([0,0,  ex*80]) shock3d(upP,     arm_pt([a,shock_y], aT),      sz);
-    translate([0,0, -ex*80]) shock3d(mx(upP), mx(arm_pt([a,shock_y], aL)), -sz);
+    translate([0,0,  ex*80]) shock3d(upP,     arm_pt([a,18], aT),      sz);
+    translate([0,0, -ex*80]) shock3d(mx(upP), mx(arm_pt([a,18], aL)), -sz);
   }
   if (show_sprocket) translate([0, ex*150, 0]) sprocket();
   if (show_track && ex == 0) track3d();

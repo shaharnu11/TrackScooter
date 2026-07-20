@@ -1,0 +1,2 @@
+Frozen snapshot of Rev 003a (laser-cut profile edition), archived 2026-07-21
+before the Rev 004 flat-bar redesign. The living version is at the repo root.
