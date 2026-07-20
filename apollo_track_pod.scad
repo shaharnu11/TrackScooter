@@ -1,6 +1,6 @@
 // ============================================================================
 //  APOLLO TRACK POD — Articulated "Split-Frame" Suspension Mod
-//  Parametric OpenSCAD model · Rev 002b · 2026-07-13
+//  Parametric OpenSCAD model · Rev 003 · 2026-07-20
 //  Companion to the blueprint artifact (Sheets 0–6).
 //
 //  HOW TO USE
@@ -77,6 +77,36 @@
 //     automatic: shocks_inboard flag picks the side from cz vs belt width;
 //     lower spacer sleeve grows to ~40. Geometry (a, theta, eye position in
 //     x-y, MR) is unchanged.
+//
+//  REV 003 DELTAS (2026-07-20, owner changes):
+//   - Pivot axle M20 -> M16 cl.10.9. Bushings 20x25x20 -> SAE 841 flanged
+//     16x22x20 (flange ~Ø28x3); boss tube 32x25 -> 32x5 (ream ID 22 H7);
+//     spacer tube 25x20 -> 22x16; thrust washers Ø36x20 -> Ø30x16x1.5.
+//     Boss OD stays 32 — carrier window and clearance guard unchanged.
+//   - Fork gap re-measured: 140 mm FRONT AND REAR (was 120/140). Both pods
+//     now identical: cz=74, axle stack ~182 -> M16 x 190, keel tube 148,
+//     rod ~172, shocks outboard at |z|=94. The 1 mm/side front belt-fit
+//     risk is GONE (11 mm/side both ends).
+//
+//  REV 003a DELTAS (2026-07-20, full 3D collision audit — owner spotted the
+//  first two; the audit found the rest):
+//   - PIVOT STACK made continuous: the 25-long bosses now point INBOARD on
+//     the trailing forks and OUTBOARD on the leading forks (they can't both
+//     protrude toward the scissor interface — only a 1.5 mm washer gap there).
+//     Centre spacer shrinks ~60 -> ~14; two NEW outboard sleeves (~7) close
+//     the former ~30 mm/side of bare axle to the carriers; thrust washers
+//     4 -> 6. Nut can now truly set zero end-float; arms located sideways.
+//   - SHOCK BOLT vs WHEEL: the lower through-bolt at a=0.68C passed 12 mm
+//     INSIDE the Ø108 idler. a moved to 0.485C (4 mm clear, guarded).
+//     MR 0.57 -> 0.41; spring k factor 1.35 -> 2.65 x kg/pod.
+//   - CROSS-BRACE vs WHEEL: brace at a±25 also passed through the idler —
+//     moved inboard to x = 28..58 (7 mm clear, guarded).
+//   - KEEL vs ARM PLATES: the keel at -104 ran through the Ø64 plate boss
+//     discs (which span -100..-164). Plate boss disc slimmed to Ø44, keel
+//     tube Ø16 -> Ø12x1.5, raised to -100: 4 mm to sprocket disc, 4 mm to
+//     the boss disc — both articulation-invariant, guarded.
+//   - Shock-bolt lobe (Ø30) added to the plate profile: at the new station
+//     the Ø10 hole was <1 mm from the tapered top edge.
 // ============================================================================
 
 /* [Render] */
@@ -116,18 +146,29 @@ sprocket_teeth = 10;   // counted. 10T x 60 pitch → pitch/cord circle Ø191,
 sprocket_w     = 60;   // measure across the sprocket rim
 
 /* [Fork mount — Rev 002: carriers hang from the scooter fork legs] */
-fork_gap = 120;  // inner spacing between fork legs: FRONT 120, REAR 140
+fork_gap = 140;  // inner spacing between fork legs: 140 FRONT AND REAR
+                 // (Rev 003 — re-measured; both pods identical, was 120/140)
 leg_t    = 4;    // fork leg thickness (z) — MEASURED 2026-07-13 (was 30 placeholder)
 axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it)
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
 carrier_t  = 6;     // carrier plates
-pivot_d    = 20;    // pivot axle
-bushing_od = 25;    // SAE 841 flanged bushing
+pivot_d    = 16;    // pivot axle (Rev 003: M16 cl.10.9, was M20)
+bushing_od = 22;    // SAE 841 flanged bushing 16×22×20 (Rev 003, was 20×25×20)
+boss_len   = 25;    // boss tube length (trailing bosses point IN, leading OUT)
+boss_disc  = 44;    // arm-plate boss disc (Rev 003a: was 64 — slimmed to open
+                    // the keel window; 6 mm weld ring around the Ø32 tube)
+keel_od    = 12;    // keel standoff tube OD (Rev 003a: was 16 — Ø12×1.5, ID 9)
+a_frac     = 0.485; // shock bolt station as fraction of C (Rev 003a: was 0.68 —
+                    // a through-bolt at 0.68·C passes INSIDE the idler wheel;
+                    // 0.485 clears the Ø108 wheel by 4 mm. Springs get stiffer.)
 shock_ee   = 150;   // shock eye-to-eye, free
 shock_sag  = 10;    // installed compression at ride height
-theta      = 57;    // shock angle to arm at neutral, deg
+theta      = 68;    // shock angle to arm at neutral, deg (Rev 003a: was 57 —
+                    // with a=0.485C a 57° shock line runs its coil spring
+                    // (Ø~44) into the carrier tongue edge; 68° keeps the coil
+                    // 6+ mm clear AND recovers motion ratio: MR 0.41 -> 0.45)
 bump_max   = 15;    // arm travel limit, deg (clearance guard checks this)
 
 $fa = 4; $fs = 0.7;
@@ -161,7 +202,7 @@ drop   = 38;                          // pivot sits 38 above idler axle line
 P      = B - drop;                    // pivot drop below hub centre
 C      = sqrt(half*half + drop*drop); // pivot-to-wheel arm length
 na     = atan(drop/half);             // arm neutral droop angle, deg
-a      = 0.68*C;                      // shock bolt station along arm
+a      = a_frac*C;                    // shock bolt station along arm
 pivot  = [0, -P];
 
 zi_tr  = H/2 + 1;                      // trailing fork inner face |z|
@@ -174,10 +215,17 @@ shocks_inboard = (cz >= track_w/2 + 24);
 sz     = shocks_inboard ? track_w/2 + 14        // between belt edge and carrier
                         : cz + carrier_t + 14;  // outboard of the carrier plate
 Rc     = sprocket_od/2 - 17;           // carrier disc radius
-y_keel = -(sprocket_od/2 + 14);        // keel standoff BETWEEN sprocket swept
-                                       // disc (steel, r=90) and pivot boss
-                                       // (Rev 001b: was P+45 below pivot — hit
-                                       // belt at bump; 001c: raised with boss)
+y_keel = -(sprocket_od/2 + 10);        // keel standoff BETWEEN sprocket swept
+                                       // disc (steel, r=90) and the ARM boss
+                                       // disc (Rev 003a: window is bounded by
+                                       // the Ø44 plate disc top, not the Ø32
+                                       // tube — Ø12 tube fits with 4/4 mm)
+// pivot-stack cut lengths (Rev 003a): the bosses stack end-to-end through
+// thrust washers, so the centre spacer and the two outboard sleeves are what
+// close the chain carrier-to-carrier. All three are cut at the §9.3 dry-stack.
+sp_half   = zi_tr + plate_t - boss_len - 4.5;  // washer 1.5 + flange 3
+sleeve_z0 = zi_ld + boss_len + 4.5;            // leading boss end + flange + washer
+sleeve_ln = cz - sleeve_z0;                    // outboard sleeve length
 r_wrap = sprocket_od/2 + 2;            // belt INNER surface at sprocket (visual)
 belt_w = track_w;                      // belt overall width (measured)
 ride_len = shock_ee - shock_sag;
@@ -203,7 +251,9 @@ echo(str("DERIVED:  P=", P, "  C=", C, "  neutral droop=", na, " deg"));
 echo(str("SHOCK:    lower eye station a=", a, "  upper eye at ", upP));
 echo(str("TRAVEL:   bump +", C*(sin(bump_max-na)+sin(na)),
          " / droop -", C*(sin(bump_max+na)-sin(na)), " mm at ±", bump_max, "°"));
-echo(str("MOTION RATIO ≈ ", 0.68*sin(theta), "   (spring k = wheel k / MR²)"));
+echo(str("MOTION RATIO ≈ ", a_frac*sin(theta), "   (spring k = wheel k / MR²)"));
+echo(str("PIVOT STACK: centre spacer ≈ ", 2*sp_half, " · outboard sleeves ≈ ",
+         sleeve_ln, " ×2 — all Ø22×3 tube, cut at the §9.3 dry-stack"));
 echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
          25 - tension_pos, " mm remaining (render_mode=\"tensioner\" for the ",
          "Sheet-6 close-up; advance both draw bolts evenly)"));
@@ -215,10 +265,11 @@ echo(str(tens_head_gap < 2 ? "*** WARN " : "PASS ",
 // cut/buy lengths that follow from fork_gap + leg_t (echoed so the BOM can
 // be verified against the measured fork instead of the old 30 mm assumption)
 axle_stack = 2*(cz + carrier_t) + 22;   // carriers outer-to-outer + nut/head
-echo(str("PIVOT AXLE: stack ≈ ", axle_stack, " → buy M20×1.5 × ",
+echo(str("PIVOT AXLE: stack ≈ ", axle_stack, " → buy M", pivot_d, " cl.10.9 × ",
          10*ceil((axle_stack + 3)/10), " part-threaded (this fork_gap=",
          fork_gap, ", leg_t=", leg_t, ")"));
-echo(str("KEEL: tube Ø16 cut ", 2*cz, " · M8 rod cut ≈ ", 2*(cz+carrier_t)+12));
+echo(str("KEEL: tube Ø", keel_od, "×1.5 cut ", 2*cz, " · M8 rod cut ≈ ",
+         2*(cz+carrier_t)+12));
 echo(str("SHOCKS: run ", shocks_inboard ? "INBOARD" : "OUTBOARD",
          " of the carriers at |z|=", sz, " — upper tab on carrier ",
          shocks_inboard ? "INNER" : "OUTER", " face; lower sleeve ≈ ",
@@ -235,9 +286,9 @@ clearances = concat(
   // applies if a future layout puts them back over the belt
   (cz < track_w/2 + 3) ?
     [["carrier tongue Ø48", (pivot[1] - 24) - ((cz < lug_zone) ? y_lug_bump : y_belt_bump)]] : [],
-  [["keel standoff  Ø16", (y_keel   -  8)   - y_lug_bump],
-   ["pivot spacer   Ø25", (pivot[1] - 12.5) - y_lug_bump],
-   ["pivot boss     Ø32", (pivot[1] - 16)   - y_lug_bump]]);
+  [[str("keel standoff  Ø", keel_od), (y_keel - keel_od/2) - y_lug_bump],
+   [str("pivot spacer   Ø", bushing_od), (pivot[1] - bushing_od/2) - y_lug_bump],
+   [str("arm boss disc  Ø", boss_disc), (pivot[1] - boss_disc/2) - y_lug_bump]]);
 if (cz >= track_w/2 + 3)
   echo(str("NOTE carrier plates at |z|=", cz, " — outside the belt (half-width ",
            track_w/2, "); they cannot contact the track at any bump"));
@@ -246,10 +297,22 @@ echo(str(fork_gap/2 - track_w/2 < 3 ? "*** TIGHT " : "OK ",
 for (c = clearances)
   echo(str(c[1] < 5 ? "*** WARN " : "PASS ", c[0], ": ", c[1],
            " mm above track at +", bump_max, "° bump"));
-// keel window fit (both are static-to-static, small gaps acceptable)
+// keel window fit (all static-to-static or pivot-centred, so the gaps hold at
+// every articulation; small values acceptable) + in-plane wheel clearances
 keel_gaps = [
-  ["keel to sprocket swept disc", abs(y_keel) - 8 - sprocket_od/2],
-  ["keel to pivot washers Ø36",   abs(y_keel - pivot[1]) - 18 - 8]];
+  ["keel to sprocket swept disc", abs(y_keel) - keel_od/2 - sprocket_od/2],
+  [str("keel to arm boss disc Ø", boss_disc),
+        abs(y_keel - pivot[1]) - boss_disc/2 - keel_od/2],
+  ["keel to pivot washers Ø30",   abs(y_keel - pivot[1]) - 15 - keel_od/2],
+  // Rev 003a: the lower shock through-bolt and the cross-brace share the
+  // space between the fork plates with the Ø108 idler wheel — check both
+  ["shock bolt Ø10 to idler wheel", sqrt(pow(C - a, 2) + 18*18) - D/2 - 5],
+  ["cross-brace to idler wheel",    sqrt(pow(C - 58, 2) + 14*14) - D/2],
+  // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
+  // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
+  // the closest point since the line leans away from the tongue going down
+  ["shock coil Ø44 to carrier tongue",
+     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 24 - 22]];
 for (g = keel_gaps)
   echo(str(g[1] < 2 ? "*** WARN " : "PASS ", g[0], ": ", g[1], " mm gap"));
 
@@ -259,8 +322,15 @@ ex = (render_mode == "exploded") ? 1 : 0;
 module arm_plate_2d(slot=false){
   send = slot ? 18 : 0;
   difference(){
-    hull(){ circle(d=64); translate([C+send, 0]) circle(d=52); }
-    circle(d=bushing_od);                       // bushing seat Ø25 H7
+    union(){
+      hull(){ circle(d=boss_disc); translate([C+send, 0]) circle(d=52); }
+      translate([a, 18]) circle(d=30);          // shock-bolt lobe (edge distance)
+    }
+    circle(d=31.8);                             // pivot hole: the Ø32 boss tube
+                                                // passes THROUGH the plate and is
+                                                // welded on both faces (§9.2);
+                                                // the bushing seat Ø22 H7 is
+                                                // reamed in the TUBE after welding
     if (slot) hull(){ translate([C,0])    circle(d=G+0.4);
                       translate([C+25,0]) circle(d=G+0.4); }
     else      translate([C,0]) circle(d=G+0.4); // wheel axle bore
@@ -279,8 +349,9 @@ module carrier_2d(){
               translate([0,y_keel]) circle(d=30); }
       for (p = [upP, mx(upP)])                    // shock-tab weld lobes, both
         hull(){ circle(d=44);                     // sides so L/R part is common
-                translate(p) circle(d=30);
-                translate(p + [8,-34]) circle(d=30); }
+                translate(p) circle(d=30); }      // (Rev 003a: the old down-rear
+                                                  // foot lobe sat inside the
+                                                  // coil-spring envelope)
     }
     // hub-motor axle slot: Ø10 with flats — the plate doubles as a torque arm
     intersection(){ circle(d=axle_d+0.4);
@@ -294,7 +365,10 @@ module carrier_2d(){
 module upper_tab_2d(p){
   difference(){
     hull(){ translate(p) circle(d=22);
-            translate(p + [8,-34]) circle(d=30); } // weld foot, clear of bore
+            translate(p + [-24,10]) circle(d=30); } // weld foot toward the hub
+                                                    // boss (Rev 003a: the old
+                                                    // [8,-34] foot sat inside
+                                                    // the coil-spring envelope)
     translate(p) circle(d=10);
   }
 }
@@ -361,36 +435,38 @@ module cat_tube(od, id, l){
   difference(){ cylinder(h=l, d=od); translate([0,0,-1]) cylinder(h=l+2, d=id); } }
 
 module part_catalog(name){
-  if (name == "pivot_axle"){                     // BOM 1 — M20 pivot bolt
-    color(cSteel) rotate([0,90,0]) cat_bolt(20, 110, 45, 30, 13);
-    color(cSteel) translate([60,-45,0]) cat_hexnut(30, 18, 17.6);
-    color(cSteel) for (i=[0:1]) translate([110+i*45,-45,0]) cat_washer(37,21,3);
+  if (name == "pivot_axle"){                     // BOM 1 — M16 pivot bolt (Rev 003)
+    color(cSteel) rotate([0,90,0]) cat_bolt(16, 120, 45, 24, 10);
+    color(cSteel) translate([60,-45,0]) cat_hexnut(24, 16, 14.8);
+    color(cSteel) for (i=[0:1]) translate([110+i*45,-45,0]) cat_washer(30,17,3);
   } else if (name == "arm_plates"){              // BOM 2 — one of each profile
     color(cSteel){ linear_extrude(plate_t) arm_plate_2d(true);
                    translate([0,95,0]) linear_extrude(plate_t) arm_plate_2d(false); }
   } else if (name == "carrier_plates"){          // BOM 3
     color(cSteel) linear_extrude(carrier_t) carrier_2d();
-  } else if (name == "boss_tube"){               // BOM 4
-    color(cSteel) for (i=[0:1]) translate([i*55,0,0]) cat_tube(32,25,25);
-  } else if (name == "bushing"){                 // BOM 5 — flanged, bronze
+  } else if (name == "boss_tube"){               // BOM 4 — 32×5 tube, ream ID 22 H7
+    color(cSteel) for (i=[0:1]) translate([i*55,0,0]) cat_tube(32,22,25);
+  } else if (name == "bushing"){                 // BOM 5 — flanged, bronze 16×22×20
     color(cBronze) for (i=[0:1]) translate([i*45,0,0]){
-      cat_tube(25,20,20); cat_washer(32,20,3); }
+      cat_tube(22,16,20); cat_washer(28,16,3); }
   } else if (name == "thrust_washer"){           // BOM 6
-    color(cSteel) for (i=[0:1]) translate([i*46,0,0]) cat_washer(36,20,1.5);
-  } else if (name == "spacer_tube"){             // BOM 7
-    color(cSteel) rotate([0,90,0]) cat_tube(25,20,60);
+    color(cSteel) for (i=[0:1]) translate([i*46,0,0]) cat_washer(30,16,1.5);
+  } else if (name == "spacer_tube"){             // BOM 7 — centre + 2 outboard
+    color(cSteel) rotate([0,90,0]) cat_tube(22,16,2*sp_half);
+    color(cSteel) for (i=[0:1]) translate([25+i*20,-30,0])
+      rotate([0,90,0]) cat_tube(22,16,sleeve_ln);
   } else if (name == "shock"){                   // BOM 8 — coil-over
     shock3d([0,0],[150,0],0);
   } else if (name == "shock_mounts"){            // BOM 9 — tab + sleeve
     color(cSteel) linear_extrude(6) translate(-upP) upper_tab_2d(upP);
-    color(cSteel) translate([55,-15,0]) cat_tube(15,10,35);
+    color(cSteel) translate([55,-15,0]) cat_tube(15,10,45);
   } else if (name == "fork_hw"){                 // BOM 10 — M8 bolt + nuts
     color(cSteel) rotate([0,90,0]) cat_bolt(8, 12, 18, 13, 5.5);
     color(cSteel) translate([20,-22,0]) cat_hexnut(13, 8, 6.9);
     color(cSteel) translate([45,-22,0]) cat_hexnut(17, 10, 8.8);  // stock M10
   } else if (name == "keel"){                    // BOM 11 — tube + rod + nuts
-    color(cSteel) rotate([0,90,0]) cat_tube(16,8.5,128);
-    color(cSteel) translate([0,30,0]) rotate([0,90,0]) cat_threads(8,152);
+    color(cSteel) rotate([0,90,0]) cat_tube(keel_od,9,148);
+    color(cSteel) translate([0,30,0]) rotate([0,90,0]) cat_threads(8,172);
     color(cSteel) for (i=[0:3]) translate([20+i*28,55,0]) cat_hexnut(13,7,6.9);
   } else if (name == "draw_bolt"){               // BOM 12 — bolt + jam + block
     color(cSteel) rotate([0,90,0]) cat_bolt(8, 4, 52, 13, 5.5);
@@ -480,16 +556,26 @@ module arm3d(zi, slot, ang, szs){
     color([0.30,0.36,0.48]) for (s=[1,-1])
       translate([0,0, s==1 ? zi : -zi-plate_t])
         linear_extrude(plate_t) arm_plate_2d(slot);
-    // pivot boss tube, welded through both plates
-    color([0.30,0.36,0.48]) difference(){
-      cylinder(h=2*(zi+plate_t)+6, d=32, center=true);
-      cylinder(h=2*(zi+plate_t)+10, d=bushing_od, center=true); }
-    // bronze bushings (flanged, 4 per pod)
-    color([0.72,0.53,0.30]) for (s=[1,-1]) translate([0,0, s*(zi+plate_t/2)])
-      difference(){ cylinder(h=plate_t+3, d=bushing_od+0.01, center=true);
-                    cylinder(h=plate_t+6, d=pivot_d, center=true); }
-    // lower cross-brace
-    color([0.30,0.36,0.48]) translate([a-25, -26, -zi]) cube([50, 12, 2*zi]);
+    // pivot boss tubes — one 25-long tube per plate (Rev 003a: trailing bosses
+    // point INBOARD toward the spacer, leading bosses point OUTBOARD toward
+    // the sleeves; boss end faces stack through the thrust washers)
+    bz0 = slot ? zi + plate_t - boss_len : zi;   // boss inner end |z|
+    for (s=[1,-1]) scale([1,1,s]){
+      color([0.30,0.36,0.48]) difference(){
+        translate([0,0,bz0]) cylinder(h=boss_len, d=32);
+        translate([0,0,bz0-1]) cylinder(h=boss_len+2, d=bushing_od); }
+      // flanged bronze bushing: body 20 in the boss, flange Ø28×3 proud at the
+      // thrust face (trailing: inboard end; leading: outboard end)
+      fz = slot ? bz0 : bz0 + boss_len;          // flange-side boss face |z|
+      color([0.72,0.53,0.30]) difference(){
+        union(){
+          translate([0,0, slot ? fz : fz-20]) cylinder(h=20, d=bushing_od+0.01);
+          translate([0,0, slot ? fz-3 : fz])  cylinder(h=3,  d=28); }
+        translate([0,0,fz-24]) cylinder(h=48, d=pivot_d); }
+    }
+    // lower cross-brace (Rev 003a: moved inboard of the wheel — at the old
+    // a-25..a+25 station it passed through the Ø108 idler)
+    color([0.30,0.36,0.48]) translate([28, -26, -zi]) cube([30, 12, 2*zi]);
     // shock through-bolt + outboard spacer sleeve
     color([0.55,0.55,0.58]) translate([a, 18, -(zi+plate_t)-4])
       cylinder(h=(zi+plate_t)+4 + (sz-5), d=9.8);
@@ -529,9 +615,9 @@ module carrier_group(){
   color([0.45,0.50,0.60,0.35]) for (s=[1,-1])
     translate([-20, -12, s==1 ? fork_gap/2 : -fork_gap/2-leg_t])
       cube([40, 150, leg_t]);
-  // keel standoff below pivot
+  // keel standoff between sprocket disc and arm boss disc
   color([0.55,0.55,0.58]) translate([0, y_keel, -cz])
-    difference(){ cylinder(h=2*cz, d=16); cylinder(h=2*cz+2, d=8.4); }
+    difference(){ cylinder(h=2*cz, d=keel_od); cylinder(h=2*cz+2, d=8.4); }
   color([0.55,0.55,0.58]) translate([0, y_keel, -cz-carrier_t-6-ex*70])
     cylinder(h=2*(cz+carrier_t)+12, d=8);
 }
@@ -540,15 +626,22 @@ module pivot_axle_group(){
   translate([0, -ex*110, 0]) translate([pivot[0], pivot[1], 0]){
     color([0.45,0.45,0.48]){
       cylinder(h=2*(cz+carrier_t)+22, d=pivot_d, center=true);      // axle
-      translate([0,0,  cz+carrier_t+11]) cylinder(h=13, d=34, $fn=6); // head
-      translate([0,0,-(cz+carrier_t+24)]) cylinder(h=13, d=32, $fn=6); // nylock
+      translate([0,0,  cz+carrier_t+11]) cylinder(h=10, d=28, $fn=6); // head
+      translate([0,0,-(cz+carrier_t+21)]) cylinder(h=15, d=28, $fn=6); // nylock
     }
-    color([0.55,0.55,0.58]) difference(){                            // spacer
-      cylinder(h=2*zi_tr, d=25, center=true);
-      cylinder(h=2*zi_tr+2, d=pivot_d+0.4, center=true); }
-    color([0.8,0.8,0.82]) for (s=[1,-1]) for (zz=[zi_tr-0.75, zi_ld+plate_t+1])
-      translate([0,0, s*zz]) difference(){                           // washers
-        cylinder(h=1.5, d=36, center=true);
+    color([0.55,0.55,0.58]) difference(){                 // centre spacer ≈14
+      cylinder(h=2*sp_half, d=bushing_od, center=true);
+      cylinder(h=2*sp_half+2, d=pivot_d+0.4, center=true); }
+    color([0.55,0.55,0.58]) for (s=[1,-1])                // outboard sleeves ≈7
+      translate([0,0, s*(sleeve_z0 + sleeve_ln/2)]) difference(){
+        cylinder(h=sleeve_ln, d=bushing_od, center=true);
+        cylinder(h=sleeve_ln+2, d=pivot_d+0.4, center=true); }
+    // 6 thrust washers: spacer↔trailing flange, trailing↔leading boss faces
+    // (the scissor interface), leading flange↔outboard sleeve
+    color([0.8,0.8,0.82]) for (s=[1,-1])
+      for (zz=[sp_half+0.75, zi_tr+plate_t+0.75, sleeve_z0-0.75])
+      translate([0,0, s*zz]) difference(){
+        cylinder(h=1.5, d=30, center=true);
         cylinder(h=2.5, d=pivot_d+0.4, center=true); }
   }
 }
