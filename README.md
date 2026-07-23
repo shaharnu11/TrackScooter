@@ -1,6 +1,6 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-**Rev 004 (flat-bar edition) · 2026-07-21 · Status: every plate is now off-the-shelf rectangular flat bar — straight cuts + drilled holes, no laser/waterjet (arm bars 40×¼″, carrier strips 50×6 + tab stubs 40×6); shock geometry adjusted to suit (a = 0.46·C on the bar axis, θ = 72°, MR ≈ 0.44); all collision guards PASS; remaining to measure: guide-lug height only**
+**Rev 004c · 2026-07-22 · Status: every plate is off-the-shelf rectangular flat bar — straight cuts + drilled holes, no laser/waterjet (arm bars 40×¼″, carrier strips 50×6 + tab stubs 40×6); shock geometry a = 0.46·C on the bar axis, θ = 72°, true kinematic MR ≈ 0.46; pivot bolt confirmed M16×195 (45 mm thread one end, owner's actual part — only 1 nylock/bolt needed); boss tube confirmed 31 OD × 22 ID; all collision guards PASS; remaining to measure: guide-lug height only**
 
 Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
 between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
@@ -59,7 +59,7 @@ The stock pod's rigid internal frame is removed and replaced by:
    so **the carrier can never touch the track at any articulation**. Boxed together
    by the hub axle (top), the pivot axle (middle), and the **M8 keel standoff
    between the sprocket's swept disc and the pivot boss** (bottom).
-2. **Central pivot axle** — M16 class-10.9 bolt (Rev 003, was M20×1.5) through the carrier tongues,
+2. **Central pivot axle** — M16×195 bolt, threaded 45 mm on one end only (Rev 004c, owner's actual part; was M20×1.5) through the carrier tongues,
    38 mm above the idler axle line (raised from 20 in two steps for belt clearance;
    38 is near the max — the keel window closes at 42).
 3. **Leading + trailing arms** — fork weldments (2 plain 40 × ¼″ flat-bar plates each — Rev 004, rectangles only) nested on the
@@ -68,16 +68,19 @@ The stock pod's rigid internal frame is removed and replaced by:
    outboard, so the whole stack (centre spacer ≈14, 6 thrust washers, 2 outboard
    sleeves ≈7) is continuous carrier-to-carrier (Rev 003a). Fork shape keeps
    each idler centred on the belt. Trailing arm has a 25 mm slot + a motorcycle-style
-   chain adjuster (Rev 002b): tapped block on each axle end, M8 draw bolt through a
-   lug welded to the plate face — advancing the bolt draws the axle rearward.
+   chain adjuster (Rev 002b; Rev 004a hardware): M6 lifting eye nut on each axle
+   end (Ø20 eye rides the Ø15 axle — replaces the drilled-and-tapped block), M6
+   draw bolt through a lug welded to the plate face — advancing the bolt draws
+   the axle rearward.
 4. **Coil-over shocks ×2** — run **outboard of the carrier plates** (|z| = 94;
    Rev 002c/003 — with the measured 4 mm legs the carriers sit at 74, leaving
    only 15 mm inboard of them, so the Rev 002 inboard placement doesn't fit):
    upper eye on a 40×6×55 tab stub lap-welded to the carrier OUTER face (eye at
-   (±53, −9) from the hub centre), lower eye on a Ø10 through-bolt + ≈45 mm
+   (±53, −9) from the hub centre), lower eye on an M8 through-bolt (eyes measured Ø8 — Rev 004b) + ≈45 mm
    spacer sleeve through both arm-fork plates at a = 0.46·C = 54.0 on the bar
    centreline, leaning ~72° to the arm (Rev 004; the pre-003a 0.68·C bolt
-   passed through the Ø108 idler wheel). MR ≈ 0.44.
+   passed through the Ø108 idler wheel). True kinematic MR ≈ 0.46 — the
+   theoretical maximum for any through-bolt mount (a/C = 0.46).
 
 ### Design risks (mitigations are mandatory, see blueprint §0)
 - **Belt derailment** — articulation changes belt path length (~6 mm through travel).
@@ -114,9 +117,9 @@ Everything is parametric on these.
 **Derived (all exact, from the .scad echoes):** `A = 222.2` · `P = B − 38 = 132` ·
 `C = 117.4` (arm length) · neutral droop `18.9°` · wheel travel `+30 / −27.5 mm` at ±15° ·
 shock station `a = 0.46·C = 54.0` (bar axis) · upper shock eye at `(±53, −9)` from hub centre ·
-keel centre `100` below hub centre (Ø12×1.5 tube) · motion ratio `MR ≈ 0.44` ·
+keel centre `100` below hub centre (Ø12×1.5 tube) · motion ratio `MR ≈ 0.46` (true kinematic) ·
 fork widths: trailing arm `60` inner / leading arm `75.7` inner · carrier planes `|z| = 74` (both pods) ·
-pivot axle stack `≈182` → **M16 cl.10.9 × 190, part-threaded** (both pods) · shock plane `|z| = 94` (outboard).
+pivot axle stack `≈182` → **M16 × 195, 45 mm thread one end** (both pods; smooth shank 150 clears all bushings, 4 mm margin) · shock plane `|z| = 94` (outboard).
 
 **Idler axle:** the 6302 bearings take a **Ø15 mm axle** — a 15×100 MTB thru-axle
 (M15×1.5) or a 15 mm hardened shaft + collars, per the sourcing notes.
@@ -139,10 +142,10 @@ Two per pod, standard "e-scooter / mini-moto rear shock" type
 | Stroke | ≥ 30 mm (uses ~24 mm at full ±15°; check short shocks' stroke in the listing) |
 | Eyelet bore | Ø10 mm (or with reducer bushings) |
 | Installed length | free length − ~10 mm sag — use this when positioning the upper tab |
-| Spring rate | `k [N/mm] ≈ 2.3 × (kg per pod, loaded)`; N/mm × 5.7 ≈ lb/in (Rev 004: MR ≈ 0.44 — the shock station sits at 0.46·C on the bar axis for wheel + flat-bar clearance) |
+| Spring rate | `k [N/mm] ≈ 2.1 × (kg per pod, loaded)`; N/mm × 5.7 ≈ lb/in (Rev 004: true kinematic MR ≈ 0.46 — shock station at 0.46·C on the bar axis for wheel + flat-bar clearance) |
 
 Spring quick table (weight per pod, vehicle loaded with rider):
-30 kg → ~390 lb/in · 40 kg → ~520 lb/in · 50 kg → ~655 lb/in · 60 kg → ~785 lb/in.
+30 kg → ~360 lb/in · 40 kg → ~480 lb/in · 50 kg → ~600 lb/in · 60 kg → ~720 lb/in.
 Buy one spring a step softer and one stiffer at the same time. The upper tab is welded
 *after* the shock is in hand, so exact length has tolerance — verify placement in the
 OpenSCAD model by setting `shock_ee`.
@@ -219,7 +222,7 @@ Torque: M8 cl.10.9 — 30 N·m · M10 — 60 N·m · M12 — 105 N·m · M16 piv
   guards untouched), spacer tube → 22×16, thrust washers → Ø30×Ø16×1.5, axle
   seats ream Ø22 H7. **(2) Fork gap re-measured: 140 mm front AND rear** (the
   120 front reading was wrong). Both pods are now identical — carriers at
-  |z| = 74, axle stack ≈182 → **M16 × 190** ×2, keel tube 148 + rod ≈172 ×2,
+  |z| = 74, axle stack ≈182 → **M16 × 195** ×2, keel tube 148 + rod ≈172 ×2,
   shocks outboard at |z| = 94. The 1 mm/side front belt-fit risk is gone
   (11 mm/side). All clearance guards PASS (spacer margin actually improves,
   Ø25 → Ø22).

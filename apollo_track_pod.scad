@@ -126,6 +126,21 @@
 //   - All clearance guards re-run and PASS. Steel order becomes: 40x6.35
 //     flat bar ~1 m + 50x6 ~0.5 m + 40x6 ~0.25 m — no plate stock, no
 //     cutting shop.
+//
+//  REV 004c DELTAS (2026-07-22, real hardware confirmed):
+//   - PIVOT BOLT: owner sourced M16 x 195, ONE end threaded 45 long (plain
+//     hex bolt, not a double-end stud). Smooth shank = 195-45 = 150, which
+//     covers the farthest bushing edge (145.85 from head) with 4 mm to
+//     spare — that margin falls inside the outboard-sleeve zone, not on a
+//     bushing, so it's safe. Nut fully engages (163-179 within the 150-195
+//     threaded zone), 16 mm proud. Needs only ONE M16 nylock per bolt (it
+//     has a head) — earlier shopping lists said 4 nylocks total; corrected
+//     to 2 (1/pod). Washer count (4, one each side) is unchanged.
+//   - BOSS TUBE: owner sourced 31 OD x 22 ID (was 32 OD spec) -> wall 4.5
+//     (was 5). Plate pivot hole 31.8 -> 30.8. Weld shelf in the 40-wide bar
+//     grows slightly, 4.0 -> 4.6 mm/side. No clearance-guard impact (boss
+//     OD isn't a guarded dimension). BOM/tools: Ø31 hole saw or Ø30 +
+//     hand-ream/file 0.8 mm oversize.
 // ============================================================================
 
 /* [Render] */
@@ -178,7 +193,8 @@ bushing_od = 22;    // SAE 841 flanged bushing 16×22×20 (Rev 003, was 20×25×
 boss_len   = 25;    // boss tube length (trailing bosses point IN, leading OUT)
 boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
                     // rectangles — was the Ø44 boss disc; guards use the same
-                    // half-width. 4 mm weld shelf beside the Ø32 boss tube.)
+                    // half-width. 4.6 mm weld shelf beside the Ø31 boss tube
+                    // (Rev 004c: tube sourced at 31 OD, was 32 — shelf grows.)
 keel_od    = 12;    // keel standoff tube OD (Rev 003a: was 16 — Ø12×1.5, ID 9)
 a_frac     = 0.46;  // shock bolt station as fraction of C (Rev 004: was 0.485 —
                     // the bolt moved onto the bar centreline (shock_y 18 -> 0),
@@ -274,7 +290,12 @@ echo(str("DERIVED:  P=", P, "  C=", C, "  neutral droop=", na, " deg"));
 echo(str("SHOCK:    lower eye station a=", a, "  upper eye at ", upP));
 echo(str("TRAVEL:   bump +", C*(sin(bump_max-na)+sin(na)),
          " / droop -", C*(sin(bump_max+na)-sin(na)), " mm at ±", bump_max, "°"));
-echo(str("MOTION RATIO ≈ ", a_frac*sin(theta), "   (spring k = wheel k / MR²)"));
+// true kinematic motion ratio: d(shock length)/d(wheel height), differentiated
+// numerically at ride height (the old (a/C)·sinθ approximation read ~5% low)
+function shock_len(ang) = norm(arm_pt([a, shock_y], ang) - upP);
+MR_true = (shock_len(-0.5) - shock_len(0.5))
+        / (arm_pt([C,0], 0.5)[1] - arm_pt([C,0], -0.5)[1]);
+echo(str("MOTION RATIO = ", abs(MR_true), " (kinematic)   (spring k = wheel k / MR²)"));
 echo(str("PIVOT STACK: centre spacer ≈ ", 2*sp_half, " · outboard sleeves ≈ ",
          sleeve_ln, " ×2 — all Ø22×3 tube, cut at the §9.3 dry-stack"));
 echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
@@ -329,7 +350,7 @@ keel_gaps = [
   ["keel to pivot washers Ø30",   abs(y_keel - pivot[1]) - 15 - keel_od/2],
   // Rev 003a: the lower shock through-bolt and the cross-brace share the
   // space between the fork plates with the Ø108 idler wheel — check both
-  ["shock bolt Ø10 to idler wheel", sqrt(pow(C - a, 2) + shock_y*shock_y) - D/2 - 5],
+  ["shock bolt Ø8 to idler wheel", sqrt(pow(C - a, 2) + shock_y*shock_y) - D/2 - 4],
   ["cross-brace to idler wheel",    sqrt(pow(C - 58, 2) + 6*6) - D/2],
   // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
   // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
@@ -348,15 +369,17 @@ module arm_plate_2d(slot=false){
   send = slot ? 18 : 0;
   difference(){
     translate([-22, -boss_disc/2]) square([22 + C + send + 26, boss_disc]);
-    circle(d=31.8);                             // pivot hole: the Ø32 boss tube
-                                                // passes THROUGH the plate and is
-                                                // welded on both faces (§9.2);
-                                                // the bushing seat Ø22 H7 is
+    circle(d=30.8);                             // pivot hole: the Ø31 boss tube
+                                                // (Rev 004c: owner sourced 31 OD,
+                                                // was 32) passes THROUGH the plate
+                                                // and is welded on both faces
+                                                // (§9.2); bushing seat Ø22 H7 is
                                                 // reamed in the TUBE after welding
     if (slot) hull(){ translate([C,0])    circle(d=G+0.4);
                       translate([C+25,0]) circle(d=G+0.4); }
     else      translate([C,0]) circle(d=G+0.4); // wheel axle bore
-    translate([a, shock_y]) circle(d=10);       // lower shock bolt Ø10 (on axis)
+    translate([a, shock_y]) circle(d=8.4);      // lower shock bolt M8 (on axis;
+                                                // Rev 004b: shock eyes measured Ø8)
   }
 }
 
@@ -379,19 +402,20 @@ module carrier_2d(){
 module tab_stub_2d(p){
   // Rev 004: upper shock tab = 40×6 flat-bar stub, ≈55 long, lap-welded onto
   // the carrier strip's OUTER face at hub level (17 mm lap onto the strip,
-  // clear of the axle slot). Ø10 eye pin hole at p. Sits ABOVE the coil-top
+  // clear of the axle slot). Ø8.4 eye pin hole at p (M8 pin — Rev 004b:
+  // shock eyes measured Ø8). Sits ABOVE the coil-top
   // line, so the spring corridor stays clear.
   s = p[0] > 0 ? 1 : -1;
   difference(){
     translate([s==1 ? 8 : -63, -20]) square([55, 40]);
-    translate(p) circle(d=10);
+    translate(p) circle(d=8.4);
   }
 }
 
 // ============================================================== components
 // Sheet-6 belt tensioner, local arm coords (pivot at origin, wheel end +x).
 // Motorcycle chain-adjuster style: welded lug across each fork-plate tip,
-// tapped adjuster block riding on the protruding axle end, M8 draw bolt
+// M6 EYE NUT riding on the protruding axle end (Rev 004a), M6 draw bolt
 // through the lug threading into the block. Head + jam nut bear on the lug's
 // REAR face -> advancing the bolt DRAWS the axle rearward through the slot;
 // belt tension (which pulls the axle forward) loads the bolt in tension.
@@ -409,22 +433,30 @@ module tensioner_hw(zi){
     // welded lug: upright standing on the plate outer face, weld all around
     color([0.30,0.36,0.48]) difference(){
       translate([xl, -13, zo]) cube([6, 26, (bz - zo) + 7]);
-      translate([xl-1, 0, bz]) rotate([0,90,0]) cylinder(h=8, d=8.6);
+      translate([xl-1, 0, bz]) rotate([0,90,0]) cylinder(h=8, d=6.6);
     }
-    // adjuster block on the protruding axle end — drilled ØG, tapped M8
-    color([0.45,0.45,0.48]) translate([C + tension_pos, 0, bz]) difference(){
-      cube([16, 22, 12], center=true);
-      cylinder(h=14, d=G+0.3, center=true);
-      rotate([0,90,0]) cylinder(h=18, d=6.8, center=true);
+    // 7 mm standoff ring between plate outer face and eye nut (sets the eye
+    // at the lug-hole height; cut from the Ø22×3 tube)
+    color([0.55,0.55,0.58]) translate([C + tension_pos, 0, zo])
+      difference(){ cylinder(h=7, d=22); cylinder(h=9, d=15.4); }
+    // M6 lifting EYE NUT on the protruding axle end (Rev 004a — replaces the
+    // drilled+tapped block: eye Ø20 over the Ø15 axle, threaded boss toward
+    // the lug; zero fabrication). DIN 582-style, eye d2=20, section s=8.
+    color([0.45,0.45,0.48]) translate([C + tension_pos, 0, bz]){
+      difference(){ cylinder(h=8, d=36, center=true);          // eye ring
+                    cylinder(h=10, d=20, center=true); }
+      translate([13,0,0]) rotate([0,90,0]) difference(){       // threaded boss
+        cylinder(h=10, d=13, center=true);
+        cylinder(h=12, d=5, center=true); }
     }
-    // M8 draw bolt: shank from the block, through the lug; jam nut + head
+    // M6 draw bolt: from the eye-nut boss, through the lug; jam nut + head
     color([0.55,0.55,0.58]){
       translate([C + tension_pos - 8, 0, bz]) rotate([0,90,0])
-        cylinder(h=(xl + 16) - (C + tension_pos - 8), d=7.8);
+        cylinder(h=(xl + 16) - (C + tension_pos - 8), d=5.8);
       translate([xl + 6.5,  0, bz]) rotate([0,90,0])
-        cylinder(h=6.5, d=14.6, $fn=6);   // jam nut against the lug
+        cylinder(h=5.2, d=11.5, $fn=6);   // M6 jam nut against the lug
       translate([xl + 13.5, 0, bz]) rotate([0,90,0])
-        cylinder(h=5.5, d=14.6, $fn=6);   // bolt head
+        cylinder(h=4.2, d=11.5, $fn=6);   // M6 bolt head
     }
   }
 }
@@ -450,8 +482,14 @@ module cat_tube(od, id, l){
   difference(){ cylinder(h=l, d=od); translate([0,0,-1]) cylinder(h=l+2, d=id); } }
 
 module part_catalog(name){
-  if (name == "pivot_axle"){                     // BOM 1 — M16 pivot bolt (Rev 003)
-    color(cSteel) rotate([0,90,0]) cat_bolt(16, 120, 45, 24, 10);
+  if (name == "pivot_axle"){                     // BOM 1 — M16×195 pivot bolt,
+                                                  // one end threaded 45 long
+                                                  // (Rev 004c: owner's actual bolt;
+                                                  // smooth shank 150 clears all
+                                                  // 4 bushings with 4 mm margin —
+                                                  // only ONE nylock needed, headed
+                                                  // bolt, not a double-end stud)
+    color(cSteel) rotate([0,90,0]) cat_bolt(16, 150, 45, 24, 10);
     color(cSteel) translate([60,-45,0]) cat_hexnut(24, 16, 14.8);
     color(cSteel) for (i=[0:1]) translate([110+i*45,-45,0]) cat_washer(30,17,3);
   } else if (name == "arm_plates"){              // BOM 2 — one of each profile
@@ -459,8 +497,9 @@ module part_catalog(name){
                    translate([0,95,0]) linear_extrude(plate_t) arm_plate_2d(false); }
   } else if (name == "carrier_plates"){          // BOM 3
     color(cSteel) linear_extrude(carrier_t) carrier_2d();
-  } else if (name == "boss_tube"){               // BOM 4 — 32×5 tube, ream ID 22 H7
-    color(cSteel) for (i=[0:1]) translate([i*55,0,0]) cat_tube(32,22,25);
+  } else if (name == "boss_tube"){               // BOM 4 — 31×4.5 tube (Rev 004c,
+                                                  // was 32×5), ream ID 22 H7
+    color(cSteel) for (i=[0:1]) translate([i*55,0,0]) cat_tube(31,22,25);
   } else if (name == "bushing"){                 // BOM 5 — flanged, bronze 16×22×20
     color(cBronze) for (i=[0:1]) translate([i*45,0,0]){
       cat_tube(22,16,20); cat_washer(28,16,3); }
@@ -474,7 +513,7 @@ module part_catalog(name){
     shock3d([0,0],[150,0],0);
   } else if (name == "shock_mounts"){            // BOM 9 — tab + sleeve
     color(cSteel) linear_extrude(6) translate([-8,20,0]) tab_stub_2d(upP);
-    color(cSteel) translate([55,-15,0]) cat_tube(15,10,45);
+    color(cSteel) translate([55,-15,0]) cat_tube(15,9,45);
   } else if (name == "fork_hw"){                 // BOM 10 — M8 bolt + nuts
     color(cSteel) rotate([0,90,0]) cat_bolt(8, 12, 18, 13, 5.5);
     color(cSteel) translate([20,-22,0]) cat_hexnut(13, 8, 6.9);
@@ -483,13 +522,15 @@ module part_catalog(name){
     color(cSteel) rotate([0,90,0]) cat_tube(keel_od,9,148);
     color(cSteel) translate([0,30,0]) rotate([0,90,0]) cat_threads(8,172);
     color(cSteel) for (i=[0:3]) translate([20+i*28,55,0]) cat_hexnut(13,7,6.9);
-  } else if (name == "draw_bolt"){               // BOM 12 — bolt + jam + block
-    color(cSteel) rotate([0,90,0]) cat_bolt(8, 4, 52, 13, 5.5);
-    color(cSteel) translate([25,-24,0]) cat_hexnut(13, 6.5, 6.9);
-    color([0.45,0.45,0.48]) translate([62,-24,0]) difference(){
-      cube([16,22,12], center=true);
-      cylinder(h=14, d=G+0.3, center=true);
-      rotate([0,90,0]) cylinder(h=18, d=6.8, center=true); }
+  } else if (name == "draw_bolt"){               // BOM 12 — bolt + jam + eye nut
+    color(cSteel) rotate([0,90,0]) cat_bolt(6, 4, 52, 10, 4);
+    color(cSteel) translate([25,-24,0]) cat_hexnut(10, 5, 5.2);
+    color([0.45,0.45,0.48]) translate([62,-24,0]){
+      difference(){ cylinder(h=8, d=36, center=true);
+                    cylinder(h=10, d=20, center=true); }
+      translate([0,-16,0]) rotate([90,0,0]) difference(){
+        cylinder(h=10, d=13, center=true);
+        cylinder(h=12, d=5, center=true); } }
   } else if (name == "hardware"){                // BOM 14 — assortment
     color(cSteel){ cat_hexnut(13,8,6.9);
       translate([24,4,0])  cat_hexnut(17,10,8.8);
@@ -502,11 +543,14 @@ module part_catalog(name){
       translate([0,0,5]) cylinder(h=2.5, d=11, $fn=6);
       translate([0,0,7.5]) cylinder(h=3.5, d1=6.5, d2=4.5);
       translate([0,0,11.5]) sphere(d=5); }
-  } else if (name == "idler_axle"){              // BOM 16 — 15x100 thru-axle
-    color(cSteel) rotate([0,90,0]){
+  } else if (name == "idler_axle"){              // BOM 16 — 15x148 thru-axle
+    color(cSteel) rotate([0,90,0]){              // (MEROCA, 9 mm M15x1.5 tip)
       cylinder(h=5, d=21);                       // low-profile head
-      translate([0,0,5]) cylinder(h=83, d=15);
-      translate([0,0,88]) cat_threads(15, 12); }
+      translate([0,0,5]) cylinder(h=139, d=15);
+      translate([0,0,144]) cat_threads(15, 9); }
+    color(cSteel) translate([30,-25,0]) cat_hexnut(22, 6, 14.8);  // M15x1.5 nut
+    color(cSteel) translate([60,-25,0]) cat_tube(22,15.5,35);     // filler sleeve
+    color(cSteel) translate([95,-25,0]) cat_tube(22,15.5,8.85);   // centering sleeve
   } else if (name == "reused"){                  // stock sprocket/idler/belt
     sprocket();
     translate([160,0,0]) idler_wheel();
@@ -577,7 +621,7 @@ module arm3d(zi, slot, ang, szs){
     bz0 = slot ? zi + plate_t - boss_len : zi;   // boss inner end |z|
     for (s=[1,-1]) scale([1,1,s]){
       color([0.30,0.36,0.48]) difference(){
-        translate([0,0,bz0]) cylinder(h=boss_len, d=32);
+        translate([0,0,bz0]) cylinder(h=boss_len, d=31);   // Rev 004c: 31 OD
         translate([0,0,bz0-1]) cylinder(h=boss_len+2, d=bushing_od); }
       // flanged bronze bushing: body 20 in the boss, flange Ø28×3 proud at the
       // thrust face (trailing: inboard end; leading: outboard end)
@@ -593,17 +637,36 @@ module arm3d(zi, slot, ang, szs){
     color([0.30,0.36,0.48]) translate([28, -18, -zi]) cube([30, 12, 2*zi]);
     // shock through-bolt + outboard spacer sleeve
     color([0.55,0.55,0.58]) translate([a, shock_y, -(zi+plate_t)-4])
-      cylinder(h=(zi+plate_t)+4 + (sz-5), d=9.8);
+      cylinder(h=(zi+plate_t)+4 + (sz-5), d=7.8);
     color([0.55,0.55,0.58]) translate([a, shock_y, szs>0 ? zi+plate_t : -(sz-5)])
       difference(){ cylinder(h=(sz-5)-(zi+plate_t), d=15);
-                    cylinder(h=sz, d=10); }
-    // wheel + axle (trailing axle runs longer — it carries the adjuster blocks)
+                    cylinder(h=sz, d=8.5); }
+    // wheel + MEROCA 15x148 thru-axle with its full spacer stack (Rev 004a).
+    // Only the tip 9 mm is threaded, so cut-to-fit filler sleeves place the
+    // M15x1.5 nut exactly on the thread. Head at -z, nut at +z.
     wx = slot ? C + tension_pos : C;
+    z_head = slot ? -(zi + plate_t + 7 + 8) : -(zi + plate_t);  // shank start
     translate([wx, 0, 0]){
       translate([0,0, ex* (szs>0 ? 0 : 0)]) idler_wheel();
-      color([0.55,0.55,0.58])
-        cylinder(h = slot ? 2*(zi+plate_t+18) : 2*(zi+plate_t)+18,
-                 d=G, center=true);
+      color([0.55,0.55,0.58]){
+        translate([0,0,z_head]) cylinder(h=148, d=G);           // Ø15 shank
+        translate([0,0,z_head-3]) cylinder(h=3, d=21);          // head flange
+      }
+      // washers plate->bearing inner race (trailing) / centering sleeves (leading)
+      color([0.8,0.8,0.82]) for (s=[1,-1]) scale([1,1,s])
+        if (slot) translate([0,0,29])
+          difference(){ cylinder(h=1, d=26); cylinder(h=3, d=15.4, center=true); }
+        else translate([0,0,29])
+          difference(){ cylinder(h=8.85, d=22); cylinder(h=20, d=15.4, center=true); }
+      // filler sleeve + washer + M15x1.5 nut on the +z end
+      fz0 = slot ? zi + plate_t + 7 + 8 : zi + plate_t;         // stack end |z|
+      fln = (z_head + 148 - 8.5) - fz0;                         // filler length
+      color([0.55,0.55,0.58]) translate([0,0,fz0])
+        difference(){ cylinder(h=fln, d=22); cylinder(h=fln+2, d=15.4, center=true); }
+      color([0.8,0.8,0.82]) translate([0,0,fz0+fln])
+        difference(){ cylinder(h=1.5, d=28); cylinder(h=4, d=15.4, center=true); }
+      color([0.45,0.45,0.48]) translate([0,0,fz0+fln+1.5])
+        difference(){ cylinder(h=6, d=24, $fn=6); cylinder(h=8, d=15, center=true); }
     }
     // Sheet-6 tensioner hardware on the slotted (trailing) arm
     if (slot) tensioner_hw(zi);
@@ -709,7 +772,7 @@ if (render_mode == "plates"){
     cylinder(h=H, d=D, center=true);                           // ghost wheel
   flag("AXLE IN SLOT (25 TAKE-UP)",
        [C + tension_pos, -8, zo+2],  [C-52, -52, zo+26]);
-  flag("BLOCK ON AXLE END (TAP M8)",
+  flag("M6 EYE NUT ON AXLE END (Ø20 EYE)",
        [C + tension_pos, 9, zo+13],  [C-52, 42, zo+26]);
   flag("WELDED LUG",
        [C+37, -12, zo+9],            [C+50, -34, zo+26]);
