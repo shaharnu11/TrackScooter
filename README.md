@@ -1,12 +1,12 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-**Rev 004c · 2026-07-22 · Status: every plate is off-the-shelf rectangular flat bar — straight cuts + drilled holes, no laser/waterjet (arm bars 40×¼″, carrier strips 50×6 + tab stubs 40×6); shock geometry a = 0.46·C on the bar axis, θ = 72°, true kinematic MR ≈ 0.46; pivot bolt confirmed M16×195 (45 mm thread one end, owner's actual part — only 1 nylock/bolt needed); boss tube confirmed 31 OD × 22 ID; all collision guards PASS; remaining to measure: guide-lug height only**
+**Rev 005c · 2026-07-25 · Status: drive sprocket redesigned around the REAL belt (Yonggu, centre pyramid-pair lugs) — printed ABS wheel on the Ø165×35 hub rim: 11T, rib 18×16.5 riding the 22 mm lug gap (lug inner face measured ~vertical → 10T's 7 mm headroom failed; 16.5 mm headroom clears the 15 mm lugs everywhere by 1.5), T-teeth 51×20 with full-depth blades beside the rim, cord circle Ø210; belt solve A = 160.2 (idlers ride the lug tips); suspension re-tuned to suit (drop 38→55, shock a = 0.38·C, MR 0.438 ≈ the 0.435 the purchased springs were sized for; keel rehomed below the arm bar); all 16 collision guards PASS; before printing: drum circumference must tape 518 mm after the fill**
 
 Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
 between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
 into an independently articulating suspension: a central pivot below the drive hub,
 a leading and a trailing arm, and two coil-over shocks. Each lower idler gets
-**+30 / −27.5 mm** of independent vertical travel instead of zero.
+**+22.6 / −18.9 mm** of independent vertical travel instead of zero (Rev 005c geometry).
 
 ---
 
@@ -58,10 +58,14 @@ The stock pod's rigid internal frame is removed and replaced by:
    the belt's 118 mm width (15 mm/side),
    so **the carrier can never touch the track at any articulation**. Boxed together
    by the hub axle (top), the pivot axle (middle), and the **M8 keel standoff
-   between the sprocket's swept disc and the pivot boss** (bottom).
+   just below the arm bar** (bottom — Rev 005b: the old home between the sprocket's
+   swept disc and the pivot boss closed when the printed sprocket grew the swept
+   radius to the rib top).
 2. **Central pivot axle** — M16×195 bolt, threaded 45 mm on one end only (Rev 004c, owner's actual part; was M20×1.5) through the carrier tongues,
-   38 mm above the idler axle line (raised from 20 in two steps for belt clearance;
-   38 is near the max — the keel window closes at 42).
+   **55 mm above the idler axle line** (Rev 005b/c: 38 → 55 — the deeper arm V
+   lengthens the arms past the idler radius on the shorter Rev 005 belt solve;
+   the old drop ≤ 42 cap was the keel window, gone since the keel moved; the
+   new cap is the pivot centre spacer vs the 11T rib sweep, 5.0 mm at 55, guarded).
 3. **Leading + trailing arms** — fork weldments (2 plain 40 × ¼″ flat-bar plates each — Rev 004, rectangles only) nested on the
    pivot like scissors; 4 flanged SAE 841 bronze bushings (Ø16×Ø22×20), one in a
    25 mm boss tube per fork plate — trailing bosses point inboard, leading bosses
@@ -76,11 +80,11 @@ The stock pod's rigid internal frame is removed and replaced by:
    Rev 002c/003 — with the measured 4 mm legs the carriers sit at 74, leaving
    only 15 mm inboard of them, so the Rev 002 inboard placement doesn't fit):
    upper eye on a 40×6×55 tab stub lap-welded to the carrier OUTER face (eye at
-   (±53, −9) from the hub centre), lower eye on an M8 through-bolt (eyes measured Ø8 — Rev 004b) + ≈45 mm
-   spacer sleeve through both arm-fork plates at a = 0.46·C = 54.0 on the bar
-   centreline, leaning ~72° to the arm (Rev 004; the pre-003a 0.68·C bolt
-   passed through the Ø108 idler wheel). True kinematic MR ≈ 0.46 — the
-   theoretical maximum for any through-bolt mount (a/C = 0.46).
+   (±70, −2) from the hub centre — Rev 005c), lower eye on an M8 through-bolt (eyes measured Ø8 — Rev 004b) + ≈45 mm
+   spacer sleeve through both arm-fork plates at **a = 0.38·C = 36.9** on the bar
+   centreline (Rev 005b/c: 0.46 → 0.38 — the shorter arm put 0.46·C inside the
+   idler wheel; 0.38 clears it by 2.2 mm (guarded) AND lands the true kinematic
+   **MR = 0.438**, matching the ~0.435 the owner's purchased springs were sized for).
 
 ### Design risks (mitigations are mandatory, see blueprint §0)
 - **Belt derailment** — articulation changes belt path length (~6 mm through travel).
@@ -93,33 +97,35 @@ The stock pod's rigid internal frame is removed and replaced by:
 
 ---
 
-## Sheet-0 datums — measured 2026-07-12 (remaining blanks: F, lug profile, J)
+## Sheet-0 datums — updated 2026-07-24 (Rev 005b: belt + hub measured for real)
 
 Everything is parametric on these.
 
 | Datum | What | Typical* | Measured |
 |---|---|---|---|
-| track | Belt: cord-line circumference × width × pitch × links | — | **1080 × 118 mm, 60 mm pitch, 18 links** (2.1 kg) |
-| A | Idler axle centre-to-centre | 230–300 | **222.2 — solved from the belt cord line** (10T × 60 pitch = cord Ø191, 5.5 above the Ø180 face) |
+| track | Belt: cord-line circumference × width × pitch × links | — | **1080 × 118 mm, 60 mm pitch, 18 links** (2.1 kg, Yonggu) — pitch **confirmed by direct measurement 2026-07-24** |
+| lugs | Drive lugs (they are NOT edge guide rows) | — | **Pyramid PAIRS astride the centreline**: 22 mm gap between the pair, each 15 tall, base 25 along the belt, pair spans ~105 across |
+| A | Idler axle centre-to-centre | 230–300 | **160.2 — solved** (cord Ø210 at the sprocket; idlers ride the lug TIPS: wrap radius D/2 + 15 + 6) |
 | B | Hub centre height above idler axle line | 150–200 | **170** |
 | D | Idler wheel OD | 90–120 | **108** (WJ wheel) |
 | G | Idler bearing bore | 15–20 | **15** — bearings are **6302-2RS (15×42×13)**; caliper read 14.86 = 15 nominal |
-| sprocket | Drive sprocket OD × teeth | — | **180 × 10T** (hub motor inside) |
+| sprocket | Printed drive sprocket (Rev 005c) | — | **Drum Ø165 × 35 wide** (ABS fill flush in the tire well) + rib 18×**16.5** + **11 T-teeth** (51 across × 20 thick, blades to Ø168); belt face Ø198, cord Ø210, tooth marks every **56.6 mm on the rib top** (32.7°). 16.5 headroom clears the 15 lugs by 1.5 everywhere (lug inner face measured ~vertical → the 10T/7 mm option failed) |
 | fork | Fork-leg inner gap (front / rear) | — | **140 / 140** (re-measured 2026-07-20, Rev 003 — was 120/140) — leg thickness **4** |
 | axle | Hub-motor axle | — | **Ø10, flatted, static** — carrier plates slot onto it (torque-arm style) |
-| F | Belt inner width between guide lugs | 60–90 | **62 derived** (H + 4, matched wheel/belt set) |
-| lug_h / lug_w | Guide lug height / row width | — | ___ (20 / 18 conservative — owner estimates 10–20; **measure**) |
+| ~~F~~ | ~~Belt inner width between guide lugs~~ | — | **Superseded Rev 005**: there is no clear centre channel — the lug pair straddles the centre with only a 22 mm gap; idlers ride the lug tips |
+| lug_h | Drive-lug (pyramid) height | — | **15 measured** (2026-07-24; was 20 conservative) |
 | H | Idler hub width | 40–60 | **58** (57.85) |
 | T | Belt carcass thickness | 8–14 | **~12** (confirmed) |
 
 \* sanity-check ranges only, never for cutting.
 
-**Derived (all exact, from the .scad echoes):** `A = 222.2` · `P = B − 38 = 132` ·
-`C = 117.4` (arm length) · neutral droop `18.9°` · wheel travel `+30 / −27.5 mm` at ±15° ·
-shock station `a = 0.46·C = 54.0` (bar axis) · upper shock eye at `(±53, −9)` from hub centre ·
-keel centre `100` below hub centre (Ø12×1.5 tube) · motion ratio `MR ≈ 0.46` (true kinematic) ·
-fork widths: trailing arm `60` inner / leading arm `75.7` inner · carrier planes `|z| = 74` (both pods) ·
-pivot axle stack `≈182` → **M16 × 195, 45 mm thread one end** (both pods; smooth shank 150 clears all bushings, 4 mm margin) · shock plane `|z| = 94` (outboard).
+**Derived (all exact, from the .scad echoes, Rev 005c):** `A = 160.2` · `P = B − 55 = 115` ·
+`C = 97.2` (arm length) · neutral droop `34.5°` · wheel travel `+22.6 / −18.9 mm` at ±15° ·
+shock station `a = 0.38·C = 36.9` (bar axis) · upper shock eye at `(±70, −2)` from hub centre ·
+keel centre `145` below hub centre (Ø12×1.5 tube, below the arm bar) · motion ratio `MR = 0.438` (true kinematic) ·
+carrier planes `|z| = 74` (both pods) · pivot axle stack `≈182` → **M16 × 195, 45 mm thread one end**
+(both pods; smooth shank 150 clears all bushings, 4 mm margin) · shock plane `|z| = 94` (outboard) ·
+sprocket: 11 stations × 32.7°, rib top Ø198.1, cord Ø210.1.
 
 **Idler axle:** the 6302 bearings take a **Ø15 mm axle** — a 15×100 MTB thru-axle
 (M15×1.5) or a 15 mm hardened shaft + collars, per the sourcing notes.
@@ -142,7 +148,7 @@ Two per pod, standard "e-scooter / mini-moto rear shock" type
 | Stroke | ≥ 30 mm (uses ~24 mm at full ±15°; check short shocks' stroke in the listing) |
 | Eyelet bore | Ø10 mm (or with reducer bushings) |
 | Installed length | free length − ~10 mm sag — use this when positioning the upper tab |
-| Spring rate | `k [N/mm] ≈ 2.1 × (kg per pod, loaded)`; N/mm × 5.7 ≈ lb/in (Rev 004: true kinematic MR ≈ 0.46 — shock station at 0.46·C on the bar axis for wheel + flat-bar clearance) |
+| Spring rate | `k [N/mm] ≈ 2.1 × (kg per pod, loaded)`; N/mm × 5.7 ≈ lb/in (Rev 005c: true kinematic MR = 0.438 at a = 0.38·C — the owner's purchased "100 kg / 8.5 mm" units were sized for ~0.435 and still fit) |
 
 Spring quick table (weight per pod, vehicle loaded with rider):
 30 kg → ~360 lb/in · 40 kg → ~480 lb/in · 50 kg → ~600 lb/in · 60 kg → ~720 lb/in.
@@ -233,16 +239,46 @@ Torque: M8 cl.10.9 — 30 N·m · M10 — 60 N·m · M12 — 105 N·m · M16 piv
   4. **Cross-brace vs idler wheel:** the brace at a±25 also passed through the wheel — moved inboard to x = 28..58 (7 mm clear, guarded).
   5. **Keel vs arm plates:** the keel at −104 ran through the Ø64 plate boss discs (they span −100..−164). Plate boss disc slimmed to **Ø44**, keel tube **Ø16 → Ø12×1.5**, raised to −100 — 4 mm to the sprocket disc and 4 mm to the boss disc, both articulation-invariant (the disc is centred on the pivot), guarded. Shock-bolt Ø30 lobe added to the plate profile (the Ø10 hole was <1 mm from the tapered edge at the new station).
 - **Rev 004 (flat-bar edition)** (2026-07-21, owner request) — **every plate becomes off-the-shelf rectangular flat bar**: straight cuts + drilled holes only, no laser/waterjet, ~$15–35 of steel. **Arms:** plain 40 × ¼″ bars (trailing ≈185, leading ≈166). To suit the 40 mm width: lower shock bolt onto the bar centreline (was y = +18), station a → **0.46·C = 54.0** (4.4 mm wheel gap, guarded), **θ = 72°** (coil clears the carrier strip by 5.9 mm, guarded), cross-brace at y −18..−6, upper eyes at **(±53, −9)**; MR ≈ 0.44, springs ≈2.3×kg/pod (~655 lb/in worked example — the ordered 100 kg/8.5 mm shocks still fit). **Carriers:** 50 × 6 strip ≈225 (axle slot, M8, pivot, keel all on centreline) + two 40 × 6 × 55 tab stubs lap-welded on the OUTER face at hub level. Side benefits: keel-to-arm gap 4 → 6 mm; no tip rounding needed (bar half-width 20 < r34 lug wrap). All guards PASS. Backup of Rev 003a kept at `../TrackScooter-backup-rev003a`.
+- **Rev 005 (real-belt sprocket)** (2026-07-24) — belt photographed + measured by the owner:
+  the drive lugs are **pyramid pairs astride the centreline** (22 mm gap, 15 tall, base 25,
+  pair ~105 across), not edge guide rows — the F = 62 "clear channel" never existed. The
+  matched kit drive wheel (Ø16 bore, Ø188 over teeth) works by running an 18-wide rib through
+  the gap. Sprocket model rebuilt: belt face rides a printed rib, cord circle = integer
+  stations × 60 pitch (this is a hard constraint, not a choice); idler wrap radius corrected
+  to the lug tips. Keel rehomed below the arm bar (its old window closed).
+- **Rev 005b (kit-replica wheel + suspension re-tune)** (2026-07-24) — hub rim measured
+  **35 wide** (was assumed 60): the lug pair overlaps the rim by only 6.5 mm/side, so the
+  printed sprocket becomes a near-copy of the kit wheel on the Ø165 drum: **10T × 36°,
+  rib 18 × 7, T-teeth 51 × 20 (root +5/side), blades to Ø149 in the free air beside the
+  rim, no drum pockets**. The 1080 belt around the corrected (bigger) wraps solves
+  A = 178 (was 222–260), shortening the arms — fixed keeping the owner's Ø108 idlers,
+  belt, shocks and springs: **drop 38 → 60** (old ≤42 cap was the keel window, gone),
+  **a = 0.46·C → 0.38·C** (bolt clears the wheel by 8.6 mm; MR lands 0.436 ≈ the 0.435
+  the springs were bought for), **cross-brace 28..58 → 20..50**. All 15 guards PASS.
+  Explainer diagrams (to scale): https://claude.ai/code/artifact/2c1f69e1-ae04-409e-b36e-10e408f62c0e
+- **Rev 005c (11-tooth wheel — lug inner face is vertical)** (2026-07-25) — owner measured
+  the lug's inner face at ~90°: the full 15 mm height arrives immediately, so the 10T
+  wheel's 7 mm of headroom over the rim fails on contact. Sprocket: **11T × 32.7°, rib
+  18 × 16.54** (face Ø198.1, cord Ø210.1, tooth marks every 56.6 on the rib top, blades
+  to Ø168) — 16.5 mm headroom clears the lugs everywhere by 1.5. Re-solve A = 160.2;
+  re-tune: **drop 60 → 55** (the 11T rib sweeps r = 99; the pivot centre spacer clears
+  it by 5.0 — new guard added), a = 0.38·C (bolt clears wheel 2.2), **cross-brace
+  20..50 → 17..41** (clears 2.5). MR = 0.438 — purchased springs still fit. All 16
+  guards PASS.
 
 ## Open items
 
 - [x] Take Sheet-0 measurements — track, A (solved), B, D, G, H, sprocket 10T, fork gaps, axle
 - [x] Measure: **fork leg thickness** — 4 mm (2026-07-13; axle/keel/shock placement updated, Rev 002c)
 - [x] Re-measure fork gaps — **140 front and rear** (2026-07-20, Rev 003; belt-fit risk closed, 11 mm/side)
-- [ ] Measure: **lug height** (`lug_h`, assumed 20) — also needed to close the one **unguarded** clearance: guide-lug tips on the *diagonal* belt runs vs the arm-plate top edges and shock hardware near full bump (the guards cover the bottom run only; at lug_h = 20 this is tight on paper, at lug_h ≤ 12 it clears comfortably)
-- [x] Plug datums into `.scad`, confirm fit (all clearance checks PASS at full bump)
-- [ ] Export final `plates.dxf` (leg_t confirmed; re-check after lug_h is measured)
-- [x] Shock length: B=170 → **150 mm eye-to-eye, 30 mm stroke (not longer)**; weigh corner load → pick spring rate (~330 lb/in at 40 kg/pod)
+- [x] Measure: **lug height** — 15 mm, base 25, pitch 60 confirmed, pair spans ~105, gap 22 (2026-07-24, Rev 005/005b)
+- [x] Plug datums into `.scad`, confirm fit (all 15 clearance checks PASS at full bump — Rev 005b)
+- [x] Lug height at 6.5 mm from its inner edge — **measured ~15 (inner face vertical) → FAILED the 10T check → resolved by going 11T** (Rev 005c: 16.5 mm headroom, no trimming needed)
+- [ ] **Before printing the sprocket:** after the ABS fill, drum circumference must tape **518 mm** (= Ø165). Motor-casing clearance considered OK (owner: air gap between rim and motor) — one eyeball check with the print in hand.
+- [ ] Print the Rev 005c sprocket halves (ABS, axis-vertical orientation, teeth as continuous layer planes) + rim-edge bolts per the Rev 004c discussion
+- [ ] Kit reference wheel (Ø16 bore, Ø188) arriving by post — when it lands, sanity-compare its tooth spacing/shape against the print
+- [ ] Export final `plates.dxf` (re-cut list changed in Rev 005b: brace stations moved, drop 60 changes plate hole layout — re-render `plates` mode first)
+- [x] Shock length: B=170 → **150 mm eye-to-eye, 30 mm stroke (not longer)**; springs as purchased fit Rev 005b (MR 0.436)
 - [ ] Order idler axles: 15 mm (thru-axle or shaft + collars)
-- [x] Bake real numbers into the blueprint sheets (artifact updated to Rev 002)
-- [ ] Confirm vehicle-side details: total loaded weight, 2 vs 4 pods
+- [ ] Blueprint sheets (web artifact + local HTML/PDF) still draw **Rev 004c geometry** — Rev 005b rev-slip added to the local HTML; full sheet redraw pending
+- [ ] Confirm vehicle-side details: total loaded weight, 2 vs 4 pods (motors: 250 W × 3-speed each — startup assessment 2026-07-25: fine on flat/firm, marginal on soft/slopes)

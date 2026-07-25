@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Apollo Track Pod — Split-Frame Suspension Blueprint (Rev 004c)</title>
+<title>Apollo Track Pod — Split-Frame Suspension Blueprint (Rev 004c sheets + Rev 005b revision slip)</title>
 <style>
   :root{
     --paper:#F6F7F3;
@@ -245,6 +245,24 @@
     <p class="sub">Converts a rigid rubber-track pod on a hub-motor scooter (motor inside the Ø180 10T sprocket on a static Ø10 axle between fork legs, two bearing-mounted lower idlers, lugged rubber band) into an independently articulating suspension: a central pivot below the drive hub, a leading and a trailing arm, and two coil-over shocks. Rev 002c: every load-bearing dimension is measured and baked in as a number — the only open measurement left is the guide-lug height.</p>
   </div>
 </header>
+
+<!-- ======================= REV 005b REVISION SLIP ======================= -->
+<section id="rev005b-slip" style="border:3px solid #b3541e; border-radius:6px; padding:16px 20px; margin:18px 0; background:rgba(179,84,30,.06); page-break-inside:avoid;">
+  <h2 style="margin-top:0">⚠ REVISION SLIP — Rev 005c (2026-07-25) supersedes several values drawn on these sheets</h2>
+  <p>The belt and hub were measured for real on 2026-07-24/25 (belt: Yonggu, <b>pyramid-pair drive lugs astride the centreline</b> — 22&nbsp;mm gap, 15 tall with a near-vertical inner face, base 25, pair ≈105 across; hub rim: <b>Ø165 × 35 wide</b>). The sheets below still draw <b>Rev 004c</b> geometry. The model of record is <code>apollo_track_pod.scad</code> (Rev 005c, all 16 clearance guards PASS). Values superseded on these sheets:</p>
+  <table style="border-collapse:collapse; font-size:14px;">
+    <tr><th style="text-align:left; padding:4px 12px 4px 0;">Item</th><th style="text-align:left; padding:4px 12px;">Sheets say (004c)</th><th style="text-align:left; padding:4px 12px;">Rev 005c actual</th></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Drive sprocket</td><td style="padding:4px 12px;">Ø180 × 10T steel, belt face on Ø180</td><td style="padding:4px 12px;"><b>Printed ABS wheel</b>: drum Ø165×35 (fill), rib 18×16.5, <b>11</b> T-teeth 51×20, blades to Ø168; belt face Ø198, cord Ø210; tooth marks every 56.6 on the rib top (32.7°). 16.5 headroom clears the 15 lugs by 1.5 (lug inner face ~vertical killed the 10T option)</td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Idler spacing A</td><td style="padding:4px 12px;">222.2</td><td style="padding:4px 12px;"><b>160.2</b> (idlers ride the lug tips — no F=62 channel exists)</td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Pivot drop</td><td style="padding:4px 12px;">38 (keel window caps at 42)</td><td style="padding:4px 12px;"><b>55</b> (keel moved below the arm bar; new cap = pivot spacer vs the 11T rib sweep, 5.0 mm, guarded)</td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Shock station / MR</td><td style="padding:4px 12px;">a = 0.46·C = 54.0, MR ≈ 0.46</td><td style="padding:4px 12px;"><b>a = 0.38·C = 36.9, MR = 0.438</b> (springs as purchased)</td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Keel centre</td><td style="padding:4px 12px;">100 below hub</td><td style="padding:4px 12px;"><b>145 below hub</b> (below the arm bar, 4 mm off its edge)</td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Cross-brace</td><td style="padding:4px 12px;">x = 28..58</td><td style="padding:4px 12px;"><b>x = 17..41</b></td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Wheel travel</td><td style="padding:4px 12px;">+30 / −27.5</td><td style="padding:4px 12px;"><b>+22.6 / −18.9</b> at ±15°</td></tr>
+    <tr><td style="padding:4px 12px 4px 0;">Arm length C / droop</td><td style="padding:4px 12px;">117.4 / 18.9°</td><td style="padding:4px 12px;"><b>97.2 / 34.5°</b></td></tr>
+  </table>
+  <p style="margin-bottom:0">Sprocket build + pre-print checks (to-scale diagrams): <a href="https://claude.ai/code/artifact/2c1f69e1-ae04-409e-b36e-10e408f62c0e">Rev 005c drive-wheel plan</a>. Full README revision history: Rev 005 / 005b / 005c entries.</p>
+</section>
 
 <!-- ============================================================ -->
 <section id="overview">

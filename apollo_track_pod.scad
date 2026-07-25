@@ -141,6 +141,63 @@
 //     grows slightly, 4.0 -> 4.6 mm/side. No clearance-guard impact (boss
 //     OD isn't a guarded dimension). BOM/tools: Ø31 hole saw or Ø30 +
 //     hand-ream/file 0.8 mm oversize.
+//
+//  REV 005 DELTAS (2026-07-24, printed sprocket matched to the real belt):
+//   - Belt photos (Yonggu) show the drive lugs are PYRAMID PAIRS astride the
+//     centreline with a 22 mm gap between them — not edge guide-lug rows.
+//     The kit's Ø16-bore drive wheel (Ø188 over teeth) works by running an
+//     18-wide centre rib through that gap (teeth: 15 thick, T-overhangs to
+//     51 across). Owner prints the same geometry onto the hub: ABS fill of
+//     the rim well flush with the Ø165 hub body (sprocket_od 180 -> 165,
+//     MEASURED) + 18-wide centre rib + T-teeth.
+//   - The belt rides ON THE RIB TOP, so the cord circle is Ø165 + 2*rib_h
+//     + 12, and rib_h is NOT a free choice — an integer number of 60-pitch
+//     stations must fit: 11T -> rib 16.54 (needs pyramid lugs <= ~15), or
+//     12T -> rib 26.09 (safe for lugs to ~24). rib_h is now DERIVED from
+//     sprocket_teeth. Kit wheel is 10T because its body is only ~Ø140.
+//   - Idler cord radius decoupled from the sprocket (ri_belt now uses
+//     lug_h + T/2: the 58-wide idler hub rides the pyramid TIPS — the F=62
+//     clear channel assumed in Rev 001 does NOT exist on this belt).
+//   - KNOWN CASUALTY: the bigger swept sprocket (rib top r=99 at 11T,
+//     r=108.6 at 12T) eats the keel window (-90..-110). Keel guards now
+//     reference the rib-top radius and will WARN/collide until the keel is
+//     rehomed — decision pending.
+//   - MEASURED 2026-07-24 (owner): pitch 60 CONFIRMED, pyramid lugs 15 tall,
+//     base 25 along the belt -> 11T LOCKED (rib 16.54 clears lug tips by
+//     1.5). Pocket between stations = 35, tooth thickened 15 -> 20 for the
+//     ABS root (15 mm play left). lug_h 20 -> 15 measured.
+//   - Keel rehomed BELOW the arm bar (old window closed).
+//
+//  REV 005b DELTAS (2026-07-24, hub rim measured 35 wide — kit-replica wheel):
+//   - Rim is 35 wide, not 60: the pyramid pair (inner edges +-11, span ~105)
+//     overlaps the rim by only 6.5 mm/side — the lugs pass BESIDE the hub.
+//     So the belt meshes at the kit wheel's own Ø191 cord circle: 10T, rib
+//     18 x 7, T-teeth (51 across, 20 thick) whose outboard blades drop to
+//     full lug depth (tips sweep Ø149) in the free air past the rim edge.
+//     No drum pockets needed. sprocket_w 60 -> 35, sprocket_teeth -> 10.
+//   - The 1080 belt still wraps bigger radii than Rev 004 assumed (idlers
+//     ride the pyramid tips: ri = D/2 + lug_h + T/2), so A solves ~178 (was
+//     260) and the arm shortened. Fixes, keeping the owner's shocks/springs
+//     and Ø108 idlers: drop 38 -> 60 (arm V deepened — the old drop<=42 cap
+//     was the keel window, gone in 005), a_frac 0.46 -> 0.43 (MR ~0.445 vs
+//     the ~0.435 the springs were bought for), cross-brace 28..58 -> 20..50.
+//   - VERIFY before printing: pyramid height at 6.5 mm from its inner edge
+//     must be <= 7 (only place lug and rim overlap); motor casing Ø inboard
+//     of the rim <= ~Ø145 out to |z|=25.5 (blade sweep); drum really Ø165.
+//
+//  REV 005c DELTAS (2026-07-25, lug inner face measured ~vertical -> 11T):
+//   - Owner measured the lug INNER FACE nearly 90 deg: full 15 mm height
+//     right where the lug passes over the rim, so 10T's 7 mm headroom FAILS.
+//     sprocket_teeth 10 -> 11: rib 16.54, face Ø198.1, cord Ø210.1 — 16.5 mm
+//     headroom, lugs clear the rim everywhere by 1.5 mm. Tooth marks every
+//     56.57 on the rib top (32.727 deg).
+//   - Re-solve: A = 160.2. Suspension re-tuned around the bigger swept rib
+//     (r=99.0): drop 60 -> 55 (pivot centre spacer clears the rib by 5.0 —
+//     NEW GUARD added), a_frac stays 0.38 (bolt clears wheel 2.2, MR 0.4384
+//     ~= the 0.435 the springs were bought for), cross-brace 20..50 ->
+//     17..41 (clears wheel 2.5). All 16 guards PASS.
+//   - Still to verify: drum really Ø165 after fill (tape 518 circumference);
+//     eyeball casing clearance under the blade sweep (owner: air gap, OK).
 // ============================================================================
 
 /* [Render] */
@@ -169,15 +226,35 @@ brg_od = 42;      // idler bearing OD (6302)
 brg_w  = 13;      // idler bearing width (6302)
 F = 62;    // belt inner width between guide lugs — derived: H + 4 (matched set)
 lug_w = 18;// guide lug row width — conservative estimate, measure
-lug_h = 20;// guide lug height — owner estimates 10-20; keeping pessimistic 20
+lug_h = 15;// pyramid lug height — MEASURED 2026-07-24 (was pessimistic 20).
+           // Base 25 long along the belt -> 35 mm pocket between stations
 H = 58;    // idler hub width (measured 57.85)
 T = 12;    // belt carcass thickness (confirmed ~12)
 
-/* [Stock sprocket — hub motor] */
-sprocket_od    = 180;
-sprocket_teeth = 10;   // counted. 10T x 60 pitch → pitch/cord circle Ø191,
-                       // i.e. the belt cord line rides 5.5 above the Ø180 surface
-sprocket_w     = 60;   // measure across the sprocket rim
+/* [Printed sprocket — Rev 005, kit-wheel geometry printed on the hub] */
+sprocket_od    = 165;  // drum OD: ABS fill flush with the hub body (MEASURED)
+sprocket_teeth = 11;   // Rev 005c: owner measured the lug INNER FACE ~vertical
+                       // — full 15 height right at the 6.5 mm strip that passes
+                       // over the rim, so the 10T wheel's 7 mm headroom fails.
+                       // 11T -> rib 16.54 -> 16.5 headroom: lugs clear the rim
+                       // everywhere by 1.5. (10T notes kept below for history.)
+sprocket_w     = 35;   // hub rim width — MEASURED 2026-07-24 (was 60)
+rib_w      = 18;   // centre rib width — rides the 22 mm gap between pyramid pairs
+tooth_t    = 20;   // tooth thickness, circumferential. Kit wheel uses 15, but
+                   // the measured pocket is 35 (60 pitch - 25 lug base), so we
+                   // spend 5 of the slack on a fatter ABS root; 15 mm play left
+tooth_span = 51;   // T-tooth width across — overhangs (51-18)/2 = 16.5 per side
+tooth_fil  = 5;    // root widening where the overhang meets the rib (fatigue)
+rim_flange_w = 7.25; // rim flange band per side — MEASURED 2026-07-25: tunnel
+                     // is 20.5 wide between flanges -> (35 - 20.5)/2
+well_floor_d = 149;  // tire-well (tunnel) floor Ø — MEASURED 2026-07-25:
+                     // 165 - 8 - 8 (well is 8 deep). Fill = 8 x 20.5 ring
+// rib height is DERIVED, not chosen: belt face rides the rib top, so an integer
+// number of belt_pitch stations must fit the cord circle Ø(drum + 2*rib_h + T).
+// (Lug height no longer constrains it — the 35-wide rim ends at |z|=17.5 and
+// the pyramids run from |z|=11 outward, so they overlap the rim by only 6.5 mm
+// near their low inner slope; the rest passes in free air beside the hub.)
+rib_h = (sprocket_teeth*belt_pitch/PI - T - sprocket_od)/2;
 
 /* [Fork mount — Rev 002: carriers hang from the scooter fork legs] */
 fork_gap = 140;  // inner spacing between fork legs: 140 FRONT AND REAR
@@ -196,10 +273,11 @@ boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
                     // half-width. 4.6 mm weld shelf beside the Ø31 boss tube
                     // (Rev 004c: tube sourced at 31 OD, was 32 — shelf grows.)
 keel_od    = 12;    // keel standoff tube OD (Rev 003a: was 16 — Ø12×1.5, ID 9)
-a_frac     = 0.46;  // shock bolt station as fraction of C (Rev 004: was 0.485 —
-                    // the bolt moved onto the bar centreline (shock_y 18 -> 0),
-                    // which is closer to the wheel, so a comes in to keep the
-                    // 4 mm wheel clearance. Rev 003a: 0.68 was INSIDE the wheel.)
+a_frac     = 0.38;  // shock bolt station as fraction of C (Rev 005b: 0.46 ->
+                    // 0.38 — the short Rev 005 arm (A~178) put 0.46C inside
+                    // the idler; at drop=60/0.38 the bolt clears by 8.6 AND
+                    // MR lands at 0.4358, matching the ~0.435 the owner's
+                    // springs were sized for. Rev 003a: 0.68 was IN the wheel)
 shock_y    = 0;     // lower shock bolt offset from the arm axis (Rev 004: 0 —
                     // a Ø10 hole at y=18 has <2 mm edge in a 40 mm bar)
 shock_ee   = 150;   // shock eye-to-eye, free
@@ -219,10 +297,12 @@ $fa = 4; $fs = 0.7;
 // Path = sprocket wrap + 2 tangent runs + 2 idler wraps + bottom span.
 // Monotonic in Av → bisect to hit track_len.
 track_len = belt_links * belt_pitch;             // 1080 — cord-line length
-pitch_r   = sprocket_teeth * belt_pitch / (2*PI);// 95.49 — cord radius at sprocket
-cord_off  = pitch_r - sprocket_od/2;             // 5.49 — cord height above rubber
+pitch_r   = sprocket_teeth * belt_pitch / (2*PI);// cord radius at sprocket
+cord_off  = pitch_r - sprocket_od/2;             // = rib_h + T/2: cord above drum
 rs_belt = pitch_r;                    // cord-line wrap radius at sprocket
-ri_belt = D/2 + cord_off;             // cord-line wrap radius at idlers
+ri_belt = D/2 + lug_h + T/2;          // cord-line wrap radius at idlers — the
+                                      // belt face rides the pyramid TIPS there
+                                      // (no clear centre channel on this belt)
 function belt_len(Av) = let(
     wx    = Av/2,
     dd    = sqrt(wx*wx + B*B),
@@ -235,9 +315,14 @@ function solve_A(lo, hi, n) = n <= 0 ? (lo + hi)/2 :
 A_eff  = (belt_links > 0) ? solve_A(120, 800, 48) : A;
 
 half   = A_eff/2;
-drop   = 38;                          // pivot sits 38 above idler axle line
-                                      // (raised 20->30->38 for belt clearance;
-                                      //  keel window closes at drop=42)
+drop   = 55;                          // pivot sits 55 above idler axle line
+                                      // (Rev 005b: 38 -> 60 to lengthen the arm
+                                      // past the idler on the short belt solve;
+                                      // Rev 005c: 60 -> 55 — the 11T rib sweeps
+                                      // r=99, and the pivot centre spacer must
+                                      // clear it: P=115 leaves 5.0 mm, guarded.
+                                      // The old drop<=42 cap was the keel
+                                      // window, gone since the keel moved.)
 P      = B - drop;                    // pivot drop below hub centre
 C      = sqrt(half*half + drop*drop); // pivot-to-wheel arm length
 na     = atan(drop/half);             // arm neutral droop angle, deg
@@ -254,18 +339,19 @@ shocks_inboard = (cz >= track_w/2 + 24);
 sz     = shocks_inboard ? track_w/2 + 14        // between belt edge and carrier
                         : cz + carrier_t + 14;  // outboard of the carrier plate
 Rc     = sprocket_od/2 - 17;           // carrier disc radius
-y_keel = -(sprocket_od/2 + 10);        // keel standoff BETWEEN sprocket swept
-                                       // disc (steel, r=90) and the ARM boss
-                                       // disc (Rev 003a: window is bounded by
-                                       // the Ø44 plate disc top, not the Ø32
-                                       // tube — Ø12 tube fits with 4/4 mm)
+y_keel = -(P + boss_disc/2 + keel_od/2 + 4); // Rev 005: the old home between the
+                                       // sprocket swept disc and the arm bar
+                                       // closed when the swept radius grew to
+                                       // the rib top (r=99). Keel now sits
+                                       // BELOW the arm bar, 4 mm off its edge
+                                       // — still guarded vs track at full bump
 // pivot-stack cut lengths (Rev 003a): the bosses stack end-to-end through
 // thrust washers, so the centre spacer and the two outboard sleeves are what
 // close the chain carrier-to-carrier. All three are cut at the §9.3 dry-stack.
 sp_half   = zi_tr + plate_t - boss_len - 4.5;  // washer 1.5 + flange 3
 sleeve_z0 = zi_ld + boss_len + 4.5;            // leading boss end + flange + washer
 sleeve_ln = cz - sleeve_z0;                    // outboard sleeve length
-r_wrap = sprocket_od/2 + 2;            // belt INNER surface at sprocket (visual)
+r_wrap = sprocket_od/2 + rib_h;        // belt INNER surface rides the rib top
 belt_w = track_w;                      // belt overall width (measured)
 ride_len = shock_ee - shock_sag;
 
@@ -286,6 +372,11 @@ wheel_ld = mx(arm_pt([C, 0], aL));
 
 echo(str("BELT:     solved A=", A_eff, "  inner length=", belt_len(A_eff),
          " / target ", track_len));
+echo(str("SPROCKET: ", sprocket_teeth, " stations x ", belt_pitch, " pitch — rib ",
+         rib_w, " wide x ", rib_h, " tall (drum Ø", sprocket_od, " -> rib top Ø",
+         sprocket_od + 2*rib_h, ", cord Ø", 2*pitch_r, ") — tooth spacing ON THE",
+         " RIB TOP = ", PI*(sprocket_od + 2*rib_h)/sprocket_teeth, " mm (",
+         360/sprocket_teeth, " deg apart)"));
 echo(str("DERIVED:  P=", P, "  C=", C, "  neutral droop=", na, " deg"));
 echo(str("SHOCK:    lower eye station a=", a, "  upper eye at ", upP));
 echo(str("TRAVEL:   bump +", C*(sin(bump_max-na)+sin(na)),
@@ -344,14 +435,17 @@ for (c = clearances)
 // keel window fit (all static-to-static or pivot-centred, so the gaps hold at
 // every articulation; small values acceptable) + in-plane wheel clearances
 keel_gaps = [
-  ["keel to sprocket swept disc", abs(y_keel) - keel_od/2 - sprocket_od/2],
+  ["keel to sprocket swept rib top", abs(y_keel) - keel_od/2 - (sprocket_od/2 + rib_h)],
   [str("keel to arm bar (", boss_disc, " wide)"),
         abs(y_keel - pivot[1]) - boss_disc/2 - keel_od/2],
   ["keel to pivot washers Ø30",   abs(y_keel - pivot[1]) - 15 - keel_od/2],
   // Rev 003a: the lower shock through-bolt and the cross-brace share the
   // space between the fork plates with the Ø108 idler wheel — check both
   ["shock bolt Ø8 to idler wheel", sqrt(pow(C - a, 2) + shock_y*shock_y) - D/2 - 4],
-  ["cross-brace to idler wheel",    sqrt(pow(C - 58, 2) + 6*6) - D/2],
+  ["cross-brace to idler wheel",    sqrt(pow(C - 41, 2) + 6*6) - D/2],
+  // Rev 005c: the pivot centre spacer (Ø22, spans z ±sp region, crosses the
+  // teeth sweep) is what caps `drop` — guard it against the spinning rib top
+  ["pivot spacer Ø22 to sprocket swept rib", (abs(pivot[1]) - 11) - (sprocket_od/2 + rib_h)],
   // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
   // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
   // the closest point since the line leans away from the tongue going down
@@ -577,17 +671,50 @@ module idler_wheel(){
                   cylinder(h=brg_w+2, d=G,      center=true); }
 }
 
+// T-tooth, kit-wheel style: tooth_span across the belt, tooth_t thick,
+// widening by tooth_fil per side over the rib zone — that widening IS the
+// printed root fillet the ABS overhangs need for fatigue life. Runs radially
+// from the drum to flush with the rib top (the belt face rides the rib, so
+// the tooth may not stand proud of it).
+module sprocket_tooth(){
+  ts = tooth_span/2;  rw = rib_w/2;  t2 = tooth_t/2;  f = tooth_fil;
+  translate([sprocket_od/2 - 1, 0, 0]) rotate([0,90,0])
+    linear_extrude(height=rib_h + 1)
+      polygon([[-ts,-t2],[-rw,-t2-f],[rw,-t2-f],[ts,-t2],
+               [ts, t2],[ rw, t2+f],[-rw, t2+f],[-ts, t2]]);
+  // outboard blades (Rev 005b): beside the 35-wide rim the tooth drops to
+  // full lug depth — nothing is there to clash, the rim ends at |z|=17.5.
+  // Blade tips sweep Ø149; motor casing must stay under that (Ø130 drawn).
+  blade_r = sprocket_od/2 + rib_h - lug_h;
+  for (s=[1,-1]) translate([blade_r, 0, 0]) rotate([0,90,0])
+    linear_extrude(height=lug_h + 0.1)
+      polygon([[s*(sprocket_w/2), -t2],[s*ts, -t2],[s*ts, t2],[s*(sprocket_w/2), t2]]);
+}
+
 module sprocket(){
-  // Rev 002: the sprocket IS the hub motor — casing drawn, axle Ø10 static
-  color([0.13,0.13,0.14]) difference(){
-    union(){
-      cylinder(h=sprocket_w, d=sprocket_od-14, center=true);
-      for (i=[0:sprocket_teeth-1]) rotate([0,0,i*360/sprocket_teeth])
-        translate([sprocket_od/2-8, 0, 0])
-          cube([14, 12, sprocket_w-4], center=true);
-      cylinder(h=sprocket_w+8, d=130, center=true);  // motor casing
-    }
+  // Rev 005c: hub motor + GREY metal rim (two flange bands + well floor) with
+  // the sage ABS fill INSIDE the tire-well tunnel; rib + T-teeth print on top
+  // at the Ø165 surface. Two clamp halves, bolted at the rim edge.
+  // (rim_flange_w / well_floor_d are cosmetic placeholders — measure.)
+  color([0.13,0.13,0.14]) difference(){        // hub motor casing, axle static
+    cylinder(h=sprocket_w+8, d=130, center=true);
     cylinder(h=sprocket_w+40, d=axle_d+0.5, center=true);
+  }
+  color([0.55,0.55,0.58]){                     // steel rim: flanges + well floor
+    for (s=[1,-1]) translate([0,0,s*(sprocket_w-rim_flange_w)/2])
+      difference(){ cylinder(h=rim_flange_w, d=sprocket_od, center=true);
+                    cylinder(h=rim_flange_w+2, d=130, center=true); }
+    difference(){ cylinder(h=sprocket_w, d=well_floor_d, center=true);
+                  cylinder(h=sprocket_w+2, d=130, center=true); }
+  }
+  color([0.55,0.62,0.52]){                     // printed ABS (sage)
+    difference(){                              // fill, inside the well tunnel
+      cylinder(h=sprocket_w-2*rim_flange_w, d=sprocket_od, center=true);
+      cylinder(h=sprocket_w, d=well_floor_d-0.5, center=true);
+    }
+    cylinder(h=rib_w, d=sprocket_od + 2*rib_h, center=true);       // centre rib
+    for (i=[0:sprocket_teeth-1]) rotate([0,0,i*360/sprocket_teeth])
+      sprocket_tooth();
   }
 }
 
@@ -634,7 +761,10 @@ module arm3d(zi, slot, ang, szs){
     }
     // lower cross-brace (Rev 003a: inboard of the wheel; Rev 004: raised to
     // y -18..-6 so it stays inside the 40 mm bar width)
-    color([0.30,0.36,0.48]) translate([28, -18, -zi]) cube([30, 12, 2*zi]);
+    color([0.30,0.36,0.48]) translate([17, -18, -zi]) cube([24, 12, 2*zi]);
+    // (Rev 005b/c: brace 28..58 -> 17..41 — the short 11T arm put its outer
+    //  end inside the idler wheel; keep in sync with the guard's C-41 term.
+    //  Inner end sits 1 mm off the Ø31 pivot boss tube.)
     // shock through-bolt + outboard spacer sleeve
     color([0.55,0.55,0.58]) translate([a, shock_y, -(zi+plate_t)-4])
       cylinder(h=(zi+plate_t)+4 + (sz-5), d=7.8);
