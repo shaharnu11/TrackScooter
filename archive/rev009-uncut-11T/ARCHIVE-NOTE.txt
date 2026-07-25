@@ -1,0 +1,7 @@
+Rev 009 (2026-07-25) — the NO-CUT comparison twin of Rev 008 (supersedes the
+earlier rev006 uncut side-study). Rim stays factory Ø165x35: 11T, rib 18x16.54,
+wheel Ø198, cord Ø210, marks 56.6 on the rib (32.7 deg). Same corrected idler
+wrap (tread in the 22 gap, ri=60) and measured casing Ø123 as Rev 008.
+A=203.5, drop 38, brace 22..52, keel below the arm bar, a=0.433C (MR 0.4396).
+All guards PASS; margins thinner than Rev 008 (bolt 3.6 / brace ~3 / coil 2.0).
+Zero motor modification — the escape hatch if the rim is never cut.

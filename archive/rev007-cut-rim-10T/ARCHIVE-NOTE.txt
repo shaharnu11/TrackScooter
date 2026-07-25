@@ -1,0 +1,7 @@
+Rev 007 (2026-07-25, formerly numbered 006b) — CUT rim (Ø149x20.5 tunnel
+floor) + 10T, rib 18x15.0, wheel Ø179, cord Ø191. Includes the idler fix
+(tread band rides IN the 22mm lug gap, ri=60): A=220.8, full Rev 004
+suspension restored (drop 38, brace 28..58, keel in window, a=0.433C,
+MR 0.4355). All guards PASS. Superseded by Rev 008 (9T, rib 5.44) after
+the motor casing measured Ø123 — but this 10T version remains the safe
+choice if the 9T wheel ever proves too close to the casing in practice.

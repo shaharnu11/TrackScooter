@@ -247,32 +247,6 @@
 //   - Per-revision archive folders started: archive/rev005c (11T uncut,
 //     from git 83ee983), archive/rev007-cut-rim-10T (the 10T fallback),
 //     archive/rev006-option-uncut-11T (no-grinding side study).
-//
-//  REV 010 DELTAS (2026-07-25, the hub's 5 FINS -> 10T with steel drive keys):
-//   - Owner photo: 5 fins join the rim to the motor — the rim's skeleton and
-//     torque path. If they rise into a flange, that flange cannot be fully
-//     cut; the ground-down joints remain as 5 stubs on a 72-degree grid.
-//   - Owner's insight: hide the stubs INSIDE the teeth. Only 10T aligns
-//     (36-deg teeth -> every 2nd tooth on the fin grid). Five fat teeth
-//     (fin_stub_w + 10) carry cavities that swallow the stubs -> the stubs
-//     become STEEL DRIVE KEYS: torque flows metal-to-tooth, not only
-//     through the clamp. 9T lives on in archive/rev008-cut-rim-9T — still
-//     the pick if inspection shows the fins join BELOW the tunnel floor.
-//   - Solve: A=220.8, C=116.7, drop 38, a=0.433C, MR 0.4355 — identical to
-//     Rev 007's passing suspension set. All guards PASS incl. two new fin
-//     guards (stub buried in tooth wall, stub top below the belt face).
-//   - MEASURE to finalize: fin joint width at the rim (fin_stub_w, 25 is a
-//     placeholder), stub top Ø after grinding (fin_stub_d), which side
-//     (fin_side), fins exactly 72.0 apart; mark tooth #0 for clocking.
-//
-//  REV 010b (2026-07-25, correction — fins arch to the FLOOR UNDERSIDE):
-//   - Owner: the fins never touch the flanges; they arch from the motor hub
-//     to the tunnel floor's underside. Flange cut = fully clean, NO stubs.
-//     Fat teeth + cavities + stub guards REMOVED — plain 10T teeth.
-//   - 10T is unconditionally safe (lug sweep Ø149 = floor level; fins are
-//     below the floor by definition). 9T (+22%, rev008 archive) revives IF
-//     the fin top is >=10 below the floor at the rim edge plane — one
-//     caliper depth reading, pending.
 // ============================================================================
 
 /* [Render] */
@@ -320,17 +294,14 @@ sprocket_od    = 149;  // drum OD = the tire-well FLOOR (165 - 2x8 flanges).
                        // Rev 006: owner grinds the flange walls off; the floor
                        // itself is untouched factory surface, so it stays round.
                        // VERIFY after the cut: tape circumference = 468 mm.
-sprocket_teeth = 10;   // FINAL (Rev 010b, measured 2026-07-25): the 5 fins
-                       // arch from the motor hub to the UNDERSIDE of the tunnel
-                       // floor and sit essentially FLUSH against it at the rim
-                       // edge (owner measured X ~ 0). Consequences: flange cut
-                       // is fully clean (fins never touch the flanges), and 9T
-                       // is permanently excluded (its lugs dive to Ø130, 9.5
-                       // below floor level, straight into the arches). 10T lugs
-                       // sweep Ø149 = floor level — margin over the fins = the
-                       // floor's own wall thickness (verify >=3 before cutting).
-fin_n       = 5;       // fin count — owner photo 2026-07-25
-fin_side    = 1;       // fins rise on the brake-disc side (visual)
+sprocket_teeth = 9;    // Rev 008: with the drum through the lug gap, rib height
+                       // is quantized only by the whole-teeth rule — the owner
+                       // spotted that a ~6 rib might mesh, and 9T x 60/PI gives
+                       // exactly rib 5.44: wheel Ø160, cord Ø172, +22% drive
+                       // force vs 11T, A=235.9 (longest pod of any rev). The
+                       // enabler: motor casing MEASURED Ø123 — lug tips and
+                       // blade tips sweep Ø130, clearing it by 3.4 (guarded).
+                       // (10T/rib 15 archived: archive/rev007-cut-rim-10T.)
 sprocket_w     = 20.5; // drum width = tunnel floor width after the cut
 rib_w      = 18;   // centre rib width — rides the 22 mm gap between pyramid pairs
 tooth_t    = 20;   // tooth thickness, circumferential. Kit wheel uses 15, but
@@ -369,7 +340,6 @@ boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
                     // half-width. 4.6 mm weld shelf beside the Ø31 boss tube
                     // (Rev 004c: tube sourced at 31 OD, was 32 — shelf grows.)
 keel_od    = 12;    // keel standoff tube OD (Rev 003a: was 16 — Ø12×1.5, ID 9)
-use_keel   = true ; // Rev 010b keeps the keel (sits high in its window)
 a_frac     = 0.433; // shock bolt station as fraction of C (Rev 007: with the
                     // Rev 004 arm restored (C=116.7), 0.433 puts the bolt at
                     // a=50.5 — clears the wheel by 8.2 — and lands MR 0.4355,
@@ -526,13 +496,8 @@ axle_stack = 2*(cz + carrier_t) + 22;   // carriers outer-to-outer + nut/head
 echo(str("PIVOT AXLE: stack ≈ ", axle_stack, " → buy M", pivot_d, " cl.10.9 × ",
          10*ceil((axle_stack + 3)/10), " part-threaded (this fork_gap=",
          fork_gap, ", leg_t=", leg_t, ")"));
-echo(str("CARRIERS: 50x6 strip cut ≈ ",
-         (52+16) - min(pivot[1]-24, use_keel ? y_keel-12 : 0),
-         use_keel ? str(" (must reach 12 past the keel hole at ", y_keel, ")")
-                  : " (no keel — strip ends 24 below the pivot)"));
-if (use_keel) echo(str("KEEL: tube Ø", keel_od, "×1.5 cut ", 2*cz,
-         " · M8 rod cut ≈ ", 2*(cz+carrier_t)+12));
-if (!use_keel) echo("KEEL: deleted (fork legs box the carriers since Rev 002)");
+echo(str("KEEL: tube Ø", keel_od, "×1.5 cut ", 2*cz, " · M8 rod cut ≈ ",
+         2*(cz+carrier_t)+12));
 // idler axle — PURCHASED 2026-07-25: 2x GB901 M12x110 (TRAILING) + 2x
 // M12x120 (LEADING), grade 8.8 + 500 mm of 15 OD x 12 ID pipe for the sleeve
 // stack (SF ~3). Ø15 shaft kept as emergency spare. Stack/side: [eye 6,
@@ -558,8 +523,7 @@ clearances = concat(
   // applies if a future layout puts them back over the belt
   (cz < track_w/2 + 3) ?
     [["carrier tongue Ø48", (pivot[1] - 24) - ((cz < lug_zone) ? y_lug_bump : y_belt_bump)]] : [],
-  use_keel ? [[str("keel standoff  Ø", keel_od), (y_keel - keel_od/2) - y_lug_bump]] : [],
-  [
+  [[str("keel standoff  Ø", keel_od), (y_keel - keel_od/2) - y_lug_bump],
    [str("pivot spacer   Ø", bushing_od), (pivot[1] - bushing_od/2) - y_lug_bump],
    [str("arm bar (", boss_disc, " wide)  "), (pivot[1] - boss_disc/2) - y_lug_bump]]);
 if (cz >= track_w/2 + 3)
@@ -572,11 +536,11 @@ for (c = clearances)
            " mm above track at +", bump_max, "° bump"));
 // keel window fit (all static-to-static or pivot-centred, so the gaps hold at
 // every articulation; small values acceptable) + in-plane wheel clearances
-keel_gaps = concat(use_keel ? [
+keel_gaps = [
   ["keel to sprocket swept rib top", abs(y_keel) - keel_od/2 - (sprocket_od/2 + rib_h)],
   [str("keel to arm bar (", boss_disc, " wide)"),
         abs(y_keel - pivot[1]) - boss_disc/2 - keel_od/2],
-  ["keel to pivot washers Ø30",   abs(y_keel - pivot[1]) - 15 - keel_od/2]] : [], [
+  ["keel to pivot washers Ø30",   abs(y_keel - pivot[1]) - 15 - keel_od/2],
   // Rev 003a: the lower shock through-bolt and the cross-brace share the
   // space between the fork plates with the Ø108 idler wheel — check both
   ["shock bolt Ø8 to idler wheel", sqrt(pow(C - a, 2) + shock_y*shock_y) - D/2 - 4],
@@ -587,12 +551,11 @@ keel_gaps = concat(use_keel ? [
   // Rev 008: the 9T wheel pulls the belt close to the motor — lug tips and
   // blade tips both sweep Ø(face - 2*lug_h); guard them against the casing
   ["belt lug/blade tips to motor casing", (sprocket_od/2 + rib_h - lug_h) - casing_d/2],
-
   // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
   // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
   // the closest point since the line leans away from the tongue going down
   ["shock coil Ø44 to carrier strip (50 wide)",
-     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 25 - 22]]);
+     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 25 - 22]];
 for (g = keel_gaps)
   echo(str(g[1] < 2 ? "*** WARN " : "PASS ", g[0], ": ", g[1], " mm gap"));
 
@@ -624,17 +587,14 @@ module carrier_2d(){
   // (axle slot, M8 fork bolt, pivot bore, keel hole) lands on it. The shock
   // tabs are separate stubs (tab_stub_2d) lap-welded on the OUTER face at hub
   // level. Same part both sides (symmetric).
-  y_bot = min(pivot[1] - 24, use_keel ? y_keel - 12 : 0);  // reach past the keel
-                                            // hole (Rev 9: keel below the arm
-                                            // bar -> strip cut ~290, not 225)
   difference(){
-    translate([-25, y_bot]) square([50, (52+16) - y_bot]);
+    translate([-25, pivot[1]-24]) square([50, (52+16) - (pivot[1]-24)]);
     // hub-motor axle slot: Ø10 with flats — the plate doubles as a torque arm
     intersection(){ circle(d=axle_d+0.4);
                     square([axle_d+0.4, 8.9], center=true); }
     translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
-    if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
+    translate([0, y_keel]) circle(d=8.5);       // keel standoff bolt M8
   }
 }
 
@@ -829,39 +789,41 @@ module idler_wheel(){
 // the tooth may not stand proud of it).
 module sprocket_tooth(){
   ts = tooth_span/2;  rw = rib_w/2;  t2 = tooth_t/2;  f = tooth_fil;
-  blade_r = sprocket_od/2 + rib_h - lug_h;
   translate([sprocket_od/2 - 1, 0, 0]) rotate([0,90,0])
     linear_extrude(height=rib_h + 1)
       polygon([[-ts,-t2],[-rw,-t2-f],[rw,-t2-f],[ts,-t2],
                [ts, t2],[ rw, t2+f],[-rw, t2+f],[-ts, t2]]);
-  // outboard blades: beside the cut rim the tooth drops to full lug depth
-  for (sd=[1,-1]) translate([blade_r, 0, 0]) rotate([0,90,0])
+  // outboard blades (Rev 005b): beside the 35-wide rim the tooth drops to
+  // full lug depth — nothing is there to clash, the rim ends at |z|=17.5.
+  // Blade tips sweep Ø149; motor casing must stay under that (Ø130 drawn).
+  blade_r = sprocket_od/2 + rib_h - lug_h;
+  for (s=[1,-1]) translate([blade_r, 0, 0]) rotate([0,90,0])
     linear_extrude(height=lug_h + 0.1)
-      polygon([[sd*(sprocket_w/2), -t2],[sd*ts, -t2],[sd*ts, t2],[sd*(sprocket_w/2), t2]]);
+      polygon([[s*(sprocket_w/2), -t2],[s*ts, -t2],[s*ts, t2],[s*(sprocket_w/2), t2]]);
 }
 
 module sprocket(){
-  // Rev 010b: hub motor + cut-down rim ring (flange walls ground off — a fully
-  // clean cut: the 5 fins arch from the motor hub to the UNDERSIDE of the
-  // tunnel floor and never touch the flanges). Printed ABS = thin clamp shell
-  // + rib + 10 plain T-teeth; half-shells bolt to each other between the fins.
+  // Rev 006: hub motor + the CUT-DOWN rim ring (flange walls ground off; the
+  // Ø149 tunnel floor is the untouched factory drum) hanging on spokes across
+  // the air gap. Printed ABS = thin clamp shell around the drum + 18-wide rib
+  // + T-teeth; the two half-shells bolt to each other THROUGH the spoke gaps.
+  // The whole 20.5-wide drum passes between the belt's lug pairs (22 gap).
   color([0.13,0.13,0.14]) difference(){        // hub motor casing, axle static
     cylinder(h=sprocket_w+8, d=casing_d, center=true);
     cylinder(h=sprocket_w+40, d=axle_d+0.5, center=true);
   }
-  color([0.55,0.55,0.58])                      // cut rim ring (factory floor)
+  color([0.55,0.55,0.58]){                     // cut rim ring + spokes
     difference(){ cylinder(h=sprocket_w, d=sprocket_od, center=true);
                   cylinder(h=sprocket_w+2, d=sprocket_od-2*rim_wall, center=true); }
-  color([0.18,0.18,0.19])                      // the 5 FINS: black arches from
-    for (i=[0:fin_n-1]) rotate([0,0,i*72])     // the motor hub to the tunnel
-      hull(){                                  // floor's UNDERSIDE (owner)
-        translate([casing_d/2 - 2, 0, fin_side*(sprocket_w/2 + 6)])
-          cube([6, 4.1, 14], center=true);      // fin blade 4.1 wide (MEASURED)
-        translate([sprocket_od/2 - rim_wall - 3, 0, 0])
-          cube([4, 4.1, sprocket_w - 4], center=true);
-      }
-  color([0.55,0.62,0.52]){                     // printed ABS (sage): shell-less
-    // visual — rib + teeth only, so the wheel body reads GRAY (owner pref)
+    for (i=[0:5]) rotate([0,0,i*60])           // spoke contact points (visual)
+      translate([(casing_d/2 + sprocket_od/2-rim_wall)/2, 0, 0])
+        cube([(sprocket_od/2-rim_wall) - casing_d/2 + 2, 12, sprocket_w], center=true);
+  }
+  color([0.55,0.62,0.52]){                     // printed ABS (sage): only what
+    // stands ABOVE the drum, so the wheel body reads GRAY (owner preference,
+    // matching Rev 009). The 3 mm clamp-shell skin (shell_t) that physically
+    // wraps the ring is not painted over the metal — it is part of the print,
+    // merged visually into the rib/tooth roots.
     cylinder(h=rib_w, d=sprocket_od + 2*rib_h, center=true);       // centre rib
     for (i=[0:sprocket_teeth-1]) rotate([0,0,i*360/sprocket_teeth])
       sprocket_tooth();
@@ -869,8 +831,9 @@ module sprocket(){
 }
 
 // Rev 008a: live shock-force gauge. Bar fill = compression as a fraction of
-// the full-bump compression (green -> red); text = spring force in kg / N and
-// compression. Uses the same shock_len() the motion-ratio calc differentiates.
+// the full-bump compression (green -> red); text = compression (from free
+// length, includes the ride sag) and spring force = spring_rate x compression.
+// Uses the same shock_len() the motion-ratio calc differentiates.
 module force_gauge(ang, zc, mir=false){
   L    = shock_len(ang);                    // current eye-to-eye
   comp = shock_ee - L;                      // compression incl. sag
@@ -1000,9 +963,9 @@ module carrier_group(){
     translate([-20, -12, s==1 ? fork_gap/2 : -fork_gap/2-leg_t])
       cube([40, 150, leg_t]);
   // keel standoff between sprocket disc and arm boss disc
-  if (use_keel) color([0.55,0.55,0.58]) translate([0, y_keel, -cz])
+  color([0.55,0.55,0.58]) translate([0, y_keel, -cz])
     difference(){ cylinder(h=2*cz, d=keel_od); cylinder(h=2*cz+2, d=8.4); }
-  if (use_keel) color([0.55,0.55,0.58]) translate([0, y_keel, -cz-carrier_t-6-ex*70])
+  color([0.55,0.55,0.58]) translate([0, y_keel, -cz-carrier_t-6-ex*70])
     cylinder(h=2*(cz+carrier_t)+12, d=8);
 }
 

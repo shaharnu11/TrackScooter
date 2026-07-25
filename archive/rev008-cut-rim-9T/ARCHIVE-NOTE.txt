@@ -1,0 +1,7 @@
+Rev 008 (2026-07-25) — DESIGN OF RECORD snapshot (complete file set).
+Cut rim (flanges ground off; factory tunnel floor Ø149x20.5 = drum) + 9T:
+rib 18x5.44, wheel Ø160, cord Ø172, marks 55.8 on the rib (40 deg), blades
+to Ø130 over the measured Ø123 casing (3.4, guarded). Idler tread rides IN
+the 22mm lug gap (Rev 007 fix): A=235.9, full Rev 004 suspension (drop 38,
+brace 28..58, keel in window, a=0.433C, MR 0.4327). 17/17 guards PASS.
+Identical to the repo root at archive time. Compare with Rev 009 (no cut).

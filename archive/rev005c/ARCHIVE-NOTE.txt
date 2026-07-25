@@ -1,0 +1,6 @@
+Rev 005c (2026-07-25) — 11T printed sprocket on the UNCUT Ø165x35 rim.
+Extracted from git commit 83ee983. The fallback that needs NO motor
+modification: rib 18x16.54, wheel Ø198, cord Ø210, A=160.2, drop 55,
+a=0.38C, MR 0.438, 16/16 guards PASS. Superseded when the owner chose
+to cut the rim flanges (Rev 006+) and the idler-in-gap correction (006b)
+restored the long pod.

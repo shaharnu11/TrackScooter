@@ -1,0 +1,21 @@
+Rev 010b — FINAL DESIGN OF RECORD (2026-07-25 night, complete file set).
+Cut rim + 10 PLAIN teeth. The day's full arc, resolved by owner measurements:
+ - The hub's 5 fins (4.1 mm blades) arch from the motor hub to the UNDERSIDE
+   of the tunnel floor, sitting flush against it at the rim edge (X ~ 0).
+ - => Flange cut is fully CLEAN (fins never touch the flanges, no stubs);
+   the interim "fin drive-key" fat-tooth concept (early Rev 010) was removed
+   the same evening — built on a wrong premise, never printed.
+ - => 9T permanently excluded (its lugs dive to Ø130, into the arches).
+   10T lug sweep = Ø149 = floor level; margin over the fins = the floor's
+   own wall thickness (pre-cut check: ring wall >= 3).
+Geometry: drum Ø149x20.5 (tape 468 after the cut), rib 18x15, wheel Ø179,
+cord Ø191, tooth marks every 56.2 on the rib (36 deg). Suspension: A=220.8,
+drop 38, a=0.433C, MR 0.4355 (owner's springs), keel in window at -99.5,
+carriers cut ~224 (strip auto-extends past the keel — bug found by owner
+when Rev 9's keel floated; fixed parametrically in both revs).
+Includes: M12 stud idler axles (purchased), kg force gauges, load_kg
+simulator, fin visuals. All guards PASS, zero warnings.
+Companion: archive/rev009-uncut-11T (no-cut alternative, carriers ~242,
+dual-drill trick makes 9->10b upgrade an afternoon).
+NOTE: README/blueprint in this folder still describe the Rev 008 era —
+full doc sync to 010b pending.
