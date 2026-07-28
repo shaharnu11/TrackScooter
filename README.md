@@ -1,6 +1,6 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-**Rev 010 · 2026-07-26 · FINAL PAIR: (A) Rev 010 — design of record: rim flanges CUT (clean cut confirmed: the hub's 5 fins, 4.1 mm blades, arch to the tunnel floor's UNDERSIDE and never touch the flanges; casing measured Ø123), printed 10T sprocket on the Ø149×20.5 floor — rib 18×15, wheel Ø179, cord Ø191, tooth marks every 56.2 mm on the rib (36°); A = 220.8, keel in window, carriers 224; +10 % launch vs 11T, margins 8.2/5.0 mm; ALL guards PASS. (B) Rev 009 — no-cut twin (archive/rev009-uncut-11T): 11T on the factory rim, A = 203.5, NO KEEL (fork legs box the carriers), carriers 224 = identical steel; buildable today, upgradeable to Rev 010 later (pre-drill the 2nd keel + shock-bolt holes). 9T was excluded by measurement (lugs would dive Ø130 into the flush fin arches). Idler axles: M12 GB901 8.8 studs + Ø15×12 sleeve stacks — PURCHASED. Before printing Rev 010: floor ≥20 wide + ring wall ≥3 → grind → tape 468 mm.**
+**Rev 010 · 2026-07-26 · FINAL PAIR: (A) Rev 010 — design of record: rim flanges CUT (clean cut confirmed: the hub's 5 fins, 4.1 mm blades, arch to the tunnel floor's UNDERSIDE and never touch the flanges; casing measured Ø123), printed 10T sprocket on the Ø149×20.5 floor — rib 18×15, wheel Ø179, cord Ø191, tooth marks every 56.2 mm on the rib (36°); A = 220.8, carriers 224; +10 % launch vs 11T, margins 8.2/5.0 mm; ALL guards PASS. (B) Rev 009 — no-cut twin (archive/rev009-uncut-11T): 11T on the factory rim, A = 203.5, carriers 224 = identical steel. KEEL DELETED IN BOTH (2026-07-26, owner: the fork legs have boxed the carriers since Rev 002 — Ø12 tube becomes spare stock, M8 rod unneeded, carriers have no keel holes); buildable today, upgradeable to Rev 010 later (pre-drill the 2nd keel + shock-bolt holes). 9T was excluded by measurement (lugs would dive Ø130 into the flush fin arches). Idler axles: M12 GB901 8.8 studs + Ø15×12 sleeve stacks — PURCHASED. Before printing Rev 010: floor ≥20 wide + ring wall ≥3 → grind → tape 468 mm.**
 
 Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
 between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
@@ -17,6 +17,9 @@ a leading and a trailing arm, and two coil-over shocks. Each lower idler gets
 | **Blueprint (web)** | https://claude.ai/code/artifact/8435d971-16c0-4a02-9ff1-7adc27d6350e — 7 drawing sheets, BOM + shopping guide (§7.1–§7.9: per-part sourcing, substitutes, costs, receiving inspection), fabrication specs, per-component build chapters (§9.1–§9.8: tools, steps, checks, common mistakes), test protocol. Readable, always-current version of record. |
 | `apollo_track_pod_blueprint.html` / `.pdf` | Local copy of the blueprint; the PDF is printed from the HTML (one topic per page). |
 | `apollo_track_pod.scad` | Parametric OpenSCAD 3D model (companion to the blueprint). Assembly / exploded / flat-plate modes, articulation animation, DXF + STL export. Verified rendering in all modes. |
+| `sprocket_print.scad` | **Print-ready wheel-hub sprocket** (2026-07-28): generates the actual printable part for BOTH final revs (`rev=10` cut-rim 10T / `rev=9` uncut 11T) — clamp shell / well fill, two bolt-together half-shells (split lines in tooth gaps), under-floor bolt ring on the non-fin side, 2-tooth test arc. The bolt ring is NEW vs the assembly model — verify fin clearance before printing. |
+| `stl/rev010_*.stl`, `stl/rev009_*.stl` | Rendered STLs from `sprocket_print.scad`: `half_A`, `half_B`, `test_arc` per rev. Print the test arc first to tune `bore_clr`. |
+| `wheel_hub_print_blueprint_rev010.html` / `.pdf`, `..._rev009.html` / `.pdf` | Per-rev blueprint sheets for the printed hub sprocket: dimensions, section + face drawings, hardware (rev010: 2× M4×30; rev009: 2× M5×35), print settings, assembly steps, mandatory pre-print checklist. |
 | `README.md` | This file. |
 | **Shopping list — DOC OF RECORD** | [Parts to Buy (Rev 008, images + checkboxes)](https://docs.google.com/document/d/1putRc1Q8nmpfGutUm1MNZg5LL_oXczPzJIrjNoAym6Y/edit) — owned by shaharnu11, robot-editable in place: part images, clickable checkboxes, Rev 008 statuses. Alternates: [checkbox Sheet](https://docs.google.com/spreadsheets/d/1FsX82P7tIIPGnh0qGTj5WMVIoAp10TjbQoUTpdQEx1E/edit), older revs kept as archives in Drive. |
 
@@ -58,11 +61,10 @@ The stock pod's rigid internal frame is removed and replaced by:
    faces (|z| = 74 front AND rear — both gaps 140, legs 4 mm; Rev 003), outside
    the belt's 118 mm width (15 mm/side),
    so **the carrier can never touch the track at any articulation**. Boxed together
-   by the hub axle (top), the pivot axle (middle), and the **M8 keel standoff
-   back in its Rev 004 window** (bottom) — between the sprocket's swept envelope
-   (rib top r = 80 on the Rev 008 wheel) and the arm bar: keel centre 89.9 below
-   the hub, 4.0 to the rib sweep / 16.1 to the bar, both guarded. (It spent
-   Rev 005–005c parked below the arm bar while bigger ribs closed this window.)
+   by the hub axle (top) and the pivot axle (middle). (The historical third
+   member — the keel standoff — was DELETED in both revisions on 2026-07-26:
+   it dated from Rev 001a, before the carriers were fork-mounted; since Rev 002
+   the fork legs themselves box the pod. `use_keel` in the .scad re-enables it.)
 2. **Central pivot axle** — M16×195 bolt, threaded 45 mm on one end only (Rev 004c, owner's actual part; was M20×1.5) through the carrier tongues,
    **38 mm above the idler axle line** — the original Rev 004 value, restored in
    Rev 007 once the corrected idler wrap gave the belt solve its length back
@@ -123,7 +125,7 @@ Everything is parametric on these.
 **Derived (all exact, from the .scad echoes, Rev 010):** `A = 220.8` · `P = B − 38 = 132` ·
 `C = 116.7` (arm length) · neutral droop `19.0°` · wheel travel `+29.9 / −27.3 mm` at ±15° ·
 shock station `a = 0.433·C = 50.5` (bar axis) · upper shock eye at `(±50, −8.5)` from hub centre ·
-keel centre `99.5` below hub centre (Ø12×1.5, in the Rev 004 window; **Rev 009 has NO keel**) ·
+**keel: DELETED in both revisions** (fork legs box the carriers; Ø12 tube = spare stock) ·
 motion ratio `MR = 0.4355` (true kinematic) · carrier strips cut `224` (both revisions — unified) ·
 pivot axle stack `≈182` → **M16 × 195, 45 mm thread one end** · shock plane `|z| = 94` (outboard) ·
 sprocket: 10 stations × 36°, rib top Ø179.0, cord Ø191.0.

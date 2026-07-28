@@ -369,7 +369,12 @@ boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
                     // half-width. 4.6 mm weld shelf beside the Ø31 boss tube
                     // (Rev 004c: tube sourced at 31 OD, was 32 — shelf grows.)
 keel_od    = 12;    // keel standoff tube OD (Rev 003a: was 16 — Ø12×1.5, ID 9)
-use_keel   = true ; // Rev 010b keeps the keel (sits high in its window)
+use_keel   = false; // Rev 010c (owner, 2026-07-26): keel deleted here too —
+                    // same reasoning as Rev 9: since Rev 002 the fork legs box
+                    // the carriers (axle slot + M8 each) and the M16 pivot
+                    // stack ties them; the keel was legacy redundancy. Both
+                    // revisions now share identical 224 carriers with NO keel
+                    // holes. Ø12 tube (bought) -> spare stock; M8 rod unneeded.
 a_frac     = 0.433; // shock bolt station as fraction of C (Rev 007: with the
                     // Rev 004 arm restored (C=116.7), 0.433 puts the bolt at
                     // a=50.5 — clears the wheel by 8.2 — and lands MR 0.4355,
