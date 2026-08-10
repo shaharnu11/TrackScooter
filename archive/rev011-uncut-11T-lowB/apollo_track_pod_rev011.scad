@@ -347,6 +347,13 @@ boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
                     // rectangles — was the Ø44 boss disc; guards use the same
                     // half-width. 4.6 mm weld shelf beside the Ø31 boss tube
                     // (Rev 004c: tube sourced at 31 OD, was 32 — shelf grows.)
+// welded offcut pieces (they carry no holes except the lug's M6 clearance, but
+// they ARE part of the cut list, so Rev 011 puts them in the plates layout too)
+brace_w    = 30;    // brace web width after trimming the 40 bar
+brace_tr   = 50.8;  // brace web length, TRAILING fork (plates at |z|=zi_tr)
+brace_ld   = 66.5;  // brace web length, LEADING fork  (nests outside the trailing)
+lug_l      = 26;    // tensioner lug: 26 across x 18 tall x 6 thick, M6 hole 11 up
+lug_h_pl   = 18;
 arm_chamf  = 10;    // REV 011: chamfer on the TWO REAR corners of every arm
                     // bar (the (-22, ±20) corners at the pivot end). They are
                     // the closest thing to the spinning sprocket at full
@@ -1052,18 +1059,30 @@ module track3d(){
 
 // ============================================================== top level
 if (render_mode == "plates"){
-  // 2D layout for DXF export — all laser-cut steel, flat
+  // Rev 011: compact nesting of the COMPLETE cut list for DXF export / 1:1
+  // printing. Earlier revisions omitted the welded offcuts (brace webs and
+  // tensioner lugs), so the DXF was not the whole job. Everything is here now:
+  // ONE POD's worth, verified against the 3D: 2 carriers + 4 arm bars (2
+  // trailing slotted + 2 leading) + 4 tab stubs + 2 brace webs (1 per arm,
+  // different lengths) + 2 tensioner lugs (both on the trailing arm, one per
+  // fork plate). Cut everything TWICE for the vehicle.
   carrier_2d();                                             // carrier L
-  translate([2.4*Rc, 0]) mirror([1,0]) carrier_2d();        // carrier R
-  translate([-Rc-40, -P-C+40]) rotate([0,0,90]){
-    arm_plate_2d(false);                                    // leading ×2
-    translate([0, 90])  arm_plate_2d(false);
-    translate([0, 180]) arm_plate_2d(true);                 // trailing ×2
-    translate([0, 270]) arm_plate_2d(true);
-  }
-  translate([0, -2.6*P]) for (i=[0:3])                      // tab stubs ×4
-    translate([i*70, 0] - [8,-20]) intersection(){
+  translate([60, 0]) mirror([1,0]) carrier_2d();            // carrier R
+  translate([135, 40])  arm_plate_2d(true);                 // trailing ×2
+  translate([135, -10]) arm_plate_2d(true);
+  translate([135, -60]) arm_plate_2d(false);                // leading ×2
+  translate([135, -110]) arm_plate_2d(false);
+  translate([0, -190]) for (i=[0:3])                        // tab stubs ×4
+    translate([i*62, 0] - [8,-20]) intersection(){
       tab_stub_2d(upP); translate([8,-20]) square([55,40]); }
+  translate([0, -245]){                       // brace webs: 1 per arm = 2/pod
+    square([brace_tr, brace_w]);                            // trailing 50.8
+    translate([60, 0]) square([brace_ld, brace_w]);         // leading  66.5
+  }
+  translate([150, -245]) for (i=[0:1])        // tensioner lugs: 2/pod, both on
+    translate([i*32, 0]) difference(){        // the TRAILING arm (one per plate)
+      square([lug_l, lug_h_pl]);
+      translate([lug_l/2, 11]) circle(d=6.6); }
 } else if (render_mode == "part"){
   part_catalog(part);
 } else if (render_mode == "tensioner"){
