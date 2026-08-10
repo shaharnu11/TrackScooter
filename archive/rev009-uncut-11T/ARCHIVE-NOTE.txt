@@ -1,3 +1,9 @@
+=== SUPERSEDED 2026-08-10 by archive/rev011-uncut-11T-lowB (same architecture, hub
+lowered 20 mm: ground contact 203.5 -> 231.2). Also note, found during the Rev 011
+analysis: this revision's arm-bar rear corner passes the spinning sprocket with only
+4.1 mm at full droop, and NO guard covered it here. Rev 011 chamfers the corner and
+adds the guard. Kept as history / the parent of Rev 011.
+
 Rev 009 (2026-07-25) — the NO-CUT comparison twin of Rev 008 (supersedes the
 earlier rev006 uncut side-study). Rim stays factory Ø165x35: 11T, rib 18x16.54,
 wheel Ø198, cord Ø210, marks 56.6 on the rib (32.7 deg). Same corrected idler

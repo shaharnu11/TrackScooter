@@ -1,3 +1,9 @@
+=== RETIRED 2026-08-10 at the owner's request — the grinder path (cut rim, 10T) is no
+longer pursued; the design of record is archive/rev011-uncut-11T-lowB, which reaches
+231.2 mm of ground contact on the FACTORY rim by lowering the hub instead of cutting
+it. Kept as history: if the rim is ever cut, this folder's 10T geometry is still valid
+(and would gain a further ~15 mm of contact at B=150).
+
 Rev 010b — FINAL DESIGN OF RECORD (2026-07-25 night, complete file set).
 Cut rim + 10 PLAIN teeth. The day's full arc, resolved by owner measurements:
  - The hub's 5 fins (4.1 mm blades) arch from the motor hub to the UNDERSIDE

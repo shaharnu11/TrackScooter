@@ -1,0 +1,39 @@
+Rev 011 (2026-08-10) — DESIGN OF RECORD. Forked from Rev 009 (uncut rim, 11T).
+
+WHY: the owner wanted more belt on the ground without buying a longer belt.
+The 1080 mm loop was being spent 265 sprocket wrap / 226 idler wraps / 386
+diagonals / 204 ground. Analysis showed (a) the isoceles triangle already
+maximises the base for a given apex height, so no layout change helps, and
+(b) the diagonals are governed by B. Lowering B converts diagonal into ground.
+
+THE CHANGE: B 170 -> 150 (vehicle sits 20 mm lower; the track conversion had
+raised it ~120 mm over the stock wheel, so this gives a little back and does
+not affect belt-to-fender clearance, which the sprocket sets).
+  ground contact  203.5 -> 231.2 mm  (+13.6%)
+  ground pressure ~0.27 -> ~0.24 kg/cm2 at ~130 kg all-up
+  wheel travel    +27.6/-25.0 -> +30.7/-29.2
+
+CASCADE (all re-solved, all guards PASS, zero warnings):
+  drop 38 -> 22    B=150 pushes the pivot toward the sprocket; 22 is what the
+                   arm-corner clearance allows.
+  theta 72 -> 80   the flatter arm (na 20.5 -> 10.8 deg) had rotated the shock
+                   back over the carrier; 80 restores an upright shock.
+  a_frac -> 0.434  keeps MR at 0.4351 = the purchased springs' design point.
+  arm rear corners CHAMFERED 10x10 (new fabrication step).
+  cut lengths: carrier 220, trailing arm 184, leading arm 166; shock hole at
+  51.1 from the pivot; upper shock eye at (+-52, +2).
+
+NEW GUARD: "arm rear corner to sprocket swept rib" — sweeps the chamfered
+corner over the full travel. This collision was UNGUARDED in every earlier
+revision; Rev 009 sits at 4.1 mm, Rev 011 at 5.8 mm. Worst case is full droop,
+and the trailing arm's inner plate is the one at risk (teeth reach |z|=25.5,
+that plate sits at |z|=25.4).
+
+UNCHANGED: the sprocket (11T, rib 18x16.54, wheel O198, cord O210) and all its
+print files/STLs; every purchased item (M12 GB901 8.8 stud axles + O15x12
+sleeves, shocks 150/100kg-8.5, 6302 bearings, tube stock, bronze bushings);
+the idler wheels (O108, tread 20.27 riding in the belt's 22 mm lug gap);
+keel still deleted; carriers still keel-hole-free.
+
+Supersedes: archive/rev009-uncut-11T (parent) and archive/rev010-cut-rim-10T-final
+(the grinder path, retired at the owner's request).
