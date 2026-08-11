@@ -32,6 +32,25 @@
 > Model: `apollo_track_pod_rev011.scad` · cut list: `apollo_track_pod_plates.pdf` +
 > `plates_rev011.dxf` · wheel: `wheel_hub_print_blueprint_rev011.pdf` + `stl/`.
 
+### Printing the 1:1 drilling templates
+
+`rev011_1to1_drilling_templates.pdf` — one part per page, glue onto the bar,
+centre-punch every red cross, peel, drill. Regenerate with:
+
+```bash
+python3 make_1to1_templates.py     # rewrites the .html + .pdf, then verifies them 1:1
+```
+
+**Print at 100% / "Actual size".** The pages are 195 × 259.5 mm, deliberately
+smaller than the printable area of both A4 and US Letter, so "Actual size" and
+Acrobat's "Shrink oversized pages" are both exact — but an explicit "Fit to page"
+will still stretch them. Measure the SCALE CHECK ruler on every sheet before you
+cut: if the 150 mm scale reads short, reprint at `15000 ÷ (the mm you measured)` %.
+
+The generator re-opens its own PDF and asserts every outline, hole diameter and
+ruler against the SCAD/DXF numbers, so a silent geometry regression fails the run
+rather than reaching steel.
+
 Converts a rigid rubber-track pod (hub-motor drive sprocket on a static Ø10 axle
 between scooter-fork legs, two bearing-mounted lower idlers, lugged rubber band)
 into an independently articulating suspension: a central pivot below the drive hub,
