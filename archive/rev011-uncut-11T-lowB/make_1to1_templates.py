@@ -334,23 +334,28 @@ def scale_block(x, y, width, xlen=150.0, ylen=50.0):
     o.append(text(tx, yy + 6.2,
                   f"Reprint percentage = {xlen * 100:.0f} ÷ (the mm you actually measured).",
                   size=2.7))
-    o.append(text(tx, yy + 11.4, f"if the {xlen:.0f} mm scale reads…", size=2.5,
+    o.append(text(tx, yy + 10.0,
+                  "Reads LONG = the dialog is enlarging; reads SHORT = shrinking. "
+                  "Either way: Actual size.",
+                  size=2.5, color=GREY))
+    o.append(text(tx, yy + 15.0, f"if the {xlen:.0f} mm scale reads…", size=2.5,
                   color=GREY, weight="bold"))
-    o.append(text(tx + 36.0, yy + 11.4, "reprint at", size=2.5, color=GREY,
+    o.append(text(tx + 36.0, yy + 15.0, "reprint at", size=2.5, color=GREY,
                   weight="bold"))
-    # rows scale with the ruler, so this stays correct on pages with a shorter scale
-    for i, frac in enumerate((0.90, 0.92, 0.94, 0.96, 0.98, 1.00)):
-        ry = yy + 15.4 + i * 4.0
+    # Rows scale with the ruler, and span BOTH directions: this page is smaller than
+    # the paper, so "Fit to page" enlarges it — the common failure is reading long.
+    for i, frac in enumerate((0.94, 0.96, 0.98, 1.00, 1.02, 1.04)):
+        ry = yy + 19.0 + i * 4.0
         exact = frac == 1.00
         o.append(text(tx, ry, f"{xlen * frac:.0f} mm", size=2.7))
         o.append(text(tx + 36.0, ry,
                       "correct — go ahead" if exact else f"{100 / frac:.0f}%",
                       size=2.7, weight="bold" if exact else "normal"))
-    o.append(text(tx, yy + 15.4 + 6 * 4.0 + 2.6,
+    o.append(text(tx, yy + 19.0 + 6 * 4.0 + 2.6,
                   f"Paper also grows/shrinks with humidity — "
                   f"±{xlen * 0.002:.1f} mm over {xlen:.0f} is normal.",
                   size=2.5, color=GREY))
-    return o, yy + max(ylen, 15.4 + 6 * 4.0 + 6.0) + 4.0
+    return o, yy + max(ylen, 19.0 + 6 * 4.0 + 6.0) + 4.0
 
 
 def layout_table(x, y, width, rows, heading):
