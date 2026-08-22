@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Rev 011 — Nuts &amp; Bolts</title>
+<style>
+  @page { size: A4; margin: 12mm 13mm; }
+  * { box-sizing: border-box; }
+  body { margin:0; color:#14181c; background:#fff;
+         font: 400 10.2pt/1.45 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .mono { font-family:"SF Mono", Menlo, Consolas, monospace; font-variant-numeric:tabular-nums; }
+  header { border:2px solid #14181c; padding:10px 14px 9px; margin-bottom:11px;
+           display:flex; justify-content:space-between; align-items:flex-end; }
+  h1 { font-size:16.5pt; margin:0; letter-spacing:.01em; text-transform:uppercase; }
+  .sub { font-size:8.2pt; color:#5c6770; margin-top:2px; }
+  .stamp { text-align:right; font-size:8.2pt; color:#5c6770; }
+  .stamp b { display:block; font-size:11pt; color:#14181c; }
+  h2 { font-size:10.5pt; text-transform:uppercase; letter-spacing:.07em;
+       border-bottom:1.6px solid #14181c; padding-bottom:3px; margin:13px 0 6px; }
+  h2 .where { float:right; font-weight:400; font-size:8pt; color:#5c6770; letter-spacing:0; text-transform:none; }
+  table { width:100%; border-collapse:collapse; font-size:9.6pt; }
+  th { text-align:left; font-size:7.6pt; text-transform:uppercase; letter-spacing:.08em;
+       color:#5c6770; padding:3px 6px; border-bottom:1px solid #aab3ba; }
+  th.q, td.q { text-align:right; width:44px; white-space:nowrap; }
+  td { padding:3.5px 6px; border-bottom:1px solid #dde2e6; vertical-align:top; }
+  tr:last-child td { border-bottom:0; }
+  td.item b { font-weight:600; }
+  .use { color:#3d4852; }
+  .use::before { content:"("; } .use::after { content:")"; }
+  .warn { background:#faf0ef; border:1.4px solid #a33d34; padding:7px 10px; font-size:9pt; margin:8px 0; }
+  .warn b { color:#a33d34; }
+  .note { font-size:8.6pt; color:#5c6770; margin:4px 0 0; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+  .nobuy td:first-child { text-decoration:line-through; text-decoration-color:#a33d34; }
+  .torq td { border-bottom:1px solid #dde2e6; }
+  .pagebreak { break-before: page; }
+  footer { margin-top:14px; padding-top:6px; border-top:1px solid #aab3ba;
+           font-size:7.8pt; color:#5c6770; display:flex; justify-content:space-between; }
+  .chk { width:13px; height:13px; border:1.3px solid #14181c; display:inline-block;
+         vertical-align:-2px; margin-right:7px; }
+  .shoplist td { padding:4.2px 6px; }
+</style></head><body>
+
+<header>
+  <div>
+    <h1>Nuts &amp; bolts — complete list</h1>
+    <div class="sub">Apollo Track Pod &middot; two pods, one per side &middot; nothing below class 8.8 anywhere &middot; grade 8 (US) = class 10.9</div>
+  </div>
+  <div class="stamp"><b>REV 011</b>2026-08-22<br>source: FASTENERS.md + apollo_track_pod_rev011.scad</div>
+</header>
+
+<h2>A &middot; Pivot axle <span class="where">Sheet 2 &middot; &sect;7.2 / &sect;7.3</span></h2>
+<table>
+  <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
+  <tr><td class="item"><b>M16 &times; 195 hex bolt</b>, part-threaded 45 mm one end, cl.10.9 <span class="use">the pivot axle both arms swing on; smooth shank 150 must span all 4 bushings + spacer &mdash; bushings never ride on thread; head stamped 10.9</span></td><td class="q">1</td><td class="q"><b>2</b></td></tr>
+  <tr><td class="item"><b>M16 nylock nut</b> <span class="use">closes the pivot stack &mdash; one per bolt only, it is a headed bolt; zero end-float then back &#8539; turn, no torque figure</span></td><td class="q">1</td><td class="q"><b>2</b></td></tr>
+  <tr><td class="item"><b>&Oslash;16 hardened flat washer</b> <span class="use">under the pivot bolt head and under the nylock</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>&Oslash;16 &times; &Oslash;30 &times; 1.5 hardened thrust washer</b> <span class="use">between every steel face that rotates against another in the pivot stack: spacer&ndash;flange, fork&ndash;fork scissor gap, flange&ndash;sleeve</span></td><td class="q">6</td><td class="q"><b>12</b></td></tr>
+</table>
+<p class="note">Substitute if the bolt can't be found: M16 double-end stud &times; 190 + 2 nylocks per pod, smooth middle &ge; 150. Prefer 8.8/B7 over stainless. Companions in this stack (not fasteners): 4 flanged bronze bushings SAE 841 &Oslash;16&times;&Oslash;22&times;20 per pod.</p>
+
+<h2>B &middot; Idler wheel axles <span class="where">supersedes &sect;7.5 &middot; studs purchased 2026-07-25</span></h2>
+<table>
+  <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
+  <tr><td class="item"><b>GB901 M12 &times; 110 double-end stud</b>, 8.8 <span class="use">TRAILING idler axle &mdash; runs in the 25 mm tensioner slot</span></td><td class="q">1</td><td class="q"><b>2</b></td></tr>
+  <tr><td class="item"><b>GB901 M12 &times; 120 double-end stud</b>, 8.8 <span class="use">LEADING idler axle &mdash; plain &Oslash;15.4 bore; longer because the leading fork is wider</span></td><td class="q">1</td><td class="q"><b>2</b></td></tr>
+  <tr><td class="item"><b>M12 nylock nut</b> <span class="use">two per stud &mdash; a double-end stud has no head</span></td><td class="q">4</td><td class="q"><b>8</b></td></tr>
+  <tr><td class="item"><b>M12 washer</b>, &asymp;2.5 thick, snug &Oslash;13 bore <span class="use">caps the &Oslash;15 sleeve column AND clamps the plate &mdash; goes directly against the plate, ALWAYS before the eye nut; a sloppy bore that slips over the &Oslash;15 ring lets the fork crush onto the wheel</span></td><td class="q">4</td><td class="q"><b>8</b></td></tr>
+</table>
+<p class="note">Sleeves (inner tube 50.8 TR / 66.5 LD + 2 &times; 6.35 rings per axle) come from the 500 mm &Oslash;15&times;&Oslash;12 pipe in the &sect;7.1 steel order &mdash; cut long, file square, fit at dry-stack. Pass test: wheel spins free with zero side-play at full torque; if it drags, the tube is short &mdash; never back the nut off instead.</p>
+
+<h2>C &middot; Fork mount <span class="where">&sect;7.7</span></h2>
+<table>
+  <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
+  <tr><td class="item"><b>M8 &times; 30 bolt</b>, cl.10.9 <span class="use">bolts each carrier to its fork leg: carrier 6 + leg 4 + nut; locks the torque-arm rotation</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M8 nylock nut</b> <span class="use">on the fork-leg bolts</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M10 hub-motor axle nut</b> <span class="use">holds the hub motor in the carrier's flatted &Oslash;10.4 torque-arm hole &mdash; REUSED from the donor pod, do not buy</span></td><td class="q">&mdash;</td><td class="q">reuse</td></tr>
+</table>
+
+<h2>D &middot; Shocks <span class="where">&sect;7.7 / &sect;9.5 &middot; 4 shocks total, eyes measured &Oslash;8</span></h2>
+<table>
+  <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
+  <tr><td class="item"><b>M8 part-threaded bolt, &asymp;135</b> <span class="use">lower shock eye &mdash; through both arm plates at station a; the eye rides the spacer sleeve on the smooth shank</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M8 nylock nut</b> <span class="use">on the lower shock bolts</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M8 pin/bolt &asymp;35&ndash;40 + nylock</b> <span class="use">UPPER shock eye, through the &Oslash;8.4 hole in the carrier tab &mdash; missing from &sect;7.7; length unspecified anywhere, measure at the &sect;9.5 fitting with the real shock eye in hand</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+</table>
+<p class="note">Companion (steel order, not a fastener): &Oslash;15 OD &times; &Oslash;9 ID &times; &asymp;45 spacer sleeve for each lower eye &mdash; 4 total. Confirm the &asymp;135 lower length at &sect;9.5 too.</p>
+
+<h2>E &middot; Belt tensioner <span class="where">&sect;7.6 &middot; Rev 004a hardware &middot; trailing arm only</span></h2>
+<table>
+  <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
+  <tr><td class="item"><b>M6 &times; 60 full-thread draw bolt</b>, cl.8.8+ <span class="use">threads into the eye nut through the welded lug; advancing it draws the axle rearward in the slot &mdash; loaded in tension; advance both sides evenly</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M6 jam nut</b> <span class="use">locks the draw bolt against the lug's rear face once belt tension is set</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M6 lifting eye nut</b>, DIN 582-style, eye inner &Oslash;20 <span class="use">rides the protruding trailing-axle end, clamped washer&ndash;eye&ndash;nylock; the draw bolt pulls it &mdash; nothing on the pod gets drilled or tapped. Owner already has these</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+</table>
+
+<h2>F &middot; Threaded consumables <span class="where">&sect;7.8</span></h2>
+<table>
+  <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
+  <tr><td class="item"><b>M6 grease zerk</b> <span class="use">one per fork boss if you add the recommended cross-drilled grease passage &mdash; verify the thread really is M6</span></td><td class="q">1</td><td class="q"><b>2</b></td></tr>
+  <tr><td class="item"><b>Nylock + hardened washer assortment</b>, M8/M10, class 10 / Gr8 <span class="use">for the fitting-up you will inevitably redo</span></td><td class="q" colspan="2">1 box</td></tr>
+  <tr><td class="item"><b>Blue (medium) threadlocker + paint pen</b> <span class="use">threadlocker on non-nylock threads; pen for torque witness marks on every fastener</span></td><td class="q" colspan="2">1 ea</td></tr>
+</table>
+
+<div class="pagebreak"></div>
+
+<h2>Do NOT buy — superseded by Rev 011</h2>
+<table class="nobuy">
+  <tr><td>M8 threaded rod &asymp;172 + 4 nuts + washers (&sect;7.6 keel standoff)</td><td>keel is deleted &mdash; fork legs box the carriers</td></tr>
+  <tr><td>M8 keel bolt through the carriers</td><td>Rev 011 carrier strips are 220 with no keel hole</td></tr>
+  <tr><td>4 &times; M15&times;1.5 fine nuts + ~8 &Oslash;15 washers (&sect;7.5)</td><td>idler axles are now M12 studs; &Oslash;15 shaft kept only as spare</td></tr>
+  <tr><td>Second M16 nylock per pivot bolt</td><td>the bolt has a head &mdash; one nut per bolt</td></tr>
+  <tr><td>Anything below class 8.8</td><td>unmarked hardware-store bolts are out, everywhere</td></tr>
+</table>
+
+<h2>Torque</h2>
+<table class="torq">
+  <tr><td><b>M6</b> (draw bolts / jam nuts)</td><td>snug + jam nut &mdash; sets belt tension, not preload</td></tr>
+  <tr><td><b>M8</b> cl.10.9</td><td class="mono">30 N&middot;m</td></tr>
+  <tr><td><b>M10</b> (hub axle, reused nuts)</td><td class="mono">60 N&middot;m</td></tr>
+  <tr><td><b>M12</b> (idler axle nylocks)</td><td class="mono">105 N&middot;m</td><td>&mdash; only after the wheel spins free with zero side-play</td></tr>
+  <tr><td><b>M16</b> (pivot nylock)</td><td colspan="2">zero end-float, then back off &#8539; turn &mdash; running fit, never a torque figure</td></tr>
+</table>
+<p class="note">Paint-pen witness marks on everything. Retorque at 1 h / 5 h / then every 20 h (&sect;10).</p>
+
+<h2>Shopping checklist — both pods</h2>
+<div class="grid2">
+<table class="shoplist">
+  <tr><td><span class="chk"></span>M16 &times; 195 part-thread cl.10.9 bolt</td><td class="q mono">2</td></tr>
+  <tr><td><span class="chk"></span>M16 nylock nut</td><td class="q mono">2</td></tr>
+  <tr><td><span class="chk"></span>&Oslash;16 hardened flat washer</td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>&Oslash;16&times;&Oslash;30&times;1.5 thrust washer</td><td class="q mono">12</td></tr>
+  <tr><td><span class="chk"></span>M12 &times; 110 stud 8.8 <span class="use">have &mdash; purchased</span></td><td class="q mono">2</td></tr>
+  <tr><td><span class="chk"></span>M12 &times; 120 stud 8.8 <span class="use">have &mdash; purchased</span></td><td class="q mono">2</td></tr>
+  <tr><td><span class="chk"></span>M12 nylock nut</td><td class="q mono">8</td></tr>
+  <tr><td><span class="chk"></span>M12 washer, snug &Oslash;13 bore</td><td class="q mono">8</td></tr>
+  <tr><td><span class="chk"></span>M8 &times; 30 cl.10.9 bolt</td><td class="q mono">4</td></tr>
+</table>
+<table class="shoplist">
+  <tr><td><span class="chk"></span>M8 part-thread bolt &asymp;135</td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M8 pin/bolt &asymp;35&ndash;40 <span class="use">measure at &sect;9.5 first</span></td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M8 nylock nut</td><td class="q mono">12</td></tr>
+  <tr><td><span class="chk"></span>M6 &times; 60 full-thread draw bolt 8.8</td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M6 jam nut</td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M6 eye nut DIN 582 &Oslash;20 <span class="use">have &mdash; owner's</span></td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M6 grease zerk</td><td class="q mono">2</td></tr>
+  <tr><td><span class="chk"></span>M10 hub axle nut <span class="use">reuse from donor</span></td><td class="q mono">&mdash;</td></tr>
+</table>
+</div>
+
+<div class="warn" style="margin-top:10px"><b>Assembly order that matters:</b> on the idler axles the M12 washer goes directly against the arm plate, then the eye nut (trailing only), then the nylock &mdash; washer first is what caps the &Oslash;15 sleeve column. Reading &sect;B's stack as "eye against the plate" leaves the column uncapped and the fork can be crushed onto the wheel.</div>
+
+<footer>
+  <span>Rev 011 &middot; rev011-low-b &middot; generated 2026-08-22</span>
+  <span>source of truth: apollo_track_pod_rev011.scad + revision slip &mdash; not the &sect;7 prose</span>
+</footer>
+</body></html>
