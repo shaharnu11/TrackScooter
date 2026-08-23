@@ -44,7 +44,7 @@
     <h1>Nuts &amp; bolts — complete list</h1>
     <div class="sub">Apollo Track Pod &middot; two pods, one per side &middot; nothing below class 8.8 anywhere &middot; grade 8 (US) = class 10.9</div>
   </div>
-  <div class="stamp"><b>REV 011</b>2026-08-22<br>source: FASTENERS.md + apollo_track_pod_rev011.scad</div>
+  <div class="stamp"><b>REV 011b</b>2026-08-24<br>source: FASTENERS.md + apollo_track_pod_rev011.scad</div>
 </header>
 
 <h2>A &middot; Pivot axle <span class="where">Sheet 2 &middot; &sect;7.2 / &sect;7.3</span></h2>
@@ -84,12 +84,13 @@
 </table>
 <p class="note">Companion (steel order, not a fastener): &Oslash;15 OD &times; &Oslash;9 ID &times; &asymp;45 spacer sleeve for each lower eye &mdash; 4 total. Confirm the &asymp;135 lower length at &sect;9.5 too.</p>
 
-<h2>E &middot; Belt tensioner <span class="where">&sect;7.6 &middot; Rev 004a hardware &middot; trailing arm only</span></h2>
+<h2>E &middot; Belt tensioner <span class="where">Rev 011b PUSHER &middot; supersedes &sect;7.6 pull-type &middot; trailing arm only</span></h2>
 <table>
   <tr><th>Item</th><th class="q">/pod</th><th class="q">both</th></tr>
-  <tr><td class="item"><b>M6 &times; 60 full-thread draw bolt</b>, cl.8.8+ <span class="use">threads into the eye nut through the welded lug; advancing it draws the axle rearward in the slot &mdash; loaded in tension; advance both sides evenly</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
-  <tr><td class="item"><b>M6 jam nut</b> <span class="use">locks the draw bolt against the lug's rear face once belt tension is set</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
-  <tr><td class="item"><b>M6 lifting eye nut</b>, DIN 582-style, eye inner &Oslash;20 <span class="use">rides the protruding trailing-axle end, clamped washer&ndash;eye&ndash;nylock; the draw bolt pulls it &mdash; nothing on the pod gets drilled or tapped. Owner already has these</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M6 &times; 45 full-thread push bolt</b>, cl.8.8+ <span class="use">cut the purchased &times;60 down to 45; threads through the block welded FORWARD of the slot &mdash; screwing in PUSHES the axle rearward, loaded in compression; advance both sides evenly. Rev 011b: replaces the pull-type whose head hit the belt teeth</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M6 jam nut</b> <span class="use">locks the push bolt against the block's forward face once belt tension is set</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><b>M6 plain nut, welded to the block</b> <span class="use">the thread the push bolt runs in &mdash; weld over the &Oslash;6.6 hole on the forward face (or drill 5.0 and tap M6 instead)</span></td><td class="q">2</td><td class="q"><b>4</b></td></tr>
+  <tr><td class="item"><s><b>M6 lifting eye nut</b>, DIN 582</s> <span class="use">NO LONGER NEEDED &mdash; replaced by the &Oslash;15 &times; 7 push collar cut from the axle-sleeve pipe; keep the owner's eye nuts as spares</span></td><td class="q">&mdash;</td><td class="q">&mdash;</td></tr>
 </table>
 
 <h2>F &middot; Threaded consumables <span class="where">&sect;7.8</span></h2>
@@ -138,18 +139,19 @@
   <tr><td><span class="chk"></span>M8 part-thread bolt &asymp;135</td><td class="q mono">4</td></tr>
   <tr><td><span class="chk"></span>M8 pin/bolt &asymp;35&ndash;40 <span class="use">measure at &sect;9.5 first</span></td><td class="q mono">4</td></tr>
   <tr><td><span class="chk"></span>M8 nylock nut</td><td class="q mono">12</td></tr>
-  <tr><td><span class="chk"></span>M6 &times; 60 full-thread draw bolt 8.8</td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M6 &times; 60 full-thread bolt 8.8 <span class="use">cut to 45 &mdash; push bolts</span></td><td class="q mono">4</td></tr>
   <tr><td><span class="chk"></span>M6 jam nut</td><td class="q mono">4</td></tr>
-  <tr><td><span class="chk"></span>M6 eye nut DIN 582 &Oslash;20 <span class="use">have &mdash; owner's</span></td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span>M6 plain nut <span class="use">weld to pusher blocks</span></td><td class="q mono">4</td></tr>
+  <tr><td><span class="chk"></span><s>M6 eye nut DIN 582</s> <span class="use">Rev 011b: not needed &mdash; spares</span></td><td class="q mono">0</td></tr>
   <tr><td><span class="chk"></span>M6 grease zerk</td><td class="q mono">2</td></tr>
   <tr><td><span class="chk"></span>M10 hub axle nut <span class="use">reuse from donor</span></td><td class="q mono">&mdash;</td></tr>
 </table>
 </div>
 
-<div class="warn" style="margin-top:10px"><b>Assembly order that matters:</b> on the idler axles the M12 washer goes directly against the arm plate, then the eye nut (trailing only), then the nylock &mdash; washer first is what caps the &Oslash;15 sleeve column. Reading &sect;B's stack as "eye against the plate" leaves the column uncapped and the fork can be crushed onto the wheel.</div>
+<div class="warn" style="margin-top:10px"><b>Assembly order that matters:</b> on the idler axles the M12 washer goes directly against the arm plate, then the &Oslash;15 push collar (trailing only, Rev 011b), then the nylock &mdash; washer first is what caps the &Oslash;15 sleeve column; a part with a bore bigger than &Oslash;15 placed against the plate leaves the column uncapped and the fork can be crushed onto the wheel.</div>
 
 <footer>
-  <span>Rev 011 &middot; rev011-low-b &middot; generated 2026-08-22</span>
+  <span>Rev 011b &middot; rev011-low-b &middot; generated 2026-08-24</span>
   <span>source of truth: apollo_track_pod_rev011.scad + revision slip &mdash; not the &sect;7 prose</span>
 </footer>
 </body></html>

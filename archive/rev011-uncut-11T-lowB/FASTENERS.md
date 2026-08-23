@@ -45,7 +45,7 @@ in a Ø15 OD × Ø12 ID sleeve stack — *not* the Ø15 thru-axles §7.5 still d
 | M12 nylock nut | 4 | **8** | Two per stud — a double-end stud has no head |
 | M12 washer, ≈2.5 thick | 4 | **8** | |
 
-Stack per side: `[M6 eye nut 6 — trailing only] + washer 2.5 + M12 nylock 11.8 + 2 proud`.
+Stack per side: `[Ø15 push collar 7 — trailing only, Rev 011b] + washer 2.5 + M12 nylock 11.8 + ~2 proud`. The collar is a 7 mm ring cut from the same Ø15 × Ø12 pipe as the sleeves.
 Sleeves (inner tube 50.8 trailing / 66.5 leading + 2 × 6.35 rings per axle) are cut from
 the 500 mm length of Ø15 OD × Ø12 ID pipe in the §7.1 steel order — cut long, file square,
 fit at dry-stack.
@@ -83,19 +83,25 @@ around 35–40. **Measure it at the §9.5 fitting** with the real shock eye in h
 
 Confirm the lower bolt length at §9.5 too — §7.7 only says "≈135".
 
-## E · Belt tensioner — §7.6, Rev 004a hardware
+## E · Belt tensioner — **Rev 011b PUSHER** (supersedes the §7.6 / Rev 004a pull-type)
 
-Chain-adjuster style, on the trailing arm. Two lug/bolt/eye-nut sets per pod (one per
-fork-plate tip) — §7.6 says "2×", read here as one pod's worth, matching the 2 tensioner
-lugs in `plates_rev011.dxf`.
+**Why it changed (2026-08-24):** the pull-type draw-bolt head sat ~44 mm behind the axle,
+dead centre of the belt wrap — where the drive-lug tips sweep only 39 mm from the axle.
+The old guard checked the belt *face*, not the teeth; the head touched the lugs on the
+bench. The forward side of the idler is never wrapped, so the hardware moved there:
+a block welded **forward** of the slot, and the M6 bolt now **pushes** the axle rearward.
 
 | Item | /pod | both | Notes |
 |---|---:|---:|---|
-| M6 × 60 **full-thread** draw bolt, cl.8.8 or better | 2 | **4** | Advancing it draws the axle rearward; loaded in tension |
-| M6 jam nut | 2 | **4** | Locks against the lug's rear face |
-| M6 lifting eye nut, DIN 582-style, eye inner Ø20 | 2 | **4** | Owner already has these. Rides the protruding axle end — no drilling, no tapping |
+| M6 × **45** full-thread push bolt, cl.8.8 or better | 2 | **4** | Cut the purchased ×60 down to 45 — full length fouls the lower shock sleeve near zero take-up. Threads through the block; loaded in **compression** |
+| M6 jam nut | 2 | **4** | Locks against the block's **forward** face once tension is set |
+| M6 plain nut, welded to the block's forward face | 2 | **4** | The thread the bolt runs in (or skip it: drill the block 5.0 and tap M6) |
+| ~~M6 lifting eye nut DIN 582~~ | — | — | **No longer needed** — replaced by the Ø15 push collar. Keep as spares |
 
-The draw bolt threads **into the eye nut**, so there is nothing to tap anywhere on the pod.
+The bolt tip bears on the **Ø15 × 7 push collar** clamped on the stud between washer and
+nylock (cut from the §7.1 pipe — not a fastener). The bolt is a *positioner*, not a
+retainer: the torqued M12 nylocks hold the axle, exactly as before. Adjust with nylocks
+snug, both sides evenly, jam, then torque to 105 N·m.
 
 ## F · Consumables that are threaded — §7.8
 
@@ -144,9 +150,10 @@ M8 × 30 cl.10.9 bolt ........................  4
 M8 part-threaded bolt ≈135 ..................  4
 M8 pin/bolt ≈35–40 (upper shock eye) ........  4   ← not in §7.7, measure at §9.5
 M8 nylock nut ............................... 12
-M6 × 60 full-thread draw bolt 8.8 ...........  4
+M6 × 60 full-thread bolt 8.8 (cut to 45) ....  4   push bolts — Rev 011b
 M6 jam nut ..................................  4
-M6 lifting eye nut DIN 582 (eye Ø20) ........  4   (owner has)
+M6 plain nut (weld to pusher blocks) ........  4
+M6 lifting eye nut DIN 582 (eye Ø20) ........  0   ← Rev 011b: NOT needed, keep as spares
 M6 grease zerk ..............................  2
 M10 hub axle nut ............................  reused from donor pod
 ```

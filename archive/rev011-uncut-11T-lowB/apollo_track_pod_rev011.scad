@@ -352,8 +352,10 @@ boss_disc  = 40;    // arm FLAT-BAR width (Rev 004: plates are plain 40 mm
 brace_w    = 30;    // brace web width after trimming the 40 bar
 brace_tr   = 50.8;  // brace web length, TRAILING fork (plates at |z|=zi_tr)
 brace_ld   = 66.5;  // brace web length, LEADING fork  (nests outside the trailing)
-lug_l      = 26;    // tensioner lug: 26 across x 18 tall x 6 thick, M6 hole 11 up
-lug_h_pl   = 18;
+lug_l      = 26;    // tensioner PUSHER BLOCK (Rev 011b): 26 across x 14 tall
+lug_h_pl   = 14;    //   x 6 thick, hole 7 up — drill 5.0 + tap M6, or drill
+                    //   6.6 and weld an M6 nut over it on the FORWARD face
+draw_len   = 45;    // M6 push bolt (cut the purchased x60 full-thread down)
 arm_chamf  = 10;    // REV 011: chamfer on the TWO REAR corners of every arm
                     // bar (the (-22, ±20) corners at the pivot end). They are
                     // the closest thing to the spinning sprocket at full
@@ -508,11 +510,19 @@ echo(str("PIVOT STACK: centre spacer ≈ ", 2*sp_half, " · outboard sleeves ≈
          sleeve_ln, " ×2 — all Ø22×3 tube, cut at the §9.3 dry-stack"));
 echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
          25 - tension_pos, " mm remaining (render_mode=\"tensioner\" for the ",
-         "Sheet-6 close-up; advance both draw bolts evenly)"));
-// draw-bolt head must stay radially inside the belt wrap at the wheel (D/2)
-tens_head_gap = D/2 - ((34 + 18) - tension_pos);
-echo(str(tens_head_gap < 2 ? "*** WARN " : "PASS ",
-         "draw-bolt head to belt wrap: ", tens_head_gap,
+         "Sheet-6 close-up; advance both push bolts evenly)"));
+// Rev 011b tensioner guards. The old check (head vs belt FACE at D/2) let
+// the pull-type head sit 5 mm INSIDE the drive-lug tip sweep — the teeth
+// stand lug_h proud of the face. Guard the teeth, not the face:
+tens_lug_gap = (D/2 - lug_h) - 11;   // collar/nylock max radius ~11 about axle
+echo(str(tens_lug_gap < 5 ? "*** WARN " : "PASS ",
+         "tensioner collar/nylock to belt lug-tip sweep (r", D/2 - lug_h,
+         "): ", tens_lug_gap, " mm"));
+// pusher's forward stickout vs the lower shock-bolt sleeve at (a, 0): only
+// tight near zero take-up; cut the bolt to draw_len so it clears
+tens_head_x = (C + tension_pos - 7.5) - draw_len - 4.2;
+echo(str(tens_head_x - (a + 7.5) < 2 ? "*** WARN " : "PASS ",
+         "push-bolt head to lower shock sleeve: ", tens_head_x - (a + 7.5),
          " mm at tension_pos=", tension_pos));
 // cut/buy lengths that follow from fork_gap + leg_t (echoed so the BOM can
 // be verified against the measured fork instead of the old 30 mm assumption)
@@ -529,8 +539,8 @@ if (use_keel) echo(str("KEEL: tube Ø", keel_od, "×1.5 cut ", 2*cz,
 if (!use_keel) echo("KEEL: deleted (fork legs box the carriers since Rev 002)");
 // idler axle — PURCHASED 2026-07-25: 2x GB901 M12x110 (TRAILING) + 2x
 // M12x120 (LEADING), grade 8.8 + 500 mm of 15 OD x 12 ID pipe for the sleeve
-// stack (SF ~3). Ø15 shaft kept as emergency spare. Stack/side: [eye 6,
-// trailing only] + washer 2.5 + M12 nyloc 11.8 + 2 proud.
+// stack (SF ~3). Ø15 shaft kept as emergency spare. Stack/side: [Ø15 push
+// collar 7, trailing only] + washer 2.5 + M12 nyloc 11.8 + ~2 proud.
 echo(str("IDLER AXLE (PURCHASED: M12 studs 2x110 TR + 2x120 LD, 8.8 + 500 pipe): ",
          "cut per axle from 15ODx12ID pipe — inner tube ", 2*zi_tr, " (TR) / ",
          2*zi_ld, " (LD; plate-inner to plate-inner, through both bearings) + 2 rings ",
@@ -661,48 +671,53 @@ module tab_stub_2d(p){
 
 // ============================================================== components
 // Sheet-6 belt tensioner, local arm coords (pivot at origin, wheel end +x).
-// Motorcycle chain-adjuster style: welded lug across each fork-plate tip,
-// M6 EYE NUT riding on the protruding axle end (Rev 004a), M6 draw bolt
-// through the lug threading into the block. Head + jam nut bear on the lug's
-// REAR face -> advancing the bolt DRAWS the axle rearward through the slot;
-// belt tension (which pulls the axle forward) loads the bolt in tension.
-// Lug position: front face at C+34 — behind the slot's rear end (C+32.7),
-// forward of the plate tip (C+44). This keeps the bolt head within 52 mm of
-// the axle at every slot position (belt wrap radius at the wheel = D/2 = 54;
-// a tip-mounted lug would have pushed the head THROUGH the belt at slack).
-// Block-rear meets lug-front exactly at full 25 mm take-up = natural stop.
-xl_lug = 34;                      // lug front face, mm behind nominal axle (C)
+// REV 011b (owner, 2026-08-24): flipped from a pull-type draw bolt to a
+// PUSHER, motorcycle-adjuster style, because the pull-type's bolt head sat
+// ~44 mm behind the axle — dead centre of the belt wrap, where the drive
+// LUG TIPS sweep only D/2 - lug_h = 39 mm from the axle. The old guard
+// checked the belt FACE (Ø108, 10 mm clear) and missed the teeth entirely;
+// the owner found the head touching them on the bench. The rear of the
+// idler is wrapped from ~52 deg over the bottom, so NO rear-mounted head
+// can clear the teeth; the FORWARD side (toward the pivot) is never
+// wrapped, so the hardware moves there:
+//   - pusher BLOCK (26 x 14 x 6, was the 26x18 lug) welded across each
+//     plate tip, rear face at C - xb_rear — 7.5 clear of the Ø15 collar at
+//     zero take-up, 7.3 clear of the slot's round end for the weld;
+//   - M6 push bolt threads THROUGH the block (tap M6, or weld a nut on the
+//     forward face); screwing IN pushes the axle rearward. Belt tension now
+//     loads the bolt in COMPRESSION - it is a positioner only; the torqued
+//     M12 nylocks are what hold the axle, as before.
+//   - the bolt tip bears on a Ø15 x 7 PUSH COLLAR cut from the same
+//     Ø15x12 axle-sleeve pipe, clamped washer-to-nylock on the stud. It
+//     replaces the Rev 004a M6 eye nut (no longer needed - keep as spares)
+//     and, unlike pushing a nut flat, cannot rotate at final torque.
+//     Stack/side: washer 2.5 + collar 7 + nylock 11.8 = 53.05 -> the
+//     purchased M12x110 still ends 1.95 proud. Nothing new to buy.
+xb_rear = 15;                     // block REAR face, mm forward of nominal C
 module tensioner_hw(zi){
   zo = zi + plate_t;              // fork-plate outer face
-  xl = C + xl_lug;                // lug front face
-  bz = zo + 11;                   // draw-bolt axis, outboard of the plate
+  xb = C - xb_rear;               // block REAR face (faces the axle)
+  bz = zo + 7;                    // push-bolt axis, centred on the collar
+  tip = C + tension_pos - 7.5;    // bolt tip on the Ø15 collar surface
   for (s=[1,-1]) scale([1,1,s]){
-    // welded lug: upright standing on the plate outer face, weld all around
+    // welded pusher block: upright on the plate outer face, weld all around
     color([0.30,0.36,0.48]) difference(){
-      translate([xl, -13, zo]) cube([6, 26, (bz - zo) + 7]);
-      translate([xl-1, 0, bz]) rotate([0,90,0]) cylinder(h=8, d=6.6);
+      translate([xb-6, -13, zo]) cube([6, 26, (bz - zo) + 7]);
+      translate([xb-7, 0, bz]) rotate([0,90,0]) cylinder(h=8, d=5.0); // tap M6
     }
-    // 7 mm standoff ring between plate outer face and eye nut (sets the eye
-    // at the lug-hole height; cut from the Ø22×3 tube)
-    color([0.55,0.55,0.58]) translate([C + tension_pos, 0, zo])
-      difference(){ cylinder(h=7, d=22); cylinder(h=9, d=15.4); }
-    // M6 lifting EYE NUT on the protruding axle end (Rev 004a — replaces the
-    // drilled+tapped block: eye Ø20 over the Ø15 axle, threaded boss toward
-    // the lug; zero fabrication). DIN 582-style, eye d2=20, section s=8.
-    color([0.45,0.45,0.48]) translate([C + tension_pos, 0, bz]){
-      difference(){ cylinder(h=8, d=36, center=true);          // eye ring
-                    cylinder(h=10, d=20, center=true); }
-      translate([13,0,0]) rotate([0,90,0]) difference(){       // threaded boss
-        cylinder(h=10, d=13, center=true);
-        cylinder(h=12, d=5, center=true); }
-    }
-    // M6 draw bolt: from the eye-nut boss, through the lug; jam nut + head
+    // Ø15 x 7 push collar on the stud, clamped washer-to-nylock (cut from
+    // the same Ø15x12 axle-sleeve pipe) — the solid round target the bolt
+    // tip bears on; unlike a nut flat it cannot rotate at final torque
+    color([0.55,0.55,0.58]) translate([C + tension_pos, 0, zo + 2.5])
+      difference(){ cylinder(h=7, d=15); translate([0,0,-1]) cylinder(h=9, d=12.1); }
+    // M6 push bolt through the block: screwing IN pushes the collar (and so
+    // the axle) rearward; jam nut locks on the block's FORWARD face
     color([0.55,0.55,0.58]){
-      translate([C + tension_pos - 8, 0, bz]) rotate([0,90,0])
-        cylinder(h=(xl + 16) - (C + tension_pos - 8), d=5.8);
-      translate([xl + 6.5,  0, bz]) rotate([0,90,0])
-        cylinder(h=5.2, d=11.5, $fn=6);   // M6 jam nut against the lug
-      translate([xl + 13.5, 0, bz]) rotate([0,90,0])
+      translate([tip - draw_len, 0, bz]) rotate([0,90,0])
+        cylinder(h=draw_len, d=5.8);
+      translate([xb - 6 - 5.2, 0, bz]) rotate([0,90,0])
+        cylinder(h=5.2, d=11.5, $fn=6);   // M6 jam nut on the block front
+      translate([tip - draw_len - 4.2, 0, bz]) rotate([0,90,0])
         cylinder(h=4.2, d=11.5, $fn=6);   // M6 bolt head
     }
   }
@@ -769,15 +784,10 @@ module part_catalog(name){
     color(cSteel) rotate([0,90,0]) cat_tube(keel_od,9,148);
     color(cSteel) translate([0,30,0]) rotate([0,90,0]) cat_threads(8,172);
     color(cSteel) for (i=[0:3]) translate([20+i*28,55,0]) cat_hexnut(13,7,6.9);
-  } else if (name == "draw_bolt"){               // BOM 12 — bolt + jam + eye nut
-    color(cSteel) rotate([0,90,0]) cat_bolt(6, 4, 52, 10, 4);
+  } else if (name == "draw_bolt"){               // BOM 12 — bolt + jam + collar
+    color(cSteel) rotate([0,90,0]) cat_bolt(6, 0, draw_len, 10, 4);
     color(cSteel) translate([25,-24,0]) cat_hexnut(10, 5, 5.2);
-    color([0.45,0.45,0.48]) translate([62,-24,0]){
-      difference(){ cylinder(h=8, d=36, center=true);
-                    cylinder(h=10, d=20, center=true); }
-      translate([0,-16,0]) rotate([90,0,0]) difference(){
-        cylinder(h=10, d=13, center=true);
-        cylinder(h=12, d=5, center=true); } }
+    color(cSteel) translate([55,-24,0]) cat_tube(15, 12, 7);
   } else if (name == "hardware"){                // BOM 14 — assortment
     color(cSteel){ cat_hexnut(13,8,6.9);
       translate([24,4,0])  cat_hexnut(17,10,8.8);
@@ -978,9 +988,9 @@ module arm3d(zi, slot, ang, szs){
         color([0.8,0.8,0.82]) translate([0,0,zi+plate_t])       // washer 13x24
           difference(){ cylinder(h=2.5, d=24); cylinder(h=4, d=13, center=true); }
         if (slot) color([0.72,0.68,0.35]) translate([0,0,zi+plate_t+2.5])
-          difference(){ cylinder(h=6, d=20);                    // tensioner eye
-                        cylinder(h=8, d=12.4, center=true); }
-        color([0.45,0.45,0.48]) translate([0,0,zi+plate_t+2.5+(slot?6:0)])
+          difference(){ cylinder(h=7, d=15);                    // push collar
+                        cylinder(h=9, d=12.1, center=true); }
+        color([0.45,0.45,0.48]) translate([0,0,zi+plate_t+2.5+(slot?7:0)])
           difference(){ cylinder(h=11.8, d=19, $fn=6);          // M12 nyloc
                         cylinder(h=13, d=12, center=true); }
       }
@@ -1079,10 +1089,10 @@ if (render_mode == "plates"){
     square([brace_tr, brace_w]);                            // trailing 50.8
     translate([60, 0]) square([brace_ld, brace_w]);         // leading  66.5
   }
-  translate([150, -245]) for (i=[0:1])        // tensioner lugs: 2/pod, both on
+  translate([150, -245]) for (i=[0:1])        // pusher blocks: 2/pod, both on
     translate([i*32, 0]) difference(){        // the TRAILING arm (one per plate)
-      square([lug_l, lug_h_pl]);
-      translate([lug_l/2, 11]) circle(d=6.6); }
+      square([lug_l, lug_h_pl]);              // drill 5.0+tap M6, or 6.6+weld nut
+      translate([lug_l/2, 7]) circle(d=6.6); }
 } else if (render_mode == "part"){
   part_catalog(part);
 } else if (render_mode == "tensioner"){
@@ -1101,12 +1111,12 @@ if (render_mode == "plates"){
     cylinder(h=H, d=D, center=true);                           // ghost wheel
   flag("AXLE IN SLOT (25 TAKE-UP)",
        [C + tension_pos, -8, zo+2],  [C-52, -52, zo+26]);
-  flag("M6 EYE NUT ON AXLE END (Ø20 EYE)",
-       [C + tension_pos, 9, zo+13],  [C-52, 42, zo+26]);
-  flag("WELDED LUG",
-       [C+37, -12, zo+9],            [C+50, -34, zo+26]);
-  flag("DRAW BOLT + JAM NUT",
-       [C+52, 0, zo+11],             [C+42, 24, zo+26]);
+  flag("Ø15 PUSH COLLAR ON THE STUD",
+       [C + tension_pos, 7, zo+6],   [C-52, 42, zo+26]);
+  flag("WELDED PUSHER BLOCK",
+       [C-18, -12, zo+7],            [C+30, -34, zo+26]);
+  flag("M6 PUSH BOLT + JAM NUT",
+       [C-30, 0, zo+7],              [C+34, 24, zo+26]);
 } else {
   // trailing arm (rear, +x) and leading arm (front, -x, mirrored)
   translate([ ex*60, 0, 0]) arm3d(zi_tr, true,  aT, +1);

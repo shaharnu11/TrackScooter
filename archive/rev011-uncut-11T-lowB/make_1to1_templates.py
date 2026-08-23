@@ -120,8 +120,8 @@ SMALL = [
          note="40×6 offcut · no holes · the leading fork is the wider one"),
     dict(title="BRACE WEB — TRAILING", qty="×2", w=50.8, h=30.0, hole=None,
          note="40×6 offcut · no holes · nests inside the leading brace"),
-    dict(title="TENSIONER LUG", qty="×2", w=26.0, h=18.0, hole=(13.0, 7.0, 6.6),
-         note="40×6 · 26 long, rip down to 18 wide"),
+    dict(title="TENSIONER PUSHER BLOCK", qty="×2", w=26.0, h=14.0, hole=(13.0, 7.0, 6.6),
+         note="40×6 · 26 long, rip to 14 · drill 6.6 + weld M6 nut on the FORWARD face (or drill 5.0 and tap M6) — Rev 011b pusher"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -695,7 +695,7 @@ def verify():
               ("tab stub outline", 55.0, 40.0, (4, 5)),
               ("brace web leading", 66.5, 30.0, (4, 5)),
               ("brace web trailing", 50.8, 30.0, (4, 5)),
-              ("tensioner lug", 26.0, 18.0, (4, 5)),
+              ("tensioner pusher block", 26.0, 14.0, (4, 5)),
               ("X ruler 150 mm", 150.0, 0.0, (2,)),
               ("X ruler 100 mm", 100.0, 0.0, (2,)),
               ("Y ruler 50 mm", 0.0, 50.0, (2,)),
