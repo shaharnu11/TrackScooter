@@ -530,7 +530,7 @@ axle_stack = 2*(cz + carrier_t) + 22;   // carriers outer-to-outer + nut/head
 echo(str("PIVOT AXLE: stack ≈ ", axle_stack, " → buy M", pivot_d, " cl.10.9 × ",
          10*ceil((axle_stack + 3)/10), " part-threaded (this fork_gap=",
          fork_gap, ", leg_t=", leg_t, ")"));
-echo(str("CARRIERS: 50x6 strip cut ≈ ",
+echo(str("CARRIERS: 40x6 strip cut ≈ ",  // Rev 011c: was 50x6
          (52+16) - min(pivot[1]-24, use_keel ? y_keel-12 : 0),
          use_keel ? str(" (must reach 12 past the keel hole at ", y_keel, ")")
                   : " (no keel — strip ends 24 below the pivot)"));
@@ -594,8 +594,8 @@ keel_gaps = concat(use_keel ? [
   // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
   // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
   // the closest point since the line leans away from the tongue going down
-  ["shock coil Ø44 to carrier strip (50 wide)",
-     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 25 - 22],
+  ["shock coil Ø44 to carrier strip (40 wide — Rev 011c)",
+     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 20 - 22],
   // Rev 011: THE guard that now caps `drop`. The arm bar's chamfered rear
   // corner sweeps toward the spinning sprocket as the arm droops; this was
   // silently unguarded until Rev 011 (Rev 009 sat at 4.1 mm). Swept over the
@@ -637,19 +637,28 @@ module arm_plate_2d(slot=false){
   }
 }
 
+module axle_key_2d(){
+  // hub-motor axle key: Ø10+0.4 with flats 8.9 across — the torque-arm fit.
+  // Cut in the carrier AND (Rev 011c) in the shock tab stub; drill Ø10.4,
+  // file the flats. Never a slot — a slot lets the axle rotate.
+  intersection(){ circle(d=axle_d+0.4);
+                  square([axle_d+0.4, 8.9], center=true); }
+}
+
 module carrier_2d(){
-  // Rev 004: plain 50-wide flat-bar strip, cut ≈225 — every centreline feature
-  // (axle slot, M8 fork bolt, pivot bore, keel hole) lands on it. The shock
-  // tabs are separate stubs (tab_stub_2d) lap-welded on the OUTER face at hub
-  // level. Same part both sides (symmetric).
+  // Rev 011c (owner): 40-wide flat-bar strip — was 50. Same stock as the
+  // arms/braces/stubs, so the 50x6 steel line is gone entirely. Edge
+  // distance at the Ø16 pivot bore drops 17 -> 12 (0.75·d, acceptable);
+  // the Ø30 pivot washers keep 5 per side. Every centreline feature
+  // (axle key, M8 fork bolt, pivot bore) lands on it. The shock tab is a
+  // separate stub (tab_stub_2d) welded on the OUTER face at hub level.
+  // Same part both sides (symmetric).
   y_bot = min(pivot[1] - 24, use_keel ? y_keel - 12 : 0);  // reach past the keel
                                             // hole (Rev 9: keel below the arm
                                             // bar -> strip cut ~290, not 225)
   difference(){
-    translate([-25, y_bot]) square([50, (52+16) - y_bot]);
-    // hub-motor axle slot: Ø10 with flats — the plate doubles as a torque arm
-    intersection(){ circle(d=axle_d+0.4);
-                    square([axle_d+0.4, 8.9], center=true); }
+    translate([-20, y_bot]) square([40, (52+16) - y_bot]);
+    axle_key_2d();   // the plate doubles as a torque arm
     translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
@@ -657,14 +666,21 @@ module carrier_2d(){
 }
 
 module tab_stub_2d(p){
-  // Rev 004: upper shock tab = 40×6 flat-bar stub, ≈55 long, lap-welded onto
-  // the carrier strip's OUTER face at hub level (17 mm lap onto the strip,
-  // clear of the axle slot). Ø8.4 eye pin hole at p (M8 pin — Rev 004b:
-  // shock eyes measured Ø8). Sits ABOVE the coil-top
-  // line, so the spring corridor stays clear.
+  // Rev 011c (owner): upper shock tab = 40x6 stub, 83 long — spans the FULL
+  // 40-wide carrier strip (was a 55-long stub with a 17 lap). It carries the
+  // same Ø10.4 flatted key as the carrier, so the hub axle passes through
+  // strip AND stub: the axle nut clamps the stub mechanically on top of the
+  // weld, and the torque-arm key engagement doubles (6 -> 12 of flats).
+  // Weld with the axle inserted through both so the flats index.
+  // ONE stub per carrier — each carrier carries only its own arm's shock
+  // (trailing on the +z carrier, leading on the -z carrier); the Rev 004
+  // drawings showed two per carrier, which was one too many. The two stubs
+  // of a pod are a mirror pair: drill two identical blanks, flip one over.
+  // Ø8.4 eye pin hole at p (M8 pin — Rev 004b: shock eyes measured Ø8).
   s = p[0] > 0 ? 1 : -1;
   difference(){
-    translate([s==1 ? 8 : -63, -20]) square([55, 40]);
+    translate([s==1 ? -20 : -63, -20]) square([83, 40]);
+    axle_key_2d();
     translate(p) circle(d=8.4);
   }
 }
@@ -774,7 +790,7 @@ module part_catalog(name){
   } else if (name == "shock"){                   // BOM 8 — coil-over
     shock3d([0,0],[150,0],0);
   } else if (name == "shock_mounts"){            // BOM 9 — tab + sleeve
-    color(cSteel) linear_extrude(6) translate([-8,20,0]) tab_stub_2d(upP);
+    color(cSteel) linear_extrude(6) translate([20,20,0]) tab_stub_2d(upP);
     color(cSteel) translate([55,-15,0]) cat_tube(15,9,45);
   } else if (name == "fork_hw"){                 // BOM 10 — M8 bolt + nuts
     color(cSteel) rotate([0,90,0]) cat_bolt(8, 12, 18, 13, 5.5);
@@ -1008,13 +1024,14 @@ module carrier_group(){
   // upper shock tabs — welded to the carrier INNER face when the shocks run
   // inboard (Rev 002, thick legs), to the OUTER face when outboard (Rev 002c,
   // measured 4 mm legs leave no inboard room)
-  // Rev 004: tab stubs (40×6 bar) lap-welded on the carrier OUTER faces; the
-  // eye pin cantilevers from the stub out to the shock plane through washers
+  // Rev 011c: ONE full-width tab stub per carrier, on the OUTER face at hub
+  // level, keyed on the axle; the eye pin cantilevers from the stub out to
+  // the shock plane through washers. +z carrier serves the trailing shock,
+  // -z the leading — a shock loads only the carrier it hangs from.
   tab_z0 = cz + carrier_t;
   color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
-      linear_extrude(6){ tab_stub_2d(s==1 ? upP : mx(upP));
-                         tab_stub_2d(s==1 ? mx(upP) : upP); }
+      linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP));
   // hub-motor axle: static Ø10, spans fork legs + both plates
   color([0.55,0.55,0.58])
     cylinder(h=2*(cz+carrier_t)+24, d=axle_d, center=true);
@@ -1082,9 +1099,9 @@ if (render_mode == "plates"){
   translate([135, -10]) arm_plate_2d(true);
   translate([135, -60]) arm_plate_2d(false);                // leading ×2
   translate([135, -110]) arm_plate_2d(false);
-  translate([0, -190]) for (i=[0:3])                        // tab stubs ×4
-    translate([i*62, 0] - [8,-20]) intersection(){
-      tab_stub_2d(upP); translate([8,-20]) square([55,40]); }
+  translate([0, -190]) for (i=[0:1])          // tab stubs ×2 (Rev 011c: ONE per
+    translate([i*95, 0] - [-20,-20])           // carrier — mirror pair, drill two
+      tab_stub_2d(upP);                        // identical blanks, flip one over
   translate([0, -245]){                       // brace webs: 1 per arm = 2/pod
     square([brace_tr, brace_w]);                            // trailing 50.8
     translate([60, 0]) square([brace_ld, brace_w]);         // leading  66.5

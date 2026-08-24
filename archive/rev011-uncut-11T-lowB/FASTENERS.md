@@ -64,6 +64,12 @@ drags the wheel, the inner spacer tube between the 6302 inner races is missing o
 The carrier's Ø10.4 axle hole with flats 8.9 apart is the torque arm; the M8 into the leg
 locks rotation. Rev 011 carriers have **no keel hole**.
 
+**Rev 011c:** carriers are now **40 × 6** strip (was 50). The shock tab stub spans the
+full carrier width and carries the **same Ø10.4 flatted key** — the hub axle passes
+through leg + carrier + stub, and the reused M10 axle nut clamps all three (check the
+axle's flat/thread length reaches the extra 6 mm). One stub per carrier, not two: each
+carrier serves only its own arm's shock.
+
 ## D · Shocks — §7.7 / §9.5
 
 Four shocks total (2 per pod, one per arm), eyes measured **Ø8**.

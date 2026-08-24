@@ -106,16 +106,17 @@ LEADING = dict(
 CARRIER = dict(
     title="CARRIER PLATE",
     qty="×4",
-    w=50.0, h=220.0,
-    stock="50 × 6 bar · no keel hole",
-    fork=(25.0, 16.0, 8.5),        # Ø8.5 M8 into the fork leg
-    axle=(25.0, 68.0, 10.4, 8.9),  # Ø10.4 with flats 8.9 apart — the torque-arm key
-    pivot=(25.0, 196.0, 16.0),     # Ø16 pivot axle
+    w=40.0, h=220.0,               # Rev 011c: 40-wide strip (was 50)
+    stock="40 × 6 bar · no keel hole",
+    fork=(20.0, 16.0, 8.5),        # Ø8.5 M8 into the fork leg
+    axle=(20.0, 68.0, 10.4, 8.9),  # Ø10.4 with flats 8.9 apart — the torque-arm key
+    pivot=(20.0, 196.0, 16.0),     # Ø16 pivot axle
 )
 
 SMALL = [
-    dict(title="SHOCK TAB STUB", qty="×8", w=55.0, h=40.0, hole=(44.1, 22.4, 8.4),
-         note="40×6 · laps 17 mm onto the carrier OUTER face"),
+    dict(title="SHOCK TAB STUB", qty="×4", w=83.0, h=40.0, hole=(72.1, 22.4, 8.4),
+         key=(20.0, 20.0, 10.4, 8.9),
+         note="40×6 · spans the FULL carrier width; hub axle keys through both — Rev 011c. ONE per carrier: drill 2 identical, flip one"),
     dict(title="BRACE WEB — LEADING", qty="×2", w=66.5, h=30.0, hole=None,
          note="40×6 offcut · no holes · the leading fork is the wider one"),
     dict(title="BRACE WEB — TRAILING", qty="×2", w=50.8, h=30.0, hole=None,
@@ -522,6 +523,10 @@ def page_small(page_no, pages):
             o += hole(bx + hx, by + hy, hd)
             o += dim_h(bx, bx + hx, by + part["h"] + 5.0, f"{hx:.1f}")
             o += dim_v(by, by + hy, bx - 4.0, f"{hy:.1f}")
+        if part.get("key"):
+            kx, ky, kd, kacross = part["key"]
+            o += flatted_hole(bx + kx, by + ky, kd, kacross)
+            o += dim_h(bx, bx + kx, by + part["h"] + 8.0, f"{kx:.1f}")
         o += dim_h(bx, bx + part["w"], by + part["h"] + (11.0 if part["hole"] else 5.0),
                    f"{part['w']:g}")
         o += dim_v(by, by + part["h"], bx + part["w"] + 4.0, f"{part['h']:g}")
@@ -692,7 +697,7 @@ def verify():
     expect = [("trailing bar outline", TRAILING["length"], BAR_W, (6, 7)),
               ("leading bar outline", LEADING["length"], BAR_W, (6, 7)),
               ("carrier outline", CARRIER["w"], CARRIER["h"], (4, 5)),
-              ("tab stub outline", 55.0, 40.0, (4, 5)),
+              ("tab stub outline", 83.0, 40.0, (4, 5)),
               ("brace web leading", 66.5, 30.0, (4, 5)),
               ("brace web trailing", 50.8, 30.0, (4, 5)),
               ("tensioner pusher block", 26.0, 14.0, (4, 5)),
@@ -743,7 +748,7 @@ def verify():
 
     # the carrier axle key: Ø10.4 circle cut by flats 8.9 apart (SCAD 641-642)
     ad, across = CARRIER["axle"][2], CARRIER["axle"][3]
-    key_ok = False
+    keys = 0
     for content in _streams(data):
         for pts in _subpaths(content):
             if len(pts) < 12:
@@ -753,9 +758,10 @@ def verify():
             w = (max(xs) - min(xs)) / PT_PER_MM
             h = (max(ys) - min(ys)) / PT_PER_MM
             if abs(w - ad) < 0.06 and abs(h - across) < 0.06:
-                key_ok = True
+                keys += 1
+    key_ok = keys == 2          # Rev 011c: carrier + shock tab stub
     ok &= key_ok
-    print(f"  carrier axle key Ø{ad} × {across} flats  "
+    print(f"  axle keys Ø{ad} × {across} flats: {keys} found, 2 expected  "
           f"{'OK' if key_ok else 'FAIL'}")
 
     print("\n  " + ("ALL CHECKS PASSED — the sheet is true 1:1."
