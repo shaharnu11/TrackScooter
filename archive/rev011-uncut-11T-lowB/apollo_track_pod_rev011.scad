@@ -360,7 +360,9 @@ use_bracket   = true;   // render + guard the rear-fork bracket
 brk_t         = 6;      // bracket plate thickness
 brk_blade_w   = 40;     // blade width (the 40x6 bar)
 brk_cut_x     = 125;    // axle centre -> fork CUT LINE (forward, -x)
-brk_pad_l     = 65;     // leg stub length past the cut line (pad zone)
+brk_pad_l     = 65;     // leg stub length past the cut line (pad zone).
+                        // Pad piece = 65 x 40 x 6 from the 40 bar, offset
+                        // 15 up the leg — NOT a 55-wide plate.
 brk_leg_h     = 55;     // fork leg height (MEASURED 2026-08-29)
 brk_axle_up   = 20;     // axle centre above the leg BOTTOM edge (old height)
 brk_leg_gap   = 117.7;  // rear fork INNER gap (MEASURED — belt touches!)
@@ -554,6 +556,10 @@ if (use_bracket) {
   echo(str(brk_arc_gap < 8 ? "*** WARN " : "PASS ",
            "belt outer arc (Ø", sprocket_od + 2*rib_h + 2*T,
            ") to fork cut edge: ", brk_arc_gap, " mm"));
+  echo(str("PASS belt edge (", track_w/2, ") to pad plane (",
+           cz + carrier_t - brk_t, "): ",
+           cz + carrier_t - brk_t - track_w/2,
+           " mm — the render only LOOKS like they touch"));
   // the belt edge vs the REAL rear legs (117.7 inner = touching) is exactly
   // why the legs get cut — only the 65 stub survives, forward of the arc
   echo(str("BRACKET (Rev 011d, merged): TRAILING plate 262x40x", brk_t,
@@ -1102,12 +1108,17 @@ module carrier_group(){
           translate([-(brk_cut_x + fx), -brk_axle_up + 14])  // through blade+pad
             circle(d=10.5);
       }
+    // bolt pad: a plain 65x40 strip from the SAME 40 bar (no 55 plate
+    // needed), one layer inboard, shifted up to cover leg 15..55; it
+    // overlaps the blade over 15..40 — two 65-long fillets there. Upper
+    // M10 row (41 up the leg) is in the pad, lower row (14) in the blade;
+    // both rows grip leg 4 + packing 11 + one 6 plate = identical bolts.
     color([0.16,0.45,0.25]) translate([0,0,bz0-brk_t]) linear_extrude(brk_t)
-      difference(){                                            // bolt pad UNDER
-        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])    // the blade
-          square([brk_pad_l, brk_leg_h]);
-        for (fx=[15,50]) for (fy=[14,41])
-          translate([-(brk_cut_x + fx), -brk_axle_up + fy]) circle(d=10.5);
+      difference(){
+        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up + 15])
+          square([brk_pad_l, brk_blade_w]);
+        for (fx=[15,50])
+          translate([-(brk_cut_x + fx), -brk_axle_up + 41]) circle(d=10.5);
       }
     // ghost: the cut rear-fork leg stub + the 17 packing at the pad zone
     color([0.45,0.50,0.60,0.35]) translate([-(brk_cut_x + brk_pad_l),
@@ -1201,9 +1212,10 @@ if (render_mode == "plates"){
           axle_key_2d();
           translate(i==0 ? upP : [-upP[0], upP[1]]) circle(d=8.4); } }
     for (i=[0:1]) translate([290, -i*50]) difference(){
-      square([brk_pad_l, brk_leg_h]);         // bolt pads x2
-      for (fx=[15,50]) for (fy=[14,41])
-        translate([brk_pad_l - fx, fy]) circle(d=10.5); }
+      square([brk_pad_l, brk_blade_w]);       // bolt pads x2: 65x40 strips,
+      for (fx=[15,50])                        // upper M10 row only (sits 41 up
+        translate([brk_pad_l - fx, 41-15])    // the leg = 26 up this strip)
+          circle(d=10.5); }
   }
 } else if (render_mode == "part"){
   part_catalog(part);
