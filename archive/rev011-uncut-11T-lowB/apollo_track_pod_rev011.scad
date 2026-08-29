@@ -260,7 +260,7 @@
 // ============================================================================
 
 /* [Render] */
-render_mode = "assembly"; // [assembly, exploded, plates, tensioner, part]
+render_mode = "assembly"; // [assembly, exploded, plates, tensioner, bracket, part]
 // render_mode="part": renders one BOM item alone (thumbnails for the §7
 // shopping guide). Pick the item with the part variable below.
 part = "bushing"; // [pivot_axle, arm_plates, carrier_plates, boss_tube, bushing, thrust_washer, spacer_tube, shock, shock_mounts, fork_hw, keel, draw_bolt, hardware, zerk, idler_axle, reused]
@@ -1219,6 +1219,65 @@ if (render_mode == "plates"){
   }
 } else if (render_mode == "part"){
   part_catalog(part);
+} else if (render_mode == "bracket"){
+  // ---- REV 011d close-up: the rear-fork bracket, one side (+z, trailing),
+  // every layer labeled. Open Window -> Customizer, set render_mode to
+  // "bracket", and orbit — this is the whole 'how does the pod hang from
+  // the cut fork' story in one picture. Layers from the scooter outward:
+  //   fork leg 4 (ghost) -> packing 11 -> PAD 65x40 -> BLADE -> hub nut
+  // and inboard of the blade: the carrier, on the same keyed axle.
+  bz0 = cz + carrier_t;                       // blade inner face |z| = 80
+  // carrier (cropped to the hub region so the bracket is not buried)
+  color([0.36,0.43,0.56]) translate([0,0,cz]) linear_extrude(carrier_t)
+    intersection(){ carrier_2d(); translate([-21,-45]) square([42,110]); }
+  // blade: full length, key + eye + lower bolt row
+  color([0.20,0.55,0.30]) translate([0,0,bz0]) linear_extrude(brk_t)
+    difference(){
+      translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
+        square([brk_cut_x + brk_pad_l + 72, brk_blade_w]);
+      axle_key_2d();
+      translate(upP) circle(d=8.4);
+      for (fx=[15,50])
+        translate([-(brk_cut_x + fx), -brk_axle_up + 14]) circle(d=10.5);
+    }
+  // pad: the second 40 strip, one layer in, 15 up the leg
+  color([0.16,0.45,0.25]) translate([0,0,bz0-brk_t]) linear_extrude(brk_t)
+    difference(){
+      translate([-(brk_cut_x + brk_pad_l), -brk_axle_up + 15])
+        square([brk_pad_l, brk_blade_w]);
+      for (fx=[15,50])
+        translate([-(brk_cut_x + fx), -brk_axle_up + 41]) circle(d=10.5);
+    }
+  // ghost fork-leg stub + packing
+  color([0.45,0.50,0.60,0.35]) translate([-(brk_cut_x + brk_pad_l),
+    -brk_axle_up, brk_leg_gap/2]) cube([brk_pad_l, brk_leg_h, leg_t]);
+  color([0.55,0.55,0.58,0.6]) translate([-(brk_cut_x + brk_pad_l),
+    -brk_axle_up, brk_leg_gap/2 + leg_t]) cube([brk_pad_l, brk_leg_h, brk_pack]);
+  // the 4 M10 bolts, drawn through their true stacks
+  color([0.55,0.55,0.58]) for (fx=[15,50]) for (fy=[14,41])
+    translate([-(brk_cut_x + fx), -brk_axle_up + fy, brk_leg_gap/2 - 8])
+      cylinder(h=45, d=9.8);
+  // hub axle + nut clamping carrier + blade
+  color([0.55,0.55,0.58]) cylinder(h=2*(bz0+brk_t)+16, d=axle_d, center=true);
+  color([0.45,0.45,0.48]) translate([0,0,bz0+brk_t+2])
+    difference(){ cylinder(h=8, d=17, $fn=6); cylinder(h=10, d=10, center=true); }
+  // shock eye pin
+  color([0.55,0.55,0.58]) translate([upP[0], upP[1], bz0-2])
+    cylinder(h=brk_t+12, d=7.8);
+  flag("FORK LEG STUB - CUT AT 65 (GHOST)",
+       [-(brk_cut_x+30), 20, brk_leg_gap/2+2],   [-(brk_cut_x+90), 70, 95]);
+  flag("PACKING 11 = 6+5",
+       [-(brk_cut_x+55), 0, brk_leg_gap/2+leg_t+5], [-(brk_cut_x+150), 30, 95]);
+  flag("PAD 65x40 - UPPER M10 ROW",
+       [-(brk_cut_x+32), 30, bz0-3],             [-(brk_cut_x+130), -40, 95]);
+  flag("BLADE - LOWER M10 ROW, KEY, EYE",
+       [-(brk_cut_x-30), 15, bz0+brk_t],         [-(brk_cut_x-30), -60, 95]);
+  flag("CARRIER - SAME KEYED AXLE",
+       [0, -35, cz],                              [60, -80, 95]);
+  flag("HUB NUT CLAMPS CARRIER+BLADE",
+       [0, 8, bz0+brk_t+8],                       [60, 55, 95]);
+  flag("SHOCK EYE PIN",
+       [upP[0], upP[1], bz0+brk_t+10],            [upP[0]+40, upP[1]+35, 95]);
 } else if (render_mode == "tensioner"){
   // ---- Sheet-6 close-up: trailing-arm belt tensioner, arm drawn level ----
   // (local arm coords: pivot at x=0, wheel end +x = rearward)
