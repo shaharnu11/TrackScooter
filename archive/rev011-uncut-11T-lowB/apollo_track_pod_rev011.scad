@@ -341,13 +341,21 @@ axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it
 // The REAR fork measured for real: two parallel 4 mm plates, INNER gap
 // 117.7 = the belt width — they touch. The legs get CUT just before the
 // axle groove (65 mm of flat leg remains, 55 tall) and the pod hangs from
-// a bracket per side instead: blade 210x40x6 (40x6 bar) + bolt pad
-// 65x55x6 welded on its front. The bracket slides onto the hub axle
-// BETWEEN carrier and shock stub (all three keyed on the flats) and bolts
-// to the leg stub with 4xM10 through 17 mm of packing (6+6+5). New axle
-// sits 125 behind the cut line at the old axle height (20 above the leg
-// bottom edge) -> the wheel moves 55 rearward; the Ø222 belt arc clears
-// the stub's cut edge by ~14. Bolt first, weld at final fit.
+// a bracket per side instead. MERGED (owner, 2026-08-29): bracket blade
+// and shock tab stub are ONE plate per side — the blade carries the shock
+// eye hole, so the rear pod has no separate stubs (the front pod keeps
+// Rev 011c stubs until its fork is dealt with). Two DISTINCT plates, mark
+// L/R, both 40x6 bar + a 65x55x6 bolt pad welded on the front:
+//   TRAILING side (+z): 262 long — key at 190 from the front end, Ø8.4
+//     shock eye at 242 (= +52.06, +2.44 of the axle), 20 end margin.
+//   LEADING side (-z): 210 long — key at 190, eye at 138 (= -52.06).
+// The plate slides onto the hub axle against the carrier outer face
+// (two keyed plates, clamped by the hub nut) and bolts to the leg stub
+// with 4xM10 through 17 mm of packing (6+6+5). New axle sits 125 behind
+// the cut line at the old axle height (20 above the leg bottom edge) ->
+// the wheel moves 55 rearward; the Ø222 belt arc clears the stub's cut
+// edge by ~14. Shock eye pin cantilevers from the plate through washers
+// to the shock plane, as the stub's did. Bolt first, weld at final fit.
 use_bracket   = true;   // render + guard the rear-fork bracket
 brk_t         = 6;      // bracket plate thickness
 brk_blade_w   = 40;     // blade width (the 40x6 bar)
@@ -542,11 +550,12 @@ if (use_bracket) {
            ") to fork cut edge: ", brk_arc_gap, " mm"));
   // the belt edge vs the REAL rear legs (117.7 inner = touching) is exactly
   // why the legs get cut — only the 65 stub survives, forward of the arc
-  echo(str("BRACKET (Rev 011d): blade 210x40x", brk_t, " + pad ", brk_pad_l,
-           "x", brk_leg_h, "x", brk_t, " per side · axle key at ", brk_cut_x,
-           " behind the cut line, ", brk_axle_up, " above the leg bottom edge",
-           " · 4xM10 through ", brk_pack, " packing · wheel moves ",
-           brk_cut_x - 70, " rearward vs the old dropout"));
+  echo(str("BRACKET (Rev 011d, merged): TRAILING plate 262x40x", brk_t,
+           " (key 190 from front, eye 242) · LEADING plate 210x40x", brk_t,
+           " (key 190, eye 138) · + pad ", brk_pad_l, "x", brk_leg_h, "x",
+           brk_t, " each · two DISTINCT plates, mark L/R · 4xM10 through ",
+           brk_pack, " packing · wheel moves ", brk_cut_x - 70,
+           " rearward vs the old dropout · rear pod has NO separate stubs"));
 }
 // Rev 011b tensioner guards. The old check (head vs belt FACE at D/2) let
 // the pull-type head sit 5 mm INSIDE the drive-lug tip sweep — the teeth
@@ -1065,20 +1074,24 @@ module carrier_group(){
   // level, keyed on the axle; the eye pin cantilevers from the stub out to
   // the shock plane through washers. +z carrier serves the trailing shock,
   // -z the leading — a shock loads only the carrier it hangs from.
-  tab_z0 = cz + carrier_t + (use_bracket ? brk_t : 0);  // 011d: stub sits on
-                                                         // the bracket, 86-92
-  color([0.36,0.43,0.56]) for (s=[1,-1])
+  // 011d merged: with the bracket, the blade IS the shock tab — separate
+  // stubs exist only on the front pod (no bracket there yet)
+  tab_z0 = cz + carrier_t;
+  if (!use_bracket) color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
       linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP));
   // REV 011d rear-fork bracket: blade + pad per side, keyed on the axle at
   // z = carrier outer face .. +brk_t; the shock stub moves outboard by brk_t
-  if (use_bracket) for (s=[1,-1]) scale([1,1,s]) translate([0,0, s==1 ? 0 : 0]){
+  if (use_bracket) for (s=[1,-1]) scale([1,1,s]){
     bz0 = cz + carrier_t;                      // bracket inner face |z|
+    // blade = bracket + shock tab in one: trailing (+z) runs to +72 and
+    // carries the eye at upP; leading (-z) ends at +20, eye at mx(upP)
     color([0.20,0.55,0.30]) translate([0,0,bz0]) linear_extrude(brk_t)
       difference(){
         translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
-          square([brk_cut_x + brk_pad_l + 20, brk_blade_w]);   // blade, 20 past axle
+          square([brk_cut_x + brk_pad_l + (s==1 ? 72 : 20), brk_blade_w]);
         axle_key_2d();
+        translate(s==1 ? upP : mx(upP)) circle(d=8.4);   // shock eye pin
       }
     color([0.20,0.55,0.30]) translate([0,0,bz0]) linear_extrude(brk_t)
       difference(){
@@ -1160,9 +1173,9 @@ if (render_mode == "plates"){
   translate([135, -10]) arm_plate_2d(true);
   translate([135, -60]) arm_plate_2d(false);                // leading ×2
   translate([135, -110]) arm_plate_2d(false);
-  translate([0, -190]) for (i=[0:1])          // tab stubs ×2 (Rev 011c: ONE per
-    translate([i*95, 0] - [-20,-20])           // carrier — mirror pair, drill two
-      tab_stub_2d(upP);                        // identical blanks, flip one over
+  translate([0, -190]) for (i=[0:1])          // tab stubs ×2 — FRONT POD ONLY
+    translate([i*95, 0] - [-20,-20])           // (rear-pod blades carry the eye);
+      tab_stub_2d(upP);                        // mirror pair, flip one over
   translate([0, -245]){                       // brace webs: 1 per arm = 2/pod
     square([brace_tr, brace_w]);                            // trailing 50.8
     translate([60, 0]) square([brace_ld, brace_w]);         // leading  66.5
@@ -1171,14 +1184,15 @@ if (render_mode == "plates"){
     translate([i*32, 0]) difference(){        // the TRAILING arm (one per plate)
       square([lug_l, lug_h_pl]);              // drill 5.0+tap M6, or 6.6+weld nut
       translate([lug_l/2, 7]) circle(d=6.6); }
-  if (use_bracket) translate([0, -300]){      // REV 011d fork bracket: blade +
-    for (i=[0:1]) translate([0, -i*50]){      // pad x2 (mirror pair — flip one)
-      difference(){
-        square([brk_cut_x + brk_pad_l + 20, brk_blade_w]);
-        translate([brk_pad_l + brk_cut_x, brk_axle_up]) axle_key_2d(); }
-    }
-    for (i=[0:1]) translate([230, -i*50]) difference(){
-      square([brk_pad_l, brk_leg_h]);
+  if (use_bracket) translate([0, -300]){      // REV 011d MERGED bracket plates:
+    for (i=[0:1]) translate([0, -i*50])       // i=0 TRAILING 262, i=1 LEADING 210
+      difference(){                           // — two DISTINCT plates, mark L/R
+        square([brk_cut_x + brk_pad_l + (i==0 ? 72 : 20), brk_blade_w]);
+        translate([brk_pad_l + brk_cut_x, brk_axle_up]){
+          axle_key_2d();
+          translate(i==0 ? upP : [-upP[0], upP[1]]) circle(d=8.4); } }
+    for (i=[0:1]) translate([290, -i*50]) difference(){
+      square([brk_pad_l, brk_leg_h]);         // bolt pads x2
       for (fx=[15,50]) for (fy=[14,41])
         translate([brk_pad_l - fx, fy]) circle(d=10.5); }
   }
