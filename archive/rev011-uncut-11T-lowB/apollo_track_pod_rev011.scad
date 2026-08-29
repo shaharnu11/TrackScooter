@@ -337,6 +337,27 @@ fork_gap = 140;  // inner spacing between fork legs: 140 FRONT AND REAR
 leg_t    = 4;    // fork leg thickness (z) — MEASURED 2026-07-13 (was 30 placeholder)
 axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it)
 
+/* [Rear-fork bracket — REV 011d (owner, 2026-08-29)] */
+// The REAR fork measured for real: two parallel 4 mm plates, INNER gap
+// 117.7 = the belt width — they touch. The legs get CUT just before the
+// axle groove (65 mm of flat leg remains, 55 tall) and the pod hangs from
+// a bracket per side instead: blade 210x40x6 (40x6 bar) + bolt pad
+// 65x55x6 welded on its front. The bracket slides onto the hub axle
+// BETWEEN carrier and shock stub (all three keyed on the flats) and bolts
+// to the leg stub with 4xM10 through 17 mm of packing (6+6+5). New axle
+// sits 125 behind the cut line at the old axle height (20 above the leg
+// bottom edge) -> the wheel moves 55 rearward; the Ø222 belt arc clears
+// the stub's cut edge by ~14. Bolt first, weld at final fit.
+use_bracket   = true;   // render + guard the rear-fork bracket
+brk_t         = 6;      // bracket plate thickness
+brk_blade_w   = 40;     // blade width (the 40x6 bar)
+brk_cut_x     = 125;    // axle centre -> fork CUT LINE (forward, -x)
+brk_pad_l     = 65;     // leg stub length past the cut line (pad zone)
+brk_leg_h     = 55;     // fork leg height (MEASURED 2026-08-29)
+brk_axle_up   = 20;     // axle centre above the leg BOTTOM edge (old height)
+brk_leg_gap   = 117.7;  // rear fork INNER gap (MEASURED — belt touches!)
+brk_pack      = 17;     // packing between leg outer face and pad (6+6+5)
+
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
 carrier_t  = 6;     // carrier plates
@@ -511,6 +532,22 @@ echo(str("PIVOT STACK: centre spacer ≈ ", 2*sp_half, " · outboard sleeves ≈
 echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
          25 - tension_pos, " mm remaining (render_mode=\"tensioner\" for the ",
          "Sheet-6 close-up; advance both push bolts evenly)"));
+// Rev 011d rear-fork bracket guards + cut lengths
+if (use_bracket) {
+  // belt outer arc at the sprocket (rib top + belt thickness T) vs the fork
+  // stub's cut edge — the nearest scooter steel to the spinning belt
+  brk_arc_gap = brk_cut_x - (sprocket_od/2 + rib_h + T);
+  echo(str(brk_arc_gap < 8 ? "*** WARN " : "PASS ",
+           "belt outer arc (Ø", sprocket_od + 2*rib_h + 2*T,
+           ") to fork cut edge: ", brk_arc_gap, " mm"));
+  // the belt edge vs the REAL rear legs (117.7 inner = touching) is exactly
+  // why the legs get cut — only the 65 stub survives, forward of the arc
+  echo(str("BRACKET (Rev 011d): blade 210x40x", brk_t, " + pad ", brk_pad_l,
+           "x", brk_leg_h, "x", brk_t, " per side · axle key at ", brk_cut_x,
+           " behind the cut line, ", brk_axle_up, " above the leg bottom edge",
+           " · 4xM10 through ", brk_pack, " packing · wheel moves ",
+           brk_cut_x - 70, " rearward vs the old dropout"));
+}
 // Rev 011b tensioner guards. The old check (head vs belt FACE at D/2) let
 // the pull-type head sit 5 mm INSIDE the drive-lug tip sweep — the teeth
 // stand lug_h proud of the face. Guard the teeth, not the face:
@@ -1028,10 +1065,34 @@ module carrier_group(){
   // level, keyed on the axle; the eye pin cantilevers from the stub out to
   // the shock plane through washers. +z carrier serves the trailing shock,
   // -z the leading — a shock loads only the carrier it hangs from.
-  tab_z0 = cz + carrier_t;
+  tab_z0 = cz + carrier_t + (use_bracket ? brk_t : 0);  // 011d: stub sits on
+                                                         // the bracket, 86-92
   color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
       linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP));
+  // REV 011d rear-fork bracket: blade + pad per side, keyed on the axle at
+  // z = carrier outer face .. +brk_t; the shock stub moves outboard by brk_t
+  if (use_bracket) for (s=[1,-1]) scale([1,1,s]) translate([0,0, s==1 ? 0 : 0]){
+    bz0 = cz + carrier_t;                      // bracket inner face |z|
+    color([0.20,0.55,0.30]) translate([0,0,bz0]) linear_extrude(brk_t)
+      difference(){
+        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
+          square([brk_cut_x + brk_pad_l + 20, brk_blade_w]);   // blade, 20 past axle
+        axle_key_2d();
+      }
+    color([0.20,0.55,0.30]) translate([0,0,bz0]) linear_extrude(brk_t)
+      difference(){
+        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
+          square([brk_pad_l, brk_leg_h]);                      // bolt pad
+        for (fx=[15,50]) for (fy=[14,41])
+          translate([-(brk_cut_x + fx), -brk_axle_up + fy]) circle(d=10.5);
+      }
+    // ghost: the cut rear-fork leg stub + the 17 packing at the pad zone
+    color([0.45,0.50,0.60,0.35]) translate([-(brk_cut_x + brk_pad_l),
+      -brk_axle_up, brk_leg_gap/2]) cube([brk_pad_l, brk_leg_h, leg_t]);
+    color([0.55,0.55,0.58,0.6]) translate([-(brk_cut_x + brk_pad_l),
+      -brk_axle_up, brk_leg_gap/2 + leg_t]) cube([brk_pad_l, brk_leg_h, brk_pack]);
+  }
   // hub-motor axle: static Ø10, spans fork legs + both plates
   color([0.55,0.55,0.58])
     cylinder(h=2*(cz+carrier_t)+24, d=axle_d, center=true);
@@ -1110,6 +1171,17 @@ if (render_mode == "plates"){
     translate([i*32, 0]) difference(){        // the TRAILING arm (one per plate)
       square([lug_l, lug_h_pl]);              // drill 5.0+tap M6, or 6.6+weld nut
       translate([lug_l/2, 7]) circle(d=6.6); }
+  if (use_bracket) translate([0, -300]){      // REV 011d fork bracket: blade +
+    for (i=[0:1]) translate([0, -i*50]){      // pad x2 (mirror pair — flip one)
+      difference(){
+        square([brk_cut_x + brk_pad_l + 20, brk_blade_w]);
+        translate([brk_pad_l + brk_cut_x, brk_axle_up]) axle_key_2d(); }
+    }
+    for (i=[0:1]) translate([230, -i*50]) difference(){
+      square([brk_pad_l, brk_leg_h]);
+      for (fx=[15,50]) for (fy=[14,41])
+        translate([brk_pad_l - fx, fy]) circle(d=10.5); }
+  }
 } else if (render_mode == "part"){
   part_catalog(part);
 } else if (render_mode == "tensioner"){
