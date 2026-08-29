@@ -360,19 +360,20 @@ use_bracket   = true;   // render + guard the rear-fork bracket
 brk_t         = 6;      // bracket plate thickness
 brk_blade_w   = 40;     // blade width (the 40x6 bar)
 brk_cut_x     = 125;    // axle centre -> fork CUT LINE (forward, -x)
-brk_pad_l     = 65;     // leg stub length past the cut line (pad zone).
-                        // Pad piece = 65 x 40 x 6 from the 40 bar, offset
-                        // 15 up the leg — NOT a 55-wide plate.
+brk_pad_l     = 65;     // leg stub length past the cut line (bolt zone).
+                        // NO PAD (owner review, 2026-08-30): the stepped
+                        // pad had a 6 mm void under the lower bolt row and
+                        // its upper row clashed with the blade's top edge.
+                        // Both M10 rows now sit INSIDE the blade band:
+                        // 2x2 pattern 35 x 14, rows 13 and 27 up the leg
+                        // (y = -7/+7 of the axle line), all four bolts
+                        // through leg 4 + packing 11 + blade 6 = 21.
 brk_leg_h     = 55;     // fork leg height (MEASURED 2026-08-29)
 brk_axle_up   = 20;     // axle centre above the leg BOTTOM edge (old height)
 brk_leg_gap   = 117.7;  // rear fork INNER gap (MEASURED — belt touches!)
-brk_pack      = 11;     // packing between leg outer face and PAD (6+5) —
-                        // the pad is the 4th layer: leg 4 / packing 11 /
-                        // pad 6 / blade 6. Pad covers the full 55 leg
-                        // height UNDER the blade; blade laps on it, two
-                        // 65-long fillets along the blade edges. Lower
-                        // bolt row goes through blade+pad, upper through
-                        // the pad alone. Leg-to-blade stays 17.
+brk_pack      = 11;     // packing between leg outer face and BLADE (6+5)
+                        // — cut to the MEASURED gap at fit-up. Stack:
+                        // leg 4 / packing 11 / blade 6, M10 nylock outboard.
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
@@ -556,16 +557,15 @@ if (use_bracket) {
   echo(str(brk_arc_gap < 8 ? "*** WARN " : "PASS ",
            "belt outer arc (Ø", sprocket_od + 2*rib_h + 2*T,
            ") to fork cut edge: ", brk_arc_gap, " mm"));
-  echo(str("PASS belt edge (", track_w/2, ") to pad plane (",
-           cz + carrier_t - brk_t, "): ",
-           cz + carrier_t - brk_t - track_w/2,
+  echo(str("PASS belt edge (", track_w/2, ") to blade plane (",
+           cz + carrier_t, "): ", cz + carrier_t - track_w/2,
            " mm — the render only LOOKS like they touch"));
   // the belt edge vs the REAL rear legs (117.7 inner = touching) is exactly
   // why the legs get cut — only the 65 stub survives, forward of the arc
   echo(str("BRACKET (Rev 011d, merged): TRAILING plate 262x40x", brk_t,
            " (key 190 from front, eye 242) · LEADING plate 210x40x", brk_t,
-           " (key 190, eye 138) · + pad ", brk_pad_l, "x", brk_leg_h, "x",
-           brk_t, " each · two DISTINCT plates, mark L/R · 4xM10 through ",
+           " (key 190, eye 138) · NO pad — 2x2 M10 (35x14) in the blade,",
+           " rows 13/27 up the leg · two DISTINCT plates, mark L/R · through ",
            brk_pack, " packing · wheel moves ", brk_cut_x - 70,
            " rearward vs the old dropout · rear pod has NO separate stubs"));
 }
@@ -1104,21 +1104,9 @@ module carrier_group(){
           square([brk_cut_x + brk_pad_l + (s==1 ? 72 : 20), brk_blade_w]);
         axle_key_2d();
         translate(s==1 ? upP : mx(upP)) circle(d=8.4);   // shock eye pin
-        for (fx=[15,50])                                 // lower bolt row runs
-          translate([-(brk_cut_x + fx), -brk_axle_up + 14])  // through blade+pad
+        for (fx=[15,50]) for (fy=[13,27])                // 2x2 M10, 35 x 14 —
+          translate([-(brk_cut_x + fx), -brk_axle_up + fy])  // all in the blade
             circle(d=10.5);
-      }
-    // bolt pad: a plain 65x40 strip from the SAME 40 bar (no 55 plate
-    // needed), one layer inboard, shifted up to cover leg 15..55; it
-    // overlaps the blade over 15..40 — two 65-long fillets there. Upper
-    // M10 row (41 up the leg) is in the pad, lower row (14) in the blade;
-    // both rows grip leg 4 + packing 11 + one 6 plate = identical bolts.
-    color([0.16,0.45,0.25]) translate([0,0,bz0-brk_t]) linear_extrude(brk_t)
-      difference(){
-        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up + 15])
-          square([brk_pad_l, brk_blade_w]);
-        for (fx=[15,50])
-          translate([-(brk_cut_x + fx), -brk_axle_up + 41]) circle(d=10.5);
       }
     // ghost: the cut rear-fork leg stub + the 17 packing at the pad zone
     color([0.45,0.50,0.60,0.35]) translate([-(brk_cut_x + brk_pad_l),
@@ -1210,12 +1198,9 @@ if (render_mode == "plates"){
         square([brk_cut_x + brk_pad_l + (i==0 ? 72 : 20), brk_blade_w]);
         translate([brk_pad_l + brk_cut_x, brk_axle_up]){
           axle_key_2d();
-          translate(i==0 ? upP : [-upP[0], upP[1]]) circle(d=8.4); } }
-    for (i=[0:1]) translate([290, -i*50]) difference(){
-      square([brk_pad_l, brk_blade_w]);       // bolt pads x2: 65x40 strips,
-      for (fx=[15,50])                        // upper M10 row only (sits 41 up
-        translate([brk_pad_l - fx, 41-15])    // the leg = 26 up this strip)
-          circle(d=10.5); }
+          translate(i==0 ? upP : [-upP[0], upP[1]]) circle(d=8.4);
+          for (fx=[15,50]) for (fy=[-7,7])
+            translate([-(brk_cut_x + fx), fy]) circle(d=10.5); } }
   }
 } else if (render_mode == "part"){
   part_catalog(part);
@@ -1224,7 +1209,7 @@ if (render_mode == "plates"){
   // every layer labeled. Open Window -> Customizer, set render_mode to
   // "bracket", and orbit — this is the whole 'how does the pod hang from
   // the cut fork' story in one picture. Layers from the scooter outward:
-  //   fork leg 4 (ghost) -> packing 11 -> PAD 65x40 -> BLADE -> hub nut
+  //   fork leg 4 (ghost) -> packing 11 -> BLADE -> hub nut
   // and inboard of the blade: the carrier, on the same keyed axle.
   bz0 = cz + carrier_t;                       // blade inner face |z| = 80
   // carrier (cropped to the hub region so the bracket is not buried)
@@ -1237,16 +1222,8 @@ if (render_mode == "plates"){
         square([brk_cut_x + brk_pad_l + 72, brk_blade_w]);
       axle_key_2d();
       translate(upP) circle(d=8.4);
-      for (fx=[15,50])
-        translate([-(brk_cut_x + fx), -brk_axle_up + 14]) circle(d=10.5);
-    }
-  // pad: the second 40 strip, one layer in, 15 up the leg
-  color([0.16,0.45,0.25]) translate([0,0,bz0-brk_t]) linear_extrude(brk_t)
-    difference(){
-      translate([-(brk_cut_x + brk_pad_l), -brk_axle_up + 15])
-        square([brk_pad_l, brk_blade_w]);
-      for (fx=[15,50])
-        translate([-(brk_cut_x + fx), -brk_axle_up + 41]) circle(d=10.5);
+      for (fx=[15,50]) for (fy=[13,27])
+        translate([-(brk_cut_x + fx), -brk_axle_up + fy]) circle(d=10.5);
     }
   // ghost fork-leg stub + packing
   color([0.45,0.50,0.60,0.35]) translate([-(brk_cut_x + brk_pad_l),
@@ -1254,7 +1231,7 @@ if (render_mode == "plates"){
   color([0.55,0.55,0.58,0.6]) translate([-(brk_cut_x + brk_pad_l),
     -brk_axle_up, brk_leg_gap/2 + leg_t]) cube([brk_pad_l, brk_leg_h, brk_pack]);
   // the 4 M10 bolts, drawn through their true stacks
-  color([0.55,0.55,0.58]) for (fx=[15,50]) for (fy=[14,41])
+  color([0.55,0.55,0.58]) for (fx=[15,50]) for (fy=[13,27])
     translate([-(brk_cut_x + fx), -brk_axle_up + fy, brk_leg_gap/2 - 8])
       cylinder(h=45, d=9.8);
   // hub axle + nut clamping carrier + blade
@@ -1268,9 +1245,7 @@ if (render_mode == "plates"){
        [-(brk_cut_x+30), 20, brk_leg_gap/2+2],   [-(brk_cut_x+90), 70, 95]);
   flag("PACKING 11 = 6+5",
        [-(brk_cut_x+55), 0, brk_leg_gap/2+leg_t+5], [-(brk_cut_x+150), 30, 95]);
-  flag("PAD 65x40 - UPPER M10 ROW",
-       [-(brk_cut_x+32), 30, bz0-3],             [-(brk_cut_x+130), -40, 95]);
-  flag("BLADE - LOWER M10 ROW, KEY, EYE",
+  flag("BLADE - 2x2 M10 (35x14), KEY, EYE",
        [-(brk_cut_x-30), 15, bz0+brk_t],         [-(brk_cut_x-30), -60, 95]);
   flag("CARRIER - SAME KEYED AXLE",
        [0, -35, cz],                              [60, -80, 95]);
