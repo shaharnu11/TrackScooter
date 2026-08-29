@@ -364,7 +364,13 @@ brk_pad_l     = 65;     // leg stub length past the cut line (pad zone)
 brk_leg_h     = 55;     // fork leg height (MEASURED 2026-08-29)
 brk_axle_up   = 20;     // axle centre above the leg BOTTOM edge (old height)
 brk_leg_gap   = 117.7;  // rear fork INNER gap (MEASURED — belt touches!)
-brk_pack      = 17;     // packing between leg outer face and pad (6+6+5)
+brk_pack      = 11;     // packing between leg outer face and PAD (6+5) —
+                        // the pad is the 4th layer: leg 4 / packing 11 /
+                        // pad 6 / blade 6. Pad covers the full 55 leg
+                        // height UNDER the blade; blade laps on it, two
+                        // 65-long fillets along the blade edges. Lower
+                        // bolt row goes through blade+pad, upper through
+                        // the pad alone. Leg-to-blade stays 17.
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
@@ -1092,11 +1098,14 @@ module carrier_group(){
           square([brk_cut_x + brk_pad_l + (s==1 ? 72 : 20), brk_blade_w]);
         axle_key_2d();
         translate(s==1 ? upP : mx(upP)) circle(d=8.4);   // shock eye pin
+        for (fx=[15,50])                                 // lower bolt row runs
+          translate([-(brk_cut_x + fx), -brk_axle_up + 14])  // through blade+pad
+            circle(d=10.5);
       }
-    color([0.20,0.55,0.30]) translate([0,0,bz0]) linear_extrude(brk_t)
-      difference(){
-        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
-          square([brk_pad_l, brk_leg_h]);                      // bolt pad
+    color([0.16,0.45,0.25]) translate([0,0,bz0-brk_t]) linear_extrude(brk_t)
+      difference(){                                            // bolt pad UNDER
+        translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])    // the blade
+          square([brk_pad_l, brk_leg_h]);
         for (fx=[15,50]) for (fy=[14,41])
           translate([-(brk_cut_x + fx), -brk_axle_up + fy]) circle(d=10.5);
       }
