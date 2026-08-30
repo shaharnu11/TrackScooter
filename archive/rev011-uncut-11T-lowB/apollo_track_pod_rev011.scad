@@ -580,7 +580,8 @@ if (use_bracket) {
            " (key 190 from front, eye 242) · LEADING plate 210x40x", brk_t,
            " (key 190, eye 138) · NO pad — 2x2 M10 (35x14) in the blade,",
            " rows 13/27 up the leg · two DISTINCT plates, mark L/R · REMOVABLE:",
-           " backing strip 65x40 inside the leg, M10x50, NO weld to the fork · through ",
+           " backing strip 65x40 inside the leg, M10x55, NO weld to the fork ·",
+           " 2x M8 blade-to-carrier at the axle (reused leg bolts) + weld · through ",
            brk_pack, " packing · wheel moves ", brk_cut_x - 70,
            " rearward vs the old dropout · rear pod has NO separate stubs"));
 }
@@ -732,6 +733,11 @@ module carrier_2d(){
   difference(){
     translate([-20, y_bot]) square([40, (52+16) - y_bot]);
     axle_key_2d();   // the plate doubles as a torque arm
+    // Rev 011d: 2x M8 blade-to-carrier bolts, 12 above/below the axle on the
+    // centreline — anti-rotation redundancy for the keyed axle; the rear
+    // pod's freed carrier-to-leg M8x30s move here. Weld blade-to-carrier at
+    // final fit on top. (Front pod: skip drilling until it gets a bracket.)
+    if (use_bracket) for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);
     translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
@@ -1118,6 +1124,7 @@ module carrier_group(){
         translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
           square([brk_cut_x + brk_pad_l + (s==1 ? 72 : 20), brk_blade_w]);
         axle_key_2d();
+        for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);  // M8 to carrier
         translate(s==1 ? upP : mx(upP)) circle(d=8.4);   // shock eye pin
         for (fx=[15,50]) for (fy=[13,27])                // 2x2 M10, 35 x 14 —
           translate([-(brk_cut_x + fx), -brk_axle_up + fy])  // all in the blade
@@ -1221,6 +1228,7 @@ if (render_mode == "plates"){
         square([brk_cut_x + brk_pad_l + (i==0 ? 72 : 20), brk_blade_w]);
         translate([brk_pad_l + brk_cut_x, brk_axle_up]){
           axle_key_2d();
+          for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);
           translate(i==0 ? upP : [-upP[0], upP[1]]) circle(d=8.4);
           for (fx=[15,50]) for (fy=[-7,7])
             translate([-(brk_cut_x + fx), fy]) circle(d=10.5); } }
@@ -1244,6 +1252,7 @@ if (render_mode == "plates"){
       translate([-(brk_cut_x + brk_pad_l), -brk_axle_up])
         square([brk_cut_x + brk_pad_l + 72, brk_blade_w]);
       axle_key_2d();
+      for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);  // M8 to carrier
       translate(upP) circle(d=8.4);
       for (fx=[15,50]) for (fy=[13,27])
         translate([-(brk_cut_x + fx), -brk_axle_up + fy]) circle(d=10.5);
@@ -1259,6 +1268,9 @@ if (render_mode == "plates"){
   color([0.55,0.55,0.58]) for (fx=[15,50]) for (fy=[13,27])
     translate([-(brk_cut_x + fx), -brk_axle_up + fy, brk_leg_gap/2 - brk_t - 6])
       cylinder(h=56, d=9.8);
+  // 2x M8 blade-to-carrier bolts (reused carrier-to-leg M8x30s)
+  color([0.55,0.55,0.58]) for (yy=[-12,12])
+    translate([0, yy, cz - 6]) cylinder(h=26, d=7.8);
   // hub axle + nut clamping carrier + blade
   color([0.55,0.55,0.58]) cylinder(h=2*(bz0+brk_t)+16, d=axle_d, center=true);
   color([0.45,0.45,0.48]) translate([0,0,bz0+brk_t+2])
@@ -1270,12 +1282,14 @@ if (render_mode == "plates"){
        [-(brk_cut_x+30), 20, brk_leg_gap/2+2],   [-(brk_cut_x+90), 70, 95]);
   flag("BACKING STRIP 65x40 - NO WELD TO FORK",
        [-(brk_cut_x+58), -10, brk_leg_gap/2 - brk_t],  [-(brk_cut_x+170), -55, 95]);
-  flag("PACKING 11 = 6+5",
+  flag("PACKING 17 = 6+6+5",
        [-(brk_cut_x+55), 0, brk_leg_gap/2+leg_t+5], [-(brk_cut_x+150), 30, 95]);
   flag("BLADE - 2x2 M10 (35x14), KEY, EYE",
        [-(brk_cut_x-30), 15, bz0+brk_t],         [-(brk_cut_x-30), -60, 95]);
   flag("CARRIER - SAME KEYED AXLE",
        [0, -35, cz],                              [60, -80, 95]);
+  flag("2x M8 BLADE-TO-CARRIER (+WELD AT FINAL)",
+       [0, -14, cz + carrier_t + brk_t + 4],     [-60, -75, 95]);
   flag("HUB NUT CLAMPS CARRIER+BLADE",
        [0, 8, bz0+brk_t+8],                       [60, 55, 95]);
   flag("SHOCK EYE PIN",
