@@ -371,9 +371,23 @@ brk_pad_l     = 65;     // leg stub length past the cut line (bolt zone).
 brk_leg_h     = 55;     // fork leg height (MEASURED 2026-08-29)
 brk_axle_up   = 20;     // axle centre above the leg BOTTOM edge (old height)
 brk_leg_gap   = 117.7;  // rear fork INNER gap (MEASURED — belt touches!)
-brk_pack      = 11;     // packing between leg outer face and BLADE (6+5)
-                        // — cut to the MEASURED gap at fit-up. Stack:
-                        // leg 4 / packing 11 / blade 6, M10 nylock outboard.
+brk_pack      = 17;     // packing between leg outer face and BLADE (6+6+5).
+                        // OWNER CATCH 2026-08-30: this went back to ~17 when
+                        // the pad died — the pad used to fill 6 of it. The
+                        // blade plane is FIXED at 80 by the carrier (shared
+                        // keyed axle); leg outer face is at 62.85; the
+                        // packing fills exactly that gap. Nominal 17.15 —
+                        // cut to the MEASURED gap at fit-up.
+// REMOVABLE JOINT (owner, 2026-08-30): NOTHING is welded to the fork — the
+// pod comes off by undoing the 8 M10s. In place of the weld:
+//   - BACKING STRIP 65x40x6 (the same 40 bar) on the leg's INNER face —
+//     the belt's run stays >12 inboard of the bolt zone, so that face is
+//     free. Sandwich: strip 6 / leg 4 / packing 17 / blade 6 = grip 33,
+//     bolts M10 x 55 cl.8.8. Doubles the leg bearing, stops dishing/prying.
+//   - the joint works as a FRICTION joint (~130 kN clamp/side vs ~160 N*m,
+//     demand): keep the preload — witness marks, retorque 1h/5h/20h.
+//   - a cross-tube welded BLADE-to-BLADE (pod side, Ø22x3 offcut, at the
+//     bolt zone) carries side loads; it leaves the scooter untouched.
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
@@ -565,7 +579,8 @@ if (use_bracket) {
   echo(str("BRACKET (Rev 011d, merged): TRAILING plate 262x40x", brk_t,
            " (key 190 from front, eye 242) · LEADING plate 210x40x", brk_t,
            " (key 190, eye 138) · NO pad — 2x2 M10 (35x14) in the blade,",
-           " rows 13/27 up the leg · two DISTINCT plates, mark L/R · through ",
+           " rows 13/27 up the leg · two DISTINCT plates, mark L/R · REMOVABLE:",
+           " backing strip 65x40 inside the leg, M10x50, NO weld to the fork · through ",
            brk_pack, " packing · wheel moves ", brk_cut_x - 70,
            " rearward vs the old dropout · rear pod has NO separate stubs"));
 }
@@ -1113,6 +1128,9 @@ module carrier_group(){
       -brk_axle_up, brk_leg_gap/2]) cube([brk_pad_l, brk_leg_h, leg_t]);
     color([0.55,0.55,0.58,0.6]) translate([-(brk_cut_x + brk_pad_l),
       -brk_axle_up, brk_leg_gap/2 + leg_t]) cube([brk_pad_l, brk_leg_h, brk_pack]);
+    // backing strip on the leg's INNER face — the no-weld sandwich layer
+    color([0.20,0.55,0.30]) translate([-(brk_cut_x + brk_pad_l),
+      -brk_axle_up, brk_leg_gap/2 - brk_t]) cube([brk_pad_l, brk_blade_w, brk_t]);
   }
   // hub-motor axle: static Ø10, spans fork legs + both plates
   color([0.55,0.55,0.58])
@@ -1193,6 +1211,11 @@ if (render_mode == "plates"){
       square([lug_l, lug_h_pl]);              // drill 5.0+tap M6, or 6.6+weld nut
       translate([lug_l/2, 7]) circle(d=6.6); }
   if (use_bracket) translate([0, -300]){      // REV 011d MERGED bracket plates:
+    for (i=[0:1]) translate([305, -i*50])     // backing strips x2 — leg INNER
+      difference(){                           // face, no-weld sandwich layer
+        square([brk_pad_l, brk_blade_w]);
+        for (fx=[15,50]) for (fy=[13,27])
+          translate([brk_pad_l - fx, fy]) circle(d=10.5); }
     for (i=[0:1]) translate([0, -i*50])       // i=0 TRAILING 262, i=1 LEADING 210
       difference(){                           // — two DISTINCT plates, mark L/R
         square([brk_cut_x + brk_pad_l + (i==0 ? 72 : 20), brk_blade_w]);
@@ -1231,9 +1254,11 @@ if (render_mode == "plates"){
   color([0.55,0.55,0.58,0.6]) translate([-(brk_cut_x + brk_pad_l),
     -brk_axle_up, brk_leg_gap/2 + leg_t]) cube([brk_pad_l, brk_leg_h, brk_pack]);
   // the 4 M10 bolts, drawn through their true stacks
+  color([0.20,0.55,0.30]) translate([-(brk_cut_x + brk_pad_l),
+    -brk_axle_up, brk_leg_gap/2 - brk_t]) cube([brk_pad_l, brk_blade_w, brk_t]);
   color([0.55,0.55,0.58]) for (fx=[15,50]) for (fy=[13,27])
-    translate([-(brk_cut_x + fx), -brk_axle_up + fy, brk_leg_gap/2 - 8])
-      cylinder(h=45, d=9.8);
+    translate([-(brk_cut_x + fx), -brk_axle_up + fy, brk_leg_gap/2 - brk_t - 6])
+      cylinder(h=56, d=9.8);
   // hub axle + nut clamping carrier + blade
   color([0.55,0.55,0.58]) cylinder(h=2*(bz0+brk_t)+16, d=axle_d, center=true);
   color([0.45,0.45,0.48]) translate([0,0,bz0+brk_t+2])
@@ -1243,6 +1268,8 @@ if (render_mode == "plates"){
     cylinder(h=brk_t+12, d=7.8);
   flag("FORK LEG STUB - CUT AT 65 (GHOST)",
        [-(brk_cut_x+30), 20, brk_leg_gap/2+2],   [-(brk_cut_x+90), 70, 95]);
+  flag("BACKING STRIP 65x40 - NO WELD TO FORK",
+       [-(brk_cut_x+58), -10, brk_leg_gap/2 - brk_t],  [-(brk_cut_x+170), -55, 95]);
   flag("PACKING 11 = 6+5",
        [-(brk_cut_x+55), 0, brk_leg_gap/2+leg_t+5], [-(brk_cut_x+150), 30, 95]);
   flag("BLADE - 2x2 M10 (35x14), KEY, EYE",
