@@ -184,11 +184,15 @@ hole and the axle key) for the M8 that holds each green plate.
 
 ### Printable 1:1 templates
 
-`rev012_green_plate_templates.pdf` — 5 pages: each green plate in **two halves** (tape them
-together on the join line) and the **rail-end sleeve holes**. Print at **100% / Actual size**
-and measure the scale ruler before drilling. Regenerate with
-`python3 make_rev012_templates.py` — it reads every number from the `.scad`, renders the PDF
-and measures it back. Flat parts as DXF: `rev012_plates.dxf`.
+- **`rev012_green_plate_templates.pdf` — A4 portrait, 3 pages, use this one.** Each green plate
+  runs **top to bottom on one page** (no taping); page 3 is the rail-end sleeve holes.
+- `rev012_green_plate_templates_split.pdf` — the same parts on a page that also fits US Letter,
+  5 pages: each plate in two halves, taped together on the red join line.
+
+Print at **100% / Actual size** and measure the scale ruler before drilling. Regenerate both with
+`python3 make_rev012_templates.py` — it reads every number from the `.scad`, renders the PDFs and
+measures them back (outlines, every hole position and size, keys, rulers). Flat parts as DXF:
+`rev012_plates.dxf`.
 
 ![flat parts](rev012_plates.png)
 

@@ -14,8 +14,10 @@ follows from them: 1320 mm. Standing height 269 (plywood lid). Chassis ~16.2 kg.
 All chassis guards PASS (see README "Rev 012 — narrow frame"). The only WARNs are the lower
 shock bolt bending, inherited from Rev 011 — fix before the arms are built.
 
-NEW FILES: rev012_green_plate_templates.pdf (+ .html, make_rev012_templates.py — 1:1, reads the
-numbers from the .scad and measures the PDF back), rev012_plates.dxf, rev012_*.png.
+NEW FILES: rev012_green_plate_templates.pdf (A4 portrait, one whole plate per page) and
+rev012_green_plate_templates_split.pdf (any paper, plates in two halves), both from
+make_rev012_templates.py — 1:1, reads the numbers from the .scad and measures the PDFs back;
+rev012_plates.dxf, rev012_*.png.
 
 NOT COPIED: rev011_fork_bracket_template.* — Rev 012 does not use the Rev 011d fork bracket.
 
