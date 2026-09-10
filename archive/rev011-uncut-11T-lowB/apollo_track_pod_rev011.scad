@@ -461,6 +461,9 @@ stock_axle_h = 116; // TBD donor front axle height with its ORIGINAL wheel
                     //     (= wheel OD / 2, on a flat tyre-inflated floor).
                     //     Only used to report how far the pod lifts the whole
                     //     front end — head tube, stem and bars all go with it.
+steer_lock  = 35;   // TBD steering lock each way, degrees. The front pod
+                    //     TURNS with the fork, so it sweeps sideways — the
+                    //     rails must clear it at full lock (guarded).
 plate_th    = 6;    // TBD angle plate thickness
 plate_a     = 150;  // TBD length of the face that BOLTS FLAT to the floor
 plate_w     = 120;  // TBD plate width (across)
@@ -659,7 +662,7 @@ echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
          25 - tension_pos, " mm remaining (render_mode=\"tensioner\" for the ",
          "Sheet-6 close-up; advance both push bolts evenly)"));
 // Rev 011d rear-fork bracket guards + cut lengths
-if (use_bracket) {
+if (use_bracket_eff) {
   // belt outer arc at the sprocket (rib top + belt thickness T) vs the fork
   // stub's cut edge — the nearest scooter steel to the spinning belt
   brk_arc_gap = brk_cut_x - (sprocket_od/2 + rib_h + T);
@@ -832,7 +835,7 @@ module carrier_2d(){
     // centreline — anti-rotation redundancy for the keyed axle; the rear
     // pod's freed carrier-to-leg M8x30s move here. Weld blade-to-carrier at
     // final fit on top. (Front pod: skip drilling until it gets a bracket.)
-    if (use_bracket) for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);
+    if (use_bracket_eff) for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);
     translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
@@ -1340,6 +1343,19 @@ rm_shock_x = min([for (t = [-bump_max : 2.5 : bump_max])
 rail_x0  = rails_clear_pods ? -pod_halfl : pod_halfl;
 rail_len = rails_clear_pods ? wheelbase + 2*pod_halfl : bay_len;
 
+// ---- front pod steering sweep (plan view) --------------------------------
+// The front pod turns about the steering axis, which crosses hub height
+// fork_off/sin(head_ang) behind the axle. Rotate the pod's plan outline
+// (belt ends at |z| = track_w/2, the wide zone at the shocks and pivot nut
+// at |z| = pod_halfw) through +/- steer_lock and take the widest point.
+// Axis tilt is ignored — a slight overestimate of the sweep, the safe side.
+steer_xs  = fork_off / sin(head_ang);
+steer_pts = [[ pod_halfl, track_w/2], [-pod_halfl, track_w/2],
+             [ 52, pod_halfw],        [-52, pod_halfw]];
+steer_zmax = max([for (p = steer_pts) for (sgz = [1,-1]) for (sgt = [1,-1])
+                   let(dx = p[0] - steer_xs, zz = sgz*p[1], th = sgt*steer_lock)
+                   abs(dx*sin(th) + zz*cos(th))]);
+
 // ---- steering axis, from the head angle + offset --------------------------
 // u  = up-and-back along the axis; nb = perpendicular, back-and-down, so the
 // axle sitting fork_off AHEAD of the axis means the axis passes through
@@ -1531,7 +1547,7 @@ if (render_mode == "plates"){
     translate([i*32, 0]) difference(){        // the TRAILING arm (one per plate)
       square([lug_l, lug_h_pl]);              // drill 5.0+tap M6, or 6.6+weld nut
       translate([lug_l/2, 7]) circle(d=6.6); }
-  if (use_bracket) translate([0, -300]){      // REV 011d MERGED bracket plates:
+  if (use_bracket_eff) translate([0, -300]){      // REV 011d MERGED bracket plates:
     for (i=[0:1]) translate([305, -i*50])     // backing strips x2 — leg INNER
       difference(){                           // face, no-weld sandwich layer
         square([brk_pad_l, brk_blade_w]);
@@ -1679,7 +1695,11 @@ if (render_mode == "plates"){
   ];
   // only meaningful when the rails are too narrow to pass outboard of the
   // pods and have to duck between them instead
-  cg2 = concat(cg, rails_clear_pods ? []
+  cg2 = concat(cg, rails_clear_pods
+                 // rails run alongside the front pod -> it must not hit them
+                 // when steered. Found 2026-09-10: at the placeholder 35 deg
+                 // lock it reaches |z| 171 against a 175 rail face.
+                 ? [["front pod at full steering lock to rail", rail_in - steer_zmax]]
                  : [["rail underside to pod crown", rail_y0 - pod_top]]);
   for (g = cg2)
     echo(str(g[1] < 10 ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10, " mm"));
@@ -1734,7 +1754,7 @@ if (render_mode == "plates"){
                         : " mm"));
   echo("FILL IN (Sheet 0B) — everything below is currently a GUESS:");
   echo("  vehicle : wheelbase · ride_clear · rail_zc");
-  echo("  front   : head_ang · fork_off · fork_len · head_len · head_od · stock_axle_h");
+  echo("  front   : head_ang · fork_off · fork_len · head_len · head_od · stock_axle_h · steer_lock");
   echo("  plate   : plate_th · plate_a · plate_w · plate_x · neck_t");
   echo("  battery : batt_l · batt_w · batt_h · batt_x");
   echo("  (plate_b and plate_ang are DERIVED — do not set them by hand)");

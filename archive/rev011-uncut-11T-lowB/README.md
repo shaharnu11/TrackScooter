@@ -160,6 +160,38 @@ Two faults the question surfaced, both now fixed:
   now has a **well** cut over each pod (`pod_well_clr`). The tracks come up
   through those openings; fender them later.
 
+### Why the rails don't bolt straight to the hub plate
+
+Owner's follow-up, 2026-09-10: *"why can't the left and right beam connect
+straight to the hub plate?"* A rail bolted flat to the carrier's outer face
+would have to live at |z| = 80…120. That lane is already taken:
+
+| Part in the lane | |z| | Height above ground |
+|---|---|---|
+| **shock** (body Ø22 / coil guard Ø44) | 83…105 / 72…116 | **66 (full droop) … 218**, at x ≈ 46…52 |
+| shock tab stub | 80…86 | 196…236 |
+| pivot bolt head + nylock | 91…116 | 74…102 |
+
+- **At deck height (rail y = 100…160) the rail goes straight through the
+  shock** — and each side of a pod carries one (trailing on +z, leading on
+  −z), so **both** rails are blocked. It also grazes the pivot nut.
+- **The only free band is above the shock**: rail 241…301, leaving **43 mm**
+  of bolting face on the carrier (top at 284). It works mechanically, but the
+  **deck rises 163 → 304**, the sprocket crown still pokes 23 mm above it, the
+  rails end up only 160 apart (two 150-wide packs side by side need 320), and
+  there's 141 mm under the deck where two stacked 90 mm packs need 180.
+- **The front pod can never do it** — it steers.
+
+So the gusset stays: rails outboard at 175, a short plate across to the
+carrier. It is the price of keeping the deck low and the pack bay wide.
+
+**Found while checking this:** the rails start at x = −182, beside the front
+pod, and my guards never tested a *turned* pod. Rotating its plan outline
+about the steering axis: 144 at 25° lock, 158 at 30°, **171 at 35°** against
+a 175 rail face, 182 at 40°. New `steer_lock` parameter (TBD, placeholder 35)
+and a guard, which now **WARNs at 4.4 mm**. Fix once the real lock is
+measured: start the rails behind the sweep, notch them, or limit the lock.
+
 ### What it already caught (at placeholder values)
 
 - **The front end rises 100 mm.** Hub axle 216 vs a stock ~116 wheel axle. The
