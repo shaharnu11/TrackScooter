@@ -260,9 +260,11 @@
 // ============================================================================
 
 /* [Render] */
-render_mode = "assembly"; // [assembly, exploded, plates, tensioner, bracket, chassis, chassis_plates, part]
+render_mode = "assembly"; // [assembly, exploded, plates, tensioner, bracket, chassis, chassis_link, chassis_plates, part]
 // render_mode="chassis": REV 012 — the whole vehicle: box frame (100x40x2),
 // rear pod on 60x6 green plates (4 bolts), front pod in the donor fork.
+// render_mode="chassis_link": labelled close-up of how the rear pod hangs on the
+// frame; link_explode pulls the pod back out of the tabs.
 // render_mode="chassis_plates": the 60x6 parts laid flat for DXF / 1:1 print.
 // render_mode="part": renders one BOM item alone (thumbnails for the §7
 // shopping guide). Pick the item with the part variable below.
@@ -407,7 +409,7 @@ brk_pack      = 17;     // packing between leg outer face and BLADE (6+6+5).
 // #    - a BOX FRAME of 100x40x2 tube, 100 side vertical (BOUGHT): two       #
 // #      rails, a front cross member and a rear cross tube. The two battery  #
 // #      packs sit INSIDE the box, one each side of a 60x6 middle bar.       #
-// #    - a 3 mm lid on top (you stand on it), a 3 mm tray below (packs sit). #
+// #    - a PLYWOOD lid on top (you stand on it) and tray below (packs sit). #
 // #    - the REAR pod hangs on two GREEN PLATES of 60x6 flat bar (BOUGHT)    #
 // #      that lie FLAT on the hub plates (keyed on the axle + 2x M8, as in   #
 // #      Rev 011d), reach forward past the front shock, and bolt between two #
@@ -443,8 +445,11 @@ fr_h        = 100;  // tube height (y)
 fr_w        = 40;   // tube width
 fr_t        = 2;    // wall
 bay_w       = 350;  // clear width between the rails' inner faces (2 packs)
-lid_t       = 3;    // floor plate you stand on (TO BUY: 3 mm steel)
-tray_t      = 3;    // battery tray under the frame (TO BUY: 3 mm steel)
+lid_t       = 12;   // TBD lid you stand on — PLYWOOD (owner, 2026-09-10)
+tray_t      = 12;   // TBD battery tray under the frame — PLYWOOD
+wood_rho    = 6.0e-7; // kg/mm³ — birch plywood, ~600 kg/m³
+wood_limit  = 15;   // MPa — plywood bending, with margin
+link_explode = 0;   // [0:10:150] chassis_link view: pull the rear pod back out of the tabs
 
 // -- 60x6 flat bar (BOUGHT): green plates, tabs, middle bar -----------------
 gp_w        = 60;   // bar width  = green plate height
@@ -1020,10 +1025,10 @@ module part_catalog(name){
 }
 
 // red 3D leader + text for the "tensioner" detail view
-module flag(txt, tip, anchor){
+module flag(txt, tip, anchor, size = 6){
   color([0.70,0.18,0.12]){
     hull(){ translate(tip) sphere(0.9); translate(anchor) sphere(0.9); }
-    translate(anchor + [2, -2.5, 0]) linear_extrude(1.2) text(txt, size=6);
+    translate(anchor + [2, -2.5, 0]) linear_extrude(1.2) text(txt, size=size);
   }
 }
 
@@ -1348,8 +1353,8 @@ pod_top   = hub_h + pitch_r + T/2;   // belt crown over the sprocket
 // top (hub + 30). Every other height hangs off that one datum.
 fr_top   = hub_h + gp_w/2;           // 246 — rail / cross member top
 fr_bot   = fr_top - fr_h;            // 146
-deck_y   = fr_top + lid_t;           // 249 — STANDING HEIGHT
-tray_y0  = fr_bot - tray_t;          // 143 — lowest frame point
+deck_y   = fr_top + lid_t;           // 258 — STANDING HEIGHT (12 mm plywood lid)
+tray_y0  = fr_bot - tray_t;          // 134 — lowest point (plywood tray)
 rail_in  = bay_w/2;                  // 175 — rail inner face |z|
 rail_out = rail_in + fr_w;           // 215
 fr_x0    = front_cm_x;               // frame front face
@@ -1453,10 +1458,10 @@ ch_tab_shock = (ch_lead_xmin - shock_perch_d/2) - tab_x1;
 // ---------------------------------------------------------------- colours ---
 c_frame = [0.42,0.45,0.50];
 c_bar   = [0.30,0.33,0.38];
-c_lid   = [0.55,0.57,0.60,0.30];
-c_tray  = [0.45,0.47,0.50,0.35];
+c_lid   = [0.72,0.55,0.35,0.45];   // plywood
+c_tray  = [0.66,0.50,0.32,0.50];   // plywood
 c_green = [0.20,0.55,0.30];
-c_tab   = [0.12,0.38,0.20];
+c_tab   = [0.58,0.61,0.66];   // tabs are FRAME parts -> frame grey, not pod green
 c_bolt  = [0.78,0.78,0.80];
 c_ghost = [0.50,0.55,0.62,0.30];
 c_batt  = [0.20,0.45,0.80,0.45];
@@ -1515,14 +1520,14 @@ module chassis_frame(){
   if (show_tray) color(c_tray) translate([fr_x0, tray_y0, -rail_out]) cube([rail_len, tray_t, 2*rail_out]);
 }
 
-module rear_link(){
+module rear_link(bolt_out = 0){
   // two tabs per side, welded to the rear cross tube's rear face, the green
   // plate between them; M10x30 from OUTSIDE into a nut welded on the inner tab
   translate([wheelbase, hub_h, 0]) for (s = [1, -1]) scale([1, 1, s]){
     color(c_tab) for (zb = [gp_z0 - gp_t, gp_z0 + gp_t])
       translate([0, 0, zb]) linear_extrude(gp_t) gp_tab_2d();
     for (bx = gp_bolts) translate([bx, 0, 0]){
-      color(c_bolt){
+      color(c_bolt) translate([0, 0, bolt_out]){
         translate([0, 0, gp_z0 - gp_t - 8]) cylinder(h = 3*gp_t + 8 + 2, d = 9.8); // shank
         translate([0, 0, gp_z0 + 2*gp_t])     cylinder(h = 2,   d = 20);           // washer
         translate([0, 0, gp_z0 + 2*gp_t + 2]) cylinder(h = 6.5, d = 18.5, $fn = 6); // head
@@ -1681,7 +1686,7 @@ if (render_mode == "plates"){
          [0, hub_h + 40, pod_halfw],                       [-430, deck_y + 330, lz]);
     flag(str("FRAME 100x40x2 ON EDGE - ", rail_len, " x ", 2*rail_out),
          [fr_x0 + 60, fr_bot + fr_h/2, rail_out],          [-430, deck_y + 250, lz]);
-    flag(str("STANDING HEIGHT ", deck_y, " mm (LID 3 mm)"),
+    flag(str("STANDING HEIGHT ", deck_y, " mm (PLYWOOD LID ", lid_t, " mm)"),
          [(fr_x0 + fr_x1)/2, deck_y, rail_out],            [(fr_x0 + fr_x1)/2 - 200, deck_y + 330, lz]);
     flag(str("BATTERY BAY ", bay_len, " x ", bay_w, " x ", fr_h),
          [(bay_x0 + bay_x1)/2, fr_bot + 30, rail_out],     [(fr_x0 + fr_x1)/2 - 200, -160, lz]);
@@ -1749,10 +1754,13 @@ if (render_mode == "plates"){
     ["M10 8.8 bolt, double shear",                              ch_Fb/157],
     ["rails, rider x2 in the middle",                           ch_Pr*(rail_len - fr_w)/4 / (2*ch_Irl/(fr_h/2))],
     ["middle bar, one foot in the middle",                      ch_Pf*bay_len/4 / ch_Zgp],
-    ["lid, one foot between rail and middle bar",               ch_Pf/2*(slot_w/2 - 25) / (250*lid_t*lid_t/6)],
   ];
   for (g = ch_stress)
     echo(str(g[1] > 141 ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]), " MPa"));
+  ch_s_lid = ch_Pf/2*(slot_w/2 - 25) / (250*lid_t*lid_t/6);
+  echo(str(ch_s_lid > wood_limit ? "*** WARN " : "PASS ", "plywood lid ", lid_t,
+           " mm, one foot between rail and middle bar: ", round(ch_s_lid*10)/10,
+           " MPa (plywood limit ", wood_limit, ")"));
   echo(str(ch_Fb <= 0.9*ch_grip ? "PASS " : "*** WARN ", "bolt joint: ", round(ch_Fb), " N per bolt vs grip ",
            round(ch_grip), " N -> ", ch_Fb <= 0.9*ch_grip ? "does not slip" : "SLIPS — move the bolts apart"));
   echo("  (static spring forces at the travel limits, no impact factor. The 141 MPa limit = 0.6 x 235 steel.)");
@@ -1765,22 +1773,60 @@ if (render_mode == "plates"){
   echo(str("  60x6      tabs                           4 x ", gp_tab_len));
   echo(str("  60x6      middle bar                     1 x ", bay_len,
            "   -> ", (gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*gp_tab_len + bay_len, " mm of 60x6 + saw cuts"));
-  echo(str("  3 mm steel  lid ", rail_len, " x ", 2*rail_out, "  +  tray ", rail_len, " x ", 2*rail_out, "   (TO BUY)"));
+  echo(str("  plywood ", lid_t, " mm   lid ", rail_len, " x ", 2*rail_out, "  ·  plywood ", tray_t, " mm   tray ", rail_len, " x ", 2*rail_out));
   echo("  bolts:    4x M10x30 8.8 + washer · 4x M10 weld nut (inner tabs) · 4x M8 plate-to-hub-plate (Rev 011d)");
   // ---- weight of the chassis steel (added 2026-09-10, owner asked) ---------
   ch_rho    = 7.85e-6;                                           // steel, kg/mm³
   ch_m_tube = (fr_h*fr_w - (fr_h - 2*fr_t)*(fr_w - 2*fr_t)) * (2*rail_len + 2*bay_w) * ch_rho;
   ch_m_bar  = gp_w*gp_t * ((gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*gp_tab_len + bay_len) * ch_rho;
-  ch_m_lid  = rail_len*2*rail_out*lid_t*ch_rho;
-  ch_m_tray = rail_len*2*rail_out*tray_t*ch_rho;
+  ch_m_lid  = rail_len*2*rail_out*lid_t*wood_rho;              // plywood
+  ch_m_tray = rail_len*2*rail_out*tray_t*wood_rho;             // plywood
   ch_m_hw   = 0.5;                                               // bolts, nuts, weld metal
-  echo(str("WEIGHT:   100x40x2 tubes ", round(ch_m_tube*10)/10, " kg · 60x6 parts ", round(ch_m_bar*10)/10,
-           " kg · lid ", round(ch_m_lid*10)/10, " kg · tray ", round(ch_m_tray*10)/10, " kg · bolts+welds ~", ch_m_hw,
-           " kg  ->  CHASSIS ~", round((ch_m_tube + ch_m_bar + ch_m_lid + ch_m_tray + ch_m_hw)*10)/10,
+  echo(str("WEIGHT:   STEEL ~", round((ch_m_tube + ch_m_bar + ch_m_hw)*10)/10, " kg (100x40x2 tubes ",
+           round(ch_m_tube*10)/10, " · 60x6 parts ", round(ch_m_bar*10)/10, " · bolts+welds ~", ch_m_hw,
+           ")  +  PLYWOOD ~", round((ch_m_lid + ch_m_tray)*10)/10, " kg (lid ", round(ch_m_lid*10)/10,
+           " · tray ", round(ch_m_tray*10)/10, ")  ->  CHASSIS ~",
+           round((ch_m_tube + ch_m_bar + ch_m_lid + ch_m_tray + ch_m_hw)*10)/10,
            " kg (no pods, no batteries, no front fork)"));
-  echo("FILL IN — still guesses: wheelbase · front_cm_x · rider_kg · batt_l/w/h · shock_perch_d · shock_neck ·");
+  echo(str("          the 2 green plates (~", round(gp_w*gp_t*((gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0))*ch_rho*10)/10,
+           " kg) come off WITH the rear pod"));
+  echo("FILL IN — still guesses: wheelbase · front_cm_x · rider_kg · batt_l/w/h · lid_t/tray_t · shock_perch_d · shock_neck ·");
   echo("          head_ang · fork_off · fork_len · head_len · head_od · stock_axle_h · steer_lock");
   echo("===================================================================================");
+
+} else if (render_mode == "chassis_link"){
+  // ---- REV 012 close-up: HOW THE REAR POD HANGS ON THE FRAME (owner asked).
+  // ---- Customizer: link_explode 0..150 pulls the pod back out of the tabs.
+  //   frame -> rear cross tube -> 2 tabs welded on it (a 6 mm slot) -> green
+  //   plate in the slot -> 2x M10 through tab + plate + tab -> the green plate
+  //   lies flat on the hub plate (motor axle key + 2x M8) -> the pod.
+  lk_bo = link_explode > 0 ? 45 : 0;
+  color(c_frame){
+    translate([fr_x1 - fr_w/2, fr_bot, -rail_in]) beam_z(2*rail_in, fr_h, fr_w, fr_t);
+    for (s = [1, -1])
+      translate([fr_x1 - 160, fr_bot, s*(rail_in + fr_w/2)]) beam_x(160, fr_h, fr_w, fr_t);
+  }
+  rear_link(lk_bo);
+  translate([wheelbase + link_explode, hub_h, 0]) pod_assembly("green");
+  lk_z = rail_out + 40;
+  lk_x = fr_x1 - 330;                    // labels close to the joint, so a
+  lk_r = wheelbase + 90 + link_explode;  // tight camera still shows them all
+  flag("1. REAR CROSS TUBE 100x40x2 - PART OF THE FRAME",
+       [fr_x1 - fr_w/2, fr_top, 130],                                         [lk_x, fr_top + 230, lk_z], 9);
+  flag("2. TWO TABS 60x6 WELDED ON THE TUBE - 6 mm SLOT",
+       [wheelbase - rear_ct_x + 60, hub_h + gp_w/2, gp_z0 + 2*gp_t],          [lk_x, fr_top + 170, lk_z], 9);
+  flag("3. 2x M10 BOLTS, PUT IN FROM OUTSIDE",
+       [wheelbase + gp_bolts[1], hub_h + 9, gp_z0 + 2*gp_t + 8.5 + lk_bo],    [lk_x, fr_top + 110, lk_z], 9);
+  flag("4. M10 NUT WELDED ON THE INNER TAB",
+       [wheelbase + gp_bolts[0], hub_h - 10, gp_z0 - gp_t - 4],               [lk_x, hub_h - 100, lk_z], 9);
+  flag("5. GREEN PLATE 60x6 GOES INTO THE SLOT",
+       [wheelbase + link_explode - 120, hub_h + gp_w/2, gp_z0 + gp_t],        [lk_r, fr_top + 230, lk_z], 9);
+  flag("6. OTHER END: FLAT ON THE HUB PLATE (AXLE + 2x M8)",
+       [wheelbase + link_explode, hub_h + 12, gp_z0 + gp_t],                  [lk_r, fr_top + 170, lk_z], 9);
+  flag("7. SHOCK TOP EYE BOLTS TO THE GREEN PLATE",
+       [wheelbase + link_explode + upP[0], hub_h + upP[1] + 5, gp_z0 + gp_t + 6], [lk_r, fr_top + 110, lk_z], 9);
+  echo(str("CHASSIS LINK: frame -> rear cross tube -> 2 tabs (6 mm slot) -> green plate -> 2x M10 -> ",
+           "green plate flat on the hub plate -> pod · pod pulled back ", link_explode, " mm"));
 
 } else if (render_mode == "chassis_plates"){
   // ---- REV 012 flat parts from the 60x6 bar, laid out for DXF / 1:1 print.

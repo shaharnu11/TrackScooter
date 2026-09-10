@@ -83,6 +83,8 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
   100×40×2, rear pod on 60×6 green plates (off with 4 bolts), front pod in the
   donor fork (ghost), battery bay. The echoes print every check, the cut list
   and the weight. See "Rev 012 — the floor frame" below.
+- `render_mode = "chassis_link"` — labelled close-up of how the rear pod hangs
+  on the frame; `link_explode` (0–150) pulls the pod back out of the tabs.
 - `render_mode = "chassis_plates"` — the flat 60×6 parts (green plates, tabs,
   middle bar) for DXF / 1:1 print:
   `openscad -o rev012_plates.dxf -D 'render_mode="chassis_plates"' apollo_track_pod_rev011.scad`
@@ -115,8 +117,8 @@ steers). Behind it everything is new:
 |---|---|---|
 | 2 rails + front cross member + rear cross tube | **100×40×2**, 100 side vertical | a box 500 × 430 × 100 |
 | middle bar | **60×6** on edge | under the lid; splits the bay into two 172-wide slots |
-| lid (you stand on it) | 3 mm plate | standing height **249 mm** |
-| tray (packs sit on it) | 3 mm plate | lowest point 143 mm above ground |
+| lid (you stand on it) | **plywood** 12 mm (TBD) | standing height **258 mm** |
+| tray (packs sit on it) | **plywood** 12 mm (TBD) | lowest point 134 mm above ground |
 | 2 green plates | **60×6** | flat on the hub plates, keyed on the axle + 2× M8 |
 | 4 tabs | **60×6** | welded to the rear cross tube, 2 per side |
 | 4 bolts | M10×30 8.8 + weld nuts | **the whole rear pod comes off with these 4** |
@@ -125,11 +127,23 @@ steers). Behind it everything is new:
 
 ### How the rear pod hangs
 
-Each green plate lies flat on its hub plate, reaches forward past the front
-shock, and sits between two tabs on the rear cross tube. 2× M10 per side, put
-in from the outside into nuts welded on the inner tabs.
+Seven steps, from the frame to the pod (`render_mode="chassis_link"`; slide
+`link_explode` to pull the pod back out):
 
-![rear link](rev012_rear_link.png)
+1. The **rear cross tube** (100×40×2) is part of the frame, welded between the rails.
+2. **Two tabs** (60×6 × 105) are welded on its back face, on each side, 6 mm apart — a slot.
+3. The **green plate** (60×6) goes into that slot.
+4. **2× M10** go through tab + green plate + tab, put in from the outside…
+5. …into an **M10 nut welded** on the inner tab.
+6. The other end of the green plate lies **flat on the hub plate**: the motor
+   axle passes through both, plus 2× M8.
+7. The **shock's top eye** bolts to the green plate.
+
+To take the rear pod off: undo the 4 M10 and pull the pod back.
+
+![rear link, assembled](rev012_link.png)
+![rear link, pod pulled back](rev012_link_open.png)
+![rear link, other side](rev012_rear_link.png)
 
 - **Why flat.** The hub plate is a 40×6 strip. Anything that grabs it from the
   side bends it like a page: 1163 N × 95 mm lever = 230–460 MPa on 235 steel.
@@ -157,7 +171,8 @@ in from the outside into nuts welded on the inner tabs.
 | green plate, worst section | 84 MPa |
 | tab welds / rear cross tube twist / M10 in shear | 52 / 34 / 46 MPa |
 | bolt joint | 7150 N per bolt vs 9600 N grip — does not slip |
-| rails / middle bar / lid | 11 / 37 / 104 MPa |
+| rails / middle bar | 11 / 37 MPa |
+| plywood lid 12 mm, one foot (plywood limit 15) | 6.5 MPa |
 
 Static spring forces at the travel limits, no impact factor; limit 141 MPa
 (0.6 × 235 steel).
@@ -172,15 +187,16 @@ Static spring forces at the travel limits, no impact factor; limit 141 MPa
 | 60×6 | green plate LEFT (front shock eye) | 1 × 208 |
 | 60×6 | tabs | 4 × 105 |
 | 60×6 | middle bar | 1 × 420 — **1308 mm total + saw cuts** |
-| 3 mm plate | lid + tray | 2 × 500 × 430 (**to buy**) |
+| plywood 12 mm | lid + tray | 2 × 500 × 430 |
 | hardware | M10×30 8.8 + washers · M10 weld nuts · M8 plate-to-hub-plate | 4 · 4 · 4 |
 
 Flat 60×6 parts with holes and notches: `rev012_plates.dxf`.
 
 ![flat parts](rev012_plates.png)
 
-**Weight:** about **21.6 kg** of steel — tubes 7.3, 60×6 parts 3.7, lid 5.1,
-tray 5.1, bolts + welds ~0.5. Without pods, batteries or front fork.
+**Weight:** about **14.6 kg** — steel 11.5 (tubes 7.3, 60×6 parts 3.7, bolts +
+welds ~0.5) + plywood 3.1 (lid 1.5, tray 1.5). Without pods, batteries or front
+fork. The 2 green plates (~1.3 kg) come off with the rear pod.
 
 ### ⚠ Still open
 

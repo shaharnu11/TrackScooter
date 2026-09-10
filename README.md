@@ -26,7 +26,7 @@ Folder contents: model (`apollo_track_pod_rev011.scad`), printable sprocket
 blueprint, README, archive note.
 
 **Rev 012 chassis (same folder):** scratch-built floor frame — a 100×40×2 box,
-rear pod on 60×6 green plates (off with 4 bolts), ~21.6 kg of steel.
+rear pod on 60×6 green plates (off with 4 bolts), plywood lid + tray, ~14.6 kg.
 `render_mode="chassis"`; see that folder's README, "Rev 012 — the floor frame".
 
 ## Shared facts
