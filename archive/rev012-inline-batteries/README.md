@@ -1,6 +1,12 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
-> ## THIS FOLDER = REV 011 — THE DESIGN OF RECORD (2026-08-10)
+> ## THIS FOLDER = REV 012 — LIVE (2026-09-10)
+> **The pod is Rev 011, unchanged** — everything below about the pod still applies.
+> New in Rev 012: the scratch-built **narrow frame** — two 100×40×2 rails whose inner faces
+> bolt straight onto the rear pod's 60×6 green plates, with the two batteries in line between
+> them. See "Rev 012 — narrow frame" below. Model: `apollo_track_pod_rev012.scad`.
+>
+> ## POD: REV 011 — THE DESIGN OF RECORD (2026-08-10)
 > **No grinder: the hub rim stays factory Ø165×35.** Forked from Rev 009; Revs 009 and 010
 > are superseded history. The one change that defines this revision: **the hub sits 20 mm
 > lower over the idler axle line (B 170 → 150)**, which stops the belt wasting length on its
@@ -29,7 +35,7 @@
 > **Hardware is untouched:** M12 stud axles, sleeves, shocks, springs, bearings, tubes and
 > the printed sprocket all carry over. Only cut lengths and hole positions moved.
 >
-> Model: `apollo_track_pod_rev011.scad` · cut list: `apollo_track_pod_plates.pdf` +
+> Model: `apollo_track_pod_rev012.scad` (pod identical to Rev 011) · cut list: `apollo_track_pod_plates.pdf` +
 > `plates_rev011.dxf` · wheel: `wheel_hub_print_blueprint_rev011.pdf` + `stl/`.
 
 ### Printing the 1:1 drilling templates
@@ -79,15 +85,14 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
 - `render_mode = "tensioner"` — labeled 3D close-up of the Sheet-6 belt tensioner
   (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
   axle through its take-up.
-- `render_mode = "chassis"` — **REV 012: the whole vehicle.** Box frame of
-  100×40×2, rear pod on 60×6 green plates (off with 4 bolts), front pod in the
-  donor fork (ghost), battery bay. The echoes print every check, the cut list
-  and the weight. See "Rev 012 — the floor frame" below.
-- `render_mode = "chassis_link"` — labelled close-up of how the rear pod hangs
-  on the frame; `link_explode` (0–150) pulls the pod back out of the tabs.
-- `render_mode = "chassis_plates"` — the flat 60×6 parts (green plates, tabs,
-  middle bar) for DXF / 1:1 print:
-  `openscad -o rev012_plates.dxf -D 'render_mode="chassis_plates"' apollo_track_pod_rev011.scad`
+- `render_mode = "chassis"` — **REV 012: the whole vehicle.** Narrow 100×40×2 frame,
+  two batteries in line, rear pod bolted to the rails (4× M12), front pod in the donor fork
+  (ghost). The echoes print every check, the cut list and the weight. See "Rev 012 — narrow
+  frame" below.
+- `render_mode = "chassis_link"` — labelled close-up of how the rear pod hangs on the rails;
+  `link_explode` (0–150) pulls the pod back out.
+- `render_mode = "chassis_plates"` — the two green plates laid flat for DXF:
+  `openscad -o rev012_plates.dxf -D 'render_mode="chassis_plates"' apollo_track_pod_rev012.scad`
 - `render_mode = "plates"` — all 10 flat-bar rectangles laid out flat (4 arm bars,
   2 carrier strips, 4 tab stubs — Rev 004). Print 1:1 as a drilling template, or
   export DXF if you still want a shop to cut them:
@@ -102,121 +107,98 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 
 ---
 
-## Rev 012 — the floor frame (rear pod on green plates)
+## Rev 012 — narrow frame, batteries in line
 
-> **SUPERSEDED 2026-09-10 by [`../rev012-inline-batteries/`](../rev012-inline-batteries/)** — a narrow
-> frame with the batteries in line and the rails bolted straight to the green plates. The wide
-> box frame below is kept as history.
-
-> Built in the model 2026-09-10. **Steel sizes are real (bought).** Numbers
-> marked TBD in the `.scad` are still guesses. The front fork → frame link is
-> **not designed yet**.
+> Built 2026-09-10. **Steel sizes are real (bought); the battery size and the shock's
+> 25 mm neck are measured.** Numbers marked TBD in the `.scad` are still guesses. The
+> front fork → frame link is **not designed yet**.
 
 ![side view](rev012_chassis_side.png)
 
-The donor deck is scrapped. The front pod stays in the donor front fork (it
-steers). Behind it everything is new:
-
-| Part | Steel | Notes |
+| Part | Material | Notes |
 |---|---|---|
-| 2 rails + front cross member + rear cross tube | **100×40×2**, 100 side vertical | a box 500 × 430 × 100 |
-| middle bar | **60×6** on edge | under the lid; splits the bay into two 172-wide slots |
-| lid (you stand on it) | **plywood** 12 mm (TBD) | standing height **269 mm** |
-| tray (packs sit on it) | **plywood** 12 mm (TBD) | lowest point 145 mm above ground |
-| 2 green plates | **60×6** | flat on the hub plates, keyed on the axle + M8 + weld; **no cut** — ends above the spring |
-| 4 tabs | **60×6** | go **through** the rear cross tube (slots), welded on both walls, 2 per side |
-| 4 bolts | M10×30 8.8 + weld nuts | **the whole rear pod comes off with these 4** |
+| 2 rails | **100×40×2**, 100 side vertical | 1027 long, **172 apart inside** (252 outside) |
+| front + rear cross member | **100×40×2** | 172 long, keep the rails square |
+| 2 green plates | **60×6**, no cut | flat on the hub plates (axle key + M8 + weld), flat on the rails' inner faces |
+| 4 sleeves | steel Ø25 × Ø13 × 40 | welded inside the rails, one at each bolt |
+| 4 bolts | M12×65 10.9 + washer · M12 nut welded on the green plate | **the whole rear pod comes off with these 4** |
+| 2 batteries | 400 × 110 × 80 (measured) | **one behind the other**, 62 mm spare in width, 20 above |
+| lid / tray | plywood 12 mm (TBD) | lid 920 × 302 · standing height **269** · lowest point 145 |
+
+**Wheelbase 1320 mm — derived from the batteries** (front cross member at 210 + bay 840
++ two cross members + 190 to the rear axle). Chassis ≈ **16.2 kg**: steel 12.5 + plywood 3.7.
 
 ![3/4 view](rev012_chassis_3q.png) ![top view, lid off](rev012_bay_top.png)
 
-### How the rear pod hangs
+### How the rear pod hangs — 4 bolts
 
-Seven steps, from the frame to the pod (`render_mode="chassis_link"`; slide
-`link_explode` to pull the pod back out):
+1. Each **rail's inner face lies flat on a green plate** (the plate sits between the rail and the track).
+2. Each rail has **two Ø25 holes** through both walls, 25 and 85 mm from its rear end, 70 mm up
+   from its bottom, with a **steel sleeve welded in** — the bolt squeezes the sleeve, not the 2 mm walls.
+3. **2× M12** per side go in from the **outside**, through the sleeve and the green plate…
+4. …into an **M12 nut welded on the green plate's inner face**.
+5. The other end of the green plate lies **flat on the hub plate**: motor axle key + M8 + weld.
+6. The **rails end 9 mm before the front shock**, so nothing touches it.
 
-1. The **rear cross tube** (100×40×2) is part of the frame, welded between the rails.
-2. **Two tabs** (60×6 × 148) drop **into** slots in the tube, on each side, 6 mm
-   apart — a slot for the green plate. Each tab slot is 6.5 wide and cut 61 mm
-   **down from the top edge**, through the front wall, the top wall and the back
-   wall, so it is **open at the top**. Weld the tab on the front, the back and the
-   top; grind the top weld flush so the lid sits flat. (A tab welded only *on* the
-   2 mm face would dent it: that holds ~93 N·m, each tab needs ~252.)
-3. The **green plate** (60×6) goes into that slot.
-4. **2× M10** go through tab + green plate + tab, put in from the outside…
-5. …into an **M10 nut welded** on the inner tab.
-6. The other end of the green plate lies **flat on the hub plate**: the motor
-   axle passes through both, plus 1× M8 above the axle, and a weld all round.
-7. The **shock's top eye** bolts to the green plate.
+To take the rear pod off: undo the 4 M12 and slide the pod back out from between the rails.
 
-To take the rear pod off: undo the 4 M10 and pull the pod back.
+![rear link](rev012_link.png) ![pod pulled back](rev012_link_open.png)
 
-![rear link, assembled](rev012_link.png)
-![rear link, pod pulled back](rev012_link_open.png)
-![rear link, other side](rev012_rear_link.png)
+**Why this works:** the rail wall lies flat on the green plate, so every load stays in the
+plates' own plane — the way the scooter fork did. A part grabbing the thin 40×6 hub plate from
+the side would bend it like a page. (The earlier wide-frame drafts, with tabs through a rear cross
+tube and a middle bar, stay in `../rev011-uncut-11T-lowB/` as history.)
 
-- **Why flat.** The hub plate is a 40×6 strip. Anything that grabs it from the
-  side bends it like a page: 1163 N × 95 mm lever = 230–460 MPa on 235 steel.
-  The scooter fork worked because its legs lie flat on the hub plate. The
-  first Rev 012 draft's side gusset was wrong for this reason and is deleted.
-- **Why not a rail straight onto the hub plate.** The front shock stands where
-  the left rail would pass. The plate face has only 94 mm between the pivot
-  bolt head and the shock tab (the rail is 100). And rails there would be
-  160 apart — two packs need 320.
-- **No cut in the green plate** (owner). Measured: 25 mm from the shock's top
-  eye centre to the spring (`shock_neck`). The plate's 60 mm band sits 11 mm
-  above the axle (`gp_yc`), so its bottom edge ends 2.7 mm above the spring over
-  full travel. The tabs, bolts and frame top moved up with it; the front pod's
-  shock tabs sit 1 mm higher for the same reason. Between the eye and the spring
-  the shock must be thinner than 16 mm.
-
-### Checks — all PASS at the current numbers
+### Checks — all PASS
 
 | Check | Result |
 |---|---|
 | front cross member behind the front pod at full steering lock | 17.3 mm |
-| rear cross tube + lid edge to the rear track, full travel | 26.8 mm |
-| tab end to the front shock | 10.9 mm |
+| rear cross member + lid edge to the rear track, full travel | 26.8 mm |
+| rail rear end ahead of the front shock | 8.9 mm |
+| rail inner face / M12 weld nut to the track edge | 27 / 11 mm |
 | green plate / front shock tab above the spring, full travel | 2.7 / 2.7 mm |
-| packs in the bay: width / length / height spare | 22 / 60 / 10 mm |
-| green plate, worst section | 84 MPa |
-| tab welds (both walls) / tube wall at each tab / cross tube twist / M10 in shear | 14 / 56 / 34 / 46 MPa |
-| bolt joint | 7150 N per bolt vs 9600 N grip — does not slip |
-| rails / middle bar | 11 / 37 MPa |
-| plywood lid 12 mm, one foot (plywood limit 15) | 6.5 MPa |
+| green plate at the rail end / at the rear bolt hole / at the shock eye hole | 83 / 97 / 21 MPa |
+| rail at the joint / rails with rider ×2 | 30 / 21 MPa |
+| sleeve bearing / sleeve under bolt preload / M12 shear | 77 / 140 / 68 MPa |
+| bolt joint | 7684 N per bolt vs 10000 N grip — does not slip |
+| plywood lid 12 mm, one foot | 6.5 MPa (limit 15) |
 
-Static spring forces at the travel limits, no impact factor; limit 141 MPa
-(0.6 × 235 steel).
+Static spring forces at the travel limits; steel limit 141 MPa (0.6 × 235). The only WARNs
+left are the lower shock bolt (below).
 
 ### Cut list
 
-| Steel | Part | Qty × length |
+| Material | Part | Qty × size |
 |---|---|---|
-| 100×40×2 | rails | 2 × 500 |
-| 100×40×2 | front + rear cross members | 2 × 350 — **1700 mm total**; rear one gets 4 slots 6.5 wide × 61 deep, **open at the top** |
+| 100×40×2 | rails | 2 × 1027 |
+| 100×40×2 | front + rear cross members | 2 × 172 — **2398 mm total** |
 | 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
-| 60×6 | green plate LEFT (front shock eye) | 1 × 208 |
-| 60×6 | tabs (43 mm of each inside the tube) | 4 × 148 |
-| 60×6 | middle bar | 1 × 420 — **1480 mm total + saw cuts** |
-| plywood 12 mm | lid + tray | 2 × 500 × 430 |
-| hardware | M10×30 8.8 + washers · M10 weld nuts · M8 plate-to-hub-plate (+ weld) | 4 · 4 · 2 |
+| 60×6 | green plate LEFT (front shock eye) | 1 × 208 — **468 mm total** |
+| steel bar/tube | sleeves Ø25 × Ø13 | 4 × 40 |
+| plywood 12 mm | lid · tray | 920 × 302 · 920 × 252 |
+| hardware | M12×65 10.9 + washer · M12 weld nut · M8 plate → hub plate | 4 · 4 · 2 |
 
-Flat 60×6 parts with holes, no cuts: `rev012_plates.dxf`.
+**Rear-pod hub plates:** drill one extra Ø8.4 at **44 mm from the top end** (between the fork
+hole and the axle key) for the M8 that holds each green plate.
+
+### Printable 1:1 templates
+
+`rev012_green_plate_templates.pdf` — 5 pages: each green plate in **two halves** (tape them
+together on the join line) and the **rail-end sleeve holes**. Print at **100% / Actual size**
+and measure the scale ruler before drilling. Regenerate with
+`python3 make_rev012_templates.py` — it reads every number from the `.scad`, renders the PDF
+and measures it back. Flat parts as DXF: `rev012_plates.dxf`.
 
 ![flat parts](rev012_plates.png)
 
-**Weight:** about **15.0 kg** — steel 11.9 (tubes 7.3, 60×6 parts 4.2, bolts +
-welds ~0.5) + plywood 3.1 (lid 1.5, tray 1.5). Without pods, batteries or front
-fork. The 2 green plates (~1.3 kg) come off with the rear pod.
-
 ### ⚠ Still open
 
-- **Lower shock bolt is over-stressed — Rev 011, both pods.** M8 + Ø15×Ø9
-  sleeve held only at the arm plates: ~530 MPa (trailing) / ~463 MPa (leading)
-  at full bump, static. Guard `lower shock bolt bending` WARNs. Support the
-  eye's outer end (double shear) before the arms are built.
+- **Lower shock bolt is over-stressed** (~530 MPa trailing / ~463 leading at full bump, both
+  pods; guard WARNs). Fix it before the arms are built.
 - **Front fork → frame link** — not designed.
-- **Measure:** wheelbase, battery case, shock neck + perch, head angle, fork
-  offset and length, steering lock.
+- **Measure:** the front cross member position against the real front pod, the spring's outer
+  diameter, head angle, fork offset and length, steering lock.
 
 ## How the mechanism works
 

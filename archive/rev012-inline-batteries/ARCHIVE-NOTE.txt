@@ -1,6 +1,29 @@
-2026-09-10: the chassis work moved to archive/rev012-inline-batteries/ (LIVE). The wide
-box-frame chassis in this folder's scad (render_mode="chassis") is superseded history. The pod
-defined here is unchanged and carried into Rev 012.
+Rev 012 (2026-09-10) — LIVE. Forked from Rev 011; the POD is unchanged.
+
+WHY: the owner is building his own floor instead of using the scooter deck. It must hold two
+batteries, 400 x 110 x 80 each (measured), and he wanted the rails bolted straight to the
+rear pod.
+
+THE CHANGE: a narrow frame. Two 100x40x2 rails (bought) whose INNER faces lie flat on the rear
+pod's 60x6 green plates (bought, not cut). 2x M12 10.9 per side: from outside, through a
+Ø25xØ13 steel sleeve welded inside the rail and the green plate, into an M12 nut welded on the
+plate. The whole rear pod comes off with 4 bolts. The rails end 9 mm before the front shock.
+The rails are 172 apart inside, so the batteries sit one behind the other, and the WHEELBASE
+follows from them: 1320 mm. Standing height 269 (plywood lid). Chassis ~16.2 kg.
+
+All chassis guards PASS (see README "Rev 012 — narrow frame"). The only WARNs are the lower
+shock bolt bending, inherited from Rev 011 — fix before the arms are built.
+
+NEW FILES: rev012_green_plate_templates.pdf (+ .html, make_rev012_templates.py — 1:1, reads the
+numbers from the .scad and measures the PDF back), rev012_plates.dxf, rev012_*.png.
+
+NOT COPIED: rev011_fork_bracket_template.* — Rev 012 does not use the Rev 011d fork bracket.
+
+SUPERSEDES: the wide box-frame chassis drafted inside archive/rev011-uncut-11T-lowB/
+(render_mode="chassis" there: 350 bay, tabs through a rear cross tube, middle bar).
+
+================================================================================
+The Rev 011 note follows (pod history, still valid):
 
 Rev 011 (2026-08-10) — DESIGN OF RECORD. Forked from Rev 009 (uncut rim, 11T).
 

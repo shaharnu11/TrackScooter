@@ -5,7 +5,13 @@ files live in the per-revision folders. Every future change lands in the live re
 
 ## Live revision
 
-**[`archive/rev011-uncut-11T-lowB/`](archive/rev011-uncut-11T-lowB/) — Rev 011, the design of record.**
+**[`archive/rev012-inline-batteries/`](archive/rev012-inline-batteries/) — Rev 012, live.** The pod is
+Rev 011 (below, unchanged). Rev 012 adds the scratch-built **narrow frame**: two 100×40×2 rails bolted
+straight onto the rear pod's 60×6 green plates (4× M12), the two 400×110×80 batteries in line between
+them, wheelbase 1320, chassis ~16 kg. `render_mode="chassis"`; printable green-plate templates:
+`rev012_green_plate_templates.pdf`.
+
+**Pod — Rev 011** (source folder [`archive/rev011-uncut-11T-lowB/`](archive/rev011-uncut-11T-lowB/)):
 
 No grinder: the hub rim stays factory Ø165×35, driven by a printed 11-tooth sprocket
 (rib 18×16.5, wheel Ø198, cord Ø210, tooth marks every 56.6 mm on the rib). The defining
@@ -25,9 +31,7 @@ Folder contents: model (`apollo_track_pod_rev011.scad`), printable sprocket
 (`sprocket_print.scad` + `stl/`), 2D wheel blueprint, plate cutting sheet + DXF, pod
 blueprint, README, archive note.
 
-**Rev 012 chassis (same folder):** scratch-built floor frame — a 100×40×2 box,
-rear pod on 60×6 green plates (off with 4 bolts), plywood lid + tray, ~15 kg.
-`render_mode="chassis"`; see that folder's README, "Rev 012 — the floor frame".
+(The first, wide box-frame Rev 012 draft stays in the Rev 011 folder as history.)
 
 ## Shared facts
 
