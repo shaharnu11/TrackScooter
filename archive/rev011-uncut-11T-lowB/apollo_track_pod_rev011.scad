@@ -652,6 +652,27 @@ function shock_len(ang) = norm(arm_pt([a, shock_y], ang) - upP);
 MR_true = (shock_len(-0.5) - shock_len(0.5))
         / (arm_pt([C,0], 0.5)[1] - arm_pt([C,0], -0.5)[1]);
 echo(str("MOTION RATIO = ", abs(MR_true), " (kinematic)   (spring k = wheel k / MR²)"));
+
+// ---- lower shock bolt bending (added 2026-09-10) ---------------------------
+// Never checked before. The lower eye rides an M8 through-bolt + Ø15×Ø9
+// spacer sleeve (FASTENERS.md §D) that is supported ONLY by the arm plates —
+// its outboard end, where the eye sits, is free. So the shock force bends it
+// as a cantilever from the arm plate's outer face out to the eye centre.
+// Simple beam, sleeve + bolt minor-diameter section summed, STATIC spring
+// force at full bump: a real impact is higher. Found while evaluating the
+// owner's "mount the shock on the beam" idea — which moves the eye further
+// out and roughly doubles this.
+lsb_od  = 15;   // spacer sleeve OD  (FASTENERS.md §D)
+lsb_id  = 9;    // spacer sleeve ID
+lsb_Z   = PI*(pow(lsb_od,4) - pow(lsb_id,4))/(32*lsb_od) + PI*pow(6.47,3)/32;
+lsb_F   = spring_rate*(shock_ee - shock_len(bump_max));
+for (arm = [["trailing", zi_tr + plate_t], ["leading", zi_ld + plate_t]]) let(
+    lsb_L = sz - arm[1],
+    lsb_s = lsb_F * lsb_L / lsb_Z)
+  echo(str(lsb_s > 235 ? "*** WARN " : "PASS ",
+           "lower shock bolt bending, ", arm[0], " arm: lever ", round(lsb_L),
+           " mm, ", round(lsb_F), " N at full bump -> ", round(lsb_s), " MPa",
+           lsb_s > 235 ? " — over mild-steel sleeve yield (235) before any impact. Support the eye's OUTER end (double shear: clevis / outer strap), or a much stiffer pin." : ""));
 echo(str("SHOCK FORCE (spring_rate=", spring_rate, " N/mm): ride sag ",
          spring_rate*(shock_ee - shock_len(0)), " N -> full bump ",
          spring_rate*(shock_ee - shock_len(bump_max)), " N -> full droop ",

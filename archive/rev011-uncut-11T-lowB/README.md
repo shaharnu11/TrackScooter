@@ -192,6 +192,48 @@ a 175 rail face, 182 at 40°. New `steer_lock` parameter (TBD, placeholder 35)
 and a guard, which now **WARNs at 4.4 mm**. Fix once the real lock is
 measured: start the rails behind the sweep, notch them, or limit the lock.
 
+### "Mount the shock on the beam" — evaluated
+
+Owner, 2026-09-10: *"the shock can be connected to the beam itself."* On the
+rear pod the rail and the carrier would be one rigid body, so moving the
+shock's TOP eye from the carrier tab to the rail changes nothing about the
+suspension if the eye stays put. But the top mount was never the blocker —
+the shock **body** is. Wherever its top bolts, the shock still needs its lane.
+
+| | Today | Full idea: rail flat on carrier, shock outboard of rail | In between: rail just outboard of the shock, top eye on the rail |
+|---|---|---|---|
+| rail \|z\| | 175…215 | 80…120 | 121…161 |
+| carrier → rail | gusset 89 | bolted flat | spacer block 41 |
+| shock plane \|z\| | 94 | **147** | 94 |
+| lower-bolt lever (trailing / leading) | 62 / 54 | **115 / 107** | 62 / 54 |
+| top eye pin | cantilever off the tab | on a 67 mm rail tab | **double shear** tab ↔ rail |
+| pod width | 232 | 338 | 232 |
+| pack bay between rails | 350 | 160 | 242 |
+| rails must start behind (35° lock) | — (guard WARNs at 4.4) | x ≈ 191 | x ≈ 158 |
+| other | — | rail must rise 7 to clear the pivot nut | 5 mm to coil guard and pivot nylock |
+
+Two packs side by side need 320, so only today's layout keeps that bay.
+
+### ⚠ Lower shock bolt is over-stressed — Rev 011 design of record, BOTH pods
+
+Found while checking the table above; **no guard ever covered it.** The lower
+eye rides an M8 bolt + Ø15×Ø9 sleeve (FASTENERS.md §D) held only by the arm
+plates — the outboard end, where the eye sits, is free. Cantilever from the
+arm plate face to the eye, sleeve + bolt section, **static** spring force at
+full bump (2681 N):
+
+| Layout | Trailing arm | Leading arm |
+|---|---|---|
+| **Today** | **~530 MPa** | **~463 MPa** |
+| Full "shock on the beam" idea | ~981 MPa | ~914 MPa |
+
+Mild-steel sleeve yield ~235–355 MPa, 8.8 bolt 640 — and that is before any
+impact. New guard `lower shock bolt bending` now WARNs on both arms. Moving the
+shock outboard (the full idea) roughly doubles it, so that option is off the
+table unless the lower mount changes. **Fix direction:** support the eye's
+outer end — a clevis or outer strap on the arm, putting the bolt in double
+shear — or a much stiffer pin. Needs modelling before any steel is cut.
+
 ### What it already caught (at placeholder values)
 
 - **The front end rises 100 mm.** Hub axle 216 vs a stock ~116 wheel axle. The
