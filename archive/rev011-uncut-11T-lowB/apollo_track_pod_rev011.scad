@@ -1525,7 +1525,9 @@ module chassis_frame(){
 }
 
 module rear_cross_tube(){
-  // rear cross tube, welded between the rails, with 8 slots (4 tabs x 2 walls)
+  // rear cross tube, welded between the rails, with 4 slots (one per tab). The tab top
+  // is flush with the tube top, so each slot is OPEN at the top: it cuts the front
+  // wall, the top wall and the back wall, 61 mm down. The tab drops in from above.
   color(c_frame) difference(){
     translate([fr_x1 - fr_w/2, fr_bot, -rail_in]) beam_z(2*rail_in, fr_h, fr_w, fr_t);
     if (gp_tab_through) for (s = [1, -1]) for (zb = [gp_z0 - gp_t, gp_z0 + gp_t])
@@ -1801,7 +1803,9 @@ if (render_mode == "plates"){
   echo(str("  60x6      middle bar                     1 x ", bay_len,
            "   -> ", (gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*(gp_tab_len + gp_tab_in) + bay_len, " mm of 60x6 + saw cuts"));
   if (gp_tab_through)
-    echo(str("  rear cross tube: 8 slots ", gp_w + 1, " x ", gp_t + 0.5, " through BOTH walls (4 tabs x 2 walls)"));
+    echo(str("  rear cross tube: 4 slots (one per tab), ", gp_t + 0.5, " wide x ", gp_w + 1,
+             " deep, OPEN AT THE TOP: cut down from the top edge through the front wall, top wall and back wall.",
+             " Drop the tab in from above, weld front + back + top, grind the top weld flush for the lid."));
   echo(str("  plywood ", lid_t, " mm   lid ", rail_len, " x ", 2*rail_out, "  ·  plywood ", tray_t, " mm   tray ", rail_len, " x ", 2*rail_out));
   echo("  bolts:    4x M10x30 8.8 + washer · 4x M10 weld nut (inner tabs) · 2x M8 green plate -> hub plate (+ weld all round)");
   // ---- weight of the chassis steel (added 2026-09-10, owner asked) ---------

@@ -131,9 +131,12 @@ Seven steps, from the frame to the pod (`render_mode="chassis_link"`; slide
 `link_explode` to pull the pod back out):
 
 1. The **rear cross tube** (100×40×2) is part of the frame, welded between the rails.
-2. **Two tabs** (60×6 × 148) go **through** slots in both walls of the tube and are
-   welded on both faces, on each side, 6 mm apart — a slot. (A tab welded only
-   *on* the 2 mm face would dent it: that holds ~93 N·m, each tab needs ~252.)
+2. **Two tabs** (60×6 × 148) drop **into** slots in the tube, on each side, 6 mm
+   apart — a slot for the green plate. Each tab slot is 6.5 wide and cut 61 mm
+   **down from the top edge**, through the front wall, the top wall and the back
+   wall, so it is **open at the top**. Weld the tab on the front, the back and the
+   top; grind the top weld flush so the lid sits flat. (A tab welded only *on* the
+   2 mm face would dent it: that holds ~93 N·m, each tab needs ~252.)
 3. The **green plate** (60×6) goes into that slot.
 4. **2× M10** go through tab + green plate + tab, put in from the outside…
 5. …into an **M10 nut welded** on the inner tab.
@@ -185,7 +188,7 @@ Static spring forces at the travel limits, no impact factor; limit 141 MPa
 | Steel | Part | Qty × length |
 |---|---|---|
 | 100×40×2 | rails | 2 × 500 |
-| 100×40×2 | front + rear cross members | 2 × 350 — **1700 mm total**; rear one gets 8 slots 61 × 6.5 through both walls |
+| 100×40×2 | front + rear cross members | 2 × 350 — **1700 mm total**; rear one gets 4 slots 6.5 wide × 61 deep, **open at the top** |
 | 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
 | 60×6 | green plate LEFT (front shock eye) | 1 × 208 |
 | 60×6 | tabs (43 mm of each inside the tube) | 4 × 148 |
