@@ -79,6 +79,11 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
 - `render_mode = "tensioner"` — labeled 3D close-up of the Sheet-6 belt tensioner
   (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
   axle through its take-up.
+- `render_mode = "chassis"` — **REV 012 DRAFT: the whole vehicle.** The donor
+  front end as a ghost (head tube, fork, angle plate), the scratch-built floor
+  (two rails, cross members, skin), both pods, and the battery bay. See
+  "Rev 012 draft — the scratch-built floor" below. **Every chassis number in
+  this mode is a placeholder**; the echoes name each one.
 - `render_mode = "plates"` — all 10 flat-bar rectangles laid out flat (4 arm bars,
   2 carrier strips, 4 tab stubs — Rev 004). Print 1:1 as a drilling template, or
   export DXF if you still want a shop to cut them:
@@ -92,6 +97,63 @@ All Sheet-0 datums are variables at the top of the file — every part and the D
 resize from them. The console echoes derived values (C, travel, motion ratio) each render.
 
 ---
+
+## Rev 012 draft — the scratch-built floor
+
+> **Status: DRAWN, NOT MEASURED.** Nothing here has been cut. The point of
+> this mode is to argue with the layout before steel is cut, not to build from.
+
+The donor deck is scrapped because two battery packs will not fit in a deck
+built as a battery box for one. What survives from the scooter is the **front
+end only**: head tube + front fork + front hub motor — i.e. the front pod
+exactly as Rev 011 already draws it. The front fork was never cut; only the
+**rear** fork needed the Rev 011d bracket, and **that bracket is now obsolete**
+— the rear pod hangs from legs welded to the new floor instead.
+
+```bash
+openscad -o chassis.png --preview --camera=430,380,3050,430,380,0 \
+  -D 'render_mode="chassis"' apollo_track_pod_rev011.scad
+```
+
+### What the model works out for you
+
+Three numbers are **derived, not chosen** — set them by hand and you are
+lying to yourself:
+
+| Derived | Why it isn't a free choice |
+|---|---|
+| `plate_ang` — the angle plate's bend | Face A must lie flat on the deck, face B must land on the neck. Deck height + head tube position fix the angle. Once measured, this **is** the bender setting. |
+| `plate_b` — face B length | Same reason. |
+| `head_bot_y` — head tube height | The fork is uncut, so the pod's taller axle carries the whole front end up with it. |
+
+### What it already caught (at placeholder values)
+
+- **The front end rises 100 mm.** Hub axle 216 vs a stock ~116 wheel axle. The
+  head tube, stem and bars all go up with it — plan on shortening the stem by
+  about that much to keep the stock reach.
+- **The angle plate is a bracket, not a tab.** At a 163 mm deck it spans
+  ~409 mm up to the neck. That cantilevers the whole steering load off the
+  deck: triangulate it back to a rail, or raise the deck to shorten it.
+- **The rails can pass outboard of the pods.** Pods are 232 wide at the shock
+  coils; rails at `rail_zc = 195` leave 59 mm clear, so the floor can run the
+  full wheelbase instead of ducking into the 537 mm bay between the pods.
+- **A 90 mm pack does not fit a 60 mm rail.** It hangs 30 mm below, so real
+  ground clearance under the packs is 70, not the 100 you set.
+- **Rear leg thickness is not free.** The carriers bolt to the leg OUTER faces,
+  so `rleg_t` must stay at `leg_t` = 4. Any other value moves `cz`, the pivot
+  stack, the sleeves and the packing for **both** pods. Stiffen the leg with a
+  doubler above the axle zone instead.
+
+### To fill in (Sheet 0B)
+
+Every one of these is currently a guess. The `chassis` echoes list them too.
+
+| Group | Parameters |
+|---|---|
+| vehicle | `wheelbase` · `ride_clear` · `rail_zc` |
+| front | `head_ang` · `fork_off` · `fork_len` · `head_len` · `head_od` · `stock_axle_h` |
+| plate | `plate_th` · `plate_a` · `plate_w` · `plate_x` · `neck_t` |
+| battery | `batt_l` · `batt_w` · `batt_h` · `batt_x` |
 
 ## How the mechanism works
 

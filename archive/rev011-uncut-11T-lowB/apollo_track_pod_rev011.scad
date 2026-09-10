@@ -260,7 +260,10 @@
 // ============================================================================
 
 /* [Render] */
-render_mode = "assembly"; // [assembly, exploded, plates, tensioner, bracket, part]
+render_mode = "assembly"; // [assembly, exploded, plates, tensioner, bracket, chassis, part]
+// render_mode="chassis": REV 012 DRAFT — the whole vehicle. Donor front end
+// (ghost) + the scratch-built floor + both pods, in vehicle coordinates.
+// Every chassis number is a PLACEHOLDER until Sheet 0B is measured.
 // render_mode="part": renders one BOM item alone (thumbnails for the §7
 // shopping guide). Pick the item with the part variable below.
 part = "bushing"; // [pivot_axle, arm_plates, carrier_plates, boss_tube, bushing, thrust_washer, spacer_tube, shock, shock_mounts, fork_hw, keel, draw_bolt, hardware, zerk, idler_axle, reused]
@@ -388,6 +391,90 @@ brk_pack      = 17;     // packing between leg outer face and BLADE (6+6+5).
 //     demand): keep the preload — witness marks, retorque 1h/5h/20h.
 //   - a cross-tube welded BLADE-to-BLADE (pod side, Ø22x3 offcut, at the
 //     bolt zone) carries side loads; it leaves the scooter untouched.
+
+// ############################################################################
+// #  REV 012 DRAFT — SCRATCH-BUILT FLOOR CHASSIS (owner, 2026-09-10)         #
+// #                                                                          #
+// #  The donor deck is scrapped. What survives from the scooter is the       #
+// #  FRONT END ONLY: head tube + front fork + the front hub motor, i.e. the  #
+// #  front pod exactly as Rev 011 already draws it (the front fork was       #
+// #  never cut — only the REAR fork needed the Rev 011d bracket, and that    #
+// #  bracket is now obsolete: the rear pod hangs from legs we weld to the    #
+// #  new floor instead).                                                     #
+// #                                                                          #
+// #  EVERY NUMBER IN THE BLOCK BELOW IS A PLACEHOLDER. Nothing here has      #
+// #  been measured. render_mode="chassis" exists so the layout can be        #
+// #  LOOKED AT and argued with before any steel is cut — the guards and      #
+// #  echoes below say which numbers actually change the answer.              #
+// #  Fill them from the Sheet-0B measurement list, then re-render.           #
+// ############################################################################
+
+/* [Chassis — REV 012 DRAFT: EVERY VALUE IS A PLACEHOLDER, NOT MEASURED] */
+show_chassis_labels = true;
+show_batteries      = true;
+show_rider_box      = true;   // 600x300 footprint box = where you actually stand
+
+// -- vehicle ---------------------------------------------------------------
+wheelbase   = 900;  // TBD front hub axle -> rear hub axle. Sets bay length.
+ride_clear  = 100;  // TBD ground clearance under the rails. The whole deck
+                    //     height follows from this + rail_h + skin_t.
+
+// -- the two main rails (buy: 60x40x3 rect tube, stood ON EDGE) -------------
+rail_h      = 60;   // rail depth (vertical) — stiffness goes with THIS cubed
+rail_w      = 40;   // rail width (across)
+rail_t      = 3;    // wall
+rail_zc     = 195;  // TBD rail centreline |z|. Must clear the pods (guarded)
+                    //     AND be wide enough for the packs between the rails.
+skin_t      = 3;    // floor plate on top of the rails
+
+// -- cross members (buy: 40x40x2) ------------------------------------------
+xmem_h      = 40;
+xmem_w      = 40;
+xmem_t      = 2;
+n_xmem      = 4;    // TBD. One of them MUST land under the angle plate.
+
+// -- batteries: two packs, laid side by side ACROSS the frame --------------
+batt_l      = 360;  // TBD  ) measure all three over the CASE,
+batt_w      = 150;  // TBD  ) not the cells
+batt_h      = 90;   // TBD  )
+batt_gap    = 20;   // gap between the two packs
+batt_x      = 250;  // TBD pack front face, from the front hub axle
+
+// -- front end: head tube + angle plate (ALL TBD — this is the blocker) ----
+head_ang    = 72;   // TBD head tube angle measured from the GROUND
+fork_off    = 30;   // TBD front axle ahead of the steering axis (offset)
+fork_len    = 340;  // TBD front axle -> head tube BOTTOM, along the fork.
+                    //     Measured on the donor, tape from axle to head tube.
+                    //     (The head tube height above ground is DERIVED from
+                    //     this — the fork is unchanged, so the pod's taller
+                    //     axle carries the whole front end up with it.)
+head_len    = 220;  // TBD head tube length
+head_od     = 45;   // TBD head tube OD
+stock_axle_h = 116; // TBD donor front axle height with its ORIGINAL wheel
+                    //     (= wheel OD / 2, on a flat tyre-inflated floor).
+                    //     Only used to report how far the pod lifts the whole
+                    //     front end — head tube, stem and bars all go with it.
+plate_th    = 6;    // TBD angle plate thickness
+plate_a     = 150;  // TBD length of the face that BOLTS FLAT to the floor
+plate_w     = 120;  // TBD plate width (across)
+plate_x     = 260;  // TBD rear end of the floor face, from the front axle.
+                    //     A cross member goes directly under this station.
+neck_t      = 45;   // TBD where the plate meets the neck, measured ALONG the
+                    //     head tube axis up from the head tube's bottom end.
+// NOTE: the plate's bend angle and its second face length are NOT free —
+// they are whatever it takes to reach the neck from the deck. Both are
+// DERIVED below and echoed, so once the head tube is measured the model
+// tells you the angle to set in the bender.
+
+// -- rear pod legs: these REPLACE the scooter's rear fork -------------------
+// The carriers bolt to the leg OUTER faces, so the leg thickness is not a
+// free choice: it is leg_t, and leg_t sets cz, which sets the pivot-axle
+// stack, the sleeves and the bracket packing for BOTH pods. Change it here
+// and the whole pod BOM moves. Stiffen the leg with a DOUBLER above the
+// axle zone instead — that adds steel without moving the axle plane.
+rleg_t      = 4;    // = leg_t. Guarded: any other value is echoed as a WARN.
+rleg_w      = 60;   // leg width fore-aft at the axle
+rleg_top_w  = 90;   // widens where it meets the rail (weld shelf)
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
@@ -1191,6 +1278,195 @@ module track3d(){
     }
 }
 
+// ====================================================== pod as one object ==
+// Rev 012: the assembly branch's body, lifted verbatim into a module so the
+// chassis view can place TWO of them (front and rear) in vehicle coordinates.
+// Pod coords: origin = hub axle centre, +x rearward, +y up, z across.
+module pod_assembly(){
+  // trailing arm (rear, +x) and leading arm (front, -x, mirrored)
+  translate([ ex*60, 0, 0]) arm3d(zi_tr, true,  aT, +1);
+  translate([-ex*60, 0, 0]) mirror([1,0,0]) arm3d(zi_ld, false, aL, -1);
+
+  carrier_group();
+  pivot_axle_group();
+
+  if (show_shocks){
+    translate([0,0,  ex*80]) shock3d(upP,     arm_pt([a,shock_y], aT),      sz);
+    translate([0,0, -ex*80]) shock3d(mx(upP), mx(arm_pt([a,shock_y], aL)), -sz);
+    if (show_force){
+      translate([0,0,  ex*80]) force_gauge(aT,  sz+16, false);
+      translate([0,0, -ex*80]) force_gauge(aL, -sz-16, true);
+    }
+  }
+  if (show_sprocket) translate([0, ex*150, 0]) sprocket();
+  if (show_track && ex == 0) track3d();
+}
+
+// ======================================================= REV 012 chassis ===
+// Vehicle coords: X = 0 at the FRONT hub axle, +X rearward.
+//                 Y = 0 at the GROUND, +Y up.   Z = across, 0 on centreline.
+// A pod drops straight in with translate([x, hub_h, 0]) — same axis
+// convention as the pod's own coordinate system, no rotation needed.
+
+hub_h    = B + D/2 + T;              // 216 — hub axle height above ground
+pod_halfl = A_eff/2 + D/2 + T;       // 181.6 — pod half length, x
+pod_halfw = sz + 22;                 // ~116 — widest point (shock coil Ø44)
+pod_top   = hub_h + pitch_r + T/2;   // belt crown over the sprocket
+
+rail_y0  = ride_clear;               // rail underside
+rail_y1  = ride_clear + rail_h;      // rail top
+deck_y   = rail_y1 + skin_t;         // STANDING HEIGHT — the number that
+                                     // decides whether this thing is tippy
+rail_in  = rail_zc - rail_w/2;       // rail INNER face |z|
+rail_out = rail_zc + rail_w/2;       // rail OUTER face |z|
+bay_len  = wheelbase - 2*pod_halfl;  // clear length BETWEEN the two pods
+batt_span = 2*batt_w + batt_gap;     // width the two packs need, side by side
+batt_y0  = rail_y1 - batt_h;         // packs hung from the floor skin down
+// Rails run the full wheelbase only if they pass OUTBOARD of the pods.
+rails_clear_pods = (rail_in > pod_halfw);
+rail_x0  = rails_clear_pods ? -pod_halfl : pod_halfl;
+rail_len = rails_clear_pods ? wheelbase + 2*pod_halfl : bay_len;
+
+// ---- steering axis, from the head angle + offset --------------------------
+// u  = up-and-back along the axis; nb = perpendicular, back-and-down, so the
+// axle sitting fork_off AHEAD of the axis means the axis passes through
+// Q = axle + fork_off*nb. Positive trail follows automatically.
+u_ax = [cos(head_ang), sin(head_ang)];
+nb   = [sin(head_ang), -cos(head_ang)];
+Q_ax = [fork_off*nb[0], hub_h + fork_off*nb[1]];
+// The axle sits fork_off off the axis, so a fork_len measured axle-to-head-
+// tube resolves along the axis by Pythagoras.
+t_bot = sqrt(max(1, fork_len*fork_len - fork_off*fork_off));
+head_p0 = Q_ax + t_bot*u_ax;                        // head tube bottom centre
+head_p1 = head_p0 + head_len*u_ax;                  // head tube top centre
+head_bot_y = head_p0[1];                            // DERIVED, not chosen
+// trail = where the axis hits the ground, ahead of the contact patch
+trail = -(Q_ax[0] - Q_ax[1]*u_ax[0]/u_ax[1]);
+
+// ---- angle plate, DERIVED ------------------------------------------------
+// The plate is not a free shape. Face A must lie flat on the floor skin;
+// face B must land on the neck. So once the deck height and the head tube
+// are known, both the bend angle and face B's length fall out. The model
+// reports them; you set that angle in the bender.
+neck_p  = head_p0 + neck_t*u_ax;              // where face B meets the neck
+plateA0 = [plate_x,          deck_y];         // face A, rear end (on the deck)
+plateA1 = [plate_x - plate_a, deck_y];        // face A, front end = the BEND
+plate_b   = norm(neck_p - plateA1);           // face B length, derived
+// Included angle at the fold: face A leaves the bend along +x (toward the
+// rear of the deck), face B leaves it toward the neck.
+plate_ang = atan2(neck_p[1] - plateA1[1], neck_p[0] - plateA1[0]);
+
+// ---------------------------------------------------------------- steel ---
+c_rail = [0.42,0.45,0.50];
+c_xmem = [0.34,0.37,0.42];
+c_skin = [0.55,0.57,0.60,0.32];   // kept see-through: the rails and cross
+                                  // members under it are the interesting part
+c_ghost= [0.50,0.55,0.62,0.30];
+c_batt = [0.20,0.45,0.30,0.55];
+
+// hollow rectangular tube running along +x. h tall (y), w wide (z),
+// origin at the front face, bottom at y=0, centred in z.
+module beam_x(len, h, w, t){
+  difference(){
+    translate([0, 0, -w/2]) cube([len, h, w]);
+    translate([-1, t, -(w/2 - t)]) cube([len+2, h - 2*t, w - 2*t]);
+  }
+}
+// same, running along +z (cross members). origin at the -z end.
+module beam_z(len, h, w, t){
+  difference(){
+    translate([-w/2, 0, 0]) cube([w, h, len]);
+    translate([-(w/2 - t), t, -1]) cube([w - 2*t, h - 2*t, len+2]);
+  }
+}
+
+module chassis_frame(){
+  // two main rails
+  color(c_rail) for (s=[1,-1])
+    translate([rail_x0, rail_y0, s*rail_zc]) beam_x(rail_len, rail_h, rail_w, rail_t);
+
+  // cross members, evenly spread through the battery bay, tucked up under
+  // the floor skin so the packs can hang between them
+  color(c_xmem) for (i=[0:n_xmem-1])
+    translate([pod_halfl + (i+0.5)*bay_len/n_xmem,
+               rail_y1 - xmem_h, -rail_in])
+      beam_z(2*rail_in, xmem_h, xmem_w, xmem_t);
+
+  // the ONE cross member that is not optional: directly under the angle
+  // plate's bolt pattern, taking the steering and braking load
+  color([0.60,0.30,0.20]) translate([plate_x, rail_y1 - xmem_h, -rail_in])
+    beam_z(2*rail_in, xmem_h, xmem_w, xmem_t);
+
+  // floor skin
+  color(c_skin) translate([rail_x0, rail_y1, -rail_out])
+    cube([rail_len, skin_t, 2*rail_out]);
+}
+
+module rear_legs(){
+  // Two plates dropping from the rail to the rear hub axle. Inner faces at
+  // fork_gap/2 = 70, so the carriers land on the leg OUTER faces exactly as
+  // they do on the donor fork. Drawn as a tapered blade: wide at the rail
+  // (weld shelf), rleg_w at the axle.
+  lx = wheelbase;
+  color([0.30,0.50,0.35]) for (zb = [fork_gap/2, -(fork_gap/2 + rleg_t)])
+    translate([0, 0, zb])
+      linear_extrude(rleg_t) polygon([
+        [lx - rleg_w/2,     hub_h - 25],
+        [lx + rleg_w/2,     hub_h - 25],
+        [lx + rleg_top_w/2, rail_y1],
+        [lx - rleg_top_w/2, rail_y1] ]);
+  // the axle itself, through both legs
+  color([0.55,0.55,0.58]) translate([lx, hub_h, 0])
+    rotate([0,0,0]) translate([0,0,-(fork_gap/2 + rleg_t + 30)])
+      cylinder(h = fork_gap + 2*rleg_t + 60, d = axle_d);
+}
+
+module front_end_ghost(){
+  // Everything here is DONOR HARDWARE, drawn as a ghost: head tube, the two
+  // fork legs down to the front hub, and the angle plate that ties the neck
+  // to the floor. Shapes are indicative — the numbers are all TBD.
+  color(c_ghost){
+    // head tube
+    translate([head_p0[0], head_p0[1], 0]) rotate([0, 90 - head_ang, 0])
+      cylinder(h = head_len, d = head_od);
+    // fork legs: head tube bottom down to the hub axle, one per side
+    for (s=[1,-1]) translate([0, 0, s*(fork_gap/2 + leg_t/2)])
+      hull(){
+        translate([head_p0[0], head_p0[1], 0]) rotate([90,0,0])
+          cylinder(h = leg_t, d = 26, center=true);
+        translate([0, hub_h, 0]) rotate([90,0,0])
+          cylinder(h = leg_t, d = 26, center=true);
+      }
+  }
+  // ---- the angle plate. Face A lies flat on the floor skin; face B runs
+  // ---- from the bend up to the neck. Drawn by extruding a 2-segment
+  // ---- outline, so it ALWAYS connects — whatever the TBD numbers become.
+  color([0.85,0.45,0.12,0.85]) translate([0, 0, -plate_w/2])
+    linear_extrude(plate_w){
+      translate(plateA1) rotate(plate_ang)           // face B: bend -> neck
+        translate([0, -plate_th]) square([plate_b, plate_th]);
+      translate([plateA1[0], deck_y]) square([plate_a, plate_th]);  // face A
+    }
+}
+
+module battery_boxes(){
+  color(c_batt) for (s=[1,-1])
+    translate([batt_x, batt_y0, s*(batt_gap/2) - (s>0 ? 0 : batt_w)])
+      cube([batt_l, batt_h, batt_w]);
+}
+
+module rider_box(){
+  // 600 x 300 — a realistic pair of feet plus stance. If this box does not
+  // sit clear above the packs and inside the rails, the deck does not work.
+  color([0.85,0.75,0.20,0.22])
+    translate([wheelbase/2 - 300, deck_y, -150]) cube([600, 70, 300]);
+}
+
+module chassis_ground(){
+  color([0.80,0.80,0.82,0.35])
+    translate([-400, -2, -450]) cube([wheelbase + 800, 2, 900]);
+}
+
 // ============================================================== top level
 if (render_mode == "plates"){
   // Rev 011: compact nesting of the COMPLETE cut list for DXF export / 1:1
@@ -1294,6 +1570,122 @@ if (render_mode == "plates"){
        [0, 8, bz0+brk_t+8],                       [60, 55, 95]);
   flag("SHOCK EYE PIN",
        [upP[0], upP[1], bz0+brk_t+10],            [upP[0]+40, upP[1]+35, 95]);
+} else if (render_mode == "chassis"){
+  // ---- REV 012 DRAFT: the whole vehicle. Donor front end (ghost) + the
+  // ---- scratch-built floor + both pods. EVERY CHASSIS NUMBER IS A GUESS.
+  chassis_ground();
+  translate([0,         hub_h, 0]) pod_assembly();      // FRONT pod (donor fork)
+  translate([wheelbase, hub_h, 0]) pod_assembly();      // REAR pod (new legs)
+  chassis_frame();
+  rear_legs();
+  front_end_ghost();
+  if (show_batteries)  battery_boxes();
+  if (show_rider_box)  rider_box();
+
+  if (show_chassis_labels){
+    lz = rail_out + 90;                  // label plane, just outboard of the frame
+    // front-end labels go forward, deck labels stay mid, rear labels go aft —
+    // keeps the leader lines from crossing the vehicle
+    flag("HEAD TUBE - ANGLE, OFFSET, LENGTH ALL TBD",
+         [head_p1[0], head_p1[1], 0],            [-430, head_p1[1] + 40, lz]);
+    flag("ANGLE PLATE - BEND ANGLE IS DERIVED, NOT CHOSEN",
+         [plateA1[0], plateA1[1] + 40, 0],       [-430, head_p1[1] - 40, lz]);
+    flag("FRONT POD - DONOR FORK, UNCUT",
+         [0, hub_h, pod_halfw],                  [-430, head_p1[1] - 120, lz]);
+    flag(str("STANDING HEIGHT ", round(deck_y), " mm"),
+         [wheelbase/2 - 60, deck_y, rail_out],   [wheelbase/2 - 150, deck_y + 300, lz]);
+    flag(str("RAIL ", rail_h, "x", rail_w, "x", rail_t, " ON EDGE"),
+         [wheelbase/2 + 60, rail_y0 + rail_h/2, rail_out],
+                                                 [wheelbase/2 - 150, deck_y + 220, lz]);
+    flag(str("BAY BETWEEN PODS ", round(bay_len), " mm"),
+         [wheelbase/2, rail_y0 - 10, 0],         [wheelbase/2 - 150, -170, lz]);
+    flag("2x BATTERY - ALL 3 DIMS TBD",
+         [batt_x + batt_l/2, batt_y0, batt_w],   [wheelbase/2 - 150, -250, lz]);
+    flag("REAR LEGS REPLACE THE REAR FORK (4 mm, = leg_t)",
+         [wheelbase, hub_h + 60, fork_gap/2],    [wheelbase + 150, deck_y + 220, lz]);
+    flag("CROSS MEMBER UNDER THE PLATE - NOT OPTIONAL",
+         [plate_x, rail_y1 - xmem_h/2, rail_in], [wheelbase + 150, deck_y + 140, lz]);
+  }
+
+  // ---------------------------------------------------- chassis guards ----
+  echo("");
+  echo("=================== REV 012 CHASSIS — DRAFT, NOT MEASURED =========");
+  echo(str("VEHICLE:  wheelbase ", wheelbase, "  ·  hub axles ", hub_h,
+           " above ground (both ends — pods level the vehicle)"));
+  echo(str("POD:      ", round(2*pod_halfl), " long x ", round(2*pod_halfw),
+           " wide, crown ", round(pod_top), " above ground"));
+  echo(str("BAY:      ", round(bay_len), " mm clear between the pods",
+           "  ·  rails run ", rails_clear_pods ? "FULL LENGTH (outboard of the pods)"
+                                               : "BETWEEN THE PODS ONLY"));
+  echo(str("DECK:     rail underside ", rail_y0, " · rail top ", rail_y1,
+           " · STANDING HEIGHT ", deck_y, " mm"));
+  echo(str("STEERING: head ", head_ang, " deg to ground, offset ", fork_off,
+           " -> trail ", round(trail*10)/10, " mm  (ALL THREE ARE GUESSES)"));
+  echo(str("PLATE:    face A ", plate_a, " flat on the deck at x=", plate_x,
+           "  ·  face B ", round(plate_b*10)/10, " to the neck  ·  BEND ",
+           round(plate_ang*10)/10, " deg  — both DERIVED from the deck height",
+           " and the head tube; measure those and this becomes the bender setting"));
+
+  cg = [
+    ["rail inner face to pod widest point", rail_in - pod_halfw],
+    ["rail inner gap vs the two packs",     2*rail_in - batt_span],
+    ["pack underside to ground",            batt_y0 - 0],
+    ["pack length vs the bay",              bay_len - batt_l],
+  ];
+  // only meaningful when the rails are too narrow to pass outboard of the
+  // pods and have to duck between them instead
+  cg2 = concat(cg, rails_clear_pods ? []
+                 : [["rail underside to pod crown", rail_y0 - pod_top]]);
+  for (g = cg2)
+    echo(str(g[1] < 10 ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10, " mm"));
+
+  // ---- what the pod does to the front end -------------------------------
+  // The front fork is UNCUT, so every millimetre the pod adds under the front
+  // axle lifts the head tube, the stem and the bars with it. The deck does
+  // NOT follow automatically — you choose that with ride_clear — so the gap
+  // the angle plate has to span is a design output, not an input.
+  front_rise = hub_h - stock_axle_h;
+  plate_dy   = neck_p[1] - deck_y;
+  plate_dx   = plateA1[0] - neck_p[0];
+  echo(str("FRONT END: the pod lifts the front axle ", round(front_rise),
+           " mm over the stock wheel (", stock_axle_h, " -> ", hub_h,
+           "). Head tube bottom now sits ", round(head_bot_y),
+           " above ground; bars rise the same ", round(front_rise),
+           " — shorten the stem by about that much to keep the stock reach."));
+  echo(str(plate_b > 200 ? "*** WARN " : "PASS ",
+           "angle plate spans ", round(plate_dy), " up and ",
+           round(abs(plate_dx)), " along — face B is ", round(plate_b), " mm",
+           plate_b > 200
+             ? ". That is a BRACKET, not a tab: it cantilevers the whole steering load off the deck. Triangulate it (gusset back to a rail) or raise the deck to shorten it."
+             : "."));
+
+  // The trade that actually decides the layout: a pack taller than the rail
+  // must either hang below (eating ground clearance) or stand proud of the
+  // skin (a hump in the floor). This echo names which one you are choosing.
+  pack_drop = rail_y0 - batt_y0;         // >0 = pack hangs below the rails
+  echo(str(pack_drop <= 0 ? "PASS " : "*** NOTE ",
+           "pack ", batt_h, " tall vs rail ", rail_h, " deep: ",
+           pack_drop <= 0 ? "fits inside the rail depth"
+                          : str("hangs ", round(pack_drop), " mm BELOW the rails — ground clearance under the packs is ",
+                                round(batt_y0), ", not ", ride_clear,
+                                ". Lay the packs flatter, deepen the rail, or accept it.")));
+
+  echo(str(rleg_t == leg_t ? "PASS " : "*** WARN ",
+           "rear leg thickness ", rleg_t, " vs leg_t ", leg_t,
+           rleg_t == leg_t ? " — carrier plane unchanged, pod BOM carries over"
+                           : " — MISMATCH: cz, pivot stack, sleeves and packing ALL move. Stiffen with a doubler ABOVE the axle instead."));
+  echo(str(deck_y > 250 ? "*** WARN " : "PASS ",
+           "standing height ", deck_y,
+           deck_y > 250 ? " mm — tall for a tracked vehicle; drop ride_clear or lay the packs flatter"
+                        : " mm"));
+  echo("FILL IN (Sheet 0B) — everything below is currently a GUESS:");
+  echo("  vehicle : wheelbase · ride_clear · rail_zc");
+  echo("  front   : head_ang · fork_off · fork_len · head_len · head_od · stock_axle_h");
+  echo("  plate   : plate_th · plate_a · plate_w · plate_x · neck_t");
+  echo("  battery : batt_l · batt_w · batt_h · batt_x");
+  echo("  (plate_b and plate_ang are DERIVED — do not set them by hand)");
+  echo("==================================================================");
+
 } else if (render_mode == "tensioner"){
   // ---- Sheet-6 close-up: trailing-arm belt tensioner, arm drawn level ----
   // (local arm coords: pivot at x=0, wheel end +x = rearward)
@@ -1317,21 +1709,5 @@ if (render_mode == "plates"){
   flag("M6 PUSH BOLT + JAM NUT",
        [C-30, 0, zo+7],              [C+34, 24, zo+26]);
 } else {
-  // trailing arm (rear, +x) and leading arm (front, -x, mirrored)
-  translate([ ex*60, 0, 0]) arm3d(zi_tr, true,  aT, +1);
-  translate([-ex*60, 0, 0]) mirror([1,0,0]) arm3d(zi_ld, false, aL, -1);
-
-  carrier_group();
-  pivot_axle_group();
-
-  if (show_shocks){
-    translate([0,0,  ex*80]) shock3d(upP,     arm_pt([a,shock_y], aT),      sz);
-    translate([0,0, -ex*80]) shock3d(mx(upP), mx(arm_pt([a,shock_y], aL)), -sz);
-    if (show_force){
-      translate([0,0,  ex*80]) force_gauge(aT,  sz+16, false);
-      translate([0,0, -ex*80]) force_gauge(aL, -sz-16, true);
-    }
-  }
-  if (show_sprocket) translate([0, ex*150, 0]) sprocket();
-  if (show_track && ex == 0) track3d();
+  pod_assembly();
 }
