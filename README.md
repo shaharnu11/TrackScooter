@@ -25,6 +25,10 @@ Folder contents: model (`apollo_track_pod_rev011.scad`), printable sprocket
 (`sprocket_print.scad` + `stl/`), 2D wheel blueprint, plate cutting sheet + DXF, pod
 blueprint, README, archive note.
 
+**Rev 012 chassis (same folder):** scratch-built floor frame — a 100×40×2 box,
+rear pod on 60×6 green plates (off with 4 bolts), ~21.6 kg of steel.
+`render_mode="chassis"`; see that folder's README, "Rev 012 — the floor frame".
+
 ## Shared facts
 
 Yonggu belt 1080 × 118 @ 60 pitch (pyramid-pair lugs, 22 mm centre gap) · idlers Ø108

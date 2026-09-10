@@ -79,11 +79,13 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
 - `render_mode = "tensioner"` — labeled 3D close-up of the Sheet-6 belt tensioner
   (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
   axle through its take-up.
-- `render_mode = "chassis"` — **REV 012 DRAFT: the whole vehicle.** The donor
-  front end as a ghost (head tube, fork, angle plate), the scratch-built floor
-  (two rails, cross members, skin), both pods, and the battery bay. See
-  "Rev 012 draft — the scratch-built floor" below. **Every chassis number in
-  this mode is a placeholder**; the echoes name each one.
+- `render_mode = "chassis"` — **REV 012: the whole vehicle.** Box frame of
+  100×40×2, rear pod on 60×6 green plates (off with 4 bolts), front pod in the
+  donor fork (ghost), battery bay. The echoes print every check, the cut list
+  and the weight. See "Rev 012 — the floor frame" below.
+- `render_mode = "chassis_plates"` — the flat 60×6 parts (green plates, tabs,
+  middle bar) for DXF / 1:1 print:
+  `openscad -o rev012_plates.dxf -D 'render_mode="chassis_plates"' apollo_track_pod_rev011.scad`
 - `render_mode = "plates"` — all 10 flat-bar rectangles laid out flat (4 arm bars,
   2 carrier strips, 4 tab stubs — Rev 004). Print 1:1 as a drilling template, or
   export DXF if you still want a shop to cut them:
@@ -98,174 +100,97 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 
 ---
 
-## Rev 012 draft — the scratch-built floor
+## Rev 012 — the floor frame (rear pod on green plates)
 
-> **Status: DRAWN, NOT MEASURED.** Nothing here has been cut. The point of
-> this mode is to argue with the layout before steel is cut, not to build from.
+> Built in the model 2026-09-10. **Steel sizes are real (bought).** Numbers
+> marked TBD in the `.scad` are still guesses. The front fork → frame link is
+> **not designed yet**.
 
-The donor deck is scrapped because two battery packs will not fit in a deck
-built as a battery box for one. What survives from the scooter is the **front
-end only**: head tube + front fork + front hub motor — i.e. the front pod
-exactly as Rev 011 already draws it. The front fork was never cut; only the
-**rear** fork needed the Rev 011d bracket, and **that bracket is now obsolete**
-— the rear pod hangs from legs welded to the new floor instead.
+![side view](rev012_chassis_side.png)
 
-```bash
-openscad -o chassis.png --preview --camera=430,380,3050,430,380,0 \
-  -D 'render_mode="chassis"' apollo_track_pod_rev011.scad
-```
+The donor deck is scrapped. The front pod stays in the donor front fork (it
+steers). Behind it everything is new:
 
-### What the model works out for you
-
-Three numbers are **derived, not chosen** — set them by hand and you are
-lying to yourself:
-
-| Derived | Why it isn't a free choice |
-|---|---|
-| `plate_ang` — the angle plate's bend | Face A must lie flat on the deck, face B must land on the neck. Deck height + head tube position fix the angle. Once measured, this **is** the bender setting. |
-| `plate_b` — face B length | Same reason. |
-| `head_bot_y` — head tube height | The fork is uncut, so the pod's taller axle carries the whole front end up with it. |
-
-### The Rev 011d bracket is deleted
-
-Owner's question, 2026-09-10: *"why is the chassis not connected straight to
-the hub wheel? why do we need the green plate at all?"* — Correct on both
-counts, and it exposed two modelling faults.
-
-The green plate is the Rev 011d bracket blade. Its **only** job was to hang
-the pod off a donor rear fork whose inner gap measured 117.7 against a 118 mm
-belt. We were bending over backwards not to modify a fork we are now cutting
-off and throwing away. It goes, and with it the keyed blade, the 17 mm
-packing, the 8 × M10 friction joint (with its 1 h / 5 h / 20 h retorque), the
-backing strips and the 55 mm rearward wheel shift.
-
-**What replaces it:** the carrier plate already sits at |z| = 74…80 and
-already spans y = 64…284, so it passes right by the rail on its own. The only
-thing missing is the ~89 mm of z between the carrier and the rail's inner
-face — one **gusset per side**, `rmount_x` wide fore-aft. Nothing is in that
-z band: the sprocket is at |z| ≤ 17.5 and the belt at |z| ≤ 59.
-
-**The front pod deliberately gets none of this — it has to steer.** It stays
-hung on the donor fork and reaches the floor only through the head tube and
-the angle plate. That is the whole front load path, and it is why that plate
-matters so much.
-
-Two faults the question surfaced, both now fixed:
-
-- `carrier_group()` drew the bracket whenever `use_bracket` was on, so it was
-  appearing on the **front** pod too, where it never belonged. Chassis mode
-  now forces it off via `use_bracket_eff`.
-- The floor skin was a plain sheet running the full length — at a 163 mm deck
-  against 327 mm pods it passed **straight through both of them**. The skin
-  now has a **well** cut over each pod (`pod_well_clr`). The tracks come up
-  through those openings; fender them later.
-
-### Why the rails don't bolt straight to the hub plate
-
-Owner's follow-up, 2026-09-10: *"why can't the left and right beam connect
-straight to the hub plate?"* A rail bolted flat to the carrier's outer face
-would have to live at |z| = 80…120. That lane is already taken:
-
-| Part in the lane | |z| | Height above ground |
+| Part | Steel | Notes |
 |---|---|---|
-| **shock** (body Ø22 / coil guard Ø44) | 83…105 / 72…116 | **66 (full droop) … 218**, at x ≈ 46…52 |
-| shock tab stub | 80…86 | 196…236 |
-| pivot bolt head + nylock | 91…116 | 74…102 |
+| 2 rails + front cross member + rear cross tube | **100×40×2**, 100 side vertical | a box 500 × 430 × 100 |
+| middle bar | **60×6** on edge | under the lid; splits the bay into two 172-wide slots |
+| lid (you stand on it) | 3 mm plate | standing height **249 mm** |
+| tray (packs sit on it) | 3 mm plate | lowest point 143 mm above ground |
+| 2 green plates | **60×6** | flat on the hub plates, keyed on the axle + 2× M8 |
+| 4 tabs | **60×6** | welded to the rear cross tube, 2 per side |
+| 4 bolts | M10×30 8.8 + weld nuts | **the whole rear pod comes off with these 4** |
 
-- **At deck height (rail y = 100…160) the rail goes straight through the
-  shock** — and each side of a pod carries one (trailing on +z, leading on
-  −z), so **both** rails are blocked. It also grazes the pivot nut.
-- **The only free band is above the shock**: rail 241…301, leaving **43 mm**
-  of bolting face on the carrier (top at 284). It works mechanically, but the
-  **deck rises 163 → 304**, the sprocket crown still pokes 23 mm above it, the
-  rails end up only 160 apart (two 150-wide packs side by side need 320), and
-  there's 141 mm under the deck where two stacked 90 mm packs need 180.
-- **The front pod can never do it** — it steers.
+![3/4 view](rev012_chassis_3q.png) ![top view, lid off](rev012_bay_top.png)
 
-So the gusset stays: rails outboard at 175, a short plate across to the
-carrier. It is the price of keeping the deck low and the pack bay wide.
+### How the rear pod hangs
 
-**Found while checking this:** the rails start at x = −182, beside the front
-pod, and my guards never tested a *turned* pod. Rotating its plan outline
-about the steering axis: 144 at 25° lock, 158 at 30°, **171 at 35°** against
-a 175 rail face, 182 at 40°. New `steer_lock` parameter (TBD, placeholder 35)
-and a guard, which now **WARNs at 4.4 mm**. Fix once the real lock is
-measured: start the rails behind the sweep, notch them, or limit the lock.
+Each green plate lies flat on its hub plate, reaches forward past the front
+shock, and sits between two tabs on the rear cross tube. 2× M10 per side, put
+in from the outside into nuts welded on the inner tabs.
 
-### "Mount the shock on the beam" — evaluated
+![rear link](rev012_rear_link.png)
 
-Owner, 2026-09-10: *"the shock can be connected to the beam itself."* On the
-rear pod the rail and the carrier would be one rigid body, so moving the
-shock's TOP eye from the carrier tab to the rail changes nothing about the
-suspension if the eye stays put. But the top mount was never the blocker —
-the shock **body** is. Wherever its top bolts, the shock still needs its lane.
+- **Why flat.** The hub plate is a 40×6 strip. Anything that grabs it from the
+  side bends it like a page: 1163 N × 95 mm lever = 230–460 MPa on 235 steel.
+  The scooter fork worked because its legs lie flat on the hub plate. The
+  first Rev 012 draft's side gusset was wrong for this reason and is deleted.
+- **Why not a rail straight onto the hub plate.** The front shock stands where
+  the left rail would pass. The plate face has only 94 mm between the pivot
+  bolt head and the shock tab (the rail is 100). And rails there would be
+  160 apart — two packs need 320.
+- **Notch.** Each green plate, and each front-pod shock tab, has no steel under
+  the shock eye (26 mm each side of it, from 12 mm below the eye down), so the
+  shock body clears. **Measure the real shock:** `shock_neck` (eye centre down
+  to where it gets wider than 16 mm) must be ≥ 14; `shock_perch_d` (widest part
+  near the top) sets the notch width.
 
-| | Today | Full idea: rail flat on carrier, shock outboard of rail | In between: rail just outboard of the shock, top eye on the rail |
-|---|---|---|---|
-| rail \|z\| | 175…215 | 80…120 | 121…161 |
-| carrier → rail | gusset 89 | bolted flat | spacer block 41 |
-| shock plane \|z\| | 94 | **147** | 94 |
-| lower-bolt lever (trailing / leading) | 62 / 54 | **115 / 107** | 62 / 54 |
-| top eye pin | cantilever off the tab | on a 67 mm rail tab | **double shear** tab ↔ rail |
-| pod width | 232 | 338 | 232 |
-| pack bay between rails | 350 | 160 | 242 |
-| rails must start behind (35° lock) | — (guard WARNs at 4.4) | x ≈ 191 | x ≈ 158 |
-| other | — | rail must rise 7 to clear the pivot nut | 5 mm to coil guard and pivot nylock |
+### Checks — all PASS at the current numbers
 
-Two packs side by side need 320, so only today's layout keeps that bay.
-
-### ⚠ Lower shock bolt is over-stressed — Rev 011 design of record, BOTH pods
-
-Found while checking the table above; **no guard ever covered it.** The lower
-eye rides an M8 bolt + Ø15×Ø9 sleeve (FASTENERS.md §D) held only by the arm
-plates — the outboard end, where the eye sits, is free. Cantilever from the
-arm plate face to the eye, sleeve + bolt section, **static** spring force at
-full bump (2681 N):
-
-| Layout | Trailing arm | Leading arm |
-|---|---|---|
-| **Today** | **~530 MPa** | **~463 MPa** |
-| Full "shock on the beam" idea | ~981 MPa | ~914 MPa |
-
-Mild-steel sleeve yield ~235–355 MPa, 8.8 bolt 640 — and that is before any
-impact. New guard `lower shock bolt bending` now WARNs on both arms. Moving the
-shock outboard (the full idea) roughly doubles it, so that option is off the
-table unless the lower mount changes. **Fix direction:** support the eye's
-outer end — a clevis or outer strap on the arm, putting the bolt in double
-shear — or a much stiffer pin. Needs modelling before any steel is cut.
-
-### What it already caught (at placeholder values)
-
-- **The front end rises 100 mm.** Hub axle 216 vs a stock ~116 wheel axle. The
-  head tube, stem and bars all go up with it — plan on shortening the stem by
-  about that much to keep the stock reach.
-- **The angle plate is a bracket, not a tab.** At a 163 mm deck it spans
-  ~409 mm up to the neck. That cantilevers the whole steering load off the
-  deck: triangulate it back to a rail, or raise the deck to shorten it.
-- **The rails can pass outboard of the pods.** Pods are 232 wide at the shock
-  coils; rails at `rail_zc = 195` leave 59 mm clear, so the floor can run the
-  full wheelbase instead of ducking into the 537 mm bay between the pods.
-- **A 90 mm pack does not fit a 60 mm rail.** It hangs 30 mm below, so real
-  ground clearance under the packs is 70, not the 100 you set.
-- **Keep the carrier plane at |z| = 74.** It is `fork_gap/2 + leg_t`, and the
-  front pod still hangs on the real fork, so moving it would split the two
-  pods into different parts. Both stay identical.
-- **The gusset can't start at the carrier face.** The shock tab stub occupies
-  |z| = 80…86 and reaches x = 0…52, so the gusset starts outboard of it at 86
-  (`rm_z0`). Merging the gusset and the shock tab into one plate is the
-  obvious simplification once real numbers land — exactly as Rev 011d merged
-  the blade and the tab.
-
-### To fill in (Sheet 0B)
-
-Every one of these is currently a guess. The `chassis` echoes list them too.
-
-| Group | Parameters |
+| Check | Result |
 |---|---|
-| vehicle | `wheelbase` · `ride_clear` · `rail_zc` |
-| front | `head_ang` · `fork_off` · `fork_len` · `head_len` · `head_od` · `stock_axle_h` |
-| plate | `plate_th` · `plate_a` · `plate_w` · `plate_x` · `neck_t` |
-| battery | `batt_l` · `batt_w` · `batt_h` · `batt_x` |
+| front cross member behind the front pod at full steering lock | 17.3 mm |
+| rear cross tube + lid edge to the rear track, full travel | 21.5 mm |
+| tab end to the front shock | 10.9 mm |
+| notch edge to the shock body, full travel | 4.2 mm |
+| packs in the bay: width / length / height spare | 22 / 60 / 10 mm |
+| green plate, worst section | 84 MPa |
+| tab welds / rear cross tube twist / M10 in shear | 52 / 34 / 46 MPa |
+| bolt joint | 7150 N per bolt vs 9600 N grip — does not slip |
+| rails / middle bar / lid | 11 / 37 / 104 MPa |
+
+Static spring forces at the travel limits, no impact factor; limit 141 MPa
+(0.6 × 235 steel).
+
+### Cut list
+
+| Steel | Part | Qty × length |
+|---|---|---|
+| 100×40×2 | rails | 2 × 500 |
+| 100×40×2 | front + rear cross members | 2 × 350 — **1700 mm total** |
+| 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
+| 60×6 | green plate LEFT (front shock eye) | 1 × 208 |
+| 60×6 | tabs | 4 × 105 |
+| 60×6 | middle bar | 1 × 420 — **1308 mm total + saw cuts** |
+| 3 mm plate | lid + tray | 2 × 500 × 430 (**to buy**) |
+| hardware | M10×30 8.8 + washers · M10 weld nuts · M8 plate-to-hub-plate | 4 · 4 · 4 |
+
+Flat 60×6 parts with holes and notches: `rev012_plates.dxf`.
+
+![flat parts](rev012_plates.png)
+
+**Weight:** about **21.6 kg** of steel — tubes 7.3, 60×6 parts 3.7, lid 5.1,
+tray 5.1, bolts + welds ~0.5. Without pods, batteries or front fork.
+
+### ⚠ Still open
+
+- **Lower shock bolt is over-stressed — Rev 011, both pods.** M8 + Ø15×Ø9
+  sleeve held only at the arm plates: ~530 MPa (trailing) / ~463 MPa (leading)
+  at full bump, static. Guard `lower shock bolt bending` WARNs. Support the
+  eye's outer end (double shear) before the arms are built.
+- **Front fork → frame link** — not designed.
+- **Measure:** wheelbase, battery case, shock neck + perch, head angle, fork
+  offset and length, steering lock.
 
 ## How the mechanism works
 
