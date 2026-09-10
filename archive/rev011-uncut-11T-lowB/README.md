@@ -117,10 +117,10 @@ steers). Behind it everything is new:
 |---|---|---|
 | 2 rails + front cross member + rear cross tube | **100×40×2**, 100 side vertical | a box 500 × 430 × 100 |
 | middle bar | **60×6** on edge | under the lid; splits the bay into two 172-wide slots |
-| lid (you stand on it) | **plywood** 12 mm (TBD) | standing height **258 mm** |
-| tray (packs sit on it) | **plywood** 12 mm (TBD) | lowest point 134 mm above ground |
-| 2 green plates | **60×6** | flat on the hub plates, keyed on the axle + 2× M8 |
-| 4 tabs | **60×6** | welded to the rear cross tube, 2 per side |
+| lid (you stand on it) | **plywood** 12 mm (TBD) | standing height **269 mm** |
+| tray (packs sit on it) | **plywood** 12 mm (TBD) | lowest point 145 mm above ground |
+| 2 green plates | **60×6** | flat on the hub plates, keyed on the axle + M8 + weld; **no cut** — ends above the spring |
+| 4 tabs | **60×6** | go **through** the rear cross tube (slots), welded on both walls, 2 per side |
 | 4 bolts | M10×30 8.8 + weld nuts | **the whole rear pod comes off with these 4** |
 
 ![3/4 view](rev012_chassis_3q.png) ![top view, lid off](rev012_bay_top.png)
@@ -131,12 +131,14 @@ Seven steps, from the frame to the pod (`render_mode="chassis_link"`; slide
 `link_explode` to pull the pod back out):
 
 1. The **rear cross tube** (100×40×2) is part of the frame, welded between the rails.
-2. **Two tabs** (60×6 × 105) are welded on its back face, on each side, 6 mm apart — a slot.
+2. **Two tabs** (60×6 × 148) go **through** slots in both walls of the tube and are
+   welded on both faces, on each side, 6 mm apart — a slot. (A tab welded only
+   *on* the 2 mm face would dent it: that holds ~93 N·m, each tab needs ~252.)
 3. The **green plate** (60×6) goes into that slot.
 4. **2× M10** go through tab + green plate + tab, put in from the outside…
 5. …into an **M10 nut welded** on the inner tab.
 6. The other end of the green plate lies **flat on the hub plate**: the motor
-   axle passes through both, plus 2× M8.
+   axle passes through both, plus 1× M8 above the axle, and a weld all round.
 7. The **shock's top eye** bolts to the green plate.
 
 To take the rear pod off: undo the 4 M10 and pull the pod back.
@@ -153,23 +155,24 @@ To take the rear pod off: undo the 4 M10 and pull the pod back.
   the left rail would pass. The plate face has only 94 mm between the pivot
   bolt head and the shock tab (the rail is 100). And rails there would be
   160 apart — two packs need 320.
-- **Notch.** Each green plate, and each front-pod shock tab, has no steel under
-  the shock eye (26 mm each side of it, from 12 mm below the eye down), so the
-  shock body clears. **Measure the real shock:** `shock_neck` (eye centre down
-  to where it gets wider than 16 mm) must be ≥ 14; `shock_perch_d` (widest part
-  near the top) sets the notch width.
+- **No cut in the green plate** (owner). Measured: 25 mm from the shock's top
+  eye centre to the spring (`shock_neck`). The plate's 60 mm band sits 11 mm
+  above the axle (`gp_yc`), so its bottom edge ends 2.7 mm above the spring over
+  full travel. The tabs, bolts and frame top moved up with it; the front pod's
+  shock tabs sit 1 mm higher for the same reason. Between the eye and the spring
+  the shock must be thinner than 16 mm.
 
 ### Checks — all PASS at the current numbers
 
 | Check | Result |
 |---|---|
 | front cross member behind the front pod at full steering lock | 17.3 mm |
-| rear cross tube + lid edge to the rear track, full travel | 21.5 mm |
+| rear cross tube + lid edge to the rear track, full travel | 26.8 mm |
 | tab end to the front shock | 10.9 mm |
-| notch edge to the shock body, full travel | 4.2 mm |
+| green plate / front shock tab above the spring, full travel | 2.7 / 2.7 mm |
 | packs in the bay: width / length / height spare | 22 / 60 / 10 mm |
 | green plate, worst section | 84 MPa |
-| tab welds / rear cross tube twist / M10 in shear | 52 / 34 / 46 MPa |
+| tab welds (both walls) / tube wall at each tab / cross tube twist / M10 in shear | 14 / 56 / 34 / 46 MPa |
 | bolt joint | 7150 N per bolt vs 9600 N grip — does not slip |
 | rails / middle bar | 11 / 37 MPa |
 | plywood lid 12 mm, one foot (plywood limit 15) | 6.5 MPa |
@@ -182,19 +185,19 @@ Static spring forces at the travel limits, no impact factor; limit 141 MPa
 | Steel | Part | Qty × length |
 |---|---|---|
 | 100×40×2 | rails | 2 × 500 |
-| 100×40×2 | front + rear cross members | 2 × 350 — **1700 mm total** |
+| 100×40×2 | front + rear cross members | 2 × 350 — **1700 mm total**; rear one gets 8 slots 61 × 6.5 through both walls |
 | 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
 | 60×6 | green plate LEFT (front shock eye) | 1 × 208 |
-| 60×6 | tabs | 4 × 105 |
-| 60×6 | middle bar | 1 × 420 — **1308 mm total + saw cuts** |
+| 60×6 | tabs (43 mm of each inside the tube) | 4 × 148 |
+| 60×6 | middle bar | 1 × 420 — **1480 mm total + saw cuts** |
 | plywood 12 mm | lid + tray | 2 × 500 × 430 |
-| hardware | M10×30 8.8 + washers · M10 weld nuts · M8 plate-to-hub-plate | 4 · 4 · 4 |
+| hardware | M10×30 8.8 + washers · M10 weld nuts · M8 plate-to-hub-plate (+ weld) | 4 · 4 · 2 |
 
-Flat 60×6 parts with holes and notches: `rev012_plates.dxf`.
+Flat 60×6 parts with holes, no cuts: `rev012_plates.dxf`.
 
 ![flat parts](rev012_plates.png)
 
-**Weight:** about **14.6 kg** — steel 11.5 (tubes 7.3, 60×6 parts 3.7, bolts +
+**Weight:** about **15.0 kg** — steel 11.9 (tubes 7.3, 60×6 parts 4.2, bolts +
 welds ~0.5) + plywood 3.1 (lid 1.5, tray 1.5). Without pods, batteries or front
 fork. The 2 green plates (~1.3 kg) come off with the rear pod.
 

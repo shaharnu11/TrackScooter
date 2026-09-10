@@ -455,16 +455,19 @@ link_explode = 0;   // [0:10:150] chassis_link view: pull the rear pod back out 
 gp_w        = 60;   // bar width  = green plate height
 gp_t        = 6;    // bar thickness
 gp_tab_len  = 105;  // tab length, back from the cross tube face
+gp_tab_through = true; // REV 012b: tabs pass THROUGH both walls of the rear cross
+                    //     tube (8 slots) and are welded on both faces. A tab welded
+                    //     only ON the 2 mm face would dent it (guarded).
 gp_bolt_edge = 20;  // M10 hole centre from each tab end (clears the tube face)
 gp_gap      = 2;    // green plate front end -> cross tube face
-gp_eye_edge = 12;   // steel kept below the shock-eye hole centre (~1.5 d)
+gp_spring_clr = 3;  // gap: green plate bottom edge -> top of the spring
 bolt_preload = 24000; // N — M10 8.8 tightened to ~45 N·m
 bolt_mu     = 0.2;  // friction, clean dry steel faces
 
 // -- top of the shock, next to the green plate (MEASURE YOUR SHOCK) ---------
-shock_perch_d = 44; // TBD widest part near the top (spring perch / cap)
-shock_neck  = 14;   // TBD from the TOP eye centre down to where the shock gets
-                    //     wider than 16 mm. Must be >= gp_eye_edge + 2 (guarded).
+shock_perch_d = 44; // TBD widest part at the top of the spring (only for the tilt check)
+shock_neck  = 25;   // MEASURED 2026-09-10 (owner): TOP eye centre -> top of the SPRING.
+                    //     The green plate ends above it, so it needs NO cut (guarded).
 
 // -- batteries (TBD — measure the CASE, not the cells) ----------------------
 batt_l      = 360;
@@ -832,7 +835,7 @@ module axle_key_2d(){
                   square([axle_d+0.4, 8.9], center=true); }
 }
 
-module carrier_2d(m8 = use_bracket_eff){
+module carrier_2d(m8 = use_bracket_eff ? [-12, 12] : []){
   // Rev 011c (owner): 40-wide flat-bar strip — was 50. Same stock as the
   // arms/braces/stubs, so the 50x6 steel line is gone entirely. Edge
   // distance at the Ø16 pivot bore drops 17 -> 12 (0.75·d, acceptable);
@@ -850,14 +853,14 @@ module carrier_2d(m8 = use_bracket_eff){
     // centreline — anti-rotation redundancy for the keyed axle; the rear
     // pod's freed carrier-to-leg M8x30s move here. Weld blade-to-carrier at
     // final fit on top. (Front pod: skip drilling until it gets a bracket.)
-    if (m8) for (yy=[-12,12]) translate([0,yy]) circle(d=8.4);
+    for (yy = m8) translate([0,yy]) circle(d=8.4);
     translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
   }
 }
 
-module tab_stub_2d(p, notch = false){
+module tab_stub_2d(p, yb = -20){
   // Rev 011c (owner): upper shock tab = 40x6 stub, 83 long — spans the FULL
   // 40-wide carrier strip (was a 55-long stub with a 17 lap). It carries the
   // same Ø10.4 flatted key as the carrier, so the hub axle passes through
@@ -871,11 +874,9 @@ module tab_stub_2d(p, notch = false){
   // Ø8.4 eye pin hole at p (M8 pin — Rev 004b: shock eyes measured Ø8).
   s = p[0] > 0 ? 1 : -1;
   difference(){
-    translate([s==1 ? -20 : -63, -20]) square([83, 40]);
+    translate([s==1 ? -20 : -63, yb]) square([83, 40]);
     axle_key_2d();
     translate(p) circle(d=8.4);
-    // REV 012: no steel under the eye where the shock body passes
-    if (notch) translate([p[0] - gp_notch_hw, -21]) square([2*gp_notch_hw, p[1] - gp_eye_edge + 21]);
   }
 }
 
@@ -1135,12 +1136,15 @@ module shock3d(p, q, zc){
       translate([x,0,0]) difference(){
         cylinder(h=10, d=18, center=true);
         cylinder(h=12, d=10, center=true); }
-    color([0.72,0.72,0.75]) translate([6,0,0])        // damper body
-      rotate([0,90,0]) cylinder(h=0.52*L, d=22);
+    // REV 012c: owner measured 25 mm from the TOP eye centre to the spring
+    // (shock_neck) — body and spring start there, only the thin rod above it
+    color([0.72,0.72,0.75]) translate([shock_neck,0,0])        // damper body
+      rotate([0,90,0]) cylinder(h=6 + 0.52*L - shock_neck, d=22);
     color([0.72,0.72,0.75]) rotate([0,90,0])          // shaft
       cylinder(h=L-6, d=9);
-    color([0.70,0.15,0.12]) translate([10,0,0])       // coil spring
-      rotate([0,90,0]) linear_extrude(height=L-22, twist=2160, $fn=24)
+    color([0.70,0.15,0.12]) translate([shock_neck,0,0])        // coil spring
+      rotate([0,90,0]) linear_extrude(height=L-12-shock_neck,
+                                      twist=2160*(L-12-shock_neck)/(L-22), $fn=24)
         translate([14,0]) circle(d=4.2);
   }
 }
@@ -1211,12 +1215,12 @@ module arm3d(zi, slot, ang, szs){
 }
 
 module carrier_group(mount = use_bracket_eff ? "bracket" : "stub"){
-  // mount: "bracket" (Rev 011d), "stub" (Rev 011c), "stub_notched" (REV 012
+  // mount: "bracket" (Rev 011d), "stub" (Rev 011c), "stub_clear" (REV 012
   // front pod), "green" (REV 012 rear pod: 60x6 green plates)
   // plates (Rev 002: bolted to the fork-leg outer faces)
   color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? cz : -cz-carrier_t) + s*ex*55])
-      linear_extrude(carrier_t) carrier_2d(mount == "bracket" || mount == "green");
+      linear_extrude(carrier_t) carrier_2d(mount == "bracket" ? [-12, 12] : mount == "green" ? gp_m8 : []);
   // upper shock tabs — welded to the carrier INNER face when the shocks run
   // inboard (Rev 002, thick legs), to the OUTER face when outboard (Rev 002c,
   // measured 4 mm legs leave no inboard room)
@@ -1227,9 +1231,9 @@ module carrier_group(mount = use_bracket_eff ? "bracket" : "stub"){
   // 011d merged: with the bracket, the blade IS the shock tab — separate
   // stubs exist only on the front pod (no bracket there yet)
   tab_z0 = cz + carrier_t;
-  if (mount == "stub" || mount == "stub_notched") color([0.36,0.43,0.56]) for (s=[1,-1])
+  if (mount == "stub" || mount == "stub_clear") color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
-      linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_notched");
+      linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_clear" ? stub_yb : -20);
   // REV 012 rear pod: green plate = bracket + shock tab in one, flat on the
   // hub plate; the tabs and bolts belong to the frame (rear_link)
   if (mount == "green") color(c_green) for (s=[1,-1]) scale([1,1,s])
@@ -1347,14 +1351,21 @@ pod_halfl = A_eff/2 + D/2 + T;       // 181.6 — pod half length (belt ends)
 pod_halfw = sz + 22;                 // 116 — widest pod part (shock coil guard)
 pod_top   = hub_h + pitch_r + T/2;   // belt crown over the sprocket
 
+// ---- where the green plate sits (REV 012c, owner 2026-09-10) ---------------
+// "Don't cut the green plate." Its bottom edge must end ABOVE the spring
+// (shock_neck below the top eye), so the 60 mm band moves UP instead of being
+// notched. The tabs, the bolts and the frame top all move up with it.
+gp_yc   = ceil(upP[1] - shock_neck + gp_spring_clr + gp_w/2);   // 11 — band centre above the hub axle
+stub_yb = max(-20, ceil(upP[1] - shock_neck + gp_spring_clr));   // -19 — front pod shock tab bottom
+gp_m8   = [24];                      // ONE M8 to the hub plate, above the axle key; weld all round too
+
 // ---- box frame --------------------------------------------------------------
-// The green plate is 60 tall, centred on the hub axle, and its tabs weld full
-// height onto the rear cross tube — so the frame TOP is flush with the plate
-// top (hub + 30). Every other height hangs off that one datum.
-fr_top   = hub_h + gp_w/2;           // 246 — rail / cross member top
-fr_bot   = fr_top - fr_h;            // 146
-deck_y   = fr_top + lid_t;           // 258 — STANDING HEIGHT (12 mm plywood lid)
-tray_y0  = fr_bot - tray_t;          // 134 — lowest point (plywood tray)
+// The tabs weld full height onto the rear cross tube, so the frame TOP is flush
+// with the green plate top (hub + gp_yc + 30). Every height hangs off that.
+fr_top   = hub_h + gp_yc + gp_w/2;   // 257 — rail / cross member top
+fr_bot   = fr_top - fr_h;            // 157
+deck_y   = fr_top + lid_t;           // 269 — STANDING HEIGHT (12 mm plywood lid)
+tray_y0  = fr_bot - tray_t;          // 145 — lowest point (plywood tray)
 rail_in  = bay_w/2;                  // 175 — rail inner face |z|
 rail_out = rail_in + fr_w;           // 215
 fr_x0    = front_cm_x;               // frame front face
@@ -1371,9 +1382,9 @@ gp_x0    = -rear_ct_x + gp_gap;      // -188 — green plate front end
 gp_x1_tr = round(upP[0]) + 20;       // +72 — right (+z) plate runs past the rear-shock eye
 gp_x1_ld = 20;                       // +20 — left (-z) plate runs just past the axle key
 tab_x1   = -rear_ct_x + gp_tab_len;  // -85 — tab rear end
+gp_tab_in = gp_tab_through ? fr_w + 3 : 0;  // tab inside the tube + 3 mm out the front
 gp_bolts = [-rear_ct_x + gp_bolt_edge, tab_x1 - gp_bolt_edge];   // [-170, -105]
 gp_gap_z = sz - (gp_z0 + gp_t);      // 8 — plate outer face to the shock centreline
-gp_notch_hw = shock_perch_d/2 + 4;   // 26 — half-width of the notch under each eye
 
 // ---- steering axis, from the head angle + offset ---------------------------
 u_ax = [cos(head_ang), sin(head_ang)];
@@ -1435,22 +1446,16 @@ ch_cases = [[0, 0], [bump_max, bump_max], [bump_max, -bump_max], [-bump_max, bum
 function ch_Mmax(s, xs, yc = 0) = max([for (c = ch_cases) ch_M(ch_side(s, c[0], c[1]), xs, yc)]);
 function ch_V(s) = max([for (c = ch_cases) norm(ch_vsum([for (l = ch_side(s, c[0], c[1])) l[1]]))]);
 
-// ---- shock body vs the plate under the eye (the notch) ---------------------
-// The shock centreline is gp_gap_z (8) outside the plate face, so a part of
-// radius r reaches INTO the plate unless it is sqrt(r² - 8²) away in-plane.
-function ch_notch_one(s, t) = let(
-    eye   = s > 0 ? upP : mx(upP),
-    lo    = s > 0 ? ch_lo(t) : mx(ch_lo(t)),
-    L     = norm(lo - eye), u = (lo - eye)/L,
-    x1    = s > 0 ? gp_x1_tr : gp_x1_ld,
-    left  = eye[0] - gp_notch_hw,
-    right = (eye[0] + gp_notch_hw < x1) ? eye[0] + gp_notch_hw : 1e6,
-    need  = sqrt(max(0, pow(shock_perch_d/2, 2) - gp_gap_z*gp_gap_z)),
-    ds    = [for (k = [shock_neck : 1 : L]) let(q = eye + k*u)
-               if (q[1] <= eye[1] - gp_eye_edge && q[1] >= -gp_w/2)
-                 min(q[0] - left, right - q[0]) - need])
-  len(ds) == 0 ? 1e6 : min(ds);
-ch_notch_clear = min([for (s = [1,-1]) for (t = [-bump_max : 5 : bump_max]) ch_notch_one(s, t)]);
+// ---- top of the spring vs the plate / tab above it -------------------------
+// The shock leans a little over travel, so one side of the spring's top rim
+// rises by r·sin(lean). Highest rim point, both shocks, full travel:
+function ch_spring_top(s, t) = let(
+    eye = s > 0 ? upP : mx(upP),
+    lo  = s > 0 ? ch_lo(t) : mx(ch_lo(t)),
+    u   = (lo - eye)/norm(lo - eye),
+    q   = eye + shock_neck*u)
+  q[1] + (shock_perch_d/2)*abs(u[0]);
+ch_spring_hi = max([for (s = [1,-1]) for (t = [-bump_max : 2.5 : bump_max]) ch_spring_top(s, t)]);
 // front (leading) shock x range over travel, on the -z side
 ch_lead_xmin = -max(concat([upP[0]], [for (t = [-bump_max : 2.5 : bump_max]) ch_lo(t)[0]]));
 ch_tab_shock = (ch_lead_xmin - shock_perch_d/2) - tab_x1;
@@ -1486,23 +1491,22 @@ module beam_z(len, h, w, t){
 // s = +1: RIGHT plate (+z), carries the REAR shock eye.
 // s = -1: LEFT plate (-z), carries the FRONT shock eye.
 module green_plate_2d(s){
+  // NO cut (owner): the band sits gp_yc above the axle so it ends above the spring
   eye = s > 0 ? upP : mx(upP);
   x1  = s > 0 ? gp_x1_tr : gp_x1_ld;
   difference(){
-    translate([gp_x0, -gp_w/2]) square([x1 - gp_x0, gp_w]);
+    translate([gp_x0, gp_yc - gp_w/2]) square([x1 - gp_x0, gp_w]);
     axle_key_2d();                                        // keyed on the hub axle
-    for (yy = [-12, 12]) translate([0, yy]) circle(d = 8.4);   // 2x M8 to hub plate
+    for (yy = gp_m8) translate([0, yy]) circle(d = 8.4);  // M8 to the hub plate
     translate(eye) circle(d = 8.4);                       // shock top eye pin
-    for (bx = gp_bolts) translate([bx, 0]) circle(d = 10.5);   // 2x M10 to the tabs
-    // NOTCH: no steel under the eye where the shock body passes
-    translate([eye[0] - gp_notch_hw, -gp_w/2 - 1])
-      square([2*gp_notch_hw, eye[1] - gp_eye_edge + gp_w/2 + 1]);
+    for (bx = gp_bolts) translate([bx, gp_yc]) circle(d = 10.5);   // 2x M10 to the tabs
   }
 }
 module gp_tab_2d(){
+  // REV 012b: runs THROUGH the rear cross tube and sticks out 3 mm at the front
   difference(){
-    translate([-rear_ct_x, -gp_w/2]) square([gp_tab_len, gp_w]);
-    for (bx = gp_bolts) translate([bx, 0]) circle(d = 10.5);
+    translate([-rear_ct_x - gp_tab_in, gp_yc - gp_w/2]) square([gp_tab_len + gp_tab_in, gp_w]);
+    for (bx = gp_bolts) translate([bx, gp_yc]) circle(d = 10.5);
   }
 }
 
@@ -1511,13 +1515,23 @@ module chassis_frame(){
   // two rails
   color(c_frame) for (s = [1, -1])
     translate([fr_x0, fr_bot, s*(rail_in + fr_w/2)]) beam_x(rail_len, fr_h, fr_w, fr_t);
-  // front cross member + rear cross tube, welded between the rails
-  color(c_frame) for (xc = [fr_x0 + fr_w/2, fr_x1 - fr_w/2])
-    translate([xc, fr_bot, -rail_in]) beam_z(2*rail_in, fr_h, fr_w, fr_t);
+  // front cross member, welded between the rails
+  color(c_frame) translate([fr_x0 + fr_w/2, fr_bot, -rail_in]) beam_z(2*rail_in, fr_h, fr_w, fr_t);
+  rear_cross_tube();
   // middle bar: 60x6 on edge under the lid — halves the lid span, splits the slots
   color(c_bar) translate([bay_x0, fr_top - gp_w, -gp_t/2]) cube([bay_len, gp_w, gp_t]);
   if (show_lid)  color(c_lid)  translate([fr_x0, fr_top,  -rail_out]) cube([rail_len, lid_t,  2*rail_out]);
   if (show_tray) color(c_tray) translate([fr_x0, tray_y0, -rail_out]) cube([rail_len, tray_t, 2*rail_out]);
+}
+
+module rear_cross_tube(){
+  // rear cross tube, welded between the rails, with 8 slots (4 tabs x 2 walls)
+  color(c_frame) difference(){
+    translate([fr_x1 - fr_w/2, fr_bot, -rail_in]) beam_z(2*rail_in, fr_h, fr_w, fr_t);
+    if (gp_tab_through) for (s = [1, -1]) for (zb = [gp_z0 - gp_t, gp_z0 + gp_t])
+      translate([fr_x1 - fr_w - 1, hub_h + gp_yc - gp_w/2 - 0.5, (s > 0 ? zb : -(zb + gp_t)) - 0.25])
+        cube([fr_w + 2, gp_w + 1, gp_t + 0.5]);
+  }
 }
 
 module rear_link(bolt_out = 0){
@@ -1526,7 +1540,7 @@ module rear_link(bolt_out = 0){
   translate([wheelbase, hub_h, 0]) for (s = [1, -1]) scale([1, 1, s]){
     color(c_tab) for (zb = [gp_z0 - gp_t, gp_z0 + gp_t])
       translate([0, 0, zb]) linear_extrude(gp_t) gp_tab_2d();
-    for (bx = gp_bolts) translate([bx, 0, 0]){
+    for (bx = gp_bolts) translate([bx, gp_yc, 0]){
       color(c_bolt) translate([0, 0, bolt_out]){
         translate([0, 0, gp_z0 - gp_t - 8]) cylinder(h = 3*gp_t + 8 + 2, d = 9.8); // shank
         translate([0, 0, gp_z0 + 2*gp_t])     cylinder(h = 2,   d = 20);           // washer
@@ -1673,7 +1687,7 @@ if (render_mode == "plates"){
   // ---- REV 012: the whole vehicle. Donor front end (ghost) + box frame +
   // ---- both pods. Rear pod on green plates, 4 bolts.
   chassis_ground();
-  translate([0,         hub_h, 0]) pod_assembly("stub_notched");  // FRONT pod — donor fork
+  translate([0,         hub_h, 0]) pod_assembly("stub_clear");    // FRONT pod — donor fork
   translate([wheelbase, hub_h, 0]) pod_assembly("green");         // REAR pod — green plates
   chassis_frame();
   rear_link();
@@ -1693,9 +1707,9 @@ if (render_mode == "plates"){
     flag("REAR POD: GREEN PLATE 60x6 FLAT ON THE HUB PLATE",
          [wheelbase - 60, hub_h + 20, gp_z0 + gp_t],       [wheelbase + 150, deck_y + 330, lz]);
     flag("2x M10 PER SIDE - POD OFF WITH 4 BOLTS",
-         [wheelbase + gp_bolts[1], hub_h, gp_z0 + 3*gp_t + 8], [wheelbase + 150, deck_y + 250, lz]);
-    flag("NOTCH: NO STEEL UNDER THE SHOCK EYE",
-         [wheelbase + upP[0], hub_h - 20, gp_z0 + gp_t],   [wheelbase + 150, deck_y + 170, lz]);
+         [wheelbase + gp_bolts[1], hub_h + gp_yc, gp_z0 + 3*gp_t + 8], [wheelbase + 150, deck_y + 250, lz]);
+    flag("GREEN PLATE ENDS ABOVE THE SPRING - NO CUT",
+         [wheelbase + upP[0], hub_h + gp_yc - gp_w/2, gp_z0 + gp_t],   [wheelbase + 150, deck_y + 170, lz]);
     flag("REAR CROSS TUBE + TABS",
          [fr_x1 - fr_w/2, fr_top, 0],                      [wheelbase + 150, deck_y + 90, lz]);
   }
@@ -1705,15 +1719,25 @@ if (render_mode == "plates"){
   ch_Pf   = ch_Pr/2;                                           // one foot
   ch_Irl  = (fr_w*pow(fr_h,3) - (fr_w - 2*fr_t)*pow(fr_h - 2*fr_t, 3))/12;
   ch_Zgp  = gp_t*gp_w*gp_w/6;
-  ch_ntop = upP[1] - gp_eye_edge;                              // notch top edge
-  ch_hn   = gp_w/2 - ch_ntop;                                  // plate left above the notch
-  ch_ycn  = (gp_w/2 + ch_ntop)/2;
-  ch_Zn   = gp_t*ch_hn*ch_hn/6;
+  ch_Zeye = (gp_t*pow(gp_w,3)/12 - (gp_t*pow(8.4,3)/12 + gp_t*8.4*pow(gp_yc - upP[1], 2))) / (gp_w/2);
   ch_xc   = (gp_bolts[0] + gp_bolts[1])/2;
-  ch_Mj   = max(ch_Mmax(1, ch_xc), ch_Mmax(-1, ch_xc));
+  ch_Mj   = max(ch_Mmax(1, ch_xc, gp_yc), ch_Mmax(-1, ch_xc, gp_yc));
   ch_Fb   = ch_Mj/abs(gp_bolts[1] - gp_bolts[0]) + max(ch_V(1), ch_V(-1))/2;
   ch_grip = 2*bolt_mu*bolt_preload;
-  ch_Mct  = max(ch_Mmax(1, -rear_ct_x), ch_Mmax(-1, -rear_ct_x));
+  ch_Mct  = max(ch_Mmax(1, -rear_ct_x, gp_yc), ch_Mmax(-1, -rear_ct_x, gp_yc));
+  ch_Mtab = ch_Mct/2;                                          // each of the 2 tabs
+  // THROUGH-tab: the tab's moment becomes two opposite up/down forces on the
+  // rear and front walls (fr_w apart). Each wall takes that IN ITS OWN PLANE
+  // along the 60 mm weld — the strong way for a thin wall.
+  ch_Fwall = ch_Mtab/fr_w + max(ch_V(1), ch_V(-1))/4;
+  ch_s_wall = ch_Fwall/(gp_w*fr_t);
+  ch_s_weldt = ch_Fwall/(2*gp_w*4);                            // 2 fillets per wall, a=4
+  // tab welded only ON the face (not used): the 2 mm face bends like a can lid.
+  // Yield-line estimate, transverse plate on a hollow-section face (CIDECT form;
+  // b/t = 50 is past its range, so if anything this is optimistic).
+  ch_beta  = gp_w/fr_h;  ch_eta = gp_t/fr_h;
+  ch_Nface = 235*fr_t*fr_t*(2*ch_eta + 4*sqrt(1 - ch_beta))/(1 - ch_beta);
+  ch_Msurf = ch_Nface*gp_w/4;
 
   echo("");
   echo("=================== REV 012 CHASSIS — BOX FRAME + REAR POD LINK ===================");
@@ -1731,25 +1755,24 @@ if (render_mode == "plates"){
     ["rear cross tube + lid edge to the rear track, over full travel", ch_ct_clear,            10],
     ["tab end to the front shock (left side)",                          ch_tab_shock,           5],
     ["inner weld nut to the track edge",                                (gp_z0 - gp_t - 8) - track_w/2, 5],
-    ["notch edge to the shock body, over full travel",                  ch_notch_clear,         2],
+    ["green plate bottom edge above the spring, over full travel",      (gp_yc - gp_w/2) - ch_spring_hi, 1.5],
+    ["front pod shock tab above the spring, over full travel",          stub_yb - ch_spring_hi,          1.5],
     ["pack in its slot, width",                                          slot_w - batt_w,        5],
     ["pack in the bay, length",                                          bay_len - batt_l,       5],
     ["pack under the lid, height",                                       fr_h - batt_h,          5],
   ];
   for (g = ch_clear)
     echo(str(g[1] < g[2] ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10, " mm"));
-  echo(str(shock_neck >= gp_eye_edge + 2 ? "NOTE " : "*** WARN ",
-           "shock neck ", shock_neck, " (TBD — MEASURE): the plate keeps ", gp_eye_edge,
-           " mm of steel under the eye, so the shock must stay thinner than ", 2*gp_gap_z,
-           " mm for ", gp_eye_edge + 2, " mm below the eye centre"));
+  echo(str("NOTE shock: top eye centre -> spring = ", shock_neck, " mm (MEASURED). No cut in the green plate: its band sits ",
+           gp_yc, " mm above the axle instead. Between the eye and the spring the shock must stay thinner than ",
+           2*gp_gap_z, " mm (its centre is ", gp_gap_z, " mm off the plate face)."));
 
   ch_stress = [
-    ["green plate at the tab end, right side",                  ch_Mmax( 1, tab_x1)/ch_Zgp],
-    ["green plate at the tab end, left side",                   ch_Mmax(-1, tab_x1)/ch_Zgp],
-    ["green plate at the notch, right side",                    ch_Mmax( 1,  upP[0] - gp_notch_hw, ch_ycn)/ch_Zn],
-    ["green plate at the notch, left side (front edge)",        ch_Mmax(-1, -upP[0] - gp_notch_hw, ch_ycn)/ch_Zn],
-    ["green plate at the notch, left side (rear edge)",         ch_Mmax(-1, -upP[0] + gp_notch_hw, ch_ycn)/ch_Zn],
-    ["tab welds on the cross tube (4 x 60 mm fillets, a=4)",    ch_Mct/(4*4*gp_w*gp_w/6)],
+    ["green plate at the tab end, right side",                  ch_Mmax( 1, tab_x1, gp_yc)/ch_Zgp],
+    ["green plate at the tab end, left side",                   ch_Mmax(-1, tab_x1, gp_yc)/ch_Zgp],
+    ["green plate at the front shock eye hole, left side",      ch_Mmax(-1, -upP[0] - 4.2, gp_yc)/ch_Zeye],
+    ["tab welds, both walls (8 x 60 mm fillets, a=4)",           gp_tab_through ? ch_s_weldt : ch_Mtab/(2*4*gp_w*gp_w/6)],
+    ["cross tube wall where each tab goes through (in-plane)",   gp_tab_through ? ch_s_wall : 999],
     ["rear cross tube, twist",                                  ch_Mct/(2*(fr_h - fr_t)*(fr_w - fr_t)*fr_t)],
     ["M10 8.8 bolt, double shear",                              ch_Fb/157],
     ["rails, rider x2 in the middle",                           ch_Pr*(rail_len - fr_w)/4 / (2*ch_Irl/(fr_h/2))],
@@ -1757,6 +1780,9 @@ if (render_mode == "plates"){
   ];
   for (g = ch_stress)
     echo(str(g[1] > 141 ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]), " MPa"));
+  echo(str(gp_tab_through ? "NOTE " : "*** WARN ", "a tab welded only ON the 2 mm tube face holds ~",
+           round(ch_Msurf/1000), " N·m before the face dents; each tab needs ", round(ch_Mtab/1000), " N·m -> ",
+           gp_tab_through ? "that is why the tabs go THROUGH the tube" : "set gp_tab_through = true"));
   ch_s_lid = ch_Pf/2*(slot_w/2 - 25) / (250*lid_t*lid_t/6);
   echo(str(ch_s_lid > wood_limit ? "*** WARN " : "PASS ", "plywood lid ", lid_t,
            " mm, one foot between rail and middle bar: ", round(ch_s_lid*10)/10,
@@ -1770,15 +1796,18 @@ if (render_mode == "plates"){
   echo(str("  100x40x2  front + rear cross members     2 x ", bay_w, "   -> ", 2*rail_len + 2*bay_w, " mm of 100x40x2"));
   echo(str("  60x6      green plate RIGHT (rear shock) 1 x ", gp_x1_tr - gp_x0));
   echo(str("  60x6      green plate LEFT (front shock) 1 x ", gp_x1_ld - gp_x0));
-  echo(str("  60x6      tabs                           4 x ", gp_tab_len));
+  echo(str("  60x6      tabs                           4 x ", gp_tab_len + gp_tab_in,
+           gp_tab_through ? str("   (", gp_tab_in, " of it inside the tube)") : ""));
   echo(str("  60x6      middle bar                     1 x ", bay_len,
-           "   -> ", (gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*gp_tab_len + bay_len, " mm of 60x6 + saw cuts"));
+           "   -> ", (gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*(gp_tab_len + gp_tab_in) + bay_len, " mm of 60x6 + saw cuts"));
+  if (gp_tab_through)
+    echo(str("  rear cross tube: 8 slots ", gp_w + 1, " x ", gp_t + 0.5, " through BOTH walls (4 tabs x 2 walls)"));
   echo(str("  plywood ", lid_t, " mm   lid ", rail_len, " x ", 2*rail_out, "  ·  plywood ", tray_t, " mm   tray ", rail_len, " x ", 2*rail_out));
-  echo("  bolts:    4x M10x30 8.8 + washer · 4x M10 weld nut (inner tabs) · 4x M8 plate-to-hub-plate (Rev 011d)");
+  echo("  bolts:    4x M10x30 8.8 + washer · 4x M10 weld nut (inner tabs) · 2x M8 green plate -> hub plate (+ weld all round)");
   // ---- weight of the chassis steel (added 2026-09-10, owner asked) ---------
   ch_rho    = 7.85e-6;                                           // steel, kg/mm³
   ch_m_tube = (fr_h*fr_w - (fr_h - 2*fr_t)*(fr_w - 2*fr_t)) * (2*rail_len + 2*bay_w) * ch_rho;
-  ch_m_bar  = gp_w*gp_t * ((gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*gp_tab_len + bay_len) * ch_rho;
+  ch_m_bar  = gp_w*gp_t * ((gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0) + 4*(gp_tab_len + gp_tab_in) + bay_len) * ch_rho;
   ch_m_lid  = rail_len*2*rail_out*lid_t*wood_rho;              // plywood
   ch_m_tray = rail_len*2*rail_out*tray_t*wood_rho;             // plywood
   ch_m_hw   = 0.5;                                               // bolts, nuts, weld metal
@@ -1801,11 +1830,9 @@ if (render_mode == "plates"){
   //   plate in the slot -> 2x M10 through tab + plate + tab -> the green plate
   //   lies flat on the hub plate (motor axle key + 2x M8) -> the pod.
   lk_bo = link_explode > 0 ? 45 : 0;
-  color(c_frame){
-    translate([fr_x1 - fr_w/2, fr_bot, -rail_in]) beam_z(2*rail_in, fr_h, fr_w, fr_t);
-    for (s = [1, -1])
-      translate([fr_x1 - 160, fr_bot, s*(rail_in + fr_w/2)]) beam_x(160, fr_h, fr_w, fr_t);
-  }
+  rear_cross_tube();
+  color(c_frame) for (s = [1, -1])
+    translate([fr_x1 - 160, fr_bot, s*(rail_in + fr_w/2)]) beam_x(160, fr_h, fr_w, fr_t);
   rear_link(lk_bo);
   translate([wheelbase + link_explode, hub_h, 0]) pod_assembly("green");
   lk_z = rail_out + 40;
@@ -1813,16 +1840,16 @@ if (render_mode == "plates"){
   lk_r = wheelbase + 90 + link_explode;  // tight camera still shows them all
   flag("1. REAR CROSS TUBE 100x40x2 - PART OF THE FRAME",
        [fr_x1 - fr_w/2, fr_top, 130],                                         [lk_x, fr_top + 230, lk_z], 9);
-  flag("2. TWO TABS 60x6 WELDED ON THE TUBE - 6 mm SLOT",
-       [wheelbase - rear_ct_x + 60, hub_h + gp_w/2, gp_z0 + 2*gp_t],          [lk_x, fr_top + 170, lk_z], 9);
+  flag("2. TWO TABS 60x6 GO THROUGH THE TUBE, WELDED BOTH SIDES",
+       [wheelbase - rear_ct_x + 60, hub_h + gp_yc + gp_w/2, gp_z0 + 2*gp_t],          [lk_x, fr_top + 170, lk_z], 9);
   flag("3. 2x M10 BOLTS, PUT IN FROM OUTSIDE",
-       [wheelbase + gp_bolts[1], hub_h + 9, gp_z0 + 2*gp_t + 8.5 + lk_bo],    [lk_x, fr_top + 110, lk_z], 9);
+       [wheelbase + gp_bolts[1], hub_h + gp_yc + 9, gp_z0 + 2*gp_t + 8.5 + lk_bo],    [lk_x, fr_top + 110, lk_z], 9);
   flag("4. M10 NUT WELDED ON THE INNER TAB",
-       [wheelbase + gp_bolts[0], hub_h - 10, gp_z0 - gp_t - 4],               [lk_x, hub_h - 100, lk_z], 9);
+       [wheelbase + gp_bolts[0], hub_h + gp_yc - 10, gp_z0 - gp_t - 4],               [lk_x, hub_h - 100, lk_z], 9);
   flag("5. GREEN PLATE 60x6 GOES INTO THE SLOT",
-       [wheelbase + link_explode - 120, hub_h + gp_w/2, gp_z0 + gp_t],        [lk_r, fr_top + 230, lk_z], 9);
-  flag("6. OTHER END: FLAT ON THE HUB PLATE (AXLE + 2x M8)",
-       [wheelbase + link_explode, hub_h + 12, gp_z0 + gp_t],                  [lk_r, fr_top + 170, lk_z], 9);
+       [wheelbase + link_explode - 120, hub_h + gp_yc + gp_w/2, gp_z0 + gp_t],        [lk_r, fr_top + 230, lk_z], 9);
+  flag("6. OTHER END: FLAT ON THE HUB PLATE (AXLE + M8 + WELD)",
+       [wheelbase + link_explode, hub_h + gp_m8[0], gp_z0 + gp_t],                  [lk_r, fr_top + 170, lk_z], 9);
   flag("7. SHOCK TOP EYE BOLTS TO THE GREEN PLATE",
        [wheelbase + link_explode + upP[0], hub_h + upP[1] + 5, gp_z0 + gp_t + 6], [lk_r, fr_top + 110, lk_z], 9);
   echo(str("CHASSIS LINK: frame -> rear cross tube -> 2 tabs (6 mm slot) -> green plate -> 2x M10 -> ",
@@ -1832,17 +1859,17 @@ if (render_mode == "plates"){
   // ---- REV 012 flat parts from the 60x6 bar, laid out for DXF / 1:1 print.
   //   openscad -o rev012_plates.dxf -D 'render_mode="chassis_plates"' apollo_track_pod_rev011.scad
   sh = -gp_x0 + 5;
-  translate([sh, 0])    green_plate_2d(1);
-  translate([sh, -80])  green_plate_2d(-1);
-  for (i = [0:3]) translate([rear_ct_x + 5 + i*(gp_tab_len + 12), -160]) gp_tab_2d();
+  translate([sh, -gp_yc])      green_plate_2d(1);
+  translate([sh, -80 - gp_yc]) green_plate_2d(-1);
+  for (i = [0:3]) translate([rear_ct_x + gp_tab_in + 5 + i*(gp_tab_len + gp_tab_in + 12), -160 - gp_yc]) gp_tab_2d();
   translate([5, -270]) square([bay_len, gp_w]);
   translate([5,  36])  text("GREEN PLATE RIGHT (+z) - REAR SHOCK EYE", size = 6);
   translate([5, -44])  text("GREEN PLATE LEFT (-z) - FRONT SHOCK EYE", size = 6);
-  translate([5, -124]) text("TABS x4 - WELD TO REAR CROSS TUBE, M10 NUT ON INNER TABS", size = 6);
+  translate([5, -124]) text("TABS x4 - THROUGH THE REAR CROSS TUBE, WELD BOTH SIDES, M10 NUT ON INNER TABS", size = 6);
   translate([5, -204]) text("MIDDLE BAR - NO HOLES", size = 6);
   echo(str("CHASSIS PLATES (60x6): right plate ", gp_x1_tr - gp_x0, " · left plate ", gp_x1_ld - gp_x0,
-           " · 4 tabs ", gp_tab_len, " · middle bar ", bay_len,
-           " · holes: key + 2x Ø8.4 at the axle, Ø8.4 shock eye, 2x Ø10.5 at x ", gp_bolts[0], " / ", gp_bolts[1], " from the axle"));
+           " · 4 tabs ", gp_tab_len + gp_tab_in, " · middle bar ", bay_len,
+           " · holes: axle key + Ø8.4 M8 ", gp_m8[0], " above it, Ø8.4 shock eye, 2x Ø10.5 at x ", gp_bolts[0], " / ", gp_bolts[1], " from the axle"));
 
 } else if (render_mode == "tensioner"){
   // ---- Sheet-6 close-up: trailing-arm belt tensioner, arm drawn level ----
