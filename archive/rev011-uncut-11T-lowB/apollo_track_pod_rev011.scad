@@ -360,6 +360,13 @@ axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it
 // edge by ~14. Shock eye pin cantilevers from the plate through washers
 // to the shock plane, as the stub's did. Bolt first, weld at final fit.
 use_bracket   = true;   // render + guard the rear-fork bracket
+// REV 012 (owner, 2026-09-10): "why do we need the green plate at all?" —
+// we don't, once the deck goes. The whole Rev 011d bracket exists to work
+// around ONE fact: the donor's rear fork has a 117.7 inner gap and the belt
+// is 118 wide. We were bending over backwards not to modify a fork we are
+// now cutting off and throwing away. In chassis mode the bracket is FORCED
+// OFF and the carriers pick up on the new frame directly.
+use_bracket_eff = (render_mode == "chassis") ? false : use_bracket;
 brk_t         = 6;      // bracket plate thickness
 brk_blade_w   = 40;     // blade width (the 40x6 bar)
 brk_cut_x     = 125;    // axle centre -> fork CUT LINE (forward, -x)
@@ -473,8 +480,9 @@ neck_t      = 45;   // TBD where the plate meets the neck, measured ALONG the
 // and the whole pod BOM moves. Stiffen the leg with a DOUBLER above the
 // axle zone instead — that adds steel without moving the axle plane.
 rleg_t      = 4;    // = leg_t. Guarded: any other value is echoed as a WARN.
-rleg_w      = 60;   // leg width fore-aft at the axle
-rleg_top_w  = 90;   // widens where it meets the rail (weld shelf)
+rmount_x    = 60;   // gusset width fore-aft, centred on the rear hub
+pod_well_clr = 15;  // clearance around each pod where it comes up through
+                    // the floor skin. Fender these openings later.
 
 /* [Design parameters — blueprint defaults] */
 plate_t    = 6.35;  // 1/4" arm fork plates
@@ -1197,12 +1205,12 @@ module carrier_group(){
   // 011d merged: with the bracket, the blade IS the shock tab — separate
   // stubs exist only on the front pod (no bracket there yet)
   tab_z0 = cz + carrier_t;
-  if (!use_bracket) color([0.36,0.43,0.56]) for (s=[1,-1])
+  if (!use_bracket_eff) color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
       linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP));
   // REV 011d rear-fork bracket: blade + pad per side, keyed on the axle at
   // z = carrier outer face .. +brk_t; the shock stub moves outboard by brk_t
-  if (use_bracket) for (s=[1,-1]) scale([1,1,s]){
+  if (use_bracket_eff) for (s=[1,-1]) scale([1,1,s]){
     bz0 = cz + carrier_t;                      // bracket inner face |z|
     // blade = bracket + shock tab in one: trailing (+z) runs to +72 and
     // carries the eye at upP; leading (-z) ends at +20, eye at mx(upP)
@@ -1324,6 +1332,11 @@ batt_span = 2*batt_w + batt_gap;     // width the two packs need, side by side
 batt_y0  = rail_y1 - batt_h;         // packs hung from the floor skin down
 // Rails run the full wheelbase only if they pass OUTBOARD of the pods.
 rails_clear_pods = (rail_in > pod_halfw);
+// rear gusset: inner face sits just outboard of the shock tab stub (6 thick
+// on the carrier's outer face), and its fore-aft band must miss the shocks
+rm_z0 = cz + carrier_t + 6;
+rm_shock_x = min([for (t = [-bump_max : 2.5 : bump_max])
+                    min(upP[0], arm_pt([a, shock_y], t)[0])]);
 rail_x0  = rails_clear_pods ? -pod_halfl : pod_halfl;
 rail_len = rails_clear_pods ? wheelbase + 2*pod_halfl : bay_len;
 
@@ -1397,28 +1410,53 @@ module chassis_frame(){
   color([0.60,0.30,0.20]) translate([plate_x, rail_y1 - xmem_h, -rail_in])
     beam_z(2*rail_in, xmem_h, xmem_w, xmem_t);
 
-  // floor skin
-  color(c_skin) translate([rail_x0, rail_y1, -rail_out])
-    cube([rail_len, skin_t, 2*rail_out]);
+  // Floor skin — with a WELL cut over each pod. The deck sits at 163 and the
+  // pods stand 327 tall, so a plain sheet would pass straight through both of
+  // them. The tracks come up through these openings; fender them later.
+  color(c_skin) difference(){
+    translate([rail_x0, rail_y1, -rail_out]) cube([rail_len, skin_t, 2*rail_out]);
+    for (px = [0, wheelbase])
+      translate([px - pod_halfl - pod_well_clr, rail_y1 - 1,
+                 -(pod_halfw + pod_well_clr)])
+        cube([2*(pod_halfl + pod_well_clr), skin_t + 2,
+              2*(pod_halfw + pod_well_clr)]);
+  }
 }
 
-module rear_legs(){
-  // Two plates dropping from the rail to the rear hub axle. Inner faces at
-  // fork_gap/2 = 70, so the carriers land on the leg OUTER faces exactly as
-  // they do on the donor fork. Drawn as a tapered blade: wide at the rail
-  // (weld shelf), rleg_w at the axle.
-  lx = wheelbase;
-  color([0.30,0.50,0.35]) for (zb = [fork_gap/2, -(fork_gap/2 + rleg_t)])
-    translate([0, 0, zb])
-      linear_extrude(rleg_t) polygon([
-        [lx - rleg_w/2,     hub_h - 25],
-        [lx + rleg_w/2,     hub_h - 25],
-        [lx + rleg_top_w/2, rail_y1],
-        [lx - rleg_top_w/2, rail_y1] ]);
-  // the axle itself, through both legs
-  color([0.55,0.55,0.58]) translate([lx, hub_h, 0])
-    rotate([0,0,0]) translate([0,0,-(fork_gap/2 + rleg_t + 30)])
-      cylinder(h = fork_gap + 2*rleg_t + 60, d = axle_d);
+module rear_mount(){
+  // REV 012 (owner's question, 2026-09-10): "why is the chassis not connected
+  // straight to the hub?" — at the REAR it should be, and now it can be.
+  //
+  // The Rev 011d bracket only ever existed to hang the pod off a fork we are
+  // now throwing away. Delete it. What has to remain is short: the carrier
+  // plate already sits at |z| = 74..80 and already spans y = 64..284, so it
+  // passes right by the rail. All that is missing is the ~95 mm of z between
+  // the carrier's outer face and the rail's inner face.
+  //
+  // So the rear "fork" is two GUSSETS, one per side, from the carrier face
+  // out to the rail. Nothing keyed, no packing, no 8x M10 friction joint, no
+  // 55 mm rearward shift of the wheel. And nothing is in the way: at this z
+  // band (80..175) the sprocket (|z| <= 17.5) and the belt (|z| <= 59) are
+  // both well inboard.
+  //
+  // NOTE the FRONT pod deliberately gets none of this — it has to steer, so
+  // it stays hung on the donor fork and reaches the floor only through the
+  // head tube and the angle plate. That is the whole front load path.
+  // The gusset starts OUTBOARD of the shock tab stub (which occupies
+  // |z| = 80..86 and reaches x = 0..52), not at the carrier face — otherwise
+  // the two share the same steel. Merging the gusset and the tab into one
+  // plate is the obvious simplification once the real numbers land, exactly
+  // as Rev 011d merged the blade and the tab.
+  lx  = wheelbase;
+  color([0.30,0.50,0.35]) for (s = [1,-1]) scale([1,1,s])
+    translate([lx - rmount_x/2, 0, 0]) rotate([0,90,0])
+      linear_extrude(rmount_x) polygon([
+        [-rm_z0,   hub_h + 30],          // up beside the carrier, above the axle
+        [-rm_z0,   rail_y1],             // down to deck level
+        [-rail_in, rail_y1] ]);          // across to the rail
+  // the axle, through both carriers
+  color([0.55,0.55,0.58]) translate([lx, hub_h, -(rm_z0 + 30)])
+    cylinder(h = 2*(rm_z0 + 30), d = axle_d);
 }
 
 module front_end_ghost(){
@@ -1577,7 +1615,7 @@ if (render_mode == "plates"){
   translate([0,         hub_h, 0]) pod_assembly();      // FRONT pod (donor fork)
   translate([wheelbase, hub_h, 0]) pod_assembly();      // REAR pod (new legs)
   chassis_frame();
-  rear_legs();
+  rear_mount();
   front_end_ghost();
   if (show_batteries)  battery_boxes();
   if (show_rider_box)  rider_box();
@@ -1601,8 +1639,10 @@ if (render_mode == "plates"){
          [wheelbase/2, rail_y0 - 10, 0],         [wheelbase/2 - 150, -170, lz]);
     flag("2x BATTERY - ALL 3 DIMS TBD",
          [batt_x + batt_l/2, batt_y0, batt_w],   [wheelbase/2 - 150, -250, lz]);
-    flag("REAR LEGS REPLACE THE REAR FORK (4 mm, = leg_t)",
-         [wheelbase, hub_h + 60, fork_gap/2],    [wheelbase + 150, deck_y + 220, lz]);
+    flag("REAR: GUSSET CARRIER -> RAIL. NO BRACKET, NO PACKING",
+         [wheelbase, hub_h, cz + carrier_t + 40], [wheelbase + 150, deck_y + 220, lz]);
+    flag("POD WELL IN THE SKIN - FENDER IT LATER",
+         [wheelbase - pod_halfl, deck_y, pod_halfw], [wheelbase + 150, deck_y + 60, lz]);
     flag("CROSS MEMBER UNDER THE PLATE - NOT OPTIONAL",
          [plate_x, rail_y1 - xmem_h/2, rail_in], [wheelbase + 150, deck_y + 140, lz]);
   }
@@ -1631,6 +1671,11 @@ if (render_mode == "plates"){
     ["rail inner gap vs the two packs",     2*rail_in - batt_span],
     ["pack underside to ground",            batt_y0 - 0],
     ["pack length vs the bay",              bay_len - batt_l],
+    // the gusset has to reach from the carrier out to the rail without the
+    // belt or the sprocket being in that z band — they are at |z|<=59
+    ["rear gusset inner face to belt edge", rm_z0 - track_w/2],
+    // ...and its fore-aft band must miss both shocks over full travel
+    ["rear gusset half-width to shock line", rm_shock_x - rmount_x/2],
   ];
   // only meaningful when the rails are too narrow to pass outboard of the
   // pods and have to duck between them instead
@@ -1670,10 +1715,19 @@ if (render_mode == "plates"){
                                 round(batt_y0), ", not ", ride_clear,
                                 ". Lay the packs flatter, deepen the rail, or accept it.")));
 
+  // ---- the rear mount, after deleting the Rev 011d bracket ---------------
+  echo(str("REAR MOUNT: gusset spans z ", rm_z0, " -> ", rail_in,
+           " (", round(rail_in - rm_z0),
+           " mm) at the hub, ", rmount_x, " wide fore-aft. The Rev 011d",
+           " bracket is GONE with the donor rear fork: no keyed blade, no 17",
+           " packing, no 8x M10 friction joint, no 55 mm rearward wheel shift."));
+  echo(str("FRONT MOUNT: none — the front pod must STEER, so it stays on the",
+           " donor fork and reaches the floor only through the head tube and",
+           " the angle plate. That is why the plate carries the whole front load."));
   echo(str(rleg_t == leg_t ? "PASS " : "*** WARN ",
-           "rear leg thickness ", rleg_t, " vs leg_t ", leg_t,
-           rleg_t == leg_t ? " — carrier plane unchanged, pod BOM carries over"
-                           : " — MISMATCH: cz, pivot stack, sleeves and packing ALL move. Stiffen with a doubler ABOVE the axle instead."));
+           "carrier plane |z|=", cz, " (fork_gap/2 + leg_t ", leg_t, ")",
+           rleg_t == leg_t ? " — keep it: both pods stay identical parts"
+                           : " — MISMATCH: cz, pivot stack and sleeves ALL move on BOTH pods."));
   echo(str(deck_y > 250 ? "*** WARN " : "PASS ",
            "standing height ", deck_y,
            deck_y > 250 ? " mm — tall for a tracked vehicle; drop ride_clear or lay the packs flatter"

@@ -126,6 +126,40 @@ lying to yourself:
 | `plate_b` — face B length | Same reason. |
 | `head_bot_y` — head tube height | The fork is uncut, so the pod's taller axle carries the whole front end up with it. |
 
+### The Rev 011d bracket is deleted
+
+Owner's question, 2026-09-10: *"why is the chassis not connected straight to
+the hub wheel? why do we need the green plate at all?"* — Correct on both
+counts, and it exposed two modelling faults.
+
+The green plate is the Rev 011d bracket blade. Its **only** job was to hang
+the pod off a donor rear fork whose inner gap measured 117.7 against a 118 mm
+belt. We were bending over backwards not to modify a fork we are now cutting
+off and throwing away. It goes, and with it the keyed blade, the 17 mm
+packing, the 8 × M10 friction joint (with its 1 h / 5 h / 20 h retorque), the
+backing strips and the 55 mm rearward wheel shift.
+
+**What replaces it:** the carrier plate already sits at |z| = 74…80 and
+already spans y = 64…284, so it passes right by the rail on its own. The only
+thing missing is the ~89 mm of z between the carrier and the rail's inner
+face — one **gusset per side**, `rmount_x` wide fore-aft. Nothing is in that
+z band: the sprocket is at |z| ≤ 17.5 and the belt at |z| ≤ 59.
+
+**The front pod deliberately gets none of this — it has to steer.** It stays
+hung on the donor fork and reaches the floor only through the head tube and
+the angle plate. That is the whole front load path, and it is why that plate
+matters so much.
+
+Two faults the question surfaced, both now fixed:
+
+- `carrier_group()` drew the bracket whenever `use_bracket` was on, so it was
+  appearing on the **front** pod too, where it never belonged. Chassis mode
+  now forces it off via `use_bracket_eff`.
+- The floor skin was a plain sheet running the full length — at a 163 mm deck
+  against 327 mm pods it passed **straight through both of them**. The skin
+  now has a **well** cut over each pod (`pod_well_clr`). The tracks come up
+  through those openings; fender them later.
+
 ### What it already caught (at placeholder values)
 
 - **The front end rises 100 mm.** Hub axle 216 vs a stock ~116 wheel axle. The
@@ -139,10 +173,14 @@ lying to yourself:
   full wheelbase instead of ducking into the 537 mm bay between the pods.
 - **A 90 mm pack does not fit a 60 mm rail.** It hangs 30 mm below, so real
   ground clearance under the packs is 70, not the 100 you set.
-- **Rear leg thickness is not free.** The carriers bolt to the leg OUTER faces,
-  so `rleg_t` must stay at `leg_t` = 4. Any other value moves `cz`, the pivot
-  stack, the sleeves and the packing for **both** pods. Stiffen the leg with a
-  doubler above the axle zone instead.
+- **Keep the carrier plane at |z| = 74.** It is `fork_gap/2 + leg_t`, and the
+  front pod still hangs on the real fork, so moving it would split the two
+  pods into different parts. Both stay identical.
+- **The gusset can't start at the carrier face.** The shock tab stub occupies
+  |z| = 80…86 and reaches x = 0…52, so the gusset starts outboard of it at 86
+  (`rm_z0`). Merging the gusset and the shock tab into one plate is the
+  obvious simplification once real numbers land — exactly as Rev 011d merged
+  the blade and the tab.
 
 ### To fill in (Sheet 0B)
 
