@@ -112,21 +112,28 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 > Built 2026-09-10. **Steel sizes are real (bought); the battery size and the shock's
 > 25 mm neck are measured.** Numbers marked TBD in the `.scad` are still guesses. The
 > front fork → frame link is **not designed yet**.
+>
+> **2026-09-14: the bay is now 1000 mm clear** (was 840, the bare minimum for the two
+> packs). The bay is its own parameter, `bay_len_set`; it can never fall below what the
+> packs need. Wheelbase 1320 → 1480, rails 1027 → 1187, chassis 16.2 → 18.2 kg. All
+> chassis guards still PASS. The green plates and their 1:1 templates are untouched.
 
 ![side view](rev012_chassis_side.png)
 
 | Part | Material | Notes |
 |---|---|---|
-| 2 rails | **100×40×2**, 100 side vertical | 1027 long, **172 apart inside** (252 outside) |
+| 2 rails | **100×40×2**, 100 side vertical | 1187 long, **172 apart inside** (252 outside) |
 | front + rear cross member | **100×40×2** | 172 long, keep the rails square |
 | 2 green plates | **60×6**, no cut | flat on the hub plates (axle key + M8 + weld), flat on the rails' inner faces |
 | 4 sleeves | steel Ø25 × Ø13 × 40 | welded inside the rails, one at each bolt |
 | 4 bolts | M12×65 10.9 + washer · M12 nut welded on the green plate | **the whole rear pod comes off with these 4** |
 | 2 batteries | 400 × 110 × 80 (measured) | **one behind the other**, 62 mm spare in width, 20 above |
-| lid / tray | plywood 12 mm (TBD) | lid 920 × 302 · standing height **269** · lowest point 145 |
+| lid / tray | plywood 12 mm (TBD) | lid 1080 × 302 · standing height **269** · lowest point 145 |
 
-**Wheelbase 1320 mm — derived from the batteries** (front cross member at 210 + bay 840
-+ two cross members + 190 to the rear axle). Chassis ≈ **16.2 kg**: steel 12.5 + plywood 3.7.
+**Bay 1000 mm clear** (`bay_len_set`). The two packs only need 840, so **160 mm stays free
+behind the rear pack** for the controller and wiring. **Wheelbase 1480 mm** = front cross
+member at 210 + bay 1000 + two cross members + 190 to the rear axle. Chassis ≈ **18.2 kg**:
+steel 13.9 + plywood 4.3.
 
 ![3/4 view](rev012_chassis_3q.png) ![top view, lid off](rev012_bay_top.png)
 
@@ -171,12 +178,12 @@ left are the lower shock bolt (below).
 
 | Material | Part | Qty × size |
 |---|---|---|
-| 100×40×2 | rails | 2 × 1027 |
-| 100×40×2 | front + rear cross members | 2 × 172 — **2398 mm total** |
+| 100×40×2 | rails | 2 × 1187 |
+| 100×40×2 | front + rear cross members | 2 × 172 — **2718 mm total** |
 | 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
 | 60×6 | green plate LEFT (front shock eye) | 1 × 208 — **468 mm total** |
 | steel bar/tube | sleeves Ø25 × Ø13 | 4 × 40 |
-| plywood 12 mm | lid · tray | 920 × 302 · 920 × 252 |
+| plywood 12 mm | lid · tray | 1080 × 302 · 1080 × 252 |
 | hardware | M12×65 10.9 + washer · M12 weld nut · M8 plate → hub plate | 4 · 4 · 2 |
 
 **Rear-pod hub plates:** drill one extra Ø8.4 at **44 mm from the top end** (between the fork

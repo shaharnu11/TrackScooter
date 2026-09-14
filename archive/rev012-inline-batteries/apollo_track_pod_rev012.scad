@@ -456,6 +456,9 @@ batt_h      = 80;
 batt_n      = 2;    // one behind the other
 batt_gap    = 20;   // between the two packs
 batt_end_clr = 10;  // pack to cross member, each end
+bay_len_set = 1000; // clear bay the owner asked for. The packs only need 840, so
+                    //   the spare sits BEHIND the rear pack. The bay never goes
+                    //   below what the packs need (guarded).
 
 // -- frame: 100x40x2 rectangular tube, 100 side VERTICAL (BOUGHT) ------------
 fr_h        = 100;
@@ -1406,11 +1409,12 @@ fr_bot   = fr_top - fr_h;            // 157
 deck_y   = fr_top + lid_t;           // 269 — STANDING HEIGHT
 tray_y0  = fr_bot - tray_t;          // 145 — lowest point
 lid_w    = 2*rail_out + 2*lid_over;  // 302
-bay_len  = batt_n*batt_l + (batt_n - 1)*batt_gap + 2*batt_end_clr;  // 840
+bay_pack_len = batt_n*batt_l + (batt_n - 1)*batt_gap + 2*batt_end_clr;  // 840 — what the packs need
+bay_len  = max(bay_len_set, bay_pack_len);   // 1000 — the clear bay that is built
 fr_x0    = front_cm_x;               // front cross member front face
 bay_x0   = fr_x0 + fr_w;
 bay_x1   = bay_x0 + bay_len;
-wheelbase = bay_x1 + fr_w + rear_ct_x;   // DERIVED from the batteries: 1320
+wheelbase = bay_x1 + fr_w + rear_ct_x;   // 1480 — front offset + bay + cross members + rear offset
 ct_x1    = wheelbase - rear_ct_x;    // rear cross member rear face = lid rear edge
 rail_x1  = wheelbase + rl_end_x;     // rail rear end
 rail_len = rail_x1 - fr_x0;
@@ -1672,7 +1676,7 @@ if (render_mode == "plates"){
          [(fr_x0 + ct_x1)/2, deck_y, lid_w/2],              [(fr_x0 + ct_x1)/2 - 250, deck_y + 330, lz]);
     flag(str("2 BATTERIES IN LINE - ", batt_l, "x", batt_w, "x", batt_h),
          [(bay_x0 + bay_x1)/2, fr_bot + 30, rail_out],      [(fr_x0 + ct_x1)/2 - 250, -160, lz]);
-    flag(str("WHEELBASE ", wheelbase, " mm (FROM THE BATTERIES)"),
+    flag(str("WHEELBASE ", wheelbase, " mm (BAY ", bay_len, " CLEAR)"),
          [wheelbase/2, 2, 0],                               [(fr_x0 + ct_x1)/2 - 250, -240, lz]);
     flag("GREEN PLATE 60x6 FLAT ON THE RAIL INNER FACE",
          [wheelbase + (rl_bolts[0] + rl_end_x)/2, hub_h + gp_yc + gp_w/2, rail_in],
@@ -1700,8 +1704,8 @@ if (render_mode == "plates"){
   echo("");
   echo("=================== REV 012 CHASSIS — NARROW FRAME, BATTERIES IN LINE ===================");
   echo("STEEL:    rails + cross members 100x40x2 (BOUGHT) · green plates 60x6 (BOUGHT) · lid + tray plywood");
-  echo(str("VEHICLE:  WHEELBASE ", wheelbase, " mm — DERIVED: front cross member at ", front_cm_x, " + bay ", bay_len,
-           " (", batt_n, " x ", batt_l, " packs) + cross members + ", rear_ct_x, " to the rear axle"));
+  echo(str("VEHICLE:  WHEELBASE ", wheelbase, " mm — front cross member at ", front_cm_x, " + bay ", bay_len,
+           " (", batt_n, " x ", batt_l, " packs need ", bay_pack_len, ") + cross members + ", rear_ct_x, " to the rear axle"));
   echo(str("FRAME:    rails ", rail_len, " long, ", bay_w, " apart inside, ", 2*rail_out, " outside · lid ", lid_w,
            " wide · STANDING HEIGHT ", deck_y, " · lowest point (tray) ", tray_y0, " above ground"));
   echo(str("REAR POD: green plate flat on each rail's inner face -> 2x M12 per side -> OFF WITH 4 BOLTS"));
@@ -1720,6 +1724,7 @@ if (render_mode == "plates"){
     ["rear sleeve hole to the rail's rear end (steel left)",             (rl_end_x - rl_bolts[1]) - sleeve_od/2, 8],
     ["batteries between the rails, width spare",                         bay_w - batt_w,         20],
     ["batteries under the lid, height spare",                            fr_h - batt_h,          5],
+    ["bay length spare behind the rear pack",                            bay_len - bay_pack_len, 0],
   ];
   for (g = ch_clear)
     echo(str(g[1] < g[2] ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10, " mm"));

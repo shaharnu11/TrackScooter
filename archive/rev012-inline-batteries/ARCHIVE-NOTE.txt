@@ -8,8 +8,9 @@ THE CHANGE: a narrow frame. Two 100x40x2 rails (bought) whose INNER faces lie fl
 pod's 60x6 green plates (bought, not cut). 2x M12 10.9 per side: from outside, through a
 Ø25xØ13 steel sleeve welded inside the rail and the green plate, into an M12 nut welded on the
 plate. The whole rear pod comes off with 4 bolts. The rails end 9 mm before the front shock.
-The rails are 172 apart inside, so the batteries sit one behind the other, and the WHEELBASE
-follows from them: 1320 mm. Standing height 269 (plywood lid). Chassis ~16.2 kg.
+The rails are 172 apart inside, so the batteries sit one behind the other. The bay is set to
+1000 mm clear (bay_len_set) — the packs need 840, so 160 mm stays free behind the rear pack.
+WHEELBASE 1480 mm. Standing height 269 (plywood lid). Chassis ~18.2 kg.
 
 All chassis guards PASS (see README "Rev 012 — narrow frame"). The only WARNs are the lower
 shock bolt bending, inherited from Rev 011 — fix before the arms are built.
