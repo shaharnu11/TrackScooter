@@ -8,7 +8,8 @@ files live in the per-revision folders. Every future change lands in the live re
 **[`archive/rev012-inline-batteries/`](archive/rev012-inline-batteries/) — Rev 012, live.** The pod is
 Rev 011 (below, unchanged). Rev 012 adds the scratch-built **narrow frame**: two 100×40×2 rails bolted
 straight onto the rear pod's 60×6 green plates (4× M12), the two 400×110×80 batteries in line between
-them in a 1000 mm clear bay, wheelbase 1480, chassis ~18 kg. `render_mode="chassis"`; printable green-plate templates:
+them, and a 6.5″ speaker firing up through the deck at each end. Bay 1226 clear, wheelbase 1706,
+chassis ~21 kg. `render_mode="chassis"`; printable green-plate templates:
 `rev012_green_plate_templates.pdf`.
 
 **Pod — Rev 011** (source folder [`archive/rev011-uncut-11T-lowB/`](archive/rev011-uncut-11T-lowB/)):

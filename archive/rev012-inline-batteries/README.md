@@ -86,9 +86,10 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
   (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
   axle through its take-up.
 - `render_mode = "chassis"` — **REV 012: the whole vehicle.** Narrow 100×40×2 frame,
-  two batteries in line, rear pod bolted to the rails (4× M12), front pod in the donor fork
-  (ghost). The echoes print every check, the cut list and the weight. See "Rev 012 — narrow
-  frame" below.
+  two batteries in line, a 6.5″ speaker firing up at each end of the deck, rear pod bolted to
+  the rails (4× M12), front pod in the donor fork (ghost). The echoes print every check, the
+  cut list and the weight. See "Rev 012 — narrow frame" below. Toggles: `show_lid`,
+  `show_tray`, `show_batteries`, `show_speakers`, `show_chassis_labels`.
 - `render_mode = "chassis_link"` — labelled close-up of how the rear pod hangs on the rails;
   `link_explode` (0–150) pulls the pod back out.
 - `render_mode = "chassis_plates"` — the two green plates laid flat for DXF:
@@ -117,23 +118,32 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 > packs). The bay is its own parameter, `bay_len_set`; it can never fall below what the
 > packs need. Wheelbase 1320 → 1480, rails 1027 → 1187, chassis 16.2 → 18.2 kg. All
 > chassis guards still PASS. The green plates and their 1:1 templates are untouched.
+>
+> **2026-09-14: two 6.5″ speakers fire UP through the deck**, one at each end. Each one
+> sits in a sealed well made of parts that already exist — see "Speakers" below. The bay
+> now has to hold the packs *and* both wells, so it grew again: bay 1226, wheelbase
+> 1480 → 1706, rails 1187 → 1413, chassis 18.2 → 21.3 kg. **One WARN: the Ø165 hole
+> leaves only 3.5 mm to the rail** — measure your driver's real cutout and set
+> `spk_cut_d`, because everything downstream is driven by that one number.
 
 ![side view](rev012_chassis_side.png)
 
 | Part | Material | Notes |
 |---|---|---|
-| 2 rails | **100×40×2**, 100 side vertical | 1187 long, **172 apart inside** (252 outside) |
+| 2 rails | **100×40×2**, 100 side vertical | 1413 long, **172 apart inside** (252 outside) |
 | front + rear cross member | **100×40×2** | 172 long, keep the rails square |
 | 2 green plates | **60×6**, no cut | flat on the hub plates (axle key + M8 + weld), flat on the rails' inner faces |
 | 4 sleeves | steel Ø25 × Ø13 × 40 | welded inside the rails, one at each bolt |
 | 4 bolts | M12×65 10.9 + washer · M12 nut welded on the green plate | **the whole rear pod comes off with these 4** |
 | 2 batteries | 400 × 110 × 80 (measured) | **one behind the other**, 62 mm spare in width, 20 above |
-| lid / tray | plywood 12 mm (TBD) | lid 1080 × 302 · standing height **269** · lowest point 145 |
+| 2 speakers | 6.5″, Ø165 × 50 deep (owner's) | fire **up through the deck**, one at each end |
+| 2 bulkheads | plywood 12 mm | 172 × 100, seals each speaker well off from the batteries |
+| lid / tray | plywood 12 mm (TBD) | lid 1306 × 302 · standing height **269** · lowest point 145 |
 
-**Bay 1000 mm clear** (`bay_len_set`). The two packs only need 840, so **160 mm stays free
-behind the rear pack** for the controller and wiring. **Wheelbase 1480 mm** = front cross
-member at 210 + bay 1000 + two cross members + 190 to the rear axle. Chassis ≈ **18.2 kg**:
-steel 13.9 + plywood 4.3.
+**Bay 1226 mm clear** = 840 for the two packs + 386 for the two speaker wells. **Wheelbase
+1706 mm** = front cross member at 210 + bay 1226 + two cross members + 190 to the rear axle.
+Chassis ≈ **21.3 kg**: steel 15.8 + plywood 5.5. The bay length is the larger of
+`bay_len_set` and what the packs plus the wells need, so it can never be built too short.
 
 ![3/4 view](rev012_chassis_3q.png) ![top view, lid off](rev012_bay_top.png)
 
@@ -156,6 +166,34 @@ plates' own plane — the way the scooter fork did. A part grabbing the thin 40�
 the side would bend it like a page. (The earlier wide-frame drafts, with tabs through a rear cross
 tube and a middle bar, stay in `../rev011-uncut-11T-lowB/` as history.)
 
+### Speakers — two 6.5″ firing up through the deck
+
+**The well is built from parts that are already there.** Its two sides are the rail inner
+faces, its floor is the tray, its lid is the deck, and its outer end is the steel cross member.
+Only the inner end is new: one 12 mm plywood bulkhead, 172 × 100, that seals the well off from
+the batteries. So each speaker costs one bulkhead and one hole in the deck.
+
+| | value |
+|---|---|
+| Driver | 6.5″, **Ø165 × 50 deep** (owner's, measured) |
+| Hole in the lid | **Ø165**, on the centreline, 130.5 and 1175.5 mm from the lid's front edge |
+| Well, clear | 181 long × 172 wide × 100 deep |
+| Sealed volume | **≈ 2.7 litres** behind each driver |
+| Air under the cone | 50 mm |
+
+**The one WARN: the hole edge is 3.5 mm from the rail.** A Ø165 hole in a bay that is 172 mm
+wide leaves almost nothing. Most 6.5″ drivers with a Ø165 rim only need a cutout near Ø147,
+which would give 12.5 mm. **Measure your driver and set `spk_cut_d`** — the well length, the
+bay, the wheelbase and the rail length are all derived from it, so they shrink on their own.
+
+Two more things the model does not draw. The well is only sealed if you actually seal it:
+run silicone or foam tape where the plywood meets the steel, or the box leaks and the bass
+goes. And the deck is what you stand on, so **each hole needs a grille that takes a foot** —
+the lid carries nothing across the hole. The lid still lands on both rails: 68.5 mm of
+plywood is left each side of the hole, over a 40 mm rail.
+
+Hide the drivers in any render with `show_speakers = false`.
+
 ### Checks — all PASS
 
 | Check | Result |
@@ -166,7 +204,10 @@ tube and a middle bar, stay in `../rev011-uncut-11T-lowB/` as history.)
 | rail inner face / M12 weld nut to the track edge | 27 / 11 mm |
 | green plate / front shock tab above the spring, full travel | 2.7 / 2.7 mm |
 | green plate at the rail end / at the rear bolt hole / at the shock eye hole | 83 / 97 / 21 MPa |
-| rail at the joint / rails with rider ×2 | 30 / 21 MPa |
+| rail at the joint / rails with rider ×2 | 30 / 30 MPa |
+| speaker hole edge to the rail inner face | **3.5 mm — WARN**, see "Speakers" |
+| speaker rim to the lid edge / air under the cone | 56 / 50 mm |
+| lid beside a speaker hole | 68.5 mm each side, over a 40 mm rail |
 | sleeve bearing / sleeve under bolt preload / M12 shear | 77 / 140 / 68 MPa |
 | bolt joint | 7684 N per bolt vs 10000 N grip — does not slip |
 | plywood lid 12 mm, one foot | 6.5 MPa (limit 15) |
@@ -178,12 +219,14 @@ left are the lower shock bolt (below).
 
 | Material | Part | Qty × size |
 |---|---|---|
-| 100×40×2 | rails | 2 × 1187 |
-| 100×40×2 | front + rear cross members | 2 × 172 — **2718 mm total** |
+| 100×40×2 | rails | 2 × 1413 |
+| 100×40×2 | front + rear cross members | 2 × 172 — **3170 mm total** |
 | 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
 | 60×6 | green plate LEFT (front shock eye) | 1 × 208 — **468 mm total** |
 | steel bar/tube | sleeves Ø25 × Ø13 | 4 × 40 |
-| plywood 12 mm | lid · tray | 1080 × 302 · 1080 × 252 |
+| plywood 12 mm | lid · tray | 1306 × 302 · 1306 × 252 |
+| plywood 12 mm | speaker bulkheads | 2 × 172 × 100 (front faces at x 431 and 1283) |
+| lid holes | Ø165 on the centreline | 130.5 and 1175.5 from the lid's front edge |
 | hardware | M12×65 10.9 + washer · M12 weld nut · M8 plate → hub plate | 4 · 4 · 2 |
 
 **Rear-pod hub plates:** drill one extra Ø8.4 at **44 mm from the top end** (between the fork

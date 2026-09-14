@@ -438,6 +438,7 @@ brk_pack      = 17;     // packing between leg outer face and BLADE (6+6+5).
 /* [Chassis — REV 012: narrow frame, batteries in line] */
 show_chassis_labels = true;
 show_batteries      = true;
+show_speakers       = true;
 show_lid            = true;
 show_tray           = true;
 link_explode = 0;   // [0:10:150] chassis_link view: pull the rear pod back out of the rails
@@ -456,9 +457,23 @@ batt_h      = 80;
 batt_n      = 2;    // one behind the other
 batt_gap    = 20;   // between the two packs
 batt_end_clr = 10;  // pack to cross member, each end
-bay_len_set = 1000; // clear bay the owner asked for. The packs only need 840, so
-                    //   the spare sits BEHIND the rear pack. The bay never goes
-                    //   below what the packs need (guarded).
+bay_len_set = 1000; // clear bay the owner asked for. The bay never goes below
+                    //   what the packs AND the speaker wells need (guarded);
+                    //   any spare sits behind the rear pack.
+
+// -- speakers: one 6.5" firing UP through the deck at each end ----------------
+// The well is a sealed box made of parts that are already there: the two rail
+// inner faces are its sides, the tray is its floor, the lid is its top, the
+// cross member is its outer end. Only the inner end is new (a plywood bulkhead).
+spk_cut_d   = 165;  // TBD MEASURE — the HOLE in the lid, not the rim. The owner
+                    //   gave Ø165 x 50 for the driver. Many 6.5" units need a
+                    //   hole of only ~147: set the real number here and the
+                    //   wells, the bay and the wheelbase all shrink with it.
+spk_depth   = 50;   // driver depth below the lid (MEASURED)
+spk_rim_d   = 190;  // TBD the rim that lands on the lid (drawn only)
+spk_edge    = 8;    // cutout edge -> bulkhead face / cross member face
+spk_bhd_t   = 12;   // plywood bulkhead that seals the well off from the batteries
+spk_disp    = 0.4;  // TBD litres the driver itself takes out of the box
 
 // -- frame: 100x40x2 rectangular tube, 100 side VERTICAL (BOUGHT) ------------
 fr_h        = 100;
@@ -1409,12 +1424,22 @@ fr_bot   = fr_top - fr_h;            // 157
 deck_y   = fr_top + lid_t;           // 269 — STANDING HEIGHT
 tray_y0  = fr_bot - tray_t;          // 145 — lowest point
 lid_w    = 2*rail_out + 2*lid_over;  // 302
+spk_well = spk_cut_d + 2*spk_edge;           // 181 — clear length of one well
+spk_bay  = 2*(spk_well + spk_bhd_t);         // 386 — bay length the two wells take
 bay_pack_len = batt_n*batt_l + (batt_n - 1)*batt_gap + 2*batt_end_clr;  // 840 — what the packs need
-bay_len  = max(bay_len_set, bay_pack_len);   // 1000 — the clear bay that is built
+bay_need = bay_pack_len + spk_bay;           // 1226 — packs + both wells
+bay_len  = max(bay_len_set, bay_need);       // 1226 — the clear bay that is built
 fr_x0    = front_cm_x;               // front cross member front face
 bay_x0   = fr_x0 + fr_w;
 bay_x1   = bay_x0 + bay_len;
-wheelbase = bay_x1 + fr_w + rear_ct_x;   // 1480 — front offset + bay + cross members + rear offset
+wheelbase = bay_x1 + fr_w + rear_ct_x;   // 1706 — front offset + bay + cross members + rear offset
+
+// ---- where the two speakers and their bulkheads sit --------------------------
+// Wells hard against each cross member; any bay spare falls behind the rear pack.
+spk_cx    = [bay_x0 + spk_well/2, bay_x1 - spk_well/2];            // driver centres
+spk_bhd_x = [bay_x0 + spk_well, bay_x1 - spk_well - spk_bhd_t];    // bulkhead front faces
+batt_x0   = bay_x0 + spk_well + spk_bhd_t + batt_end_clr;          // first pack front face
+spk_vol   = bay_w*fr_h*spk_well/1e6 - spk_disp;  // litres of air behind one driver
 ct_x1    = wheelbase - rear_ct_x;    // rear cross member rear face = lid rear edge
 rail_x1  = wheelbase + rl_end_x;     // rail rear end
 rail_len = rail_x1 - fr_x0;
@@ -1515,8 +1540,26 @@ module chassis_frame(lid = true, tray = true){
     translate([fr_x0 + fr_w/2, fr_bot, -rail_in]) beam_z(bay_w, fr_h, fr_w, fr_t);   // front cross member
     translate([ct_x1 - fr_w/2, fr_bot, -rail_in]) beam_z(bay_w, fr_h, fr_w, fr_t);   // rear cross member
   }
-  if (lid)  color(c_lid)  translate([fr_x0, fr_top,  -lid_w/2])   cube([ct_x1 - fr_x0, lid_t,  lid_w]);
+  if (lid)  color(c_lid)  difference(){
+    translate([fr_x0, fr_top, -lid_w/2]) cube([ct_x1 - fr_x0, lid_t, lid_w]);
+    for (cx = spk_cx) translate([cx, fr_top - 1, 0])
+      rotate([-90,0,0]) cylinder(h = lid_t + 2, d = spk_cut_d);      // speaker hole
+  }
   if (tray) color(c_tray) translate([fr_x0, tray_y0, -rail_out])  cube([ct_x1 - fr_x0, tray_t, 2*rail_out]);
+  // the bulkhead that closes each speaker well off from the batteries (plywood,
+  // so it comes and goes with the tray — the link close-up does not want it)
+  if (tray) color(c_lid) for (bx = spk_bhd_x)
+    translate([bx, fr_bot, -bay_w/2]) cube([spk_bhd_t, fr_h, bay_w]);
+}
+module speakers(){
+  // 6.5" driver dropped into the lid from above, firing up
+  for (cx = spk_cx) translate([cx, fr_top, 0]) rotate([-90,0,0]){
+    color([0.15,0.15,0.17])   cylinder(h = lid_t + 3, d = spk_rim_d);          // rim on the lid
+    color([0.30,0.30,0.33])   translate([0, 0, -spk_depth])
+      cylinder(h = spk_depth, d1 = spk_cut_d/3, d2 = spk_cut_d - 4);           // basket + cone
+    color([0.22,0.22,0.25])   translate([0, 0, -spk_depth])
+      cylinder(h = spk_depth/3, d = spk_cut_d/2.2);                            // magnet
+  }
 }
 module rear_link(bolt_out = 0, pod_dx = 0){
   // per side: 2x M12 put in from OUTSIDE the rail, through the sleeve and the
@@ -1546,7 +1589,7 @@ module front_end_ghost(){
 module battery_boxes(){
   // one behind the other, on the tray, centred between the rails
   color(c_batt) for (i = [0 : batt_n - 1])
-    translate([bay_x0 + batt_end_clr + i*(batt_l + batt_gap), fr_bot, -batt_w/2])
+    translate([batt_x0 + i*(batt_l + batt_gap), fr_bot, -batt_w/2])
       cube([batt_l, batt_h, batt_w]);
 }
 module chassis_ground(){
@@ -1665,6 +1708,7 @@ if (render_mode == "plates"){
   rear_link();
   front_end_ghost();
   if (show_batteries) battery_boxes();
+  if (show_speakers)  speakers();
 
   if (show_chassis_labels){
     lz = lid_w/2 + 90;
@@ -1676,6 +1720,8 @@ if (render_mode == "plates"){
          [(fr_x0 + ct_x1)/2, deck_y, lid_w/2],              [(fr_x0 + ct_x1)/2 - 250, deck_y + 330, lz]);
     flag(str("2 BATTERIES IN LINE - ", batt_l, "x", batt_w, "x", batt_h),
          [(bay_x0 + bay_x1)/2, fr_bot + 30, rail_out],      [(fr_x0 + ct_x1)/2 - 250, -160, lz]);
+    flag(str("6.5\" SPEAKER UP THROUGH THE DECK - HOLE ", spk_cut_d, ", WELL ", spk_well),
+         [spk_cx[0], deck_y, 0],                            [-430, deck_y + 170, lz]);
     flag(str("WHEELBASE ", wheelbase, " mm (BAY ", bay_len, " CLEAR)"),
          [wheelbase/2, 2, 0],                               [(fr_x0 + ct_x1)/2 - 250, -240, lz]);
     flag("GREEN PLATE 60x6 FLAT ON THE RAIL INNER FACE",
@@ -1705,7 +1751,12 @@ if (render_mode == "plates"){
   echo("=================== REV 012 CHASSIS — NARROW FRAME, BATTERIES IN LINE ===================");
   echo("STEEL:    rails + cross members 100x40x2 (BOUGHT) · green plates 60x6 (BOUGHT) · lid + tray plywood");
   echo(str("VEHICLE:  WHEELBASE ", wheelbase, " mm — front cross member at ", front_cm_x, " + bay ", bay_len,
-           " (", batt_n, " x ", batt_l, " packs need ", bay_pack_len, ") + cross members + ", rear_ct_x, " to the rear axle"));
+           " (", batt_n, " x ", batt_l, " packs need ", bay_pack_len, " + 2 speaker wells need ", spk_bay,
+           ") + cross members + ", rear_ct_x, " to the rear axle"));
+  echo(str("SPEAKERS: 6.5\" firing UP at each end of the deck — hole Ø", spk_cut_d, " in the lid, driver ",
+           spk_depth, " deep, centres at x ", spk_cx[0], " and ", spk_cx[1],
+           " · each well is a sealed box of the two rails + tray + lid + cross member + one ",
+           spk_bhd_t, " mm bulkhead ≈ ", round(spk_vol*100)/100, " litres"));
   echo(str("FRAME:    rails ", rail_len, " long, ", bay_w, " apart inside, ", 2*rail_out, " outside · lid ", lid_w,
            " wide · STANDING HEIGHT ", deck_y, " · lowest point (tray) ", tray_y0, " above ground"));
   echo(str("REAR POD: green plate flat on each rail's inner face -> 2x M12 per side -> OFF WITH 4 BOLTS"));
@@ -1724,7 +1775,10 @@ if (render_mode == "plates"){
     ["rear sleeve hole to the rail's rear end (steel left)",             (rl_end_x - rl_bolts[1]) - sleeve_od/2, 8],
     ["batteries between the rails, width spare",                         bay_w - batt_w,         20],
     ["batteries under the lid, height spare",                            fr_h - batt_h,          5],
-    ["bay length spare behind the rear pack",                            bay_len - bay_pack_len, 0],
+    ["bay length spare behind the rear pack",                            bay_len - bay_need,     0],
+    ["speaker hole edge to the rail inner face",                         (bay_w - spk_cut_d)/2,  5],
+    ["speaker rim to the lid edge",                                      (lid_w - spk_rim_d)/2,  10],
+    ["air under the driver cone, well floor to driver",                  fr_h - spk_depth,       20],
   ];
   for (g = ch_clear)
     echo(str(g[1] < g[2] ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10, " mm"));
@@ -1747,6 +1801,10 @@ if (render_mode == "plates"){
   ch_s_lid = ch_Pf/2*(bay_w/2 - 25) / (250*lid_t*lid_t/6);
   echo(str(ch_s_lid > wood_limit ? "*** WARN " : "PASS ", "plywood lid ", lid_t,
            " mm, one foot between the rails: ", round(ch_s_lid*10)/10, " MPa (plywood limit ", wood_limit, ")"));
+  ch_lid_side = (lid_w - spk_cut_d)/2;   // plywood left each side of a speaker hole
+  echo(str(ch_lid_side >= fr_w ? "PASS " : "*** WARN ", "lid beside a speaker hole: ", ch_lid_side,
+           " mm each side vs the ", fr_w, " mm rail under it — the lid still lands on both rails. ",
+           "The hole carries nothing: each speaker needs a grille you can stand on."));
   echo(str(ch_Fb <= 0.9*ch_grip ? "PASS " : "*** WARN ", "bolt joint: ", round(ch_Fb), " N per bolt vs grip ",
            round(ch_grip), " N (M12 10.9 at ~100 N·m) -> ", ch_Fb <= 0.9*ch_grip ? "does not slip" : "SLIPS"));
   echo("  (static spring forces at the travel limits, no impact factor. The 141 MPa limit = 0.6 x 235 steel.)");
@@ -1762,6 +1820,10 @@ if (render_mode == "plates"){
            (gp_x1_tr - gp_x0) + (gp_x1_ld - gp_x0), " mm of 60x6"));
   echo(str("  plywood ", lid_t, " mm  lid ", ct_x1 - fr_x0, " x ", lid_w, "  ·  plywood ", tray_t, " mm  tray ",
            ct_x1 - fr_x0, " x ", 2*rail_out));
+  echo(str("  plywood ", spk_bhd_t, " mm  speaker bulkheads 2 x ", bay_w, " x ", fr_h,
+           " (front faces at x ", spk_bhd_x[0], " and ", spk_bhd_x[1], ")"));
+  echo(str("            lid: 2 holes Ø", spk_cut_d, " on the centreline, centres ", spk_cx[0] - fr_x0, " and ",
+           spk_cx[1] - fr_x0, " mm from the lid's FRONT edge. Each hole needs a grille you can stand on."));
   echo(str("  hardware: 4x M12x65 10.9 + washer · 4x M12 weld nut (on the green plates) · 4x steel sleeve Ø",
            sleeve_od, "xØ", sleeve_id, "x", fr_w, " · 2x M8 green plate -> hub plate (+ weld all round)"));
 
@@ -1771,14 +1833,17 @@ if (render_mode == "plates"){
   ch_m_sl   = 4*ch_Asl*fr_w*ch_rho;
   ch_m_lid  = (ct_x1 - fr_x0)*lid_w*lid_t*wood_rho;
   ch_m_tray = (ct_x1 - fr_x0)*2*rail_out*tray_t*wood_rho;
+  ch_m_bhd  = 2*bay_w*fr_h*spk_bhd_t*wood_rho;
   ch_m_hw   = 0.5;
   echo(str("WEIGHT:   STEEL ~", round((ch_m_tube + ch_m_gp + ch_m_sl + ch_m_hw)*10)/10, " kg (tubes ", round(ch_m_tube*10)/10,
            " · green plates ", round(ch_m_gp*10)/10, " · sleeves ", round(ch_m_sl*10)/10, " · bolts+welds ~", ch_m_hw,
-           ")  +  PLYWOOD ~", round((ch_m_lid + ch_m_tray)*10)/10, " kg  ->  CHASSIS ~",
-           round((ch_m_tube + ch_m_gp + ch_m_sl + ch_m_hw + ch_m_lid + ch_m_tray)*10)/10,
-           " kg (no pods, no batteries, no front fork)"));
+           ")  +  PLYWOOD ~", round((ch_m_lid + ch_m_tray + ch_m_bhd)*10)/10, " kg (lid + tray + ",
+           round(ch_m_bhd*100)/100, " of speaker bulkheads)  ->  CHASSIS ~",
+           round((ch_m_tube + ch_m_gp + ch_m_sl + ch_m_hw + ch_m_lid + ch_m_tray + ch_m_bhd)*10)/10,
+           " kg (no pods, no batteries, no speakers, no front fork)"));
   echo("FILL IN — still guesses: front_cm_x · rider_kg · lid_t/tray_t/lid_over · shock_perch_d ·");
-  echo("          head_ang · fork_off · fork_len · head_len · head_od · stock_axle_h · steer_lock");
+  echo("          head_ang · fork_off · fork_len · head_len · head_od · stock_axle_h · steer_lock ·");
+  echo("          spk_cut_d (MEASURE the hole your driver needs) · spk_rim_d · spk_disp");
   echo("==========================================================================================");
 
 } else if (render_mode == "chassis_link"){
