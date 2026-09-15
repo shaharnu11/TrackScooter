@@ -85,11 +85,11 @@ open -a OpenSCAD apollo_track_pod.scad     # OpenSCAD is installed via Homebrew
 - `render_mode = "tensioner"` — labeled 3D close-up of the Sheet-6 belt tensioner
   (slot, adjuster blocks, draw bolts, welded lugs); `tension_pos` (0–25) slides the
   axle through its take-up.
-- `render_mode = "chassis"` — **REV 012: the whole vehicle.** Narrow 100×40×2 frame,
-  two batteries in line, a 6.5″ speaker firing up at each end of the deck, rear pod bolted to
-  the rails (4× M12), front pod in the donor fork (ghost). The echoes print every check, the
-  cut list and the weight. See "Rev 012 — narrow frame" below. Toggles: `show_lid`,
-  `show_tray`, `show_batteries`, `show_speakers`, `show_chassis_labels`.
+- `render_mode = "chassis"` — **REV 012: the whole vehicle.** 100×40×2 frame, two batteries in
+  line, a 6.5″ speaker firing up at each end of the deck, rear pod bolted to the rails
+  (4× M12), front end drawn as a ghost (its link to the frame is not designed yet). The echoes
+  print every check, the cut list and the weight. See "Rev 012 — narrow frame" below.
+  Toggles: `show_lid`, `show_tray`, `show_batteries`, `show_speakers`, `show_chassis_labels`.
 - `render_mode = "chassis_link"` — labelled close-up of how the rear pod hangs on the rails;
   `link_explode` (0–150) pulls the pod back out.
 - `render_mode = "chassis_plates"` — the two green plates laid flat for DXF:
@@ -122,28 +122,44 @@ resize from them. The console echoes derived values (C, travel, motion ratio) ea
 > **2026-09-14: two 6.5″ speakers fire UP through the deck**, one at each end. Each one
 > sits in a sealed well made of parts that already exist — see "Speakers" below. The bay
 > now has to hold the packs *and* both wells, so it grew again: bay 1226, wheelbase
-> 1480 → 1706, rails 1187 → 1413, chassis 18.2 → 21.3 kg. **One WARN: the Ø165 hole
-> leaves only 3.5 mm to the rail** — measure your driver's real cutout and set
-> `spk_cut_d`, because everything downstream is driven by that one number.
+> 1480 → 1706, rails 1187 → 1413.
+>
+> **2026-09-15: the carrier plates go 140 → 168 apart, so the bay is 200 wide** (280 over
+> the rails, lid 330). The parameter is still called `fork_gap`, but that name is now
+> history: **no donor fork holds either pod.** The rear fork is cut off and thrown away,
+> and the front steering-to-frame link is still undesigned, so it will be built to fit.
+> The number is simply how far apart the two carrier plates sit, and `bay_w = fork_gap + 32`.
+>
+> It pays for itself three times. The Ø165 speaker hole now clears the rail by **17.5 mm**
+> instead of 3.5. The belt has **25 mm per side** instead of 11. And the shocks move
+> **inboard** of the carriers, which shortens the lower shock bolt's bending lever from 62
+> to 41 mm and drops that long-standing WARN from 530 to **351 MPa**. It costs a longer
+> pivot axle (M16×190 → **M16×220**), longer outboard sleeves, and the carrier's upper
+> shock tab moves to the **inner** face. Chassis 21.3 → 22.1 kg. Whole-model warnings: 3 → 2.
+>
+> ⚠ **Do not stop between 142 and 156.** There the shocks stay outboard and only move
+> further out, so the lower shock bolt gets *worse* — up to 598 MPa. 158 is where it flips.
 
 ![side view](rev012_chassis_side.png)
 
 | Part | Material | Notes |
 |---|---|---|
-| 2 rails | **100×40×2**, 100 side vertical | 1413 long, **172 apart inside** (252 outside) |
-| front + rear cross member | **100×40×2** | 172 long, keep the rails square |
+| 2 rails | **100×40×2**, 100 side vertical | 1413 long, **200 apart inside** (280 outside) |
+| front + rear cross member | **100×40×2** | 200 long, keep the rails square |
 | 2 green plates | **60×6**, no cut | flat on the hub plates (axle key + M8 + weld), flat on the rails' inner faces |
 | 4 sleeves | steel Ø25 × Ø13 × 40 | welded inside the rails, one at each bolt |
 | 4 bolts | M12×65 10.9 + washer · M12 nut welded on the green plate | **the whole rear pod comes off with these 4** |
-| 2 batteries | 400 × 110 × 80 (measured) | **one behind the other**, 62 mm spare in width, 20 above |
+| 2 batteries | 400 × 110 × 80 (measured) | **one behind the other**, 90 mm spare in width, 20 above |
 | 2 speakers | 6.5″, Ø165 × 50 deep (owner's) | fire **up through the deck**, one at each end |
-| 2 bulkheads | plywood 12 mm | 172 × 100, seals each speaker well off from the batteries |
-| lid / tray | plywood 12 mm (TBD) | lid 1306 × 302 · standing height **269** · lowest point 145 |
+| 2 bulkheads | plywood 12 mm | 200 × 100, seals each speaker well off from the batteries |
+| lid / tray | plywood 12 mm (TBD) | lid 1306 × 330 · standing height **269** · lowest point 145 |
 
-**Bay 1226 mm clear** = 840 for the two packs + 386 for the two speaker wells. **Wheelbase
-1706 mm** = front cross member at 210 + bay 1226 + two cross members + 190 to the rear axle.
-Chassis ≈ **21.3 kg**: steel 15.8 + plywood 5.5. The bay length is the larger of
-`bay_len_set` and what the packs plus the wells need, so it can never be built too short.
+**Bay 200 mm wide**, set by the rear pod: carrier plates 168 apart → carrier face at |z| 88 →
+green plate 94…100 → rail inner face 100. **Bay 1226 mm clear** along the vehicle = 840 for the
+two packs + 386 for the two speaker wells. **Wheelbase 1706 mm** = front cross member at 210 +
+bay 1226 + two cross members + 190 to the rear axle. Chassis ≈ **22.1 kg**: steel 16 + plywood 6.
+The bay length is the larger of `bay_len_set` and what the packs plus the wells need, so it can
+never be built too short.
 
 ![3/4 view](rev012_chassis_3q.png) ![top view, lid off](rev012_bay_top.png)
 
@@ -170,26 +186,34 @@ tube and a middle bar, stay in `../rev011-uncut-11T-lowB/` as history.)
 
 **The well is built from parts that are already there.** Its two sides are the rail inner
 faces, its floor is the tray, its lid is the deck, and its outer end is the steel cross member.
-Only the inner end is new: one 12 mm plywood bulkhead, 172 × 100, that seals the well off from
+Only the inner end is new: one 12 mm plywood bulkhead, 200 × 100, that seals the well off from
 the batteries. So each speaker costs one bulkhead and one hole in the deck.
 
 | | value |
 |---|---|
 | Driver | 6.5″, **Ø165 × 50 deep** (owner's, measured) |
 | Hole in the lid | **Ø165**, on the centreline, 130.5 and 1175.5 mm from the lid's front edge |
-| Well, clear | 181 long × 172 wide × 100 deep |
-| Sealed volume | **≈ 2.7 litres** behind each driver |
+| Well, clear | 181 long × 200 wide × 100 deep |
+| Sealed volume | **≈ 3.2 litres** behind each driver |
+| Hole edge to the rail | **17.5 mm** — this is what the 200 mm bay bought |
 | Air under the cone | 50 mm |
 
-**The one WARN: the hole edge is 3.5 mm from the rail.** A Ø165 hole in a bay that is 172 mm
-wide leaves almost nothing. Most 6.5″ drivers with a Ø165 rim only need a cutout near Ø147,
-which would give 12.5 mm. **Measure your driver and set `spk_cut_d`** — the well length, the
-bay, the wheelbase and the rail length are all derived from it, so they shrink on their own.
+**How wide the bay has to be:** `bay_w ≥ spk_cut_d + 2 × 5` is the guard, and 10 mm each side is
+comfortable. At the old 172 mm bay this Ø165 hole left only 3.5 mm and WARNed. **Measure your
+driver and set `spk_cut_d`** — the well length, the bay length, the wheelbase and the rail
+length are all derived from it.
+
+| Bay width | carrier plates apart | Ø165 hole to rail | lower shock bolt |
+|---|---|---|---|
+| 172 (old) | 140 | 3.5 mm — WARN | outboard, 530 MPa |
+| 188 | 156 | 11.5 mm | outboard, **598 MPa — worse** |
+| 190 | 158 | 12.5 mm | inboard, 351 MPa |
+| **200 (built)** | **168** | **17.5 mm** | inboard, 351 MPa |
 
 Two more things the model does not draw. The well is only sealed if you actually seal it:
 run silicone or foam tape where the plywood meets the steel, or the box leaks and the bass
 goes. And the deck is what you stand on, so **each hole needs a grille that takes a foot** —
-the lid carries nothing across the hole. The lid still lands on both rails: 68.5 mm of
+the lid carries nothing across the hole. The lid still lands on both rails: 82.5 mm of
 plywood is left each side of the hole, over a 40 mm rail.
 
 Hide the drivers in any render with `show_speakers = false`.
@@ -201,16 +225,16 @@ Hide the drivers in any render with `show_speakers = false`.
 | front cross member behind the front pod at full steering lock | 17.3 mm |
 | rear cross member + lid edge to the rear track, full travel | 26.8 mm |
 | rail rear end ahead of the front shock | 8.9 mm |
-| rail inner face / M12 weld nut to the track edge | 27 / 11 mm |
+| rail inner face / M12 weld nut to the track edge | 41 / 25 mm |
 | green plate / front shock tab above the spring, full travel | 2.7 / 2.7 mm |
 | green plate at the rail end / at the rear bolt hole / at the shock eye hole | 83 / 97 / 21 MPa |
 | rail at the joint / rails with rider ×2 | 30 / 30 MPa |
-| speaker hole edge to the rail inner face | **3.5 mm — WARN**, see "Speakers" |
-| speaker rim to the lid edge / air under the cone | 56 / 50 mm |
-| lid beside a speaker hole | 68.5 mm each side, over a 40 mm rail |
+| speaker hole edge to the rail inner face | 17.5 mm |
+| speaker rim to the lid edge / air under the cone | 70 / 50 mm |
+| lid beside a speaker hole | 82.5 mm each side, over a 40 mm rail |
 | sleeve bearing / sleeve under bolt preload / M12 shear | 77 / 140 / 68 MPa |
 | bolt joint | 7684 N per bolt vs 10000 N grip — does not slip |
-| plywood lid 12 mm, one foot | 6.5 MPa (limit 15) |
+| plywood lid 12 mm, one foot | 8 MPa (limit 15) |
 
 Static spring forces at the travel limits; steel limit 141 MPa (0.6 × 235). The only WARNs
 left are the lower shock bolt (below).
@@ -220,12 +244,12 @@ left are the lower shock bolt (below).
 | Material | Part | Qty × size |
 |---|---|---|
 | 100×40×2 | rails | 2 × 1413 |
-| 100×40×2 | front + rear cross members | 2 × 172 — **3170 mm total** |
+| 100×40×2 | front + rear cross members | 2 × 200 — **3226 mm total** |
 | 60×6 | green plate RIGHT (rear shock eye) | 1 × 260 |
 | 60×6 | green plate LEFT (front shock eye) | 1 × 208 — **468 mm total** |
 | steel bar/tube | sleeves Ø25 × Ø13 | 4 × 40 |
-| plywood 12 mm | lid · tray | 1306 × 302 · 1306 × 252 |
-| plywood 12 mm | speaker bulkheads | 2 × 172 × 100 (front faces at x 431 and 1283) |
+| plywood 12 mm | lid · tray | 1306 × 330 · 1306 × 280 |
+| plywood 12 mm | speaker bulkheads | 2 × 200 × 100 (front faces at x 431 and 1283) |
 | lid holes | Ø165 on the centreline | 130.5 and 1175.5 from the lid's front edge |
 | hardware | M12×65 10.9 + washer · M12 weld nut · M8 plate → hub plate | 4 · 4 · 2 |
 
@@ -248,8 +272,9 @@ measures them back (outlines, every hole position and size, keys, rulers). Flat 
 
 ### ⚠ Still open
 
-- **Lower shock bolt is over-stressed** (~530 MPa trailing / ~463 leading at full bump, both
-  pods; guard WARNs). Fix it before the arms are built.
+- **Lower shock bolt is over-stressed** (~351 MPa trailing / ~284 leading at full bump, both
+  pods; guard WARNs). Fix it before the arms are built. The 168 plate spacing moved the shocks
+  inboard and cut this down from 530/463, but it is still over the 235 MPa mild-steel yield.
 - **Front fork → frame link** — not designed.
 - **Measure:** the front cross member position against the real front pod, the spring's outer
   diameter, head angle, fork offset and length, steering lock.
@@ -263,9 +288,9 @@ The stock pod's rigid internal frame is removed and replaced by:
    backbone. Each hangs from a scooter-fork leg: the hub-motor's static Ø10 flatted
    axle passes through a matching slot (the plate doubles as a torque arm) and one
    M8 bolt into the leg 52 mm above locks rotation. No carrier bearings, no
-   anti-rotation link — the fork is the chassis anchor. Plates sit on the leg OUTER
-   faces (|z| = 74 front AND rear — both gaps 140, legs 4 mm; Rev 003), outside
-   the belt's 118 mm width (15 mm/side),
+   anti-rotation link — the mount is the chassis anchor. Plates sit at
+   **|z| = 88, front and rear** (spacing widened to 168 on 2026-09-15; it was 74
+   at the donor's measured 140 gap), outside the belt's 118 mm width (29 mm/side),
    so **the carrier can never touch the track at any articulation**. Boxed together
    by the hub axle (top), the pivot axle (middle), and the **M8 keel standoff
    back in its Rev 004 window** (bottom) — between the sprocket's swept envelope
@@ -279,17 +304,20 @@ The stock pod's rigid internal frame is removed and replaced by:
 3. **Leading + trailing arms** — fork weldments (2 plain 40 × ¼″ flat-bar plates each — Rev 004, rectangles only) nested on the
    pivot like scissors; 4 flanged SAE 841 bronze bushings (Ø16×Ø22×20), one in a
    25 mm boss tube per fork plate — trailing bosses point inboard, leading bosses
-   outboard, so the whole stack (centre spacer ≈14, 6 thrust washers, 2 outboard
-   sleeves ≈7) is continuous carrier-to-carrier (Rev 003a). Fork shape keeps
+   outboard, so the whole stack (centre spacer ≈4.5, 6 thrust washers, 2 outboard
+   sleeves ≈25.25 at the 168 spacing) is continuous carrier-to-carrier (Rev 003a).
+   All three tube pieces are cut at the dry-stack — take the lengths from the
+   `PIVOT STACK` echo, not from this page. Fork shape keeps
    each idler centred on the belt. Trailing arm has a 25 mm slot + a motorcycle-style
    chain adjuster (Rev 002b; Rev 004a hardware): M6 lifting eye nut on each axle
    end (Ø20 eye rides the Ø15 axle — replaces the drilled-and-tapped block), M6
    draw bolt through a lug welded to the plate face — advancing the bolt draws
    the axle rearward.
-4. **Coil-over shocks ×2** — run **outboard of the carrier plates** (|z| = 94;
-   Rev 002c/003 — with the measured 4 mm legs the carriers sit at 74, leaving
-   only 15 mm inboard of them, so the Rev 002 inboard placement doesn't fit):
-   upper eye on a 40×6×55 tab stub lap-welded to the carrier OUTER face (eye at
+4. **Coil-over shocks ×2** — run **inboard of the carrier plates** (|z| = 73;
+   2026-09-15 — the 168 plate spacing puts the carriers at 88, which finally leaves
+   room between the belt edge and the carrier. At 140 they had to run outboard at
+   94, and that long lever is what over-stressed the lower bolt):
+   upper eye on a 40×6×55 tab stub lap-welded to the carrier INNER face (eye at
    (±51, −8.5) from the hub centre — Rev 008, essentially Rev 004's (±53, −9)),
    lower eye on an M8 through-bolt (eyes measured Ø8 — Rev 004b) + ≈45 mm
    spacer sleeve through both arm-fork plates at **a = 0.433·C = 53.7** on the bar
@@ -300,9 +328,9 @@ The stock pod's rigid internal frame is removed and replaced by:
 - **Belt derailment** — articulation changes belt path length (~6 mm through travel).
   Mitigated by ±15° travel limit, spring preload, and correct tensioner setting
   (10–15 mm mid-span sag).
-- ~~Belt-to-fork fit~~ — resolved in Rev 003: both fork gaps re-measured at
-  **140 mm**, so the 118 mm belt has 11 mm per side front and rear (the earlier
-  120 mm front reading, which left 1 mm/side, was wrong).
+- ~~Belt-to-fork fit~~ — resolved in Rev 003 (both donor gaps re-measured at 140 mm,
+  11 mm per side) and no longer a fork question at all: since 2026-09-15 the carrier
+  plates are built **168 apart**, so the 118 mm belt has **25 mm per side**.
 - ~~Anti-rotation~~ — resolved in Rev 002: the carriers bolt straight to the fork legs.
 
 ---
@@ -320,7 +348,7 @@ Everything is parametric on these.
 | D | Idler wheel OD | 90–120 | **108** (WJ wheel) |
 | G | Idler bearing bore | 15–20 | **15** — bearings are **6302-2RS (15×42×13)**; caliper read 14.86 = 15 nominal |
 | sprocket | Printed drive sprocket (Rev 008) | — | **Drum = cut rim floor Ø149 × 20.5** (flanges ground off; tape check 468 mm) + rib 18×**5.44** + **9 T-teeth** (51 across × 20 thick, blades to Ø130); wheel Ø160, cord Ø172, tooth marks every **55.8 mm on the rib top** (40°). Lug/blade tips sweep Ø130 over the **measured Ø123 casing** — 3.4 mm, guarded |
-| fork | Fork-leg inner gap (front / rear) | — | **140 / 140** (re-measured 2026-07-20, Rev 003 — was 120/140) — leg thickness **4** |
+| fork | Carrier-plate spacing (was the fork-leg inner gap) | — | **168 / 168 — a BUILD TARGET, not a measurement** (2026-09-15). The donor's gaps were 140/140 re-measured, but no donor fork holds either pod now: the rear fork is cut off, and the front steering link is undesigned. Leg thickness **4** where a leg still exists |
 | axle | Hub-motor axle | — | **Ø10, flatted, static** — carrier plates slot onto it (torque-arm style) |
 | ~~F~~ | ~~Belt inner width between guide lugs~~ | — | **Superseded**: no edge guide rows exist. The working channel is the **22 mm gap between the lug pairs** — the idler tread band (~20 wide; the 58 is its hub boss), the kit wheel's rib, and our printed rib all ride in it (Rev 007 correction) |
 | lug_h | Drive-lug (pyramid) height | — | **15 measured** (2026-07-24; was 20 conservative) |
@@ -333,8 +361,8 @@ Everything is parametric on these.
 `C = 123.9` (arm length) · neutral droop `17.9°` · wheel travel `+31.8 / −29.2 mm` at ±15° ·
 shock station `a = 0.433·C = 53.7` (bar axis) · upper shock eye at `(±51, −8.5)` from hub centre ·
 keel centre `89.9` below hub centre (Ø12×1.5 tube, in the Rev 004 window) · motion ratio `MR = 0.4327` (true kinematic) ·
-carrier planes `|z| = 74` (both pods) · pivot axle stack `≈182` → **M16 × 195, 45 mm thread one end**
-(both pods; smooth shank 150 clears all bushings, 4 mm margin) · shock plane `|z| = 94` (outboard) ·
+carrier planes `|z| = 88` (both pods, at the 168 spacing) · pivot axle stack `≈210` → **M16 × 220, part-threaded**
+(both pods) · shock plane `|z| = 73` (**inboard** of the carriers) ·
 sprocket: 9 stations × 40°, rib top Ø159.9, cord Ø171.9 · lug/blade tips to casing `3.4` (guarded).
 
 **Idler axle:** the 6302 bearings take a **Ø15 mm axle** — a 15×100 MTB thru-axle

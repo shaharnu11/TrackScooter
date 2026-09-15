@@ -15,7 +15,7 @@ side). Where a source said only "2×" without saying which, the reading is noted
 
 | Item | /pod | both | Notes |
 |---|---:|---:|---|
-| M16 × 195 hex bolt, **part-threaded 45 mm one end only**, cl.10.9 | 1 | **2** | Owner-sourced part. Smooth shank 150 must span all 4 bushings + spacer — bushings must never ride on thread |
+| M16 × **220** hex bolt, part-threaded, cl.10.9 | 1 | **2** | ⚠ **Changed 2026-09-15** — the 168 carrier-plate spacing makes the stack ≈210, so the old ×195 is too short. Take the length from the model's `PIVOT AXLE` echo. The smooth shank must span all 4 bushings + spacer — bushings must never ride on thread |
 | M16 nylock nut | 1 | **2** | **One per bolt only** — it is a headed bolt, not a stud |
 | Ø16 hardened flat washer | 2 | **4** | |
 | Ø16 × Ø30 × 1.5 hardened thrust washer | 6 | **12** | Every steel face that rotates against another |
@@ -26,9 +26,9 @@ off ⅛ turn** (running fit) — not to a torque figure.
 An earlier shopping list said 4 M16 nylocks total; that was wrong and is corrected in
 `apollo_track_pod_rev011.scad:146`.
 
-**Substitute** (owner's fallback): M16 double-end stud × 190 + **2** nylocks per pod. The
-smooth middle must still be ≥150. Prefer 8.8/B7 over A2-70 stainless; anti-seize on
-stainless.
+**Substitute** (owner's fallback): M16 double-end stud, **now ≈215**, + **2** nylocks per pod.
+The smooth middle must still span the bushings. Prefer 8.8/B7 over A2-70 stainless;
+anti-seize on stainless.
 
 Not fasteners but part of this stack: 4 flanged bronze bushings per pod (SAE 841,
 Ø16 ID × Ø22 OD × 20, flange ≈Ø28×3) → **8** for both pods.
@@ -76,9 +76,9 @@ Four shocks total (2 per pod, one per arm), eyes measured **Ø8**.
 
 | Item | /pod | both | Notes |
 |---|---:|---:|---|
-| M8 part-threaded bolt, ≈**135** — lower eye | 2 | **4** | Through both arm plates; eye rides the spacer sleeve; smooth shank where eye + sleeve ride |
+| M8 part-threaded bolt, lower eye — ⚠ **re-measure** | 2 | **4** | Through both arm plates; eye rides the spacer sleeve; smooth shank where eye + sleeve ride. The old ≈135 was for shocks OUTBOARD at \|z\|=94. Since 2026-09-15 they run **INBOARD at \|z\|=73**, so this bolt gets ~42 shorter. Measure at the §9.5 fitting |
 | M8 nylock nut | 2 | **4** | |
-| Ø15 OD × Ø9 ID × ≈45 spacer sleeve | 2 | **4** | In the §7.1 steel order, not a fastener |
+| Ø15 OD × Ø9 ID × ≈**28** spacer sleeve | 2 | **4** | In the §7.1 steel order, not a fastener. Was ≈45 with the shocks outboard; take the length from the model's `SHOCKS` echo |
 | M8 pin/bolt ≈**35–40** + nylock — upper eye | 2 | **4** | ⚠ **Missing from §7.7** — see below |
 
 ⚠ **Gap in the published BOM:** the upper shock tab carries a Ø8.4 "eye pin hole" for an
@@ -87,7 +87,7 @@ but §7.7 lists only the fork bolts and the *lower* shock bolts. Length is not s
 anywhere; the tab is a single 6 mm plate, so head + shock eye + 6 + washer + nylock lands
 around 35–40. **Measure it at the §9.5 fitting** with the real shock eye in hand.
 
-Confirm the lower bolt length at §9.5 too — §7.7 only says "≈135".
+Confirm the lower bolt length at §9.5 too — §7.7's "≈135" is now wrong (shocks moved inboard).
 
 ## E · Belt tensioner — **Rev 011b PUSHER** (supersedes the §7.6 / Rev 004a pull-type)
 
@@ -144,7 +144,7 @@ Paint-pen witness marks on everything. Retorque at 1 h / 5 h / then every 20 h (
 ## Shopping total, both pods
 
 ```
-M16 × 195 part-threaded cl.10.9 bolt ........  2
+M16 × 220 part-threaded cl.10.9 bolt ........  2
 M16 nylock nut ..............................  2
 Ø16 hardened flat washer ....................  4
 Ø16 × Ø30 × 1.5 thrust washer ............... 12

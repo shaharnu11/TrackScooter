@@ -6,11 +6,12 @@ files live in the per-revision folders. Every future change lands in the live re
 ## Live revision
 
 **[`archive/rev012-inline-batteries/`](archive/rev012-inline-batteries/) — Rev 012, live.** The pod is
-Rev 011 (below, unchanged). Rev 012 adds the scratch-built **narrow frame**: two 100×40×2 rails bolted
-straight onto the rear pod's 60×6 green plates (4× M12), the two 400×110×80 batteries in line between
-them, and a 6.5″ speaker firing up through the deck at each end. Bay 1226 clear, wheelbase 1706,
-chassis ~21 kg. `render_mode="chassis"`; printable green-plate templates:
-`rev012_green_plate_templates.pdf`.
+Rev 011 (below) with the **carrier plates built 168 apart instead of 140** (2026-09-15 — no donor fork
+holds either pod now, so that spacing is a free choice; it sets the frame width and moves the shocks
+inboard). Rev 012 adds the scratch-built **frame**: two 100×40×2 rails bolted straight onto the rear
+pod's 60×6 green plates (4× M12), the two 400×110×80 batteries in line between them, and a 6.5″ speaker
+firing up through the deck at each end. Bay 200 wide × 1226 clear, wheelbase 1706, chassis ~22 kg.
+`render_mode="chassis"`; printable green-plate templates: `rev012_green_plate_templates.pdf`.
 
 **Pod — Rev 011** (source folder [`archive/rev011-uncut-11T-lowB/`](archive/rev011-uncut-11T-lowB/)):
 
