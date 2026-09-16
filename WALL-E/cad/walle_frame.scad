@@ -108,7 +108,13 @@ vesc_d      = [85, 65, 30];    // Flipsky 75100 class, one per pod
 jet_d       = [103, 90, 50];   // Jetson Orin Nano dev kit + cooler
 teensy_d    = [60, 40, 25];    // Teensy 4.1 in a small sealed box
 cont_d      = [60, 50, 70];    // main contactor
-dcdc_d      = [110, 60, 30];   // isolated 48 V -> 12 V converter
+// A real 100 W isolated 48->12 V brick is much bigger than it feels like it
+// should be: a Mean Well SD-100C-12 is 159 x 97 x 38. Placeholder guesses were
+// half that, which would have made the shelf layout a lie.
+dcdc_d      = [159, 97, 38];   // isolated 48 V -> 12 V, 100 W, electronics rail
+amp_ps_d    = [120, 70, 35];   // 48 V -> 32 V buck, amplifier only. See
+                               //   docs/04-power-and-wiring.md section 4: the
+                               //   amp CANNOT run off a full 54.6 V pack.
 fuse_d      = [80, 50, 40];    // fuse / distribution block
 amp_d       = [120, 80, 40];   // audio amplifier
 vesc_hs_t   = 6;     // aluminium heatsink plate under each VESC
@@ -245,18 +251,18 @@ shelf_parts = [
   ["Contactor",cont_d,   1],
   ["Fuse blk", fuse_d,   1],
   ["Teensy",   teensy_d, 1],
-  ["DC-DC",    dcdc_d,   2],
-  ["Amp",      amp_d,    2],
+  ["DC-DC 12V",dcdc_d,   2],
+  ["Amp PSU",  amp_ps_d, 3],
+  ["Amp",      amp_d,    3],
 ];
-shelf_rows  = [0, 1, 2];
+shelf_rows  = [0, 1, 2, 3];
 shelf_area  = shelf_l * shelf_w;
-parts_area  = vesc_d[0]*vesc_d[1]*2 + jet_d[0]*jet_d[1] + dcdc_d[0]*dcdc_d[1]
-            + cont_d[0]*cont_d[1] + fuse_d[0]*fuse_d[1] + teensy_d[0]*teensy_d[1]
-            + amp_d[0]*amp_d[1];
+function add_area(i) = i < 0 ? 0
+                     : shelf_parts[i][1][0]*shelf_parts[i][1][1] + add_area(i-1);
+parts_area  = add_area(len(shelf_parts) - 1);
 shelf_fill  = 100*parts_area/shelf_area;
 // tallest part decides the headroom the shelf needs
-part_h_max  = max(vesc_d[2] + vesc_hs_t, jet_d[2], teensy_d[2], cont_d[2],
-                  dcdc_d[2], fuse_d[2], amp_d[2]);
+part_h_max  = max([for (p = shelf_parts) p[1][2]]) + vesc_hs_t;
 
 // pack each row end to end along x, with a 10 mm gap between boxes
 function row_parts(r) = [for (p = shelf_parts) if (p[2] == r) p];
