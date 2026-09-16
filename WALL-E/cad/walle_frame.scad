@@ -176,8 +176,18 @@ spk_grille  = true;  // draw the grilles. Not optional in a crowd
 // electronics bay shakes every connector on the shelf.
 
 // -- head --------------------------------------------------------------------
-neck_h      = 70;    // fixed for now. A real neck telescopes — out of scope
+// THE HEAD DOES NOT MOVE. Owner decision 2026-09-17: no pan, no nod, no barrel
+// tilt, no servos anywhere in the head. To look left or right, THE WHOLE ROBOT
+// TURNS. All expression comes from the two screens.
+//
+// That is a big simplification here and a real complication in the firmware,
+// because "look left" is now a DRIVE command. See docs/01-architecture.md.
+neck_h      = 70;    // rigid welded post. Not a joint: no bearing, no slip
+                     //   ring, no cable twist limit, nothing to seal against
+                     //   sand. This is the single most sand-proof choice in
+                     //   the whole robot.
 neck_d      = 90;
+neck_t      = 3;     // wall. It is a tube, not a bar
 eye_d       = 105;   // eye barrel outside diameter
 // The barrels are made of WOOD — owner decision 2026-09-17. Nobody is turning a
 // 105 mm tube on a lathe, so each one is a STACK OF PLYWOOD RINGS, cut with a
@@ -190,7 +200,7 @@ eye_len     = eye_ring_t * eye_rings;           // 144
 // The bore changes down the stack, so the rings are not all the same part:
 //   front 5 rings  bored Ø59 — the screen well, and the SUN SHADE
 //   ring 6         bored Ø53 — the screen lands on this shoulder
-//   rear 6 rings   bored Ø81 — cable and servo room
+//   rear 6 rings   bored Ø81 — cable room. No servos: the head is rigid
 // scr_recess below has to stay on a ring boundary or the screen sits on a
 // glue line instead of a shoulder. 60 = 5 rings exactly. Do not nudge it.
 eye_cl      = 128;   // barrel centre to centre. Driven by the toe-in: the
@@ -211,6 +221,28 @@ dome_t      = 3;     // clear acrylic dome over the barrel mouth. Two jobs:
                      //   it seals the barrel against dust, and the highlight
                      //   on it reads as a big glassy eye.
 
+// -- the depth camera --------------------------------------------------------
+// Owner decision 2026-09-17: the camera goes in the HEAD. It had no place in
+// this model at all before, which was a gap — it was in the buying list and the
+// architecture, but nothing checked that it physically fits or can see out.
+//
+// It CANNOT go between the barrels. They are eye_cl apart with eye_d bodies, so
+// the gap between them is only 128 - 105 = 23 mm, and the OAK-D Lite is 91 wide.
+// Widening eye_cl enough to fit it would take the head to 311 mm across, and
+// WALL-E's eyes are close together — it would stop looking like him.
+//
+// So it mounts UNDER the barrel pair, on the front of the yoke, looking forward.
+// That is better anyway: the barrels above it act as a brow, and a lens pointed
+// at the Negev sky needs shade exactly as much as the screens do.
+cam_w       = 91;    // OAK-D Lite body. CHECK against the one you buy
+cam_h       = 28;
+cam_d       = 17.5;
+cam_hood    = 30;    // plywood lip over the lens. This is the SUN SHADE — see
+                     //   the CAM SUN guard. Same problem as the eyes.
+cam_fov_h   = 69;    // degrees horizontal, OAK-D Lite colour sensor
+// With a FIXED head this is the whole field of view. Off to one side of that,
+// the robot is blind until it turns. There is a guard on what that means.
+
 // ============================================================================
 //  3. MASS ESTIMATES — every one of these is a guess. Replace with scale
 //     readings as parts get built. The tipping guard is only as good as these.
@@ -220,12 +252,29 @@ pod_com_y   = 190;   // GUESS: pod centre of mass height. Low, it is mostly
                      //   belt and hub motor
 batt_kg     = 8;     // GUESS per 48 V pack
 elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, Jetson, wiring, contactor
-head_kg     = 5;     // GUESS: head, screens, servos, neck
 body_extra  = 3;     // internal framing, hinges, catches, gas strut, paint.
                      //   Sits low, so it gets its own centre of mass below.
 spk_drv_kg  = 1.6;   // GUESS: one 6.5 inch driver, magnet and all
 steel_rho   = 7850;  // kg/m3
 ply_rho     = 650;   // kg/m3  birch
+
+// -- the head, also computed now that it is plywood and has no servos --------
+// Was a flat 5 kg guess covering "head, screens, servos, neck". There are no
+// servos any more and the barrels are plywood, so this is geometry too.
+eye_n_well   = scr_recess / eye_ring_t;                      // 5 rings
+eye_n_should = 1;                                            // the shoulder
+eye_n_cable  = eye_rings - eye_n_well - eye_n_should;         // 6 behind
+eye_vol      = eye_ring_t * PI/4 * (
+                 eye_n_well   * (eye_d*eye_d - (scr_d+6)*(scr_d+6))
+               + eye_n_should * (eye_d*eye_d - scr_d*scr_d)
+               + eye_n_cable  * (eye_d*eye_d - (eye_d-24)*(eye_d-24)));
+m_eyes       = 2 * eye_vol * 1e-9 * ply_rho;
+m_yoke       = 50 * 40 * eye_cl * 1e-9 * ply_rho;
+m_neck       = PI/4 * (neck_d*neck_d - (neck_d - 2*neck_t)*(neck_d - 2*neck_t))
+               * neck_h * 1e-9 * steel_rho;
+head_elec    = 0.6;  // 2 screens, 2 acrylic domes, the camera, the ESP32-S3,
+                     //   wiring and fasteners. Small parts, still a guess
+head_kg      = m_eyes + m_yoke + m_neck + head_elec;
 
 // -- the body is SOLID PLYWOOD now, so stop guessing its weight --------------
 // Owner decision 2026-09-17: the body is plywood, not a foam core with a thin
@@ -260,7 +309,7 @@ pod_z       = pod_cl/2;                 // each pod's centre plane
 // pod_mount_z comes from ../pod_interface.scad. It is the pod's widest point
 // AND the face the rail bolts to — 100 with the green plates fitted, 94
 // without them. That question is still open; see the cautions in that file.
-width_over  = pod_cl + 2*pod_mount_z;   // 700 — overall robot width
+width_over  = pod_cl + 2*pod_mount_z;   // 672 — overall robot width
 
 // the rail's OUTER face lies flat on the inboard green plate's outer face
 rail_zo     = pod_z - pod_mount_z;      // 150
@@ -323,7 +372,30 @@ robot_h     = head_yc + eye_d/2;                // top of the robot
 
 // Sun shade: a screen sunk scr_recess deep behind an aperture scr_d wide is in
 // shadow whenever the sun sits HIGHER than this elevation angle.
-sun_block   = atan(scr_recess/scr_d);
+// Sun elevation above which the barrel's front rim fully shadows the screen.
+// CORRECTED 2026-09-17: this was atan(scr_recess/scr_d), which is upside down.
+// For a bore of width W and depth D the rim's shadow covers the whole screen
+// once tan(elevation) > W/D, so the angle is atan(W/D). The old form happened
+// to give a SAFE answer at the current numbers, but it moved the wrong way:
+// halve the recess and it would have claimed the screen was shaded from a
+// LOWER sun, when a shallow recess shades less. That is the direction someone
+// would change it in to save space, so it mattered.
+sun_block   = atan(scr_d/scr_recess);
+
+// -- camera, derived -------------------------------------------------------
+cam_yc      = head_yc - eye_d/2 - cam_h/2 - 2;   // lens centre, just under
+                                                 //   the barrels' lowest point
+cam_xf      = eye_len/2 - 5;                     // front face, a touch behind
+                                                 //   the barrel mouths
+// Sun elevation above which the hood fully shadows the lens. Same form as
+// sun_block: the lens sits cam_h/2 below the hood, cam_hood back from its tip.
+cam_sun     = atan((cam_h/2)/cam_hood);
+// A FIXED head means the camera's field of view IS the robot's field of view.
+// This is how far ahead it has to look before it can see the full width of its
+// own path. Closer than this, its own track edges are outside the frame.
+cam_see_full = width_over / (2*tan(cam_fov_h/2));
+// and this is the sector it simply cannot see without turning the whole robot
+cam_blind   = 180 - cam_fov_h;
 
 // -- electronics shelf layout ------------------------------------------------
 // Several short rows, not two long ones: the body is only 430 deep, so a row
@@ -785,7 +857,7 @@ module eye_barrel(){
     dep  = eye_len - (i + 1)*eye_ring_t;
     bore = dep < scr_recess       ? scr_d + 6   // front rings: the screen well
          : dep < scr_recess + eye_ring_t ? scr_d // the shoulder the screen sits on
-         : eye_d - 24;                           // rear rings: cable and servos
+         : eye_d - 24;                           // rear rings: cables only now
     color(c_ply) translate([x0, 0, 0]) difference(){
       rotate([0,90,0]) cylinder(h = eye_ring_t, d = eye_d);
       translate([-1, 0, 0])
@@ -810,6 +882,14 @@ module head(){
   // yoke joining the two barrels
   color([0.60,0.52,0.28])
     translate([-25, head_yc - 20, -eye_cl/2]) cube([50, 40, eye_cl]);
+  // the depth camera, under the barrels, looking forward. The hood over it is
+  // the sun shade, and the barrels above read as a brow.
+  color(c_ply)
+    translate([cam_xf - cam_d, cam_yc + cam_h/2, -cam_w/2 - 6])
+      cube([cam_d + cam_hood, 10, cam_w + 12]);
+  color([0.15,0.15,0.17])
+    translate([cam_xf - cam_d, cam_yc - cam_h/2, -cam_w/2])
+      cube([cam_d, cam_h, cam_w]);
   // each barrel toes inward, so the eyes converge slightly in front of him
   for (sz = [-1,1])
     translate([0, head_yc, sz*eye_cl/2])
@@ -915,6 +995,17 @@ echo(str("EYES:     ", scr_d, " mm screen in a ", eye_d,
          " mm PLY RINGS glued up and sanded round",
          " · sunk ", scr_recess, " deep, so SUN ABOVE ", round(sun_block),
          " deg ELEVATION IS SHADED (Negev midday is 75-80 deg, so it is shaded)"));
+echo(str("CAMERA:   OAK-D ", cam_w, "x", cam_h, "x", cam_d,
+         " UNDER the barrels at ", round(cam_yc), " mm, lens ", round(cam_xf),
+         " fwd of the head centre. It does NOT fit between them: they are ",
+         eye_cl - eye_d, " mm apart and it is ", cam_w, " wide.",
+         " Hood ", cam_hood, " deep shades it above ", round(cam_sun), " deg."));
+echo(str("LOOKING:  HEAD IS RIGID, NO SERVOS. Field of view ", cam_fov_h,
+         " deg, so it sees +-", cam_fov_h/2, " deg and is BLIND over the other ",
+         cam_blind, " deg until the WHOLE ROBOT TURNS.",
+         " It only sees the full width of its own path from ",
+         round(cam_see_full), " mm ahead, so anything closer than that at the",
+         " track edges is unseen — that is what the ToF bumper ring is for."));
 echo(str("SHELF:    ", round(shelf_l), " x ", round(shelf_w), " at ", shelf_y,
          ", tallest box ", part_h_max, " tall · ", len(shelf_rows),
          " rows, longest ", round(row_max_len), ", ", round(rows_dep),
@@ -927,7 +1018,7 @@ echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
          " kg  ·  WHOLE ROBOT ", round(m_total*10)/10,
          " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · electronics ",
          elec_kg, " · body ", round(body_kg*10)/10, " · speakers ", round(2*spk_kg*10)/10,
-         " · head ", head_kg, ") — ALL GUESSES"));
+         " · head ", round(head_kg*10)/10, ") — pods, batteries and electronics are GUESSES; body, head, speakers and frame are COMPUTED"));
 echo(str("CoM:      x ", round(com_x*10)/10, " (0 = over the middle of the tracks)",
          "  ·  y ", round(com_y*10)/10, " above ground"));
 // contact area in cm2 = both patches in mm2 / 100
@@ -1041,6 +1132,12 @@ guards = [
   ["driver depth fits behind the baffle",             spk_box_d - spk_box_t - spk_depth, 50],
   ["sealed volume per driver, litres (6.5 inch wants 7-14)", spk_vol, 7],
   ["shelf reachable from above without pulling a speaker box (%)", shelf_reach, 35],
+  ["camera clears the barrels above it (mm)",
+                                  (head_yc - eye_d/2) - (cam_yc + cam_h/2), 1],
+  ["camera hood shades the lens from midday sun (deg)", 75 - cam_sun, 0],
+  ["camera sees its own full width within (mm ahead, under 1000)",
+                                  1000 - cam_see_full, 0],
+  ["camera fits inside the head width (mm)", head_w - (cam_w + 12), 10],
   ["screen recess lands on a ring glue line (mm off)",
                                   -abs(scr_recess - round(scr_recess/eye_ring_t)*eye_ring_t), 0],
   ["eye barrel is a whole number of ply sheets (mm off)",

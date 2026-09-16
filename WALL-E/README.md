@@ -69,9 +69,15 @@ But the robot is not stupid either. Two things run on their own:
 
 1. **A safety layer.** Sensors watch for obstacles. If something is close, the robot refuses
    to drive into it, even if the driver pushes the stick that way.
-2. **A personality layer.** A camera finds people's faces. The eyes look at them. The head
-   tilts. Sounds play. This is the part that makes people smile, and it is the reason to
-   build the robot at all.
+2. **A personality layer.** A camera finds people's faces. The pupils on the two screens
+   look at them. Sounds play. This is the part that makes people smile, and it is the
+   reason to build the robot at all.
+
+   **The head does not move.** No pan, no nod, no tilt, no servos anywhere — a rigid welded
+   post, which is the most sand-proof choice in the robot. To look left or right, the whole
+   robot turns. That is a real complication rather than a simplification, because it means
+   the personality layer can command motion: see
+   [`docs/01-architecture.md`](docs/01-architecture.md), "Looking around now means driving".
 
 We chose this on purpose. A fully self-driving robot in a crowd of thousands of people, at
 night, in dust, is both dangerous and much more work. And nobody in the crowd would even
@@ -90,7 +96,7 @@ unsafe.
 |---|---|---|---|
 | **Brain** | Jetson Orin Nano | Camera, AI, sounds, deciding | Slow is fine: 0.1 to 3 seconds |
 | **Spine** | Teensy 4.1 | Reads the remote, talks to the motors | Very fast and exact: 1000 times a second |
-| **Face** | ESP32-S3 | The two eye screens and servos | Steady: 30 times a second |
+| **Face** | ESP32-S3 | The two eye screens. No servos — the head is rigid | Steady: 30 times a second |
 
 The **Brain** runs Linux, like a normal computer. Linux is good at big jobs like AI, but it
 has no promise about timing. It can freeze for two seconds and nobody notices. That is

@@ -128,6 +128,7 @@ follow from that:
 | L20 | Each driver gets its **own sealed 10.1 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector |
 | L21 | The enclosures **bolt** to the chest panel and lift out | They shade 54 % of the shelf. Glued in, half the electronics is unreachable |
 | L22 | Metal grilles over both drivers | A crowd will push a finger through an open cone |
+| L23 | **The head is rigid. No pan, no nod, no tilt, no servos** | Owner, 2026-09-17. To look left or right the whole robot turns. Removes four gear trains, a bearing, a slip ring and a cable twist limit from a machine that lives in blowing sand, and takes the head from a 5 kg guess to 2.1 kg computed, which drops the centre of mass 18 mm. The cost is in firmware, not hardware: a gaze is now a drive command, so it needs rules L1 to L3 in `01-architecture.md` |
 
 #### L7 — why we keep the short belts now
 
@@ -319,12 +320,15 @@ runaway. Record the date and result for each one in `03-safety-log.md`.
 | LiDAR fitted, obstacle map built, bumper veto wired into the Spine |
 | Jetson installed on its isolated power rail, temperature logging running |
 | Camera fitted, face detection running, gaze targets sent to the Face |
-| Eye screens and barrel tilt servos working from the ESP32 |
-| Head mechanism built |
+| Eye screens working from the ESP32 |
+| Head built: rigid post, two ply barrels, camera under the brow |
+| Look-turn enable on RC channel 6, capped and cancelled by the stick |
 | Amplifier and sound clips into the two 3.22 litre speaker wells |
 
 **Exit test:** the robot refuses to drive into a cardboard box even when you push the stick at
-it, and its eyes follow a person walking across a room while the head tilts.
+it, and its pupils follow a person walking across a room. The head itself does not move — if
+the person walks out of the camera's 69 degree view, the robot turns its body to keep them,
+slowly, and stops the moment you touch the stick.
 
 ### Phase 5 — Body, paint, lighting (weeks 14 – 24)
 
@@ -342,7 +346,7 @@ The phase everybody skips and then regrets.
 | Heat test: run it in full midday sun until something complains |
 | Endurance test: a full evening on sand, on one charge |
 | Night test: can the driver see it, can it see, are the eyes visible |
-| Spares kit: printed sprocket, belt links, fuses, a spare 48 V controller, spare DACs, servos |
+| Spares kit: printed sprocket, belt links, fuses, a spare 48 V controller, spare DACs, a spare eye panel |
 | Field repair kit and a printed copy of the wiring diagram |
 
 **Exit test:** a full evening of driving on sand with no intervention that is not in the
@@ -384,7 +388,7 @@ If the donor battery packs cannot be reused, add 600 to 1,200.
 3. **Phase 1:** the frame steel, the contactor, the fusing, heavy cable.
 4. **Phase 2:** the Jetson and the sensors. Do not buy these early. They sit in a drawer
    losing value while you do metalwork, and a newer version may appear.
-5. **Phase 4:** the screens, servos, amplifier.
+5. **Phase 4:** the screens and the amplifier. No servos — the head is rigid.
 6. **Phase 5:** the body materials, bought against a finished robot you can measure.
 
 ---
@@ -453,7 +457,7 @@ one produces something that works.
 | 2 | Soldering and crimping | A joint you made survives being pulled hard |
 | 3 | Arduino: blink an LED | The LED blinks at a rate you chose |
 | 4 | Arduino: read a potentiometer, print it over serial | Numbers change on screen as you turn the knob |
-| 5 | Arduino: drive one servo from the potentiometer | The servo follows the knob |
+| 5 | Arduino: turn the potentiometer into a voltage on the MCP4725 DAC, and read it back with the multimeter | 0 to 3.3 V follows the knob. This replaces the old "drive a servo" exercise, which taught PWM the robot no longer uses anywhere — and it is the real throttle task in miniature |
 | 6 | Spin a motor from its scooter controller and a hand throttle, no code | The hub motor turns, and you know it is healthy |
 | 7 | Teensy: one value written to the DAC | The motor moves because of a number in your code |
 | 8 | Read the radio receiver on the Teensy | Stick numbers print on your screen |

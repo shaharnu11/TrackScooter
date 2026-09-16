@@ -117,7 +117,7 @@ happens.
 |---|---|---|
 | Jetson Orin Nano, with the camera and LiDAR on its USB | 25 W | 40 W |
 | Cooling fans | 5 W | 5 W |
-| 12→5 V converter, feeding the Teensy, the ESP32 and the head servos | 8 W | 20 W |
+| 12→5 V converter, feeding the Teensy and the ESP32 | 5 W | 8 W |
 | Contactor coils, both | 6 W | 6 W |
 | **Total** | **44 W** | **71 W** |
 

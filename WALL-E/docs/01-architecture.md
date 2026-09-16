@@ -51,7 +51,7 @@ pause.
 ┌─────────┐  ┌──────────────────────┐   USB    ┌──────────────┐
 │ LiDAR   │  │                      │  serial  │  ESP32-S3    │
 │ OAK-D   ├─►│   BRAIN              ├─────────►│  2 LCD eyes  │
-│ GPS     │  │   Jetson Orin Nano   │          │  2 servos    │
+│ GPS     │  │   Jetson Orin Nano   │          │  NO SERVOS   │
 │ mic     │  │   Linux              │          └──────────────┘
 └─────────┘  │                      │
              │  camera, AI, sound   │      Can freeze. That is allowed.
@@ -322,10 +322,60 @@ the robot from stopping.
 It also reads the VESC status messages that arrive on CAN anyway, and forwards motor
 temperature and battery voltage up to the Brain.
 
+### Looking around now means driving
+
+With a fixed head, **`GAZE` can only move pupils.** To actually look left or right, the
+robot has to turn its whole body. That has three consequences, and the third is the one
+that can hurt somebody.
+
+**1. The camera's field of view is the robot's field of view.** The OAK-D Lite sees 69
+degrees, so `+-34.5` degrees ahead and nothing else. It is blind across the remaining 111
+degrees until the body turns. The model now prints this, and it only sees the full width of
+its own path from 489 mm ahead — closer than that, its own track edges are out of frame.
+That is the job the ToF bumper ring was already doing, and it is now load-bearing rather
+than a nice extra.
+
+**2. A turn in place is the hardest thing the drive ever does.** Skid steering a tracked
+vehicle means running the two belts in opposite directions and scrubbing them sideways
+across the ground. It is the highest-current manoeuvre there is, and in soft Negev sand the
+belts dig in rather than slide, which raises it further. Every "look left" spends the
+current budget of a hard acceleration. Two things follow:
+
+- The current limit that section 1b's ACS758 sensors enforce will be hit by *turning*, not
+  by driving. Test it by turning in place on sand, not by driving in a straight line.
+- Turning in place is also what wears belts and pulls them off. Prefer a gentle arc over a
+  pirouette wherever the behaviour allows it.
+
+**3. The personality layer can now command motion, and it must not have that authority.**
+This is the part to get right. Before, "be curious about that person" moved a servo, and the
+worst case was a twitchy head. Now the same intent moves 86 kg of robot. A frozen or
+confused Brain used to produce a stuck head; now it can produce a robot that keeps turning.
+
+So a look-driven turn is **not** a special case. It is an ordinary drive command and it goes
+through every rule in section 2 exactly like a stick input: the slew limit, the current
+limit, the tilt cut-out, the bumper stop, and the watchdog. Three rules on top of that:
+
+| | Rule |
+|---|---|
+| L1 | The Brain may only request a turn as a **heading offset with a timeout**, never as a raw motor command. If the Brain stops talking, the turn stops with it — the existing heartbeat already does this. |
+| L2 | **Cap look-turns well below the driving limit.** A gaze turn gets a fraction of full turn rate, so a runaway look is a slow spin you can walk away from, not a spin that knocks somebody over. |
+| L3 | **The operator's stick always wins.** Any stick movement cancels an in-progress look-turn immediately. The operator must never have to fight the personality for control. |
+
+Rule L3 is why the RC channel that used to be "head pan override" is not deleted but
+**repurposed as a look-turn enable**. Put it on a switch. If the crowd is tight, the robot
+stops turning on its own and only the operator drives.
+
 ### Face — ESP32-S3, C++
 
 Receives short intent messages from the Brain, such as `GAZE 20 -5` or `MOOD curious`, and
-then runs the animation itself: pupil movement, blinking, and the barrel tilt servos.
+then runs the animation itself: pupil movement and blinking, on the two screens.
+
+**There are no servos.** Owner decision 2026-09-17: the head is a rigid welded post. It
+does not pan, nod, or tilt. Everything the face does, it does with 480x480 pixels per eye.
+
+That is a real gain in a sand-blown desert — no gear train, no bearing, no slip ring, and no
+cable twist limit — but it moves a problem into the firmware. See "Looking around now means
+driving" below.
 
 The Brain says *what to feel*. The Face decides *how to show it*. This split is why the face
 stays smooth while the Brain is busy, and it means you can develop and test the head with

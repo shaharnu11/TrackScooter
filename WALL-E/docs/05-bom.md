@@ -120,7 +120,7 @@ all unchanged — you swap the controllers and drop the DACs.
 | 1 | Latching mushroom emergency stop, red, IP65 | 25 | Stock | Normally-closed contact. |
 | 1 | Isolated DC-DC, 48→12 V, 100 W (Mean Well SD-100C-12) | 70 | Stock | **Isolated.** Check it: no continuity from output negative to input negative. It is 159 × 97 × 38, which is bigger than it sounds — the shelf model accounts for that. |
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. |
-| 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy, ESP32, head servos. |
+| 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy and ESP32 only. No servos any more, so this is a much easier load. |
 | — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and VESC input protection. |
 | — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 240 cross members, 1580 mm of 60×30 in total. |
 | — | M12 10.9 bolts, and the Ø25/Ø13×30 sleeves to weld into the rails | 25 | Stock | The sleeve is what stops an M12 crushing a 3 mm box wall. Not optional. |
@@ -176,7 +176,8 @@ version may appear.
 | 2 | ESP32-S3 development board | 24 | Stock | Two, one per eye. See the warning below. |
 | 2 | 2.1 inch round LCD, 480×480, QSPI (Waveshare) | 60 | Stock | 53 mm active area. The barrel in the CAD model is built around this size. |
 | 2 | Clear acrylic dome or lens, Ø99 | 20 | Stock | Dust seal and the glassy look. `cad/walle_frame.scad`. |
-| 4 | Metal-gear servo, 20 kg·cm | 60 | Stock | Head pan, head tilt, and one barrel tilt each. |
+| — | ~~Metal-gear servos~~ | — | — | **Deleted 2026-09-17. The head is rigid — no pan, no nod, no tilt.** Saves 60 dollars, 4 gear trains that sand would have eaten, and the whole servo power branch. |
+| 1 | Camera mount hardware and a plywood hood for the lens | 15 | Stock | The OAK-D goes **under** the eye barrels, not between them. See the head note below. |
 | 1 | TPA3255 class-D amplifier board | 40 | Stock | Runs on the 32 V supply, not the pack. `04-power-and-wiring.md` section 4. |
 | 2 | Full-range or coaxial speaker, 6.5 inch, **4 Ω** | 70 | Stock | One per amplifier channel. Ø165 cutout, Ø190 rim, 50 mm deep — the chest panel is drilled for exactly that. **Check the mounting depth on the one you buy**; over 200 mm and the enclosure has to grow. |
 | 2 | Speaker grille, Ø190, steel | 20 | Stock | Not optional. A crowd will push a finger through an open cone. |
@@ -256,7 +257,14 @@ Per barrel, from the cut list the model prints:
 |---|---|---|
 | 5 | Ø59 | The screen well. **This depth is the sun shade.** |
 | 1 | Ø53 | The shoulder the screen sits on |
-| 6 | Ø81 | Cable and servo room behind |
+| 6 | Ø81 | Cable room behind. **No servos** — the head is rigid |
+
+**The camera does not fit between the barrels.** They are 128 mm apart centre to centre
+with 105 mm bodies, so the gap is 23 mm and the OAK-D Lite is 91 mm wide. Spreading the eyes
+far enough apart would take the head to 311 mm across and stop it looking like WALL-E. So it
+mounts **under** the barrel pair, on the front of the yoke, with a 30 mm plywood hood over
+the lens. The barrels above it read as a brow, and the hood shades the lens from sun above
+25 degrees — a lens pointed at the Negev sky needs shade as much as the screens do.
 
 **Do not change the 60 mm recess to suit the ring count.** 60 is exactly five
 rings, so the screen lands on a glue line shoulder rather than mid-ring, and
@@ -276,7 +284,7 @@ Eight channels sounds like a lot until you allocate them. This is the minimum se
 | 3 | **Arm** | 2-position switch | **Off** |
 | 4 | Mode: MANUAL / ASSIST | 2-position switch | **MANUAL** |
 | 5 | Speed limit | Dial | **Slowest** |
-| 6 | Head pan override | Dial | Centre |
+| 6 | **Look-turn enable** | Switch | Off |
 | 7 | Trigger a sound or a behaviour | Momentary | Off |
 | 8 | Spare | — | — |
 
@@ -298,30 +306,37 @@ cannot be the same failure.
 | 1b — throttle interface for the scooter controllers | now | 76 |
 | 2 — frame and drive, including sealing the box | 1 | 761 |
 | 3 — compute and sensors | 2 | 738 |
-| 4 — face and sound | 4 | 459 |
+| 4 — face and sound | 4 | 414 |
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 3,320** |
+| **Total** | | **≈ 3,280** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
 to 552, section 3 said 740 against 738, and section 4 said 400 when it actually
 sums to 459. The total was understated in one place and overstated in another.
 
-### How it got from 4,200 to 3,320
+### How it got from 4,200 to 3,280
 
 | Change | Saving |
 |---|---|
 | The body is plywood, not foam and fibreglass | **445** |
 | You already own the frame and head steel | **335** |
 | Use the scooter controllers instead of two VESCs | **180**, after 76 spent on the interface |
+| The head is rigid, so four servos are gone | **60**, less 15 for the camera mount |
 | Correcting section 4, which was understated | **−59** |
 
 The two big ones cost nothing in capability. **The plywood body actively made
 the robot better**: 11.5 kg lighter, centre of mass 15 mm lower, and 0.7° more
 forward tipping margin, because the 25 kg foam-and-glass figure was a guess and
 the plywood box is computed from its own geometry.
+
+The rigid head is the cheapest change of all, and it removes four gear trains from a
+machine that will spend a week in blowing sand. It is not free, though: the cost moved into
+the firmware, because looking left is now a drive command. Read
+[`01-architecture.md`](01-architecture.md), "Looking around now means driving", before you
+write any of the personality code.
 
 **The controller decision is still the one you may have to undo.** Hold its 260
 dollars as contingency. If six-step commutation judders at walking pace, two
@@ -353,5 +368,5 @@ those break.
 | 1 | ESP32-S3 board | An eye. |
 | — | Every fuse value, several of each | Obvious, and always forgotten. |
 | — | Crimp lugs, heatshrink, wire, the crimp tool | You will be making cables at night. |
-| 1 | Set of servos | Sand gets into gear trains. |
+| 1 | Ø53 round LCD panel | The eyes are the whole face now, and there is no servo to blame. |
 | — | Compressed air, brushes, filter material | The actual most useful items in the box. |

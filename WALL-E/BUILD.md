@@ -312,6 +312,10 @@ you might need on a bad day at the festival? If not, move it now.
 
 # Step 9. The head
 
+**The neck is a rigid welded post. It is not a joint.** No bearing, no slip ring,
+nothing to rotate and nothing to seal. The head does not pan, nod, or tilt.
+To look left or right, the whole robot turns.
+
 Neck 70 mm tall off the body top at 735 mm. Head centre at 858 mm, 233 mm wide,
 two Ø105 barrels 128 mm apart. **Robot height 910 mm.**
 
