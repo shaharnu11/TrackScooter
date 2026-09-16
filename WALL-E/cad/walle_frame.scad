@@ -15,16 +15,20 @@
 // #  openscad -o walle.stl -D 'render_mode="assembly"' walle_frame.scad      #
 // ############################################################################
 
-render_mode = "assembly";   // [assembly, frame, section, plates]
+render_mode = "assembly";   // [assembly, frame, section, plates, robot, head, shelf]
 // assembly — pods, frame, batteries, anti-tip wheels, body envelope ghost
 // frame    — the steel only, for welding
 // section  — cut on the centre plane, to see how the batteries sit
 // plates   — the plywood battery box laid flat, for cutting / DXF
+// robot    — the WHOLE thing: frame, body shell, neck, head. Proportion check
+// head     — the head alone: eye barrels, screens, sun shade
+// shelf    — the electronics shelf, laid out, to check everything fits
 
 show_body_ghost = true;     // the body envelope, as a transparent block
 show_batteries  = true;
 show_pods       = true;
 show_ground     = true;     // set false for PNG renders, or it fills the frame
+shelf_labels    = false;    // part names on the shelf. On for the shelf render
 png_up          = false;    // true only for PNG renders — see the note at the bottom
 
 // ============================================================================
@@ -86,9 +90,66 @@ bolt_access_d = 30;  // hole in the box side wall to get a spanner on each M12
 // ground, so that is the robot's ENTIRE fore/aft footprint. See 00-plan.md D6.
 // Set them CLEAR of the ground. They must never touch in normal driving, or
 // they fight the pods' +30/-29 mm of suspension travel.
-at_x        = 320;   // castor centre, fore and aft of the ground contact centre
+at_x        = 280;   // castor centre, fore and aft of the ground contact centre
 at_clear    = 35;    // how far the castor sits ABOVE the ground at rest
 at_d        = 75;    // castor wheel diameter
+
+// -- electronics -------------------------------------------------------------
+// Owner decision 2026-09-16: the frame stays 550 long, so there is NO room for
+// electronics inside it — the interior is all battery. Everything therefore
+// lives on a shelf inside the body. The cost of that choice is thermal: the
+// VESCs lose the steel rail as a heatsink, so they get an aluminium plate that
+// bolts through to a body side panel. See the VESC HEAT guard below.
+shelf_t     = 12;    // plywood electronics shelf
+shelf_marg  = 25;    // keep-out round the shelf edge, for cable runs
+
+// real part sizes [length x, width z, height y], mm
+vesc_d      = [85, 65, 30];    // Flipsky 75100 class, one per pod
+jet_d       = [103, 90, 50];   // Jetson Orin Nano dev kit + cooler
+teensy_d    = [60, 40, 25];    // Teensy 4.1 in a small sealed box
+cont_d      = [60, 50, 70];    // main contactor
+dcdc_d      = [110, 60, 30];   // isolated 48 V -> 12 V converter
+fuse_d      = [80, 50, 40];    // fuse / distribution block
+amp_d       = [120, 80, 40];   // audio amplifier
+vesc_hs_t   = 6;     // aluminium heatsink plate under each VESC
+
+// -- body --------------------------------------------------------------------
+// Two proportion rules, both taken from the film:
+//  - narrower than the 700 mm track span, so the pods stay proud at the sides
+//  - WIDER THAN IT IS DEEP. WALL-E is a wide, shallow box, not a cube. A body
+//    sized to cover the anti-tip castors (665 long) looks like a packing crate
+//    on toy wheels, so body_l is driven by the POD length instead and the
+//    castor arms are left showing as little outriggers.
+body_w      = 620;
+body_l      = 430;   // pod is 363 long — this overhangs it by 33 each end
+body_h      = 400;
+body_wall   = 12;    // thin ply skin over a foam core
+body_gap    = 8;     // body floor clearance over the pod belt crown
+chest_d     = 20;    // how deep the front chest panel is recessed
+chest_marg  = 55;    // border round the chest panel
+
+// -- head --------------------------------------------------------------------
+neck_h      = 70;    // fixed for now. A real neck telescopes — out of scope
+neck_d      = 90;
+eye_d       = 105;   // eye barrel outside diameter
+eye_len     = 150;
+eye_cl      = 128;   // barrel centre to centre. Driven by the toe-in: the
+                     //   barrels swing TOWARDS each other at the mouth, so
+                     //   this has to be bigger than eye_d or they collide.
+eye_toe     = 6;     // degrees each barrel toes INWARD. WALL-E's eyes are not
+                     //   parallel, and this one number does most of the "it
+                     //   looks like him" work.
+// Screen choice is tied to the Face board. An ESP32-S3 drives a 2.1 inch
+// 480x480 round LCD over QSPI, and that part is cheap and definitely buyable.
+// Bigger round screens (3.4 / 4 inch) are DSI, which needs a Raspberry Pi —
+// a FOURTH computer, which is not worth it. So the screen stays small and the
+// clear dome does the work of making the eye look big.
+scr_d       = 53;    // 2.1 inch round LCD, active area diameter
+scr_recess  = 60;    // how deep the screen sits inside the barrel. This is the
+                     //   SUN SHADE — see the SUN guard. Midburn is the Negev.
+dome_t      = 3;     // clear acrylic dome over the barrel mouth. Two jobs:
+                     //   it seals the barrel against dust, and the highlight
+                     //   on it reads as a big glassy eye.
 
 // ============================================================================
 //  3. MASS ESTIMATES — every one of these is a guess. Replace with scale
@@ -100,9 +161,11 @@ pod_com_y   = 190;   // GUESS: pod centre of mass height. Low, it is mostly
 batt_kg     = 8;     // GUESS per 48 V pack
 elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, Jetson, wiring, contactor
 body_kg     = 25;    // GUESS: foam + thin ply shell
-body_com_y  = 600;   // GUESS: body centre of mass height
 head_kg     = 5;     // GUESS: head, screens, servos, neck
-head_com_y  = 900;   // GUESS
+// body and head heights are now DERIVED from the geometry below, not guessed.
+// body_com_frac: the mass sits low in the body, because the shelf, the amp and
+// the speakers are all near the floor and the upper walls are foam.
+body_com_frac = 0.40;
 steel_rho   = 7850;  // kg/m3
 ply_rho     = 650;   // kg/m3  birch
 
@@ -139,7 +202,72 @@ batt_z      = (bw + batt_gap_z)/2;              // each pack's centre plane
 batt_y1     = tray_floor + bh;                  // pack top
 batt_com_y  = tray_floor + bh/2;
 
-deck_y      = max(fr_top, batt_y1) + 8;         // body floor sits above both
+deck_y      = max(fr_top, batt_y1) + 8;         // top of the frame-level stack
+
+// -- body and head geometry --------------------------------------------------
+// The body floor cannot sit at deck_y, because the pods' belt crown is HIGHER
+// than the frame. It has to clear the crown, and the gap between the two is
+// bridged by four risers off the rail tops.
+pod_crown   = pod_top;                          // 327 — belt crown, the high point
+body_y0     = max(pod_crown, deck_y) + body_gap;// body floor
+body_y1     = body_y0 + body_h;                 // body top
+riser_h     = body_y0 - fr_top;                 // riser length, rail top to floor
+shelf_y     = body_y0 + body_wall;              // electronics stand on this
+body_com_y  = body_y0 + body_h*body_com_frac;
+// the castor arms stick out past the body by this much, each end
+at_proud    = (at_x + at_d/2) - body_l/2;
+
+neck_y0     = body_y1;
+head_yc     = body_y1 + neck_h + eye_d/2;       // head centre height
+head_com_y  = head_yc;
+head_w      = eye_cl + eye_d;                   // overall head width
+// toe-in swings each mouth inward by half the barrel length times sin(toe), so
+// the mouths end up CLOSER than eye_cl. This is the number that has to clear.
+eye_mouth_cl = eye_cl - eye_len*sin(eye_toe);
+robot_h     = head_yc + eye_d/2;                // top of the robot
+
+// Sun shade: a screen sunk scr_recess deep behind an aperture scr_d wide is in
+// shadow whenever the sun sits HIGHER than this elevation angle.
+sun_block   = atan(scr_recess/scr_d);
+
+// -- electronics shelf layout ------------------------------------------------
+// THREE rows, not two: the body is only 430 deep, so a row can only be about
+// 356 long, and the eight boxes do not fit in two rows of that length. The
+// shelf is wide (546) and shallow, so rows are cheap and length is not.
+// Row 0 is nearest the front, row 2 nearest the back.
+shelf_l     = body_l - 2*body_wall - 2*shelf_marg;
+shelf_w     = body_w - 2*body_wall - 2*shelf_marg;
+// [name, size, row]
+shelf_parts = [
+  ["VESC L",   vesc_d,   0],   // the two motor controllers share a row so the
+  ["VESC R",   vesc_d,   0],   //   pack and phase cables stay short
+  ["Jetson",   jet_d,    0],
+  ["Contactor",cont_d,   1],
+  ["Fuse blk", fuse_d,   1],
+  ["Teensy",   teensy_d, 1],
+  ["DC-DC",    dcdc_d,   2],
+  ["Amp",      amp_d,    2],
+];
+shelf_rows  = [0, 1, 2];
+shelf_area  = shelf_l * shelf_w;
+parts_area  = vesc_d[0]*vesc_d[1]*2 + jet_d[0]*jet_d[1] + dcdc_d[0]*dcdc_d[1]
+            + cont_d[0]*cont_d[1] + fuse_d[0]*fuse_d[1] + teensy_d[0]*teensy_d[1]
+            + amp_d[0]*amp_d[1];
+shelf_fill  = 100*parts_area/shelf_area;
+// tallest part decides the headroom the shelf needs
+part_h_max  = max(vesc_d[2] + vesc_hs_t, jet_d[2], teensy_d[2], cont_d[2],
+                  dcdc_d[2], fuse_d[2], amp_d[2]);
+
+// pack each row end to end along x, with a 10 mm gap between boxes
+function row_parts(r) = [for (p = shelf_parts) if (p[2] == r) p];
+function xrun(r, i)   = i == 0 ? 0 : xrun(r, i-1) + row_parts(r)[i-1][1][0] + 10;
+function row_len(r)   = xrun(r, len(row_parts(r)) - 1)
+                      + row_parts(r)[len(row_parts(r)) - 1][1][0];
+function row_dep(r)   = max([for (p = row_parts(r)) p[1][1]]);
+// where each row starts in z, measured from the shelf's front edge
+function row_z(r)     = r == 0 ? 0 : row_z(r-1) + row_dep(r-1) + 15;
+row_max_len = max([for (r = shelf_rows) row_len(r)]);
+rows_dep    = row_z(len(shelf_rows)-1) + row_dep(len(shelf_rows)-1);
 
 // -- masses ------------------------------------------------------------------
 // box tube cross-section area, m2
@@ -157,7 +285,7 @@ mass_items = [
   [2*pod_kg,  0,               pod_com_y  ],
   [m_frame,   (rail_x0 + rail_x1)/2, (fr_bot + fr_top)/2 ],
   [2*batt_kg, 0,               batt_com_y ],
-  [elec_kg,   0,               deck_y + 60],
+  [elec_kg,   0,               shelf_y + shelf_t + part_h_max/2],
   [body_kg,   0,               body_com_y ],
   [head_kg,   0,               head_com_y ],
 ];
@@ -328,13 +456,106 @@ module anti_tip(){
   }
 }
 
-// The body has to reach past the anti-tip castors, or they stick out in front
-// of WALL-E's face. body_l is driven BY the castors, not chosen.
-body_l = 2*(at_x + at_d/2 + 15);
+// body_l is driven BY the castors, not chosen: the body has to reach past them
+// or they stick out in front of WALL-E's face. See the derived section.
 module body_ghost(){
   color([0.85,0.72,0.35], 0.12)
-    translate([-body_l/2, deck_y, -width_over/2 + 40])
-      cube([body_l, body_com_y + 100 - deck_y, width_over - 80]);
+    translate([-body_l/2, body_y0, -body_w/2])
+      cube([body_l, body_h, body_w]);
+}
+
+// ---- risers: rail top up to the body floor, over the pod belt crown --------
+module risers(){
+  for (sx = [-1,1]) for (sz = [-1,1])
+    color(c_steel)
+      translate([sx*(rail_x1 - 40) - 15, fr_top, sz*(rail_zo - fr_w/2) - 15])
+        cube([30, riser_h, 30]);
+}
+
+// ---- the body shell --------------------------------------------------------
+module body_shell(){
+  color([0.78,0.66,0.34], 0.55)
+  difference(){
+    translate([-body_l/2, body_y0, -body_w/2]) cube([body_l, body_h, body_w]);
+    // hollow it out, leaving the skin. Open at the top: that is the lid, and
+    // it is how you reach the shelf.
+    translate([-body_l/2 + body_wall, body_y0 + body_wall, -body_w/2 + body_wall])
+      cube([body_l - 2*body_wall, body_h, body_w - 2*body_wall]);
+    // the chest panel, recessed into the front face
+    translate([body_l/2 - chest_d, body_y0 + chest_marg, -body_w/2 + chest_marg])
+      cube([chest_d + 1, body_h - 2*chest_marg, body_w - 2*chest_marg]);
+  }
+  // the electronics shelf
+  color(c_ply)
+    translate([-shelf_l/2, shelf_y, -shelf_w/2]) cube([shelf_l, shelf_t, shelf_w]);
+}
+
+// ---- electronics on the shelf ---------------------------------------------
+// Laid out in two rows so every box can be reached from the front or the back.
+module shelf_layout(){
+  for (row = shelf_rows)
+    for (i = [0 : len(row_parts(row)) - 1])
+      // each row is centred on the shelf in x, and the block of rows is
+      // centred in z, so the load sits over the middle of the frame
+      let(p  = row_parts(row)[i],
+          d  = p[1],
+          vesc = p[0][0] == "V",
+          zc = rows_dep/2 - row_z(row) - d[1])
+      translate([-row_len(row)/2 + xrun(row, i), shelf_y + shelf_t, zc]){
+        // a VESC gets an aluminium heatsink plate under it, because on this
+        // shelf it has no steel to dump heat into
+        if (vesc) color([0.75,0.78,0.80])
+          translate([-8, 0, -8]) cube([d[0] + 16, vesc_hs_t, d[1] + 16]);
+        // NOTE the reorder: the part arrays are [length x, width z, height y]
+        // to match how datasheets quote them, but cube() wants [x, y, z].
+        color(vesc ? [0.25,0.30,0.38] : [0.20,0.22,0.25])
+          translate([0, vesc ? vesc_hs_t : 0, 0]) cube([d[0], d[2], d[1]]);
+        // labels lie flat on top of each box, the right way up for the
+        // top-down shelf render
+        if (shelf_labels)
+          color([0.05,0.05,0.05])
+            translate([d[0]/2, d[2] + vesc_hs_t + 1, d[1]/2])
+              rotate([-90,0,0])
+                linear_extrude(1) text(p[0], size = 9, halign = "center",
+                                       valign = "center");
+      }
+}
+
+// ---- neck and head --------------------------------------------------------
+module eye_barrel(){
+  color([0.72,0.62,0.32])
+  difference(){
+    // barrel: a plain tube, axis along x, mouth facing forward
+    rotate([0,90,0]) cylinder(h = eye_len, d = eye_d, center = true);
+    // the screen well, bored in from the mouth. Its depth IS the sun shade.
+    translate([eye_len/2 - scr_recess, 0, 0])
+      rotate([0,90,0]) cylinder(h = scr_recess + 1, d = scr_d + 6, center = false);
+    // a cable and servo pocket in the back half
+    translate([-eye_len/2 - 1, 0, 0])
+      rotate([0,90,0]) cylinder(h = eye_len/2, d = eye_d - 24, center = false);
+  }
+  // the screen itself, sunk at the bottom of the well
+  color([0.10,0.45,0.95])
+    translate([eye_len/2 - scr_recess, 0, 0])
+      rotate([0,90,0]) cylinder(h = 3, d = scr_d, center = false);
+  // the clear dome across the mouth — dust seal, and the highlight on it is
+  // what makes a 53 mm screen read as a big glassy eye
+  color([0.75,0.90,1.00], 0.45)
+    translate([eye_len/2 - dome_t, 0, 0])
+      rotate([0,90,0]) cylinder(h = dome_t, d = eye_d - 6, center = false);
+}
+
+module head(){
+  // neck
+  color(c_steel)
+    translate([0, neck_y0, 0]) rotate([-90,0,0]) cylinder(h = neck_h, d = neck_d);
+  // yoke joining the two barrels
+  color([0.60,0.52,0.28])
+    translate([-25, head_yc - 20, -eye_cl/2]) cube([50, 40, eye_cl]);
+  // each barrel toes inward, so the eyes converge slightly in front of him
+  for (sz = [-1,1])
+    translate([0, head_yc, sz*eye_cl/2])
+      rotate([0, sz*eye_toe, 0]) eye_barrel();
 }
 
 // ============================================================================
@@ -353,13 +574,34 @@ module robot(){
   battery_box();
   if (show_batteries) batteries();
   anti_tip();
+  risers();
   if (show_body_ghost) body_ghost();
+}
+
+// the whole robot, with the shell and head on rather than the ghost
+module robot_full(){
+  ground();
+  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod();
+  frame_steel();
+  pod_bolts();
+  battery_box();
+  if (show_batteries) batteries();
+  anti_tip();
+  risers();
+  body_shell();
+  shelf_layout();
+  head();
 }
 
 module scene(){
 if (render_mode == "assembly")      robot();
-else if (render_mode == "frame")  { ground(); frame_steel(); pod_bolts(); anti_tip(); }
-else if (render_mode == "section")  difference(){ robot(); translate([-800,-50,0]) cube([1600,1200,800]); }
+else if (render_mode == "frame")  { ground(); frame_steel(); pod_bolts(); anti_tip(); risers(); }
+else if (render_mode == "robot")    robot_full();
+else if (render_mode == "head")     head();
+else if (render_mode == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y, -shelf_w/2])
+                                      cube([shelf_l, shelf_t, shelf_w]);
+                                    shelf_layout(); }
+else if (render_mode == "section")  difference(){ robot_full(); translate([-800,-50,0]) cube([1600,1400,800]); }
 else if (render_mode == "plates"){
   // the plywood box, laid flat for cutting
   color(c_ply) translate([0,0,0])           square([tray_len, tray_clear + 2*tray_t]);
@@ -390,7 +632,25 @@ echo(str("BATTERY:  pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
          batt_upright ? "UPRIGHT (80 wide, 110 tall)" : "FLAT (110 wide, 80 tall)",
          " · box floor ", tray_floor, ", pack top ", batt_y1,
          " · LOWEST POINT OF THE ROBOT ", tray_y0, " above ground"));
-echo(str("DECK:     body floor at ", deck_y, " above ground"));
+echo(str("DECK:     frame-level stack tops out at ", deck_y,
+         " · but the pod BELT CROWN is higher, at ", pod_crown,
+         ", so the body floor has to clear THAT"));
+echo(str("BODY:     floor ", body_y0, " (", body_gap, " over the crown), top ",
+         body_y1, " · ", body_l, " long x ", body_w, " wide x ", body_h,
+         " tall · risers ", round(riser_h), " tall, rail top to floor",
+         " · anti-tip arms show ", round(at_proud), " past each end, BY DESIGN"));
+echo(str("HEAD:     neck ", neck_h, " tall from ", neck_y0,
+         " · head centre ", round(head_yc), ", ", head_w, " wide (", eye_d,
+         " barrels, ", eye_cl, " apart) · ROBOT HEIGHT ", round(robot_h), " mm"));
+echo(str("EYES:     ", scr_d, " mm screen in a ", eye_d,
+         " mm barrel = ", round(100*scr_d/eye_d), "% of the barrel filled",
+         " · sunk ", scr_recess, " deep, so SUN ABOVE ", round(sun_block),
+         " deg ELEVATION IS SHADED (Negev midday is 75-80 deg, so it is shaded)"));
+echo(str("SHELF:    ", round(shelf_l), " x ", round(shelf_w), " at ", shelf_y,
+         ", tallest box ", part_h_max, " tall · ", len(shelf_rows),
+         " rows, longest ", round(row_max_len), ", ", round(rows_dep),
+         " deep in total · ", round(shelf_fill),
+         "% of the shelf area used"));
 
 echo("");
 echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
@@ -437,7 +697,23 @@ guards = [
   // every bump and fights the suspension. That fights wanting it small, so it
   // catches the pitch early. This pair of guards is the whole trade-off.
   ["anti-tip clear of the ground at full bump (+30.7)", at_clear - 30.7, 3],
-  ["body long enough to hide the castors",             body_l - 2*(at_x + at_d/2), 20],
+  // the body floor must clear the pod BELT CROWN, not the frame. Get this
+  // wrong and the shell grinds on a moving belt.
+  ["body floor clears the pod belt crown",             body_y0 - pod_crown, 6],
+  ["body floor clears the battery pack tops",          body_y0 - batt_y1, 5],
+  ["body narrower than the track span, pods stay proud", width_over - body_w, 40],
+  ["body WIDER than it is deep (WALL-E proportion)",   body_w - body_l, 100],
+  ["body covers the pod length",                       body_l - 2*pod_halfl, 30],
+  // the castor arms now stick out past the body on purpose. Check they are
+  // outriggers, not a trip hazard reaching half a metre into the crowd.
+  ["castor arms not sticking out too far",             120 - at_proud, 0],
+  ["head narrower than the body (WALL-E proportion)",  body_w - head_w, 200],
+  ["longest electronics row fits the shelf",           shelf_l - row_max_len, 40],
+  ["all electronics rows fit the shelf depth",         shelf_w - rows_dep, 60],
+  ["headroom over the tallest box, under the body top", body_y1 - (shelf_y + shelf_t + part_h_max), 100],
+  ["eye screen fills enough of the barrel (%)",        100*scr_d/eye_d, 45],
+  ["eye barrel MOUTHS do not collide when toed in",    eye_mouth_cl - eye_d, 4],
+  ["screen shaded from the midday sun (deg elevation)", 75 - sun_block, 0],
   ["bolt access hole above the box floor",             (pod_gp_yc - bolt_access_d/2) - tray_floor, 10],
   ["bolt access hole below the box top edge",          fr_top - (pod_gp_yc + bolt_access_d/2), 5],
   ["bolt access holes inside the box length",          tray_len/2 - abs(pod_bolt_x[0]) - bolt_access_d/2, 10],
