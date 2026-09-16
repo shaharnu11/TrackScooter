@@ -14,7 +14,7 @@
 //
 //  EVERY NUMBER BELOW WAS VERIFIED AGAINST THE POD MODEL ON 2026-09-16:
 //    archive/rev012-inline-batteries/apollo_track_pod_rev012.scad
-//  All thirteen agreed. The rev012 variable each one came from is named in its
+//  All twenty-three agreed. The rev012 variable each one came from is named in its
 //  comment, so the check can be repeated. To repeat it, run:
 //    openscad -o /dev/null WALL-E/check_pod_interface.scad
 //
@@ -30,21 +30,25 @@
 // because the names are historical and misleading:
 //
 //    0 .. 59    belt            (track_w 118 wide, so +-59)
-//   84 .. 88    fork leg        (leg_t 4, MEASURED. The donor fork's leg)
-//   88 .. 94    CARRIER plate   (carrier_t 6. rev012 cz = fork_gap/2 + leg_t)
-//   94 .. 100   GREEN plate     (gp_t 6. The pod's widest point)
+//   70 .. 74    fork leg        (fork_gap 140, so the legs' inner faces are at
+//                                70. leg_t 4, MEASURED 2026-07-13)
+//   74 .. 80    CARRIER plate   (carrier_t 6. rev012 cz = fork_gap/2 + leg_t)
+//   80 .. 86    GREEN plate     (gp_t 6. The pod's widest point)
 //
-// rev012's `fork_gap = 168` is commented there as "spacing of the two carrier
-// plates". It is not — it is the FORK LEG inner gap. The carriers sit on the
-// legs' outer faces, at 88. That comment is wrong in rev012; do not trust it.
+//  CORRECTED 2026-09-17. This stack was previously written as 84/88/94/100,
+//  which is fork_gap = 168. That was the WIDENED carrier spacing from a
+//  proposal that was then reverted, so 168 never existed in rev012 and the
+//  WALL-E frame was built 14 mm per side too wide. check_pod_interface.scad
+//  caught it, which is the entire reason that file exists. If you change a
+//  number here, run the checker before you trust anything downstream.
 pod_belt_hw   = 59;      // rev012 track_w/2
-pod_leg_zi    = 84;      // rev012 fork_gap/2
+pod_leg_zi    = 70;      // rev012 fork_gap/2 = 140/2
 pod_leg_t     = 4;       // rev012 leg_t        MEASURED 2026-07-13
-pod_carr_zi   = 88;      // rev012 cz
+pod_carr_zi   = 74;      // rev012 cz = fork_gap/2 + leg_t
 pod_carr_t    = 6;       // rev012 carrier_t
-pod_gp_zi     = 94;      // rev012 cz + carrier_t   green plate INNER face
+pod_gp_zi     = 80;      // rev012 cz + carrier_t   green plate INNER face
 pod_gp_t      = 6;       // rev012 gp_t
-pod_gp_zo     = 100;     // = pod_gp_zi + pod_gp_t. THE POD'S WIDEST POINT
+pod_gp_zo     = 86;      // = pod_gp_zi + pod_gp_t. THE POD'S WIDEST POINT
 
 // ---- heights above the ground ----------------------------------------------
 pod_hub_h     = 216;     // rev012 hub_h = B + D/2 + T
@@ -91,7 +95,7 @@ pod_bolt_d    = 12;      // M12 10.9
 //     don't, once the deck goes", and in its own chassis mode it drops the
 //     bracket and picks up on the CARRIERS directly. WALL-E currently assumes
 //     the green plates are fitted, which is what puts its widest point at
-//     100 and its overall width at 700.
+//     86 and its overall width at 672.
 //     IF THE PLATES ARE NOT ON THE PODS, set pod_has_green_plate = false.
 //     Then the frame lands on the carrier outer faces at 94 instead, the
 //     robot is 12 mm narrower, and the rails move out 6 mm each side.
@@ -99,4 +103,4 @@ pod_bolt_d    = 12;      // M12 10.9
 pod_has_green_plate = true;
 
 // the face the WALL-E rail actually bolts to, derived from that answer
-pod_mount_z   = pod_has_green_plate ? pod_gp_zo : pod_gp_zi;   // 100 or 94
+pod_mount_z   = pod_has_green_plate ? pod_gp_zo : pod_gp_zi;   // 86 or 80

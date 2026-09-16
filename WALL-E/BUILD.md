@@ -44,7 +44,7 @@ on every sheet below it is wrong too.
 
 | | |
 |---|---|
-| Overall | 910 mm tall, 700 mm wide, 430 mm body length |
+| Overall | 910 mm tall, 672 mm wide, 430 mm body length |
 | Weight | about 100 kg, and **that is a guess** — see step 0 |
 | Lowest point | the plywood box floor, 150 mm above the ground |
 | Tips forward at | 17.7°, and the castor catches it at 12.3° |
@@ -60,8 +60,8 @@ and expensive to discover later.
 ### 0a. Do the pods still have their green plates on?
 
 This is the one that matters. The model assumes the green plates **are** fitted,
-which puts the pod's widest point at 100 mm from its centre and makes the robot
-700 mm wide overall. The rails bolt to the outer face of those plates.
+which puts the pod's widest point at 86 mm from its centre and makes the robot
+672 mm wide overall. The rails bolt to the INNER face of those plates.
 
 The Rev 012 pod model itself asks whether the plates are needed at all, and in
 its own chassis mode it drops them and picks up on the carrier plates instead.
@@ -75,9 +75,41 @@ Go and look at the physical pods.
   pod_has_green_plate = false;
   ```
 
-  The rails then land on the carrier faces at 94 instead of 100, the robot gets
+  The rails then land on the carrier faces at 80 instead of 86, the robot gets
   12 mm narrower, and each rail moves out 6 mm. Run `./render_all.sh` again and
   use the new sheets.
+
+### 0a2. Measure the gap between the fork legs before you cut anything
+
+**Do this one with a tape measure, not by trusting this document.**
+
+On 2026-09-17 the checker found that the WALL-E frame had been built on
+`fork_gap = 168` when the real Rev 012 value is **140**. The 168 came from a
+proposal to widen the carrier spacing that was then reverted, so it had never
+been true. The frame was **14 mm per side too wide**, and the drawings said
+700 mm overall when the answer is 672.
+
+It is fixed now. But it is exactly the kind of error that survives right up to
+the moment the steel is already cut, so verify it yourself:
+
+| Measure | Should be |
+|---|---|
+| Inner gap between the two fork legs | 140 mm |
+| Fork leg thickness | 4 mm |
+| Carrier plate thickness | 6 mm |
+| Green plate thickness | 6 mm |
+| Outer face to outer face, green plate to green plate | 172 mm |
+
+If any of these differ, change them in `pod_interface.scad`, then run:
+
+```
+openscad -o /tmp/check.csg WALL-E/check_pod_interface.scad
+./render_all.sh
+```
+
+The checker tells you whether the numbers still match the pod model, and the
+render script re-cuts every drawing. Never edit a dimension in `walle_frame.scad`
+to work around a pod measurement.
 
 ### 0b. Weigh things
 
@@ -144,7 +176,7 @@ weld anything else.
 
 From sheet 2, plan view. Distances are from the rail's rear end.
 
-- Rail outer faces **300 mm apart**, so **240 mm clear** between them.
+- Rail outer faces **328 mm apart**, so **268 mm clear** between them.
 - Rear cross member at **25 mm**.
 - Front cross member at **525 mm**.
 - Both cross members are 240 mm long and sit **between** the rails.
@@ -156,7 +188,7 @@ Then the anti-tip legs: two 87 mm uprights with Ø75 castors, 280 mm out from th
 centre, set so the castor wheel is **35 mm clear of the ground**.
 
 **Check:** measure both diagonals across the bay. They must match. Then check
-the clear bay is 240 mm at both ends, not just in the middle.
+the clear bay is 268 mm at both ends, not just in the middle.
 
 ---
 

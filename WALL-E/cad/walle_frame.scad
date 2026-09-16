@@ -145,7 +145,7 @@ vesc_hs_t   = 6;     // aluminium heatsink plate under each VESC
 body_w      = 620;
 body_l      = 430;   // pod is 363 long — this overhangs it by 33 each end
 body_h      = 400;
-body_wall   = 12;    // thin ply skin over a foam core
+body_wall   = 12;    // SOLID plywood, not a skin over foam. Owner 2026-09-17.
 body_gap    = 8;     // body floor clearance over the pod belt crown
 chest_d     = 20;    // how deep the front chest panel is recessed
 chest_marg  = 55;    // border round the chest panel
@@ -179,7 +179,20 @@ spk_grille  = true;  // draw the grilles. Not optional in a crowd
 neck_h      = 70;    // fixed for now. A real neck telescopes — out of scope
 neck_d      = 90;
 eye_d       = 105;   // eye barrel outside diameter
-eye_len     = 150;
+// The barrels are made of WOOD — owner decision 2026-09-17. Nobody is turning a
+// 105 mm tube on a lathe, so each one is a STACK OF PLYWOOD RINGS, cut with a
+// hole saw or a router circle jig, glued up, then sanded round on the outside.
+// That makes the length a multiple of the sheet thickness rather than a free
+// choice: 12 rings of 12 mm is 144, which is why eye_len is not 150 any more.
+eye_ring_t  = 12;    // one ply sheet = one ring
+eye_rings   = 12;    // how many in the stack
+eye_len     = eye_ring_t * eye_rings;           // 144
+// The bore changes down the stack, so the rings are not all the same part:
+//   front 5 rings  bored Ø59 — the screen well, and the SUN SHADE
+//   ring 6         bored Ø53 — the screen lands on this shoulder
+//   rear 6 rings   bored Ø81 — cable and servo room
+// scr_recess below has to stay on a ring boundary or the screen sits on a
+// glue line instead of a shoulder. 60 = 5 rings exactly. Do not nudge it.
 eye_cl      = 128;   // barrel centre to centre. Driven by the toe-in: the
                      //   barrels swing TOWARDS each other at the mouth, so
                      //   this has to be bigger than eye_d or they collide.
@@ -207,16 +220,36 @@ pod_com_y   = 190;   // GUESS: pod centre of mass height. Low, it is mostly
                      //   belt and hub motor
 batt_kg     = 8;     // GUESS per 48 V pack
 elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, Jetson, wiring, contactor
-body_kg     = 25;    // GUESS: foam + thin ply shell
 head_kg     = 5;     // GUESS: head, screens, servos, neck
-// body and head heights are now DERIVED from the geometry below, not guessed.
-// body_com_frac: the mass sits low in the body, because the shelf and the amp
-// are on the floor and the upper walls are foam. The speakers are NOT in this
-// figure — they are high and forward, and they get their own mass item.
-body_com_frac = 0.40;
+body_extra  = 3;     // internal framing, hinges, catches, gas strut, paint.
+                     //   Sits low, so it gets its own centre of mass below.
 spk_drv_kg  = 1.6;   // GUESS: one 6.5 inch driver, magnet and all
 steel_rho   = 7850;  // kg/m3
 ply_rho     = 650;   // kg/m3  birch
+
+// -- the body is SOLID PLYWOOD now, so stop guessing its weight --------------
+// Owner decision 2026-09-17: the body is plywood, not a foam core with a thin
+// skin and fibreglass over it. That means its mass is geometry, not a guess,
+// so compute it: floor, four walls, and the lid that is also the access hatch.
+m_body_floor = body_l * body_w * body_wall;
+m_body_lid   = body_l * body_w * body_wall;
+m_body_wallz = 2 * body_l * body_h * body_wall;                 // left + right
+m_body_wallx = 2 * (body_w - 2*body_wall) * body_h * body_wall; // front + back
+m_body_shell = (m_body_floor + m_body_lid + m_body_wallz + m_body_wallx)
+               * 1e-9 * ply_rho;
+body_kg      = m_body_shell + body_extra;
+
+// body_com_frac: where the body's mass sits, as a fraction of body_h.
+// This used to be a flat 0.40, justified by "the upper walls are foam". They
+// are not foam any more. For a plywood box the floor and the lid are equal and
+// opposite, so the SHELL's centroid is exactly mid-height. Only the extras
+// (framing, hinges, the gas strut) sit low. So compute the blend rather than
+// assert a number. The speakers are NOT in this figure — they are high and
+// forward, and they get their own mass item.
+body_shell_frac = 0.50;
+body_extra_frac = 0.30;
+body_com_frac = (m_body_shell*body_shell_frac + body_extra*body_extra_frac)
+                / (m_body_shell + body_extra);
 
 // ============================================================================
 //  4. DERIVED
@@ -743,16 +776,21 @@ module shelf_layout(){
 
 // ---- neck and head --------------------------------------------------------
 module eye_barrel(){
-  color([0.72,0.62,0.32])
-  difference(){
-    // barrel: a plain tube, axis along x, mouth facing forward
-    rotate([0,90,0]) cylinder(h = eye_len, d = eye_d, center = true);
-    // the screen well, bored in from the mouth. Its depth IS the sun shade.
-    translate([eye_len/2 - scr_recess, 0, 0])
-      rotate([0,90,0]) cylinder(h = scr_recess + 1, d = scr_d + 6, center = false);
-    // a cable and servo pocket in the back half
-    translate([-eye_len/2 - 1, 0, 0])
-      rotate([0,90,0]) cylinder(h = eye_len/2, d = eye_d - 24, center = false);
+  // Drawn ring by ring rather than as one tube, because that is how it gets
+  // built and because the glue lines are the thing you have to cut to. Each
+  // ring is one sheet of plywood.
+  for (i = [0 : eye_rings - 1]){
+    x0   = -eye_len/2 + i*eye_ring_t;           // this ring's back face
+    // depth of this ring's FRONT face, measured back from the mouth
+    dep  = eye_len - (i + 1)*eye_ring_t;
+    bore = dep < scr_recess       ? scr_d + 6   // front rings: the screen well
+         : dep < scr_recess + eye_ring_t ? scr_d // the shoulder the screen sits on
+         : eye_d - 24;                           // rear rings: cable and servos
+    color(c_ply) translate([x0, 0, 0]) difference(){
+      rotate([0,90,0]) cylinder(h = eye_ring_t, d = eye_d);
+      translate([-1, 0, 0])
+        rotate([0,90,0]) cylinder(h = eye_ring_t + 2, d = bore);
+    }
   }
   // the screen itself, sunk at the bottom of the well
   color([0.10,0.45,0.95])
@@ -873,6 +911,8 @@ echo(str("HEAD:     neck ", neck_h, " tall from ", neck_y0,
          " barrels, ", eye_cl, " apart) · ROBOT HEIGHT ", round(robot_h), " mm"));
 echo(str("EYES:     ", scr_d, " mm screen in a ", eye_d,
          " mm barrel = ", round(100*scr_d/eye_d), "% of the barrel filled",
+         " · barrel is ", eye_rings, " x ", eye_ring_t,
+         " mm PLY RINGS glued up and sanded round",
          " · sunk ", scr_recess, " deep, so SUN ABOVE ", round(sun_block),
          " deg ELEVATION IS SHADED (Negev midday is 75-80 deg, so it is shaded)"));
 echo(str("SHELF:    ", round(shelf_l), " x ", round(shelf_w), " at ", shelf_y,
@@ -886,7 +926,7 @@ echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
          round(m_tray*10)/10, " kg -> FRAME ", round(m_frame*10)/10,
          " kg  ·  WHOLE ROBOT ", round(m_total*10)/10,
          " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · electronics ",
-         elec_kg, " · body ", body_kg, " · speakers ", round(2*spk_kg*10)/10,
+         elec_kg, " · body ", round(body_kg*10)/10, " · speakers ", round(2*spk_kg*10)/10,
          " · head ", head_kg, ") — ALL GUESSES"));
 echo(str("CoM:      x ", round(com_x*10)/10, " (0 = over the middle of the tracks)",
          "  ·  y ", round(com_y*10)/10, " above ground"));
@@ -1001,6 +1041,10 @@ guards = [
   ["driver depth fits behind the baffle",             spk_box_d - spk_box_t - spk_depth, 50],
   ["sealed volume per driver, litres (6.5 inch wants 7-14)", spk_vol, 7],
   ["shelf reachable from above without pulling a speaker box (%)", shelf_reach, 35],
+  ["screen recess lands on a ring glue line (mm off)",
+                                  -abs(scr_recess - round(scr_recess/eye_ring_t)*eye_ring_t), 0],
+  ["eye barrel is a whole number of ply sheets (mm off)",
+                                  -abs(eye_len - eye_rings*eye_ring_t), 0],
   ["eye screen fills enough of the barrel (%)",        100*scr_d/eye_d, 45],
   ["eye barrel MOUTHS do not collide when toed in",    eye_mouth_cl - eye_d, 4],
   ["screen shaded from the midday sun (deg elevation)", 75 - sun_block, 0],
@@ -1048,6 +1092,10 @@ echo(str("  sealing:  ", gasket_t, " mm closed-cell foam tape under the lid · "
          " screw-in membrane vent in the LID centre, over the gap between the packs"));
 echo(str("  anti-tip legs  30x30 box  2 x ", round(fr_bot - at_clear - at_d),
          " + 2 fore/aft ties · castors 2 x Ø", at_d));
+echo(str("  ", eye_ring_t, " mm plywood  EYE RINGS   ", 2*eye_rings, " x \u00d8", eye_d,
+     " discs: ", 2*5, " bored \u00d8", scr_d + 6, " (screen well), ", 2*1, " bored \u00d8", scr_d,
+     " (screen shoulder), ", 2*(eye_rings - 6), " bored \u00d8", eye_d - 24,
+     " (cables). Glue each stack of ", eye_rings, ", then sand the OUTSIDE round"));
 echo(str("  M12 10.9 bolts 4 off, through the rail into the nut welded on the ",
          "green plate — THE POD COMES OFF WITH 2 BOLTS PER SIDE"));
 

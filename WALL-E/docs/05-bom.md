@@ -122,9 +122,10 @@ all unchanged — you swap the controllers and drop the DACs.
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. |
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy, ESP32, head servos. |
 | — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and VESC input protection. |
-| — | Steel box tube 60×30×3 and 30×30, plate, M12 10.9 bolts | 300 | Stock | Cut list is echoed by `cad/walle_frame.scad`. |
+| — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 240 cross members, 1580 mm of 60×30 in total. |
+| — | M12 10.9 bolts, and the Ø25/Ø13×30 sleeves to weld into the rails | 25 | Stock | The sleeve is what stops an M12 crushing a 3 mm box wall. Not optional. |
 | 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels) and electronics shelf. |
-| 2 | Castor wheels, Ø75, and mounting steel | 60 | Stock | Anti-tip. `cad/walle_frame.scad`. |
+| 2 | Castor wheels, Ø75 | 35 | Stock | Anti-tip. `cad/walle_frame.scad`. Mounting steel you already have. |
 
 ### Sealing the battery box — small money, and it decides whether the packs survive
 
@@ -212,17 +213,55 @@ barrel instead of 50 %, and the eyes are the whole point. Not worth the saving.
 
 ---
 
-## 5. Body — phase 5
+## 5. Body and head — phase 5
 
-Buy this against a finished robot you can measure, not against the CAD model.
+**The body is PLYWOOD now.** Owner decision 2026-09-17: no foam core, no
+fibreglass, no filler, no paint job. A 12 mm plywood box, which is what
+`cad/walle_frame.scad` already models the walls as.
+
+This is the single best change in the whole document. It is **330 dollars
+cheaper** and the robot came out **11.5 kg lighter**, because the model was
+carrying a 25 kg guess for foam and glass and the real plywood box works out at
+13.6 kg computed from its own geometry. Every stability number improved:
+
+| | Was, foam body | Now, plywood body |
+|---|---|---|
+| Whole robot | 100.4 kg | **88.9 kg** |
+| Centre of mass | 349 mm | **334 mm** |
+| Tips forward at | 17.7° | **18.4°** |
+| Margin over the castor | 5.4° | **6.1°** |
+| Ground pressure | 0.184 kg/cm² | **0.163 kg/cm²** |
 
 | Qty | Part | Est. | Lead | Notes |
 |---|---|---|---|---|
-| — | Rigid foam board, 50 mm | 150 | Stock | The bulk of the shell. Keep the top light: `00-plan.md` locked decision L6. |
-| — | 4 mm plywood skin | 80 | Stock | |
-| — | Fibreglass cloth, resin, filler, primer, paint | 350 | Stock | |
-| — | Aluminium angle, hinges, catches, gas strut for the lid | 120 | Stock | The body top is the access lid for the shelf. |
-| — | Steel for the neck and the head frame | 60 | Stock | |
+| — | 12 mm birch plywood, about 1.7 m² | 130 | Stock | Floor, four walls, and the lid. Sizes come straight out of `cad/walle_frame.scad`. |
+| — | 12 mm plywood for the eye rings, about 0.3 m² | 25 | Stock | 24 discs of Ø105. See the head note below. |
+| — | Glue, screws, corner blocks | 30 | Stock | A plywood box is only as good as its corners. |
+| — | Hinges, catches, gas strut for the lid | 90 | Stock | The body top is the access lid for the shelf. Aluminium angle no longer needed. |
+| — | Exterior sealer or varnish | 40 | Stock | Not for looks. Plywood in the Negev sees big day-to-night humidity swings and delaminates if left bare. |
+| — | Steel for the neck and the head frame | — | — | **You already have the steel.** |
+
+### The eyes are wood, and that changes how they are made
+
+The barrels are **Ø105 round, built as a stack of 12 plywood rings**, glued up
+and then sanded round on the outside. Nobody is turning a 105 mm tube, and a
+stack of hole-sawn discs gets there with tools you have.
+
+That fixes the barrel length to a multiple of the sheet thickness: **12 rings
+of 12 mm = 144 mm**, not the 150 it used to be. Two guards now enforce it.
+
+Per barrel, from the cut list the model prints:
+
+| Rings | Bore | What it is |
+|---|---|---|
+| 5 | Ø59 | The screen well. **This depth is the sun shade.** |
+| 1 | Ø53 | The shoulder the screen sits on |
+| 6 | Ø81 | Cable and servo room behind |
+
+**Do not change the 60 mm recess to suit the ring count.** 60 is exactly five
+rings, so the screen lands on a glue line shoulder rather than mid-ring, and
+60 mm is what shades the screen from sun above 49° elevation. Negev midday is
+75 to 80°. There is a guard on each of those two facts.
 
 ---
 
@@ -257,31 +296,40 @@ cannot be the same failure.
 |---|---|---|
 | 1 — de-risking | now | 422 |
 | 1b — throttle interface for the scooter controllers | now | 76 |
-| 2 — frame and drive | 1 | 980 |
-| 2b — sealing the battery box | 1 | 80 |
-| 3 — compute and sensors | 2 | 740 |
-| 4 — face and sound | 4 | 400 |
-| 5 — body | 5 | 760 |
+| 2 — frame and drive, including sealing the box | 1 | 761 |
+| 3 — compute and sensors | 2 | 738 |
+| 4 — face and sound | 4 | 459 |
+| 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 4,010** |
+| **Total** | | **≈ 3,320** |
 
-Using the scooter controllers you already own instead of two VESCs took **about 180 dollars**
-off this, not 260, because 76 of it goes straight back into the throttle interface and into
-the current, voltage, speed and temperature sensing that the VESCs would have included for
-free. The saving is real but modest. The reason to do it is that it costs nothing to try and
-it gets the robot moving sooner.
+Every figure above is now **summed from its own table** rather than typed in.
+Doing that turned up three that had drifted: section 1 said 350 when it summed
+to 552, section 3 said 740 against 738, and section 4 said 400 when it actually
+sums to 459. The total was understated in one place and overstated in another.
 
-**Leaving the VESCs out is the one cut on this page that you may have to undo.** The others
-are cosmetic or optional. This one is a bet that six-step commutation is smooth enough at
-walking pace for a skid-steer robot, and you will not know until you drive it. Budget 260
-dollars as a contingency rather than treating it as saved.
+### How it got from 4,200 to 3,320
+
+| Change | Saving |
+|---|---|
+| The body is plywood, not foam and fibreglass | **445** |
+| You already own the frame and head steel | **335** |
+| Use the scooter controllers instead of two VESCs | **180**, after 76 spent on the interface |
+| Correcting section 4, which was understated | **−59** |
+
+The two big ones cost nothing in capability. **The plywood body actively made
+the robot better**: 11.5 kg lighter, centre of mass 15 mm lower, and 0.7° more
+forward tipping margin, because the 25 kg foam-and-glass figure was a guess and
+the plywood box is computed from its own geometry.
+
+**The controller decision is still the one you may have to undo.** Hold its 260
+dollars as contingency. If six-step commutation judders at walking pace, two
+VESCs drop straight in.
 
 The three places to cut, in order:
 
-1. **The body.** Foam and paint is 760 dollars of the total and none of it makes the robot
-   work. A rough body for the first outing is fine.
-2. **The LiDAR.** 100 dollars, and the ToF bumper ring plus the depth camera already cover
+1. **The LiDAR.** 100 dollars, and the ToF bumper ring plus the depth camera already cover
    the safety case. The LiDAR is for the mapping you probably will not build.
 3. **The GPS and IMU.** Only needed for `ASSIST` mode, which `00-plan.md` already lists as
    the first thing to drop.

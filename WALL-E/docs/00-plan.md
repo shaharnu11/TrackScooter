@@ -10,7 +10,7 @@ detail of how the electronics fit together.
 
 ## 1. What "done" looks like
 
-A tracked robot, about 700 mm wide and roughly a metre tall, that clearly reads as WALL-E to
+A tracked robot, about 672 mm wide and roughly a metre tall, that clearly reads as WALL-E to
 anybody who has seen the film. It is driven by a person with a radio remote. Its eyes find
 faces and follow them. It makes WALL-E's noises. It runs for a full evening on the sand of
 the Negev, in a crowd, without hurting anybody and without breaking down.
@@ -111,7 +111,7 @@ follow from that:
 | L3 | Three boards: Brain, Spine, Face | Timing requirements differ by 1000×. `01-architecture.md` §1 |
 | L4 | Radio receiver and E-stop wire into the Spine | The driver keeps control when the Brain crashes |
 | L5 | No SLAM. GPS and compass if position is needed at all | Open desert has no landmarks and the crowd keeps moving |
-| L6 | Body from foam and thin plywood | Mass up high makes the tipping worse. Keep the top light |
+| L6 | **Body from 12 mm plywood.** REVISED 2026-09-17: was foam with a thin ply skin and fibreglass over it | Mass up high makes the tipping worse, and plywood turned out to be the LIGHTER answer: the foam build was a 25 kg guess, the plywood box computes to 13.6 kg from its own geometry. 11.5 kg off the robot, 15 mm off the centre of mass, 0.7 deg more forward tipping margin, and 445 dollars cheaper |
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
 | L8 | Frame mounting width 168 mm | Set by the built pods. Not a choice any more |
 | L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
@@ -328,7 +328,7 @@ it, and its eyes follow a person walking across a room while the head tilts.
 
 ### Phase 5 — Body, paint, lighting (weeks 14 – 24)
 
-Shell from foam and thin plywood, arms fitted, weathered paint, night lighting.
+Shell from 12 mm plywood, arms fitted, sealed or varnished against the day-to-night humidity swing, night lighting. The eye barrels are stacks of 12 plywood rings, glued up and sanded round.
 
 **Exit test:** somebody who has seen the film says "WALL-E" without being prompted.
 
@@ -367,11 +367,11 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 | Sensors | LiDAR, OAK-D camera, 6 × ToF, GPS, compass | 300 – 400 |
 | Power conditioning | Isolated DC-DC converters, buffer, distribution | 100 – 150 |
 | Audio | Class-D amplifier, wiring | 60 – 100 |
-| Body | Foam, plywood, fibreglass, filler, paint | 400 – 800 |
+| Body and head | 12 mm plywood, glue, hinges, gas strut, sealer. Steel already owned | 280 - 360 |
 | Lighting | LED strips, drivers, the eye illumination | 100 – 150 |
 | Tools and consumables | Soldering, crimping, multimeter, drill bits | 200 – 400 |
 | Spares kit | Section 6, Phase 6 | 250 – 350 |
-| **Total still to spend** | | **≈ 2,700 – 4,200** |
+| **Total still to spend** | | **≈ 2,600 – 3,320** |
 
 If the donor battery packs cannot be reused, add 600 to 1,200.
 

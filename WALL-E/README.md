@@ -166,10 +166,10 @@ wheels.
 
 | Headline number | Value |
 |---|---|
-| Overall width | 700 mm (pods 500 apart, green plates stick out 100 each side) |
+| Overall width | 672 mm (pods 500 apart, green plates stick out 86 each side) |
 | Overall height | 910 mm, to the top of the eye barrels |
 | Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
-| Rails | 60×30×3 box, 550 long, 240 mm clear between them |
+| Rails | 60×30×3 box, 550 long, 268 mm clear between them |
 | Lowest point of the robot | 150 mm above the ground |
 | Whole robot, estimated | 100 kg — **every mass in the model is still a guess** |
 | Centre of mass | 349 mm up, and 4 mm forward of centre — the chest speakers |
