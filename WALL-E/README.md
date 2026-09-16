@@ -89,7 +89,7 @@ WALL-E/
     main.py                  The 20 Hz control loop
     test_safety.py           Invariant checks. Runs with no dependencies
   cad/
-    walle_frame.scad         The whole robot. Parametric, with 33 guards
+    walle_frame.scad         The whole robot. Parametric, with 30 guards
     walle_robot_*.png        The robot with body and head
     walle_head.png           The eye barrels
     walle_shelf.png          The electronics layout, labelled
@@ -102,7 +102,7 @@ WALL-E/
 
 `cad/walle_frame.scad` is the whole robot: the frame, the two pods, the batteries, the body,
 the head and the electronics layout. Run it and it prints every dimension, the cut list, the
-tipping angles, and 33 checks that all have to pass.
+tipping angles, and 30 checks that all have to pass.
 
 ```bash
 openscad -o walle.stl -D 'render_mode="robot"'    cad/walle_frame.scad   # everything
