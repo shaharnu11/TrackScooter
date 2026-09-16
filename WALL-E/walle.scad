@@ -40,7 +40,11 @@
 //
 // ============================================================================
 
-view = "s1";   // see the list above
+// The list in the comment below is what gives you a DROPDOWN in OpenSCAD's
+// Customizer panel instead of a plain text box. It has to sit on the same line
+// as the assignment, and the values have to match the dispatch at the bottom
+// of this file by hand — OpenSCAD cannot read them out of the code.
+view = "s1"; // [s1:Sheet 1 general arrangement, s2:Sheet 2 frame weldment, s3:Sheet 3 battery box, s4:Sheet 4 chest panel, s5:Sheet 5 electronics shelf, robot:Whole robot, frame:Steel frame only, section:Cut in half, head:Head only, chest:Chest and speakers, shelf:Electronics shelf]
 
 // Pull in the whole model for its numbers and its modules, but stop it from
 // drawing itself on top of our sheets.

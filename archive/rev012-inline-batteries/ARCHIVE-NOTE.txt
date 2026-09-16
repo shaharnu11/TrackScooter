@@ -1,5 +1,4 @@
-Rev 012 (2026-09-10) — LIVE. Forked from Rev 011. The pod was unchanged until 2026-09-15,
-when the carrier-plate spacing went 140 -> 168 (see below): every Z dimension in the pod moved.
+Rev 012 (2026-09-10) — LIVE. Forked from Rev 011; the POD is unchanged.
 
 WHY: the owner is building his own floor instead of using the scooter deck. It must hold two
 batteries, 400 x 110 x 80 each (measured), and he wanted the rails bolted straight to the
@@ -9,34 +8,21 @@ THE CHANGE: a narrow frame. Two 100x40x2 rails (bought) whose INNER faces lie fl
 pod's 60x6 green plates (bought, not cut). 2x M12 10.9 per side: from outside, through a
 Ø25xØ13 steel sleeve welded inside the rail and the green plate, into an M12 nut welded on the
 plate. The whole rear pod comes off with 4 bolts. The rails end 9 mm before the front shock.
-The rails sit on the green plates, so the batteries go one behind the other.
+The rails are 172 apart inside, so the batteries sit one behind the other.
 
-2026-09-14, THE BAY GREW TWICE IN LENGTH. First to 1000 mm clear (bay_len_set), for the
-controller and wiring. Then a 6.5" speaker was added at each end of the deck, firing up. Each
-one sits in a sealed well whose sides are the rail inner faces, floor the tray, top the lid and
-outer end the cross member; the only new part is a 12 mm plywood bulkhead facing the batteries.
-The bay is the larger of bay_len_set and what the packs (840) plus the two wells (386) need:
-1226 clear. WHEELBASE 1706, rails 1413, standing height 269. The driver is Ø165 x 50 deep, and
-spk_cut_d (the hole it needs) drives the well, the bay, the wheelbase and the rail length, so
-MEASURE IT.
+2026-09-14: the bay was set to 1000 mm clear (bay_len_set), then a 6.5" speaker was added at
+each end of the deck, firing up. Each one sits in a sealed well whose sides are the rail inner
+faces, floor the tray, top the lid and outer end the cross member; the only new part is a
+12 mm plywood bulkhead facing the batteries. The bay is now the larger of bay_len_set and
+what the packs (840) plus the two wells (386) need: 1226 clear. WHEELBASE 1706 mm, rails 1413,
+standing height 269, chassis ~21.3 kg.
 
-2026-09-15, THE BAY GREW IN WIDTH: carrier plates 140 -> 168 apart, bay 172 -> 200 (280 over
-the rails, lid 330). The parameter is still named fork_gap, but NO DONOR FORK CONSTRAINS EITHER
-POD any more: the rear fork is cut off and thrown away, and the front steering-to-frame link is
-still undesigned, so it gets built to fit. The number is just how far apart the carrier plates
-sit, and bay_w = fork_gap + 32. It pays three times:
-  Ø165 speaker hole to the rail:  3.5 -> 17.5 mm  (that WARN is gone)
-  belt edge to the carrier plane:  11 -> 25 mm per side
-  shocks:              OUTBOARD |z|=94 -> INBOARD |z|=73, lower sleeve 49.4 -> 28.4
-  lower shock bolt bending: 530/463 -> 351/284 MPa (still a WARN, still needs double shear)
-and it costs: pivot axle M16x190 -> M16x220, outboard sleeves 11.25 -> 25.25, and the carrier's
-upper shock tab moves to the INNER face. Chassis ~22.1 kg.
-  DO NOT STOP BETWEEN 142 AND 156: there the shocks stay outboard and only move further out,
-  so the lower shock bolt gets WORSE (up to 598 MPa). 158 is where it flips inboard.
+The driver is Ø165 x 50 deep. ONE WARN: a Ø165 hole in a 172 mm bay leaves 3.5 mm to the rail.
+Most 6.5" drivers with a Ø165 rim need a cutout near Ø147 — measure yours and set spk_cut_d,
+and the well, bay, wheelbase and rail length all shrink from it.
 
-All chassis guards PASS (see README "Rev 012 — narrow frame"). Whole-model warnings are down
-from 3 to 2: the two left are the lower shock bolt bending, inherited from Rev 011 — fix
-before the arms are built.
+All chassis guards PASS (see README "Rev 012 — narrow frame"). The only WARNs are the lower
+shock bolt bending, inherited from Rev 011 — fix before the arms are built.
 
 NEW FILES: rev012_green_plate_templates.pdf (A4 portrait, one whole plate per page) and
 rev012_green_plate_templates_split.pdf (any paper, plates in two halves), both from

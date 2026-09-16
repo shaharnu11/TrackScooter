@@ -15,7 +15,7 @@
 // #  openscad -o walle.stl -D 'render_mode="assembly"' walle_frame.scad      #
 // ############################################################################
 
-render_mode = "assembly";   // [assembly, frame, section, plates, robot, head, shelf]
+render_mode = "assembly";   // [assembly, frame, section, plates, robot, head, shelf, chest]
 // assembly — pods, frame, batteries, anti-tip wheels, body envelope ghost
 // frame    — the steel only, for welding
 // section  — cut on the centre plane, to see how the batteries sit

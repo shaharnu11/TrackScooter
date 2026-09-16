@@ -344,26 +344,8 @@ casing_d  = 123;   // motor casing OD — MEASURED 2026-07-25 (was drawn 130).
 rib_h = (sprocket_teeth*belt_pitch/PI - T - sprocket_od)/2;
 
 /* [Fork mount — Rev 002: carriers hang from the scooter fork legs] */
-fork_gap = 168;  // SPACING OF THE TWO CARRIER PLATES, both pods (inner faces).
-                 // 2026-09-15, owner: 140 -> 168. The name is history. NO DONOR
-                 //   FORK CONSTRAINS THIS ANY MORE: the rear fork is cut off and
-                 //   thrown away (see the Rev 011d block below), and the front
-                 //   steering-to-frame link is still undesigned, so it gets built
-                 //   to whatever we choose. 140 was the donor's re-measured gap
-                 //   (Rev 003, was 120/140) and is what every pod photo shows.
-                 // This one number sets the whole frame, because the rail's inner
-                 //   face lands on the green plate: here -> carrier -> plate ->
-                 //   rail. bay_w = fork_gap + 32. So 168 gives a 200 mm bay
-                 //   (280 over the rails) and the Ø165 speaker hole 17.5 mm to
-                 //   the rail instead of 3.5.
-                 // It also pushes cz past the belt, so the shocks flip INBOARD
-                 //   and the lower shock bolt's bending lever drops 62 -> 41 mm
-                 //   (530 -> 351 MPa, still a WARN). CAUTION: anything between
-                 //   142 and 156 makes that bolt WORSE (up to 598) — the shocks
-                 //   stay outboard and just move further out. 158 is the flip.
-                 // Costs: pivot axle M16x190 -> M16x220, its outboard sleeves
-                 //   11.25 -> 25.25, and the carrier's upper shock tab moves to
-                 //   the INNER face (lower shock sleeve 49.4 -> 28.4).
+fork_gap = 140;  // inner spacing between fork legs: 140 FRONT AND REAR
+                 // (Rev 003 — re-measured; both pods identical, was 120/140)
 leg_t    = 4;    // fork leg thickness (z) — MEASURED 2026-07-13 (was 30 placeholder)
 axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it)
 
@@ -806,8 +788,7 @@ if (cz >= track_w/2 + 3)
   echo(str("NOTE carrier plates at |z|=", cz, " — outside the belt (half-width ",
            track_w/2, "); they cannot contact the track at any bump"));
 echo(str(fork_gap/2 - track_w/2 < 3 ? "*** TIGHT " : "OK ",
-         "belt edge to the carrier mounting plane (the old fork-leg line): ",
-         fork_gap/2 - track_w/2, " mm per side"));
+         "belt edge to fork leg: ", fork_gap/2 - track_w/2, " mm per side"));
 for (c = clearances)
   echo(str(c[1] < 5 ? "*** WARN " : "PASS ", c[0], ": ", c[1],
            " mm above track at +", bump_max, "° bump"));
@@ -1423,15 +1404,11 @@ function ch_V(s) = max([for (c = ch_cases) norm(ch_vsum([for (l = ch_side(s, c[0
 gp_yc   = ceil(upP[1] - shock_neck + gp_spring_clr + gp_w/2);   // 11 — band centre above the hub axle
 stub_yb = max(-20, ceil(upP[1] - shock_neck + gp_spring_clr));   // -19 — front pod shock tab bottom
 gp_m8   = [24];                      // ONE M8 to the hub plate above the axle key, + weld all round
-gp_z0   = cz + carrier_t;            // 94 — plate inner face, ON the hub plate
+gp_z0   = cz + carrier_t;            // 80 — plate inner face, ON the hub plate
 gp_x0   = -rear_ct_x + gp_gap;       // -188 — plate front end
 gp_x1_tr = round(upP[0]) + 20;       // +72 — right (+z) plate, past the rear shock eye
 gp_x1_ld = 20;                       // +20 — left (-z) plate, past the axle key
-// Shock centreline vs the plate's outer face. At fork_gap=140 the shocks ran
-// OUTBOARD and this was the 8 mm gap between them. At 168 the shocks are
-// INBOARD of the carriers, so it goes negative (-27), which simply means the
-// carrier plate now sits between the shock and the green plate.
-gp_gap_z = sz - (gp_z0 + gp_t);
+gp_gap_z = sz - (gp_z0 + gp_t);      // 8 — plate outer face to the shock centreline
 
 // ---- where the rails end, and the 2 bolts per side (rear pod coords) --------
 ch_lead_xmin = -max(concat([upP[0]], [for (t = [-bump_max : 2.5 : bump_max]) ch_lo(t)[0]]));
