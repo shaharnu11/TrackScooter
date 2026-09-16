@@ -47,7 +47,7 @@ unsafe.
 | Name | Board | Job | How fast must it be |
 |---|---|---|---|
 | **Brain** | Jetson Orin Nano | Camera, AI, sounds, deciding | Slow is fine: 0.1 to 3 seconds |
-| **Spine** | Teensy 4.1 | Talks to the motors | Very fast and exact: 1000 times a second |
+| **Spine** | Teensy 4.1 | Reads the remote, talks to the motors | Very fast and exact: 1000 times a second |
 | **Face** | ESP32-S3 | The two eye screens and servos | Steady: 30 times a second |
 
 The **Brain** runs Linux, like a normal computer. Linux is good at big jobs like AI, but it
@@ -57,6 +57,10 @@ fine for a camera. It is *not* fine for motors.
 The **Spine** runs no operating system at all. Just one small program in a loop. It cannot
 freeze. It holds the emergency rules. If the Brain stops talking to it, the Spine stops the
 motors by itself.
+
+The radio receiver and the emergency stop wire into the **Spine**, not into the Brain. So if
+the Brain crashes, the driver keeps full control of the robot. You lose the eyes and the
+sounds, and that is all.
 
 The **Face** is separate so the eyes keep moving smoothly even when the Brain is busy. An
 eye that stutters looks broken and ruins the illusion instantly.
