@@ -268,8 +268,17 @@ chain of events if the larger pack's BMS cuts out is:
 2. The other controller still has power, from the smaller pack.
 3. Arbitration rules 4 and 5 cannot help, because the board that enforces them is off.
 
-**This is the step that decision D7 made dangerous, and it is the single most important
-paragraph in this document.**
+**This specific case is now handled in copper.** Owner decision 2026-09-17: both contactor
+coils are 48 V and both run from **pack A**. So pack A dying takes the coils with it, both
+contactors open, and both motors are physically disconnected — including the right-hand one
+with its healthy pack B. The robot coasts. See `04-power-and-wiring.md` section 3.
+
+That was free, and it is the best kind of safety: a consequence of which wire you tap, not
+code that has to run. **But it only covers pack A dying.** The rest of this section still
+applies, because the Teensy has many more ways to fail than losing its supply.
+
+**This is the step that decision D7 made dangerous, and the rest of this section is the
+single most important part of this document.**
 
 With VESCs, the robot was relying on the **VESC's own command timeout**: no command for about
 a second and it released the motor. That behaviour is what stopped the robot pivoting on its
@@ -288,7 +297,10 @@ nice extra.
 
 So this becomes the critical item in the whole build, not a configuration detail:
 
-- **Fit the hardware watchdog.** Nothing else does this job. There is no setting to enable.
+- **Fit the hardware watchdog.** Nothing else covers a Teensy that crashes, hangs, or loses
+  its I2C bus **while pack A is still alive** — the contactors stay closed, the DACs keep
+  holding their last throttle, and only the watchdog relay stops the robot. The pack A
+  coil trick above does not help here. There is no setting to enable.
 - Test it, as safety log test 15: cut power to the Spine while the robot is driving, and
   confirm both tracks stop and the robot does not turn.
 - Test its blind spot too, as safety log test 16. The watchdog only fires when the kicks stop,

@@ -47,6 +47,19 @@ fail, because a hard stop on a 231 mm footprint can pitch the robot forward.
 | 17 | Reverse line glitches while driving forward | With the track on blocks, toggle one controller's reverse line while it is driving forward | It must not slam into reverse. If the controller has no ramp of its own, the Teensy must command zero, wait for the track to stop, and only then change the line | | | |
 | 18 | **Current limit on a turn in place** | On sand, not on blocks, turn in place at full stick while watching the ACS758 readings | Current stays within the limit the wiring was sized for, and the Teensy backs the throttle off if it does not. A turn in place is the highest-current thing this robot does | | | |
 
+**Tests 11 and 12 are not the same test, although they read like it.** Both contactor coils
+run from pack A (`04-power-and-wiring.md` section 3), so:
+
+- **Test 11, pack A open.** The coils lose power, both contactors open, both motors are
+  disconnected. This test proves the **wiring**. It should pass even with the Teensy
+  unplugged, and it is worth trying that way once.
+- **Test 12, pack B open.** Contactor B stays closed with no power behind it, so the left
+  track keeps driving and the robot will pivot unless the firmware notices. This test proves
+  **arbitration rule 4** — the Teensy counting hall edges and seeing a dead track.
+
+If test 12 passes for the wrong reason, you will not find out until the day pack B's BMS
+trips in a crowd. Run it with the robot on blocks first and watch which track keeps turning.
+
 Tests 11 and 12 are the most important new ones, and they are specific to having one battery
 per pod. On a skid-steer machine, one dead track does not slow the robot down — the surviving
 track spins it on the spot. Both of these must produce a stop of **both** sides.

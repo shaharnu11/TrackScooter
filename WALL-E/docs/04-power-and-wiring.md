@@ -20,9 +20,15 @@ PACK A — larger, 48 V, 20 Ah                 (capacity is a placeholder)
    sees ~43A ├── FUSE 10 A ── DC-DC 48→12 V ── 12 V RAIL     (see section 3)
              │                isolated, 100 W
              │
-             └── FUSE 10 A ── DC-DC 48→32 V ── AUDIO AMPLIFIER
-                              non-isolated,    (why 32 V and not 48: section 4)
-                              150 W
+             ├── FUSE 10 A ── DC-DC 48→32 V ── AUDIO AMPLIFIER
+             │                non-isolated,    (why 32 V and not 48: section 4)
+             │                150 W
+             │
+             └── FUSE 5 A ─── E-STOP CHAIN ─── CONTACTOR A COIL, 48 V
+                              in series:   └── CONTACTOR B COIL, 48 V
+                              mushroom button,
+                              wireless stop relay
+                              (both coils, BOTH packs, run from PACK A)
 
 PACK B — smaller, 48 V, 15 Ah
  +── XT90-S ──── FUSE 60 A ── CONTACTOR B ─── CONTROLLER R ── hub motor, right pod
@@ -121,12 +127,57 @@ happens.
 | Jetson Orin Nano, with the camera and LiDAR on its USB | 25 W | 40 W |
 | Cooling fans | 5 W | 5 W |
 | 12→5 V converter, feeding the Teensy and the ESP32 | 5 W | 8 W |
-| Contactor coils, both | 6 W | 6 W |
-| **Total** | **44 W** | **71 W** |
+| **Total** | **38 W** | **58 W** |
 
 So a **100 W isolated 48→12 V converter** is the right part: comfortable at the continuous
-load, and it rides out the peak. Drawn from a 48 V pack that is 1.15 A, which is exactly the
-electronics current the runtime calculation in `01-architecture.md` section 3b assumes.
+load, and it rides out the peak. Drawn from a 48 V pack that is 0.79 A.
+
+**The runtime calculation does not change.** `01-architecture.md` section 3b bills pack A for
+1.15 A of electronics. The coils left this table but they did not leave pack A — they hold at
+roughly 0.3 A at 48 V — so pack A still sees about 0.79 + 0.3 = 1.09 A. The 1.15 A figure
+stands, with a little margin.
+
+### The contactor coils are NOT on this rail
+
+They used to be listed here at 6 W. **They are 48 V coils and they run straight off pack A**,
+through their own 5 A fuse and the E-stop chain. Owner decision 2026-09-17, resolving a
+contradiction: this table had them on the 12 V rail while `05-bom.md` section 2 specified a
+48 V coil, and those cannot both be true.
+
+Keeping them off the 12 V rail matters for a reason that is not tidiness. A buyer review on
+one cheap contactor reports **coil inrush of 167 W against a 4.4 W specification**
+(`05-bom.md` section 9). If that is anywhere near right and the coils were on the 12 V rail,
+every contactor pull-in would brown out the Jetson's supply. On the pack they are pulling
+inrush from a 20 Ah battery instead, which does not care.
+
+**The 5 A fuse is sized for that inrush, not for the holding current.** Two coils hold at
+roughly 0.3 A total. Use a slow-blow fuse and measure the real inrush with the bench supply's
+current limit before it goes near the robot.
+
+### Running both coils from pack A makes one failure safe for free
+
+This is worth understanding, because it changes what the hardware watchdog is actually for.
+
+Both coils run from **pack A**, which is also the electronics pack. So if pack A's BMS cuts
+out, the coils lose power, **both contactors open, and both motors are physically
+disconnected** — including the right-hand one, which still has a healthy pack B behind it.
+The robot coasts to a stop instead of pivoting on its surviving track.
+
+That is the exact failure `01-architecture.md` calls "the consequence that must be tested",
+and it is now handled in copper rather than in software. It costs nothing: it is a
+consequence of which pack the coil circuit taps, so choose it deliberately.
+
+**It does not make the watchdog optional.** The watchdog covers a different failure: the
+Teensy crashing, hanging, or losing its I2C bus **while pack A is still perfectly alive**. In
+that case the contactors stay happily closed, the DACs keep holding their last throttle, and
+nothing but the watchdog relay will stop the robot. Both mechanisms are needed, and they
+catch different things.
+
+**One asymmetry to know about.** Losing pack A stops the robot in hardware, as above. Losing
+**pack B** does not: contactor B stays closed but has no power behind it, so the left track
+keeps driving and the robot pivots. Only arbitration rule 4 — the Teensy counting hall edges
+and seeing a dead track — stops that one. So safety log tests 11 and 12 are not the same
+test, even though they read like it. Test 11 proves the wiring; test 12 proves the firmware.
 
 **It must be an isolated converter.** A non-isolated buck converter shares its negative with
 the pack, which puts the motor return current through the same copper as the Jetson's ground

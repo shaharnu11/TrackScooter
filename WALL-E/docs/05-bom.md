@@ -112,9 +112,10 @@ all unchanged — you swap the controllers and drop the DACs.
 
 | Qty | Part | Est. | Lead | Notes | Buy from — **read §9 first** |
 |---|---|---|---|---|---|
-| 2 | DC contactor, 48 V coil, 80 A+ **DC rated** | 80 | Long | Albright SW-series or Gigavac. **An AC-rated relay will weld shut.** `04-power-and-wiring.md` section 5. | **§9 — not here** |
+| 2 | DC contactor, **48 V coil** (confirmed 2026-09-17), 80 A+ **DC rated** | 80 | Long | Albright SW-series or Gigavac. **An AC-rated relay will weld shut.** `04-power-and-wiring.md` section 5. | **§9 — not here** |
 | 2 | Fuse, 60 A, and holders | 25 | Stock | Class T or ANL. One per pack. | **§9 — not here** |
 | 3 | Fuse, 10 A, and holders | 15 | Stock | 12 V converter, amplifier supply, spare. | **§9 — not here** |
+| 3 | Fuse, 5 A **slow-blow**, and holders | 6 | Stock | The contactor coil circuit. Slow-blow because it is sized for the coil inrush, not the 0.3 A holding current. See §9. | **§9 — not here** |
 | 10 m | 10 AWG silicone wire, red and black | 40 | Stock | Silicone, not PVC. It has to stay flexible when hot. | [search](https://www.aliexpress.com/w/wholesale-10AWG-silicone-wire.html) |
 | 10 m | 12 AWG silicone wire | 30 | Stock | Motor phases. | [search](https://www.aliexpress.com/w/wholesale-12AWG-silicone-wire.html) |
 | 1 set | Ring lugs, heatshrink, and a proper crimp tool | 70 | Stock | The tool is not optional. See `04-power-and-wiring.md` section 8. | [search](https://www.aliexpress.com/w/wholesale-hydraulic-crimping-tool-cable-lug.html) |
@@ -307,20 +308,20 @@ cannot be the same failure.
 |---|---|---|
 | 1 — de-risking | now | 362 |
 | 1b — throttle interface for the scooter controllers | now | 60 |
-| 2 — frame and drive, including sealing the box | 1 | 634 |
+| 2 — frame and drive, including sealing the box | 1 | 640 |
 | 3 — compute and sensors | 2 | 697 |
 | 4 — face and sound | 4 | 384 |
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 3,000** |
+| **Total** | | **≈ 3,010** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
 to 552, section 3 said 740 against 738, and section 4 said 400 when it actually
 sums to 459. The total was understated in one place and overstated in another.
 
-### How it got from 4,200 to 3,000
+### How it got from 4,200 to 3,010
 
 | Change | Saving |
 |---|---|
@@ -440,10 +441,13 @@ numbers in this project depend on it:
    rail, continuous and peak. If the real inrush is anywhere near what that
    review describes, the 100 W converter is sized for the wrong load and will
    brown out the Jetson every time a contactor pulls in.
-2. That same table lists the coils on the **12 V rail**, while section 2 of this
-   document specifies a **48 V coil**. Those two cannot both be right. Resolve
-   it before ordering: a 48 V coil runs from the pack and never touches the
-   12 V rail, and a 12 V coil has to be in the rail's budget.
+2. That same table listed the coils on the **12 V rail**, while section 2 here specified a
+   **48 V coil**. **RESOLVED 2026-09-17: the coil is 48 V and runs off pack A**, through its
+   own 5 A slow-blow fuse and the E-stop chain. The coils are gone from the 12 V rail budget,
+   which dropped from 44 W to 38 W continuous. Two good consequences: the inrush now comes
+   out of a 20 Ah battery instead of browning out the Jetson, and pack A dying drops **both**
+   contactors, so the robot cannot pivot on its surviving track. See
+   `04-power-and-wiring.md` section 3.
 
 Measure the inrush with the bench supply's current limit before it is wired into
 anything.
