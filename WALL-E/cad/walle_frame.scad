@@ -1,0 +1,483 @@
+// ############################################################################
+// #  WALL-E FRAME — the two Rev 012 track pods, SIDE BY SIDE, skid steer     #
+// #                                                                          #
+// #  The pods are BUILT. Every pod number in here is therefore a fixed       #
+// #  input, not a choice: carrier plates 168 apart, green plates at |z|      #
+// #  94..100, the M12 holes already drilled at pod-local x -168 and -108.    #
+// #  This file designs only the thing that does not exist yet — the frame    #
+// #  that holds the two pods left and right, carries a battery each side,    #
+// #  and stops the robot pitching onto its face.                            #
+// #                                                                          #
+// #  AXES (same as the pod model, so a pod drops straight in):               #
+// #    x = fore/aft, +x FORWARD        y = up, GROUND AT y=0                 #
+// #    z = left/right                                                        #
+// #                                                                          #
+// #  openscad -o walle.stl -D 'render_mode="assembly"' walle_frame.scad      #
+// ############################################################################
+
+render_mode = "assembly";   // [assembly, frame, section, plates]
+// assembly — pods, frame, batteries, anti-tip wheels, body envelope ghost
+// frame    — the steel only, for welding
+// section  — cut on the centre plane, to see how the batteries sit
+// plates   — the plywood battery box laid flat, for cutting / DXF
+
+show_body_ghost = true;     // the body envelope, as a transparent block
+show_batteries  = true;
+show_pods       = true;
+show_ground     = true;     // set false for PNG renders, or it fills the frame
+png_up          = false;    // true only for PNG renders — see the note at the bottom
+
+// ============================================================================
+//  1. POD FACTS — MEASURED / BUILT. Do not "improve" these.
+// ============================================================================
+// Straight from apollo_track_pod_rev012.scad. Re-measure the first three on the
+// real pods before cutting steel; everything in this file hangs off them.
+pod_gp_zi   = 94;    // green plate INNER face, pod-local |z| (= carrier outer face)
+pod_gp_t    = 6;     // green plate thickness -> OUTER face at 100, the pod's widest point
+pod_gp_yc   = 227;   // green plate band centre, above the GROUND (hub 216 + gp_yc 11)
+pod_gp_w    = 60;    // green plate band height -> 197 .. 257 above ground
+pod_hub_h   = 216;   // hub axle height above ground
+pod_halfl   = 181.6; // pod half length  -> 363 overall
+pod_top     = 327;   // belt crown height
+pod_belt_w  = 118;   // belt width
+pod_A       = 231.2; // idler axle centres = GROUND CONTACT LENGTH
+pod_idler_d = 108;   // idler wheel OD
+pod_B       = 150;   // hub centre above the idler axle line
+pod_T       = 12;    // belt carcass thickness
+pod_pitch_r = 105.04;// sprocket cord radius
+
+// The M12 holes in the green plates. ALREADY DRILLED, pod-local x, both plates.
+// They sit 108..168 FORWARD of the hub, because Rev 012 ran its rails forward
+// from the pod. We are stuck with them — see the note at guard "joint offset".
+pod_bolt_x  = [-168, -108];
+pod_bolt_d  = 12;    // M12 10.9
+
+// ============================================================================
+//  2. THE CHOICES — this is what this file actually decides
+// ============================================================================
+pod_cl      = 500;   // POD CENTRE TO CENTRE, left to right. Owner, 2026-09-16.
+                     // Overall width = pod_cl + 200 (the green plates stick out
+                     // 100 each side). 500 -> 700 wide, good WALL-E proportion.
+
+// -- rails: box tube, running fore/aft, bolted to the INBOARD green plates ----
+fr_h        = 60;    // rail height, y. 60 matches the green plate band exactly
+fr_w        = 30;    // rail thickness, z
+fr_t        = 3;     // wall
+rail_x0     = -275;  // rail front end
+rail_len    = 550;   // -> rear end at +275, symmetric about the ground contact
+
+// -- the battery box: plywood, slung between the rails ------------------------
+tray_t      = 12;    // plywood
+tray_y0     = 150;   // box UNDERSIDE above ground = the robot's lowest point
+batt_l      = 400;   // pack, measured
+batt_w      = 110;
+batt_h      = 80;
+batt_upright = true; // true  = pack on its side: 80 wide, 110 tall  <- DEFAULT
+                     // false = pack flat:        110 wide, 80 tall
+                     // Upright wins because the plywood box walls eat 24 mm of
+                     // the clear width. Flat leaves almost nothing. The cost is
+                     // about 15 mm of extra centre-of-mass height, which is
+                     // nothing next to the body. Guards below check both.
+batt_gap_z  = 24;    // gap between the two packs, for straps and wiring
+bolt_access_d = 30;  // hole in the box side wall to get a spanner on each M12
+
+// -- anti-tip wheels ---------------------------------------------------------
+// The whole reason these exist: the pods put only 231 mm of track on the
+// ground, so that is the robot's ENTIRE fore/aft footprint. See 00-plan.md D6.
+// Set them CLEAR of the ground. They must never touch in normal driving, or
+// they fight the pods' +30/-29 mm of suspension travel.
+at_x        = 320;   // castor centre, fore and aft of the ground contact centre
+at_clear    = 35;    // how far the castor sits ABOVE the ground at rest
+at_d        = 75;    // castor wheel diameter
+
+// ============================================================================
+//  3. MASS ESTIMATES — every one of these is a guess. Replace with scale
+//     readings as parts get built. The tipping guard is only as good as these.
+// ============================================================================
+pod_kg      = 15;    // GUESS per pod: hub motor + belt + steel + idlers
+pod_com_y   = 190;   // GUESS: pod centre of mass height. Low, it is mostly
+                     //   belt and hub motor
+batt_kg     = 8;     // GUESS per 48 V pack
+elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, Jetson, wiring, contactor
+body_kg     = 25;    // GUESS: foam + thin ply shell
+body_com_y  = 600;   // GUESS: body centre of mass height
+head_kg     = 5;     // GUESS: head, screens, servos, neck
+head_com_y  = 900;   // GUESS
+steel_rho   = 7850;  // kg/m3
+ply_rho     = 650;   // kg/m3  birch
+
+// ============================================================================
+//  4. DERIVED
+// ============================================================================
+$fa = 4; $fs = 0.7;
+
+pod_z       = pod_cl/2;                 // each pod's centre plane
+pod_gp_zo   = pod_gp_zi + pod_gp_t;     // 100 — pod's widest point, pod-local
+width_over  = pod_cl + 2*pod_gp_zo;     // 700 — overall robot width
+
+// the rail's OUTER face lies flat on the inboard green plate's outer face
+rail_zo     = pod_z - pod_gp_zo;        // 150
+rail_zi     = rail_zo - fr_w;           // 120 — rail inner face
+bay_w       = 2*rail_zi;                // 240 — clear width between the rails
+
+fr_bot      = pod_gp_yc - pod_gp_w/2;   // 197 — rail bottom, flush with the plate
+fr_top      = fr_bot + fr_h;            // 257 — rail top, flush with the plate
+rail_x1     = rail_x0 + rail_len;       // 275
+cm_rear_x   = rail_x0 + fr_w/2 + 10;    // cross member centres
+cm_front_x  = rail_x1 - fr_w/2 - 10;
+
+// battery box: plywood U hung off the rail inner faces
+tray_zi     = rail_zi - tray_t;         // 108 — box inner wall face
+tray_clear  = 2*tray_zi;                // 216 — usable width inside the box
+tray_floor  = tray_y0 + tray_t;         // 162 — packs stand on this
+tray_len    = batt_l + 2*tray_t + 20;   // box outside length
+
+bw          = batt_upright ? batt_h : batt_w;   // pack width in z
+bh          = batt_upright ? batt_w : batt_h;   // pack height in y
+batt_need   = 2*bw + batt_gap_z;                // width both packs need
+batt_z      = (bw + batt_gap_z)/2;              // each pack's centre plane
+batt_y1     = tray_floor + bh;                  // pack top
+batt_com_y  = tray_floor + bh/2;
+
+deck_y      = max(fr_top, batt_y1) + 8;         // body floor sits above both
+
+// -- masses ------------------------------------------------------------------
+// box tube cross-section area, m2
+fr_area     = (fr_h*fr_w - (fr_h - 2*fr_t)*(fr_w - 2*fr_t)) * 1e-6;
+cm_len      = bay_w;                            // cross member length
+steel_len   = (2*rail_len + 2*cm_len) * 1e-3;   // m
+m_steel     = fr_area * steel_len * steel_rho;
+m_tray      = ((tray_len*tray_clear                       // floor
+              + 2*tray_len*(fr_top - tray_floor)) * tray_t) * 1e-9 * ply_rho;
+m_frame     = m_steel + m_tray + 1.5;           // +1.5 bolts, sleeves, brackets
+
+// -- centre of mass ----------------------------------------------------------
+// [mass, x, y] for everything on the robot
+mass_items = [
+  [2*pod_kg,  0,               pod_com_y  ],
+  [m_frame,   (rail_x0 + rail_x1)/2, (fr_bot + fr_top)/2 ],
+  [2*batt_kg, 0,               batt_com_y ],
+  [elec_kg,   0,               deck_y + 60],
+  [body_kg,   0,               body_com_y ],
+  [head_kg,   0,               head_com_y ],
+];
+m_total = [for (i = mass_items) i[0]] == [] ? 0 :
+          mass_items[0][0]+mass_items[1][0]+mass_items[2][0]
+         +mass_items[3][0]+mass_items[4][0]+mass_items[5][0];
+function wsum(k) = mass_items[0][0]*mass_items[0][k] + mass_items[1][0]*mass_items[1][k]
+                 + mass_items[2][0]*mass_items[2][k] + mass_items[3][0]*mass_items[3][k]
+                 + mass_items[4][0]*mass_items[4][k] + mass_items[5][0]*mass_items[5][k];
+com_x = wsum(1)/m_total;
+com_y = wsum(2)/m_total;
+
+// -- tipping -----------------------------------------------------------------
+// The robot pivots about the edge of the ground contact patch. The patch is
+// 231 mm long, centred on x=0, so the edges are at +-115.6.
+tip_edge   = pod_A/2;
+tip_fwd    = atan((tip_edge - com_x)/com_y);    // deg of pitch before it goes over
+tip_aft    = atan((tip_edge + com_x)/com_y);
+tip_side   = atan((pod_z + pod_belt_w/2)/com_y);// belt outer edge, both pods as one base
+// the anti-tip castor catches the pitch when it reaches the ground
+at_lever   = at_x - tip_edge;
+at_catch   = asin(at_clear/at_lever);
+
+// -- the pod joint -----------------------------------------------------------
+// The bolt pair is 138 mm forward of the ground contact centre, so the vertical
+// load arrives at the joint with a lever and the two bolts take it as a couple.
+jt_xc      = (pod_bolt_x[0] + pod_bolt_x[1])/2; // -138
+jt_span    = abs(pod_bolt_x[1] - pod_bolt_x[0]);// 60
+jt_F       = m_total*9.81/2;                    // vertical load per pod
+jt_M       = jt_F * abs(jt_xc - com_x);         // N.mm
+jt_Fbolt   = jt_M/jt_span;                      // per bolt, tension/compression
+jt_Zgp     = pod_gp_t*pod_gp_w*pod_gp_w/6;      // green plate, 60x6 on edge
+jt_Irl     = (fr_w*pow(fr_h,3) - (fr_w - 2*fr_t)*pow(fr_h - 2*fr_t,3))/12;
+jt_Zrl     = jt_Irl/(fr_h/2);
+jt_s_gp    = jt_M/jt_Zgp;
+jt_s_rl    = jt_M/jt_Zrl;
+bolt_preload = 50000;                           // N, M12 10.9 at ~100 N.m
+
+// ============================================================================
+//  5. GEOMETRY
+// ============================================================================
+c_steel = [0.42,0.45,0.50];
+c_ply   = [0.78,0.65,0.45];
+c_green = [0.30,0.62,0.38];
+c_belt  = [0.13,0.13,0.15];
+c_batt  = [0.20,0.32,0.46];
+c_at    = [0.55,0.25,0.25];
+
+module beam_x(len, h, w, t){           // box tube along x
+  difference(){
+    cube([len, h, w]);
+    translate([-1, t, t]) cube([len + 2, h - 2*t, w - 2*t]);
+  }
+}
+module beam_z(len, h, w, t){           // box tube along z
+  difference(){
+    cube([w, h, len]);
+    translate([t, t, -1]) cube([w - 2*t, h - 2*t, len + 2]);
+  }
+}
+
+// ---- one pod, simplified: belt envelope + carrier + green plates ------------
+module pod(){
+  idler_y = pod_hub_h - pod_B;                    // 66
+  // belt envelope — hull of the sprocket circle and the two idler circles
+  color(c_belt, 0.55) translate([0,0,-pod_belt_w/2])
+    linear_extrude(pod_belt_w) hull(){
+      translate([0, pod_hub_h])          circle(r = pod_pitch_r + pod_T);
+      translate([ pod_A/2, idler_y])     circle(r = pod_idler_d/2 + pod_T);
+      translate([-pod_A/2, idler_y])     circle(r = pod_idler_d/2 + pod_T);
+    };
+  // carrier plates, |z| 88..94
+  color([0.36,0.43,0.56]) for (s = [1,-1]) scale([1,1,s])
+    translate([0, 0, pod_gp_zi - 6]) linear_extrude(6)
+      hull(){ translate([0, pod_hub_h]) circle(d = 48);
+              translate([ pod_A/2, idler_y]) circle(d = 40);
+              translate([-pod_A/2, idler_y]) circle(d = 40); };
+  // green plates, |z| 94..100, the band the frame bolts to
+  color(c_green) for (s = [1,-1]) scale([1,1,s])
+    translate([0, 0, pod_gp_zi]) linear_extrude(pod_gp_t)
+      difference(){
+        translate([-188, pod_gp_yc - pod_gp_w/2]) square([260, pod_gp_w]);
+        for (bx = pod_bolt_x) translate([bx, pod_gp_yc]) circle(d = pod_bolt_d + 1);
+      };
+  // hub
+  color([0.25,0.25,0.28]) translate([0, pod_hub_h, -40]) cylinder(h = 80, d = 90);
+}
+
+// ---- the frame: 2 rails + 2 cross members ----------------------------------
+module frame_steel(){
+  color(c_steel){
+    // rails, bolt holes bored through both walls
+    for (s = [1,-1]) scale([1,1,s]) translate([rail_x0, fr_bot, rail_zi])
+      difference(){
+        beam_x(rail_len, fr_h, fr_w, fr_t);
+        for (bx = pod_bolt_x)
+          translate([bx - rail_x0, pod_gp_yc - fr_bot, -1])
+            rotate([0,0,0]) translate([0,0,0])
+              cylinder(h = fr_w + 2, d = 25);
+      }
+    // front + rear cross members, between the rail inner faces
+    for (cx = [cm_rear_x, cm_front_x])
+      translate([cx - fr_w/2, fr_bot, -rail_zi]) beam_z(bay_w, fr_h, fr_w, fr_t);
+  }
+  // the Ø25 sleeves welded into each rail at the bolt holes, so the bolt does
+  // not crush the thin box walls
+  color([0.62,0.64,0.68]) for (s = [1,-1]) scale([1,1,s])
+    for (bx = pod_bolt_x) translate([bx, pod_gp_yc, rail_zi]) difference(){
+      cylinder(h = fr_w, d = 25);
+      translate([0,0,-1]) cylinder(h = fr_w + 2, d = 13);
+    }
+}
+
+// ---- M12s: in from the INBOARD side, through the rail and the green plate,
+//      into a nut welded on the green plate's outer face. Axis along z.
+//      The head therefore faces the battery bay, which is why the plywood box
+//      wall needs an access hole at each bolt — see battery_box().
+module pod_bolts(){
+  for (s = [1,-1]) scale([1,1,s]) for (bx = pod_bolt_x)
+    translate([bx, pod_gp_yc, rail_zi - 12]) {
+      color([0.75,0.72,0.55]) cylinder(h = 12 + fr_w + pod_gp_t + 10, d = pod_bolt_d - 0.2);
+      color([0.75,0.72,0.55]) cylinder(h = 10, d = 21.9, $fn = 6);      // head
+    }
+}
+
+// ---- plywood battery box ---------------------------------------------------
+// A U hung off the two rail inner faces. It is the battery box AND the floor,
+// and it keeps the sand off the packs.
+module box_side_2d(){
+  difference(){
+    square([tray_len, fr_top - tray_y0]);
+    // access for the 4 M12 heads — without these you cannot get a spanner on
+    // the bolts that hold the pods, so the pods cannot come off
+    for (bx = pod_bolt_x)
+      translate([bx + tray_len/2, pod_gp_yc - tray_y0]) circle(d = bolt_access_d);
+  }
+}
+module battery_box(){
+  color(c_ply, 0.9){
+    translate([-tray_len/2, tray_y0, -tray_clear/2 - tray_t])
+      cube([tray_len, tray_t, tray_clear + 2*tray_t]);              // floor
+    for (s = [1,-1]) scale([1,1,s])
+      translate([-tray_len/2, tray_y0, tray_zi])
+        linear_extrude(tray_t) box_side_2d();                       // side walls
+  }
+}
+
+module batteries(){
+  color(c_batt) for (s = [1,-1]) scale([1,1,s])
+    translate([-batt_l/2, tray_floor, batt_z - bw/2]) cube([batt_l, bh, bw]);
+}
+
+// ---- anti-tip castors ------------------------------------------------------
+// An L per end, on the centreline: a horizontal arm out from the cross member,
+// then a drop to the castor. The castor axle runs LEFT/RIGHT (along z) so the
+// wheel rolls fore and aft, which is the direction it has to give way in.
+// Nothing here is near the pods — they sit at z +-250, this is all at z +-15.
+module anti_tip(){
+  for (sx = [1,-1]){
+    x_cm  = sx > 0 ? cm_front_x : cm_rear_x;
+    x_leg = sx*at_x;
+    color(c_steel) translate([min(x_cm, x_leg), fr_bot, -15])
+      cube([abs(x_leg - x_cm) + 15, 30, 30]);                        // arm
+    color(c_steel) translate([x_leg - 15, at_clear + at_d/2, -15])
+      cube([30, fr_bot - at_clear - at_d/2, 30]);                    // drop
+    color(c_at) translate([x_leg, at_clear + at_d/2, 0])
+      cylinder(h = 26, d = at_d, center = true);                     // castor
+  }
+}
+
+// The body has to reach past the anti-tip castors, or they stick out in front
+// of WALL-E's face. body_l is driven BY the castors, not chosen.
+body_l = 2*(at_x + at_d/2 + 15);
+module body_ghost(){
+  color([0.85,0.72,0.35], 0.12)
+    translate([-body_l/2, deck_y, -width_over/2 + 40])
+      cube([body_l, body_com_y + 100 - deck_y, width_over - 80]);
+}
+
+// ============================================================================
+//  6. RENDER
+// ============================================================================
+module ground(){
+  if (show_ground)
+    color([0.80,0.73,0.60]) translate([-480, -6, -430]) cube([960, 6, 860]);
+}
+
+module robot(){
+  ground();
+  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod();
+  frame_steel();
+  pod_bolts();
+  battery_box();
+  if (show_batteries) batteries();
+  anti_tip();
+  if (show_body_ghost) body_ghost();
+}
+
+module scene(){
+if (render_mode == "assembly")      robot();
+else if (render_mode == "frame")  { ground(); frame_steel(); pod_bolts(); anti_tip(); }
+else if (render_mode == "section")  difference(){ robot(); translate([-800,-50,0]) cube([1600,1200,800]); }
+else if (render_mode == "plates"){
+  // the plywood box, laid flat for cutting
+  color(c_ply) translate([0,0,0])           square([tray_len, tray_clear + 2*tray_t]);
+  color(c_ply) translate([0, tray_clear + 2*tray_t + 20, 0])            box_side_2d();
+  color(c_ply) translate([0, tray_clear + 2*tray_t + 40 + (fr_top - tray_y0), 0])
+                                                                        box_side_2d();
+}
+}
+
+// This model is Y-up, like the pod model it has to mate with. OpenSCAD's
+// command-line camera assumes Z-up, so PNG renders come out lying on their
+// side. png_up=true rotates the scene for rendering only — it does not touch
+// the geometry, the STL, or any number above.
+if (png_up) rotate([90,0,0]) scene(); else scene();
+
+// ============================================================================
+//  7. NUMBERS — always printed
+// ============================================================================
+echo("");
+echo("=========== WALL-E FRAME — TWO REV 012 PODS, SIDE BY SIDE, SKID STEER ===========");
+echo(str("LAYOUT:   pods ", pod_cl, " apart centre to centre -> ", width_over,
+         " mm OVERALL WIDTH · ground contact ", pod_A, " x ", pod_belt_w,
+         " per pod, TOTAL FOOTPRINT ", pod_A, " long x ", pod_cl + pod_belt_w, " wide"));
+echo(str("FRAME:    rails ", fr_h, "x", fr_w, "x", fr_t, " box, ", rail_len,
+         " long, outer faces ", 2*rail_zo, " apart, ", bay_w, " clear inside · ",
+         "rails ", fr_bot, "..", fr_top, " above ground, flush with the green plates"));
+echo(str("BATTERY:  pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
+         batt_upright ? "UPRIGHT (80 wide, 110 tall)" : "FLAT (110 wide, 80 tall)",
+         " · box floor ", tray_floor, ", pack top ", batt_y1,
+         " · LOWEST POINT OF THE ROBOT ", tray_y0, " above ground"));
+echo(str("DECK:     body floor at ", deck_y, " above ground"));
+
+echo("");
+echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
+         round(m_tray*10)/10, " kg -> FRAME ", round(m_frame*10)/10,
+         " kg  ·  WHOLE ROBOT ", round(m_total*10)/10,
+         " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · electronics ",
+         elec_kg, " · body ", body_kg, " · head ", head_kg, ") — ALL GUESSES"));
+echo(str("CoM:      x ", round(com_x*10)/10, " (0 = over the middle of the tracks)",
+         "  ·  y ", round(com_y*10)/10, " above ground"));
+// contact area in cm2 = both patches in mm2 / 100
+gnd_area = 2*pod_A*pod_belt_w/100;
+echo(str("GROUND PRESSURE: ", round(m_total/gnd_area*1000)/1000,
+         " kg/cm2 over ", round(gnd_area), " cm2 — a walking person is about 0.5,",
+         " so it presses the sand a third as hard as you do"));
+
+echo("");
+echo("--- TIPPING: the whole reason the anti-tip wheels exist -------------------");
+echo(str("  pitch FORWARD before it goes over: ", round(tip_fwd*10)/10, " deg"));
+echo(str("  pitch BACKWARD before it goes over: ", round(tip_aft*10)/10, " deg"));
+echo(str("  ROLL sideways before it goes over:  ", round(tip_side*10)/10,
+         " deg — sideways is never the problem, the pods are 700 apart"));
+echo(str("  anti-tip castor catches the pitch at: ", round(at_catch*10)/10,
+         " deg (", at_x, " out, ", at_clear, " clear, lever ", round(at_lever), ")"));
+
+echo("");
+echo("--- THE POD JOINT --------------------------------------------------------");
+echo(str("  the 2 M12 holes are ALREADY DRILLED at pod-local x ", pod_bolt_x,
+         ", centroid ", jt_xc, ", span ", jt_span));
+echo(str("  load per pod ", round(jt_F), " N, arriving ", round(abs(jt_xc - com_x)),
+         " mm forward of the ground contact centre -> moment ", round(jt_M/1000), " N.m"));
+
+guards = [
+  // [name, actual, minimum, unit]
+  ["battery width: both packs inside the plywood box", tray_clear - batt_need, 15],
+  ["battery height: pack top below the body floor",    deck_y - batt_y1, 5],
+  ["battery length inside the box",                    tray_len - 2*tray_t - batt_l, 10],
+  ["box floor above the ground (obstacle clearance)",  tray_y0, 120],
+  ["rail inner face to the belt edge, per side",       rail_zi - pod_belt_w/2, 20],
+  ["rail outer face sits ON the green plate (must be 0)", -abs(rail_zo - (pod_z - pod_gp_zo)), -0.01],
+  ["front bolt to the green plate's front end",        (pod_bolt_x[0] - (-188)) - 1.5*(pod_bolt_d + 1), 0],
+  ["both bolts land within the rail",                  min(pod_bolt_x[0] - rail_x0, rail_x1 - pod_bolt_x[1]), 40],
+  ["anti-tip catches BEFORE the robot tips forward",   tip_fwd - at_catch, 4],
+  // at_clear MUST exceed the pods' bump travel, or the castor takes load on
+  // every bump and fights the suspension. That fights wanting it small, so it
+  // catches the pitch early. This pair of guards is the whole trade-off.
+  ["anti-tip clear of the ground at full bump (+30.7)", at_clear - 30.7, 3],
+  ["body long enough to hide the castors",             body_l - 2*(at_x + at_d/2), 20],
+  ["bolt access hole above the box floor",             (pod_gp_yc - bolt_access_d/2) - tray_floor, 10],
+  ["bolt access hole below the box top edge",          fr_top - (pod_gp_yc + bolt_access_d/2), 5],
+  ["bolt access holes inside the box length",          tray_len/2 - abs(pod_bolt_x[0]) - bolt_access_d/2, 10],
+  ["CoM within the footprint, fore/aft",               tip_edge - abs(com_x) - 40, 0],
+  ["green plate bending at the joint (MPa under 235)", 235 - jt_s_gp, 100],
+  ["rail bending at the joint (MPa under 235)",        235 - jt_s_rl, 100],
+  ["M12 bolt load vs preload (N of margin)",           bolt_preload - jt_Fbolt, 10000],
+];
+echo("");
+echo("--- GUARDS ---------------------------------------------------------------");
+for (g = guards)
+  echo(str(g[1] < g[2] ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10));
+
+echo("");
+echo(str("STRESS:   green plate at the joint ", round(jt_s_gp*10)/10,
+         " MPa · rail at the joint ", round(jt_s_rl*10)/10,
+         " MPa · per M12 ", round(jt_Fbolt), " N of ", bolt_preload, " preload"));
+
+echo("");
+echo("--- CUT LIST -------------------------------------------------------------");
+echo(str("  ", fr_h, "x", fr_w, "x", fr_t, " box  rails               2 x ", rail_len));
+echo(str("  ", fr_h, "x", fr_w, "x", fr_t, " box  cross members       2 x ", cm_len,
+         "   -> ", 2*rail_len + 2*cm_len, " mm of box tube total"));
+echo(str("    each rail: 2 holes Ø25 through BOTH walls at ",
+         pod_bolt_x[0] - rail_x0, " and ", pod_bolt_x[1] - rail_x0,
+         " mm from the rail's FRONT end, ", pod_gp_yc - fr_bot,
+         " mm up from the rail's bottom; weld a Ø25xØ13x", fr_w, " sleeve in each"));
+echo(str("  ", tray_t, " mm plywood  box floor        1 x ", tray_len, " x ", tray_clear + 2*tray_t));
+echo(str("  ", tray_t, " mm plywood  box side walls   2 x ", tray_len, " x ", fr_top - tray_y0,
+         ", each with 2 holes Ø", bolt_access_d, " at ",
+         pod_bolt_x[0] + tray_len/2, " and ", pod_bolt_x[1] + tray_len/2,
+         " mm from the FRONT edge, ", pod_gp_yc - tray_y0, " mm up (M12 spanner access)"));
+echo(str("  anti-tip legs  30x30 box  2 x ", round(fr_bot - at_clear - at_d),
+         " + 2 fore/aft ties · castors 2 x Ø", at_d));
+echo(str("  M12 10.9 bolts 4 off, through the rail into the nut welded on the ",
+         "green plate — THE POD COMES OFF WITH 2 BOLTS PER SIDE"));
+
+echo("");
+echo("--- STILL GUESSES: replace with real numbers ------------------------------");
+echo(str("  pod_kg ", pod_kg, " · pod_com_y ", pod_com_y, " · batt_kg ", batt_kg,
+         " · elec_kg ", elec_kg, " · body_kg ", body_kg, " · body_com_y ", body_com_y,
+         " · head_kg ", head_kg, " · head_com_y ", head_com_y));
+echo("  The tipping numbers above are only as good as these. Weigh things.");

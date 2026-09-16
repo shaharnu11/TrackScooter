@@ -84,8 +84,50 @@ WALL-E/
     spine-teensy/            Code for the Spine (the motor board)
     face-esp32/              Code for the Face (the eye board)
   brain/                     Code for the Brain (Python, on the Jetson)
-  cad/                       OpenSCAD model of the side-by-side frame
+  cad/
+    walle_frame.scad         The side-by-side frame. Parametric, with guards
+    walle_frame_*.png        Rendered views, regenerated from the model
 ```
+
+---
+
+## The frame
+
+`cad/walle_frame.scad` is the frame that holds the two pods left and right. Run it and it
+prints every dimension, the cut list, the tipping angles and a list of checks. Four views:
+
+```bash
+openscad -o walle.stl -D 'render_mode="assembly"' cad/walle_frame.scad   # everything
+openscad -o steel.stl -D 'render_mode="frame"'    cad/walle_frame.scad   # steel only, for welding
+openscad -o cut.dxf   -D 'render_mode="plates"'   cad/walle_frame.scad   # plywood, flat
+openscad -o sec.stl   -D 'render_mode="section"'  cad/walle_frame.scad   # cut open
+```
+
+![the frame, three quarter view](cad/walle_frame_3q.png)
+
+Front view. The two packs sit low, between the rails, one per pod. The red wheel on the
+centreline is an anti-tip castor, held clear of the ground.
+
+![front view](cad/walle_frame_front.png)
+
+| Headline number | Value |
+|---|---|
+| Overall width | 700 mm (pods 500 apart, green plates stick out 100 each side) |
+| Rails | 60×30×3 box, 550 long, 240 mm clear between them |
+| Lowest point of the robot | 150 mm above the ground |
+| Body floor | 280 mm above the ground |
+| Whole robot, estimated | 91 kg — **every mass in the model is still a guess** |
+| Centre of mass | 360 mm above the ground, centred over the tracks |
+| Ground pressure | 0.167 kg/cm² over 546 cm² |
+| Tips forward at | 17.8° of pitch |
+| Anti-tip castor catches at | 9.9° — so it catches 8° before the robot goes over |
+| Steel needed | 1580 mm of 60×30×3 box tube |
+
+**The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
+already drilled in the green plates, so no new holes go into the built pods.
+
+The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a
+pack, and put the real numbers in the model before trusting 17.8°.
 
 **New to this? Read in this order:** `99-glossary.md`, then `00-plan.md`, then
 `01-architecture.md`. Do not start buying parts until you have read the plan, because the
