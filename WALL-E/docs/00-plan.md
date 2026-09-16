@@ -377,7 +377,7 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 | Lighting | LED strips, drivers, the eye illumination | 100 – 150 |
 | Tools and consumables | Soldering, crimping, multimeter, drill bits | 200 – 400 |
 | Spares kit | Section 6, Phase 6 | 250 – 350 |
-| **Total still to spend** | | **≈ 2,600 – 3,320** |
+| **Total still to spend** | | **≈ 2,400 – 3,000** |
 
 If the donor battery packs cannot be reused, add 600 to 1,200.
 
