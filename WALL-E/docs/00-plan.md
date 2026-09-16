@@ -115,7 +115,7 @@ follow from that:
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
 | L8 | Frame mounting width 168 mm | Set by the built pods. Not a choice any more |
 | L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
-| L10 | Electronics fed from **both** packs through two isolated converters, OR'd | Even drain, and the computers survive one pack dropping out |
+| L10 | Electronics fed from the **larger** pack, one isolated converter | The extra load pushes both packs towards emptying together. Needs safety log test 15 |
 
 #### L7 — why we keep the short belts now
 
@@ -136,7 +136,7 @@ plus keeping all the heavy things as low as possible. See decision D6.
 |---|---|---|---|
 | **D2** | How is the lower shock bolt retrofit done? | Whether the pods are safe to load | **Before Phase 2.** Read `02-shock-bolt.md` |
 | **D3** | Does WALL-E carry a person? | Frame strength, tipping, Midburn registration | Before Phase 2 |
-| **D4** | Pack capacity in Ah, and are both BMS units healthy? | Runtime estimate, fuse and cable sizing | Before Phase 1 buying |
+| **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime, which side gets the electronics, fuse and cable sizing | Before Phase 1 buying |
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
 | **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
 | **D7** | Reuse the scooter controllers, or buy two VESCs? | Cost, and whether motor temperature can be read | Before Phase 1 buying |
@@ -450,6 +450,7 @@ Ordered by how much damage each one does, not how likely it is.
 | R4 | One pack's BMS cuts out while driving | The surviving track spins the robot on the spot instead of stopping | Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12 |
 | R5 | Hub motors overheat crawling | Dead robot mid-event | Log motor temperature from the first bench test. VESC current limits. Keep it light |
 | R6 | Motor current spikes reboot the Brain | Eyes and sounds die in front of an audience | Isolated DC-DC rail, own fuse, buffer capacitor |
+| R6b | The electronics pack's BMS cuts out, so the Spine dies too | No board left to enforce any stop rule | Each VESC's own command timeout, set explicitly and proven by safety log test 15 |
 | R7 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
 | R8 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
 | R9 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |

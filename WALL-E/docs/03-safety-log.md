@@ -42,6 +42,7 @@ fail, because a hard stop on a 231 mm footprint can pitch the robot forward.
 | 12 | The other pack disconnected | Repeat test 11 on the right pack | Same as test 11 | | | |
 | 13 | Uneven pack voltage | Drive with the packs at clearly different charge levels | It still drives straight. Any pull to one side means rule 11 compensation is not working | | | |
 | 14 | Ground bond removed | With the robot parked and unarmed, disconnect the negative bond between the packs | CAN drops, so the Spine sees both VESCs stop reporting and refuses to arm at all | | | |
+| 15 | **Spine unpowered mid-drive** | Cut power to the Teensy while driving forward | Both VESCs hit their own command timeout and release within 1 s. The robot must NOT pivot on one track | | | |
 
 Tests 11 and 12 are the most important new ones, and they are specific to having one battery
 per pod. On a skid-steer machine, one dead track does not slow the robot down — the surviving
@@ -49,6 +50,12 @@ track spins it on the spot. Both of these must produce a stop of **both** sides.
 
 Run test 14 parked and unarmed. It is checking that a missing ground bond fails safe rather
 than producing unpredictable CAN behaviour while driving.
+
+**Test 15 is the one the whole electronics supply decision rests on.** The electronics run from
+the larger pack only, so if that pack's BMS cuts out, the Spine switches off and cannot enforce
+any of the rules above. The only thing left protecting you is each VESC's own command timeout.
+Set that timeout explicitly in both controllers — do not assume the default is enabled — and
+prove it here before the robot goes near anybody.
 
 Test 10 catches a mistake that is easy to make in code and dangerous in the field: a robot
 that starts driving the instant you plug the battery in, because the stick was not centred or

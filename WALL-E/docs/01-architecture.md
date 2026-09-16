@@ -186,16 +186,56 @@ Two details on that bond:
 - **Do not fuse it.** A fuse that opens in the ground bond leaves the CAN bus floating while
   the robot is still driving, which is worse than the fault it was protecting against.
 
-### And the electronics supply: take it from both packs, not one
+### The electronics supply: the larger pack, and why that is the right choice
 
-Feeding the Brain from one pack sounds simplest, but it makes that pack drain faster, which
-feeds straight back into trap 1.
+The two packs are **not the same capacity**. The electronics run from the larger one, through
+one isolated DC-DC converter.
 
-Better: **two isolated DC-DC converters, one on each pack, with their outputs joined through
-ideal-diode ORing.** It costs one extra converter, about 40 dollars, and buys two things. The
-electronics load is shared, so the packs drain evenly. And if one pack or BMS drops out
-entirely, the computers, the eyes, and the Spine all stay alive — so the robot can still
-announce it has a problem and still stop itself properly.
+This is better than it first looks. Mismatched capacities are a problem on their own: with the
+same motor current on both sides, the smaller pack empties sooner, so the two voltages diverge
+faster and trap 1 gets worse. And because rules 4 and 5 stop the robot when either side drops
+out, **the runtime of the whole robot is set by the smaller pack, not the average.**
+
+Putting the electronics load on the larger pack drains it faster on purpose, which pushes the
+two packs towards emptying at the same moment. The load you want is:
+
+```
+electronics current  =  motor current per side  ×  ( larger capacity / smaller capacity − 1 )
+```
+
+A worked example. Say the packs are 20 Ah and 15 Ah, and each side pulls about 3.1 A on
+average while crawling:
+
+| | Capacity | Current drawn | Runtime |
+|---|---|---|---|
+| Larger pack: left motor + all electronics | 20 Ah | 3.1 + 1.15 = 4.25 A | 4.7 hours |
+| Smaller pack: right motor only | 15 Ah | 3.1 A | 4.8 hours |
+
+The two land within a few minutes of each other, which is as good as it gets. Fill in the real
+capacities and check where yours land — if the mismatch is much bigger than 4:3, the
+electronics load will not be enough to even it out, and the smaller pack becomes the limit.
+
+### The consequence that must be tested
+
+Running the electronics from one pack means **the Spine dies when that pack dies.** So the
+chain of events if the larger pack's BMS cuts out is:
+
+1. The Spine loses power and stops sending CAN commands.
+2. The other VESC still has power, from the smaller pack.
+3. Arbitration rules 4 and 5 cannot help, because the board that enforces them is off.
+
+The robot is then relying entirely on **the VESC's own command timeout**: if no command
+arrives for about a second, a VESC releases the motor and lets it coast. That behaviour is what
+stops the robot pivoting on its surviving track.
+
+So this becomes a critical configuration item rather than a detail:
+
+- Set the command timeout explicitly in both VESCs. Do not assume the default is what you
+  want, and do not assume it is enabled.
+- Test it, as safety log test 15: cut power to the Spine while the robot is driving, and
+  confirm the surviving track releases within a second and the robot does not turn.
+- Keep a buffer capacitor on the electronics rail anyway. That is for risk R6, the motor
+  current spikes, and it is needed whichever pack the supply comes from.
 
 ---
 
