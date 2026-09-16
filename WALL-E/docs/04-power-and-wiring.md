@@ -79,11 +79,35 @@ happens.
 | Straight, walking pace | 2 A | the normal condition |
 | Continuous pivot turning | 8 A | budget for this, not for the straight line |
 | Starting from rest, or climbing out of a rut | 25 A | seconds at a time |
-| Absolute limit set in the VESC | **40 A** | the number the wire and the fuse must survive |
+| Absolute limit | **40 A** | the number the wire and the fuse must survive |
 
-Set the VESC's motor current limit to 40 A and its **battery** current limit to 40 A as well.
-The battery limit is the one that protects the pack and the fuse, and it is easy to forget
-because it is a separate setting.
+> ### This section assumed a VESC, and decision D7 changed that on 2026-09-17
+>
+> With a VESC you **choose** the 40 A figure, set it in the configuration tool, and then size
+> the wire and the fuse to it. The number in the table is a decision.
+>
+> A scooter controller does not work that way. **Its current limit is fixed in firmware and
+> you cannot change it.** So 40 A stops being a number you pick and becomes a number you have
+> to go and measure.
+>
+> **Do this before finalising the wire gauge and the fuse rating:**
+>
+> 1. Find the controller's rated peak current. It is usually printed on the case or in the
+>    listing. Scooter controllers in this class are commonly 30 A to 60 A peak.
+> 2. Confirm it with the clamp meter, on blocks, at stall — hold the track against a block
+>    and read the actual draw. Do not trust the label alone.
+> 3. If the real peak is **above 40 A**, the 12 AWG phase wire and the 60 A fuse in section 7
+>    have to be re-checked against the real figure, not against 40.
+> 4. If it is **well below 40 A**, that is not free either: it caps how hard the robot can
+>    pivot and climb out of a rut, which is the case that matters on sand.
+>
+> The battery current limit, which is the one that actually protects the pack and the fuse,
+> is likewise fixed. The Teensy cannot command a current limit, so **the only current control
+> you have is backing off the throttle yourself** when the ACS758 sensor reads high. That is a
+> software limit on top of a hardware one, and it is slower and weaker than the VESC's.
+>
+> If this measurement comes back ugly, that is the 260 dollar contingency in `05-bom.md`
+> section 7 doing its job. Spend it.
 
 ---
 

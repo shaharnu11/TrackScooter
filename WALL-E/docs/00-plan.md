@@ -151,7 +151,7 @@ plus keeping all the heavy things as low as possible. See decision D6.
 | **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime, which side gets the electronics, fuse and cable sizing | Before Phase 1 buying |
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
 | **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
-| **D7** | Reuse the scooter controllers, or buy two VESCs? | Cost, and whether motor temperature can be read | Before Phase 1 buying |
+| **D7** | Reuse the scooter controllers, or buy two VESCs? | Cost, and whether motor temperature can be read | **DECIDED 2026-09-17: reuse them.** They have a reverse line, and the motor's own thermistor gives the temperature. 260 dollars held as contingency |
 
 #### D6 — the tipping fix, since the belts are staying
 
@@ -174,25 +174,44 @@ work for free, and it costs nothing because the batteries have to go somewhere a
 
 #### D7 — the scooter controllers you already have
 
-They are worth keeping, but probably not for the final robot.
+**REVISED 2026-09-17. This decision used to recommend buying two VESCs. It no longer does.**
+
+The controllers **have a reverse line**, confirmed by the owner. That was the one fact that
+could have ruled them out: skid steer needs each side to run forwards and backwards on its
+own, and without reverse the robot could only make wide arcs, never turn on the spot.
 
 **Use them now, for free, to prove the motors work.** Bench-test both hub motors with their
-original controllers and a throttle before you buy anything. If a motor is dead, you want to
-know today.
+original controllers and a physical throttle before you buy anything. No code. If a motor is
+dead, you want to know today.
 
-**They are poor for the real build**, for three reasons:
+**Then drive them from the Teensy.** They accept a throttle voltage and nothing else, so a
+digital-to-analogue converter fakes it. The reverse and e-brake lines are switched to ground
+through opto-isolators. `05-bom.md` section 1b is the parts list, about 76 dollars.
 
-1. They accept a throttle voltage and nothing else. You can fake that from a microcontroller
-   with a digital-to-analogue converter, so skid steer is technically possible.
-2. But they report nothing back. No motor temperature, no current. Motor overheating at low
-   speed is risk R5 in section 11, and temperature feedback is our main defence against it.
-   Giving that up to save money is a bad trade.
-3. Their current limits, cruise control, and cut-off behaviour are fixed in firmware and
-   cannot be tuned for a slow heavy robot.
+**Two of the three old objections have been answered:**
 
-**Recommendation: two VESCs, about 260 dollars.** Keep the scooter controllers as bench test
-gear and as an emergency spare that could get the robot driving badly if a VESC dies at the
-event.
+1. *They report no motor temperature.* The hub motor has **its own thermistor** in its cable.
+   Read it straight into the Teensy for the price of two resistors. Risk R5 keeps its
+   defence.
+2. *They report no current.* An ACS758 hall sensor on each pack lead, 20 dollars the pair.
+3. *Their current limits, ramp and cut-off are fixed in firmware and cannot be tuned for a
+   slow heavy robot.* **Still true, and not fixable.** So is the six-step commutation, which
+   judders at walking pace — exactly where a skid-steer robot spends its life.
+
+**Two new conditions come with this decision:**
+
+- A **hardware watchdog** is now mandatory. A throttle springs back to zero; a DAC holds its
+  last value forever, so a Teensy crash mid-drive leaves the robot driving. A relay with
+  normally-closed contacts, held open by a heartbeat pulse, shorts the throttle to ground
+  when the pulses stop. Nothing in software has to work for that to happen.
+- Check for **automatic cruise control**. Some scooter controllers engage it after a few
+  seconds of steady throttle. In a crowd that is dangerous. If it cannot be disabled, buy the
+  VESCs.
+
+**Recommendation: use the controllers you own, and hold 260 dollars as a contingency.** This
+is a bet that six-step control is smooth enough at walking pace. You will not know until you
+drive it. If it judders, two VESCs drop straight in — the Teensy, the CAN transceivers and
+the wiring are all unchanged.
 
 ---
 
@@ -205,7 +224,7 @@ Four streams. Two of them start today and do not wait for each other.
      measure pods → design in SCAD → shock bolt retrofit → build → mount pods
 
   W2 DRIVE ELECTRONICS ── starts on a bench, no frame needed ────►
-     test motors → VESC → Teensy → CAN → radio → E-stop → 2 motors → install
+     test motors → throttle by hand → Teensy + DAC → watchdog → radio → E-stop → 2 motors → install
 
                     W3 SENSE, BRAIN AND FACE ──────────────────────►
                        Jetson → LiDAR → camera → personality → eyes → head
@@ -237,7 +256,7 @@ A phase is not finished because the work is done. It is finished when its exit t
 | Read `02-shock-bolt.md`, inspect both pods, decide D2 | W1 |
 | Confirm the donor battery voltage and capacity (D4) | W2 |
 | Confirm the Midburn date and vehicle rules (D5) | — |
-| Order one VESC, a Teensy 4.1, a CAN transceiver, the radio set, a multimeter | W2 |
+| Order a Teensy 4.1, two MCP4725 DACs, a level shifter, the watchdog parts, a CAN transceiver, the radio set, a multimeter | W2 |
 
 **Exit test:** both motors spin under their own power, and the measured pod dimensions are
 written down and match the model within a millimetre or two.
@@ -246,8 +265,8 @@ written down and match the model within a millimetre or two.
 
 | W1 frame | W2 bench electronics |
 |---|---|
-| Model the side-by-side frame in OpenSCAD | Set up the VESC with its own tool, spin a hub motor |
-| Batteries low, below the mounting beam | Get the Teensy to send one CAN message to the VESC |
+| Model the side-by-side frame in OpenSCAD | Spin a hub motor from its own scooter controller and a hand throttle |
+| Batteries low, below the mounting beam | Get the Teensy to drive the throttle through the DAC, with the watchdog wired |
 | Anti-tip wheel mounts, 30–40 mm clear (D6) | Add the radio receiver, drive the motor from the stick |
 | Design and fit the shock bolt retrofit (D2) | Add the E-stop and the arm switch, with the watchdog |
 | Order the steel | Log motor temperature from the very first run |
@@ -263,7 +282,7 @@ transmitter off, when you press the E-stop, and when you unplug the Teensy's ser
 |---|
 | Weld and assemble the frame |
 | Mount both pods on the 168 mm carrier spacing |
-| Batteries in low, both VESCs, the Teensy, the contactor and the fusing |
+| Batteries in low, both scooter controllers, the Teensy, the contactor and the fusing |
 | Add mixing for two motors, and slew rate limiting |
 | Fit the anti-tip wheels |
 
@@ -323,7 +342,7 @@ The phase everybody skips and then regrets.
 | Heat test: run it in full midday sun until something complains |
 | Endurance test: a full evening on sand, on one charge |
 | Night test: can the driver see it, can it see, are the eyes visible |
-| Spares kit: printed sprocket, belt links, fuses, a spare VESC, servos |
+| Spares kit: printed sprocket, belt links, fuses, a spare 48 V controller, spare DACs, servos |
 | Field repair kit and a printed copy of the wiring diagram |
 
 **Exit test:** a full evening of driving on sand with no intervention that is not in the
@@ -341,7 +360,7 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 | Shock bolt retrofit | Steel strap, longer bolts, sleeves (D2) | 30 – 80 |
 | Frame | Steel tube, plate, plywood, welding consumables | 250 – 400 |
 | Anti-tip wheels | 2 castors and their mounts | 40 – 80 |
-| Drive electronics | 2 × VESC, contactor, fuses, heavy cable, lugs | 400 – 550 |
+| Drive electronics | throttle interface, contactor, fuses, heavy cable, lugs (controllers already owned) | 270 – 380 |
 | Radio control | Transmitter, receiver, wireless E-stop keyfob | 150 – 250 |
 | Compute | Jetson Orin Nano 8GB, storage, cooling | 300 – 350 |
 | Spine and Face boards | Teensy 4.1, CAN transceiver, ESP32-S3, 2 round LCDs | 80 – 120 |
@@ -358,11 +377,11 @@ If the donor battery packs cannot be reused, add 600 to 1,200.
 
 ### Buy in this order, not all at once
 
-1. **Now:** one VESC, a Teensy, a CAN transceiver, the radio set, a multimeter. About 300
+1. **Now:** a Teensy, the throttle interface parts, a CAN transceiver, the radio set, a multimeter. About 250
    dollars, and it is the cheapest way to find out whether the drive electronics are going to
    be a problem.
 2. **Now:** the shock bolt retrofit steel. Small money, and it unblocks loading the pods.
-3. **Phase 1:** the frame steel, the second VESC, the contactor, the fusing, heavy cable.
+3. **Phase 1:** the frame steel, the contactor, the fusing, heavy cable.
 4. **Phase 2:** the Jetson and the sensors. Do not buy these early. They sit in a drawer
    losing value while you do metalwork, and a newer version may appear.
 5. **Phase 4:** the screens, servos, amplifier.
@@ -435,8 +454,8 @@ one produces something that works.
 | 3 | Arduino: blink an LED | The LED blinks at a rate you chose |
 | 4 | Arduino: read a potentiometer, print it over serial | Numbers change on screen as you turn the knob |
 | 5 | Arduino: drive one servo from the potentiometer | The servo follows the knob |
-| 6 | VESC Tool: configure and spin a motor, no code | The hub motor turns, and its limits are set |
-| 7 | Teensy: one CAN message to the VESC | The motor moves because of a number in your code |
+| 6 | Spin a motor from its scooter controller and a hand throttle, no code | The hub motor turns, and you know it is healthy |
+| 7 | Teensy: one value written to the DAC | The motor moves because of a number in your code |
 | 8 | Read the radio receiver on the Teensy | Stick numbers print on your screen |
 | 9 | Put steps 7 and 8 together | The stick drives the motor |
 | 10 | Add the watchdog and the arm switch | Pulling a cable stops the motor |
@@ -460,10 +479,10 @@ Ordered by how much damage each one does, not how likely it is.
 | R2 | It tips forward | Broken robot, possibly a broken person | Anti-tip wheels (D6). All mass low. Ballast test in Phase 2 |
 | R3 | Lower shock bolt yields on the first hard hit | Suspension failure under load | The D2 retrofit, before the frame is loaded. See `02-shock-bolt.md` |
 | R4 | One pack's BMS cuts out while driving | The surviving track spins the robot on the spot instead of stopping | Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12 |
-| R5 | Hub motors overheat crawling | Dead robot mid-event | Log motor temperature from the first bench test. VESC current limits. Keep it light |
+| R5 | Hub motors overheat crawling | Dead robot mid-event | Read the motor's OWN thermistor into the Teensy and log it from the first bench test. The scooter controllers cannot limit current for us, so the Teensy has to back the throttle off itself. Keep it light |
 | R6 | Motor current spikes reboot the Brain | Eyes and sounds die in front of an audience | Isolated DC-DC rail, own fuse, buffer capacitor |
-| R6b | The electronics pack's BMS cuts out, so the Spine dies too | No board left to enforce any stop rule | Each VESC's own command timeout, set explicitly and proven by safety log test 15 |
-| R6c | The VESCs cook inside the body | One track dies, and the robot pivots | Direct consequence of L11: on a plywood shelf they have no steel to dump heat into. Each gets an aluminium plate bolted through to a body panel, and one filtered air path pushes air IN so the body runs at positive pressure |
+| R6b | The electronics pack's BMS cuts out, so the Spine dies too | No board left to enforce any stop rule | The scooter controllers have NO command timeout of their own, so this defence is now entirely the hardware watchdog: heartbeat stops, relay falls closed, throttle shorted to ground. Prove it by safety log test 15 |
+| R6c | The motor controllers cook inside the body | One track dies, and the robot pivots | Direct consequence of L11: on a plywood shelf they have no steel to dump heat into. Each gets an aluminium plate bolted through to a body panel, and one filtered air path pushes air IN so the body runs at positive pressure |
 | R7 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
 | R8 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
 | R8b | Sand gets into the battery box | Grit between the cells and the box, chafed wiring, a short | L16: closed box, gasketed lid on 110 mm bolt pitch, silicone plugs in all four spanner holes. **Check the plugs are in every morning** — they are the weak point, and they point at the belts |
@@ -492,6 +511,6 @@ In order. Nothing later on this list should start before the things above it.
    the whole project
 4. Read `02-shock-bolt.md`, inspect the lower shock mounts on both pods, decide D2
 5. Confirm both pack capacities in Ah and that both BMS units are healthy (D4)
-6. Order one VESC, a Teensy, a CAN transceiver, and the radio set
+6. Order a Teensy, the throttle interface parts, a CAN transceiver, and the radio set
 7. Start learning plan steps 1 to 5 while the parcels are in the post
 8. Design the frame in OpenSCAD

@@ -105,13 +105,39 @@ rule lower down.
 | 1 | Is the E-stop circuit closed? | Motors dead. Nothing can override. | This is physical, not software. The contactor is open, so there is no power to the motors at all. |
 | 2 | Is the arm switch on the remote ON? | Send zero. | The robot must never move the instant you connect the battery. The driver has to deliberately arm it. |
 | 3 | Has a radio frame arrived in the last 100 ms? | Ramp to zero. | Radio out of range or transmitter battery flat. Stop is the only safe answer. |
-| 4 | **Are BOTH VESCs reporting on CAN?** | **Ramp BOTH to zero.** | See section 3b. One dead track does not stop a skid-steer robot, it makes it pivot. |
-| 5 | **Are both pack voltages above the floor?** | **Ramp BOTH to zero.** | A BMS cutting out is the most likely way one side dies. |
+| 4 | **Is each track actually turning as commanded?** | **Ramp BOTH to zero.** | See section 3b. One dead track does not stop a skid-steer robot, it makes it pivot. **This rule was written for VESCs reporting on CAN. Scooter controllers report nothing — see the note below.** |
+| 5 | **Are both pack voltages above the floor?** | **Ramp BOTH to zero.** | A BMS cutting out is the most likely way one side dies. **Also came off the VESC's CAN messages — see the note below.** |
 | 6 | Which mode does the remote's mode switch say? | — | `MANUAL` uses the sticks. `ASSIST` uses the Brain. |
 | 7 | In `ASSIST` only: has a Brain heartbeat arrived in the last 100 ms? | Ramp to zero and fall back to `MANUAL`. | The Brain is frozen or rebooting. |
 | 8 | Do the bumper sensors see anything close in the direction of travel? | Scale the command down, or to zero. | The veto. It can only reduce, never add. |
 | 9 | Is either motor too hot? | Scale both commands down. | Protects the hub motors from overheating at low speed. |
 | 10 | Apply the slew rate limit. | — | Turns any sudden change into a smooth ramp. |
+
+> ### Rules 4, 5 and 11 lost their data source on 2026-09-17
+>
+> Decision D7 changed the motor controllers from VESCs to the scooter controllers already
+> owned. VESCs broadcast their status on CAN — motor current, input voltage, temperature,
+> fault codes — and three arbitration rules were built on that broadcast. **Scooter
+> controllers send nothing back at all.** There is no CAN bus to the motors any more.
+>
+> Each rule needs a new source. None is expensive, but none is automatic either:
+>
+> | Rule | Was | Now needs |
+> |---|---|---|
+> | 4 — is each track alive? | VESC reporting on CAN | **A speed sensor per track.** The hub motor's hall wires already give one, and the Teensy can count their edges. If a track is commanded to move and its halls are not changing, that track is dead. |
+> | 5 and 11 — pack voltage | VESC input voltage over CAN | **A resistor divider per pack** into a Teensy analogue input. Two resistors and care with the ground reference. Cheap, but it must be on the list. |
+> | 9 — is either motor too hot? | VESC motor temperature | **The hub motor's own thermistor**, read directly. This one actually got simpler — see `05-bom.md` section 1b. |
+>
+> **The bigger loss is the VESC command timeout.** A VESC releases the motor if no command
+> arrives for about a second, and section 4 below leans on that as the last line of defence
+> when the Spine dies. A scooter controller has no such behaviour: it holds whatever throttle
+> voltage is on its input, forever.
+>
+> That defence is now **entirely** the hardware watchdog in `05-bom.md` section 1b — a relay
+> with normally-closed contacts, held open by a heartbeat from the Teensy, which shorts the
+> throttle to ground the moment the pulses stop. It is a single cheap part carrying a load
+> that used to be shared. **Test it deliberately and often**, and treat safety log test 15 as
+> mandatory rather than routine.
 | 11 | **Scale each side by its own pack voltage.** | — | See section 3b. Keeps it driving straight as the two packs drift apart. |
 | 12 | Send on CAN. | — | |
 

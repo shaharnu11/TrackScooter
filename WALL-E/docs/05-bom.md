@@ -15,15 +15,22 @@ months.
 
 ## 1. Buy now — the de-risking order
 
-This is about 350 dollars, and it is the cheapest way to find out early whether the drive
+Sections 1 and 1b together are about **498 dollars**, and this is the cheapest way to find out early whether the drive
 electronics are going to be a problem. Everything here is useful on a bench with no frame and
 no body.
 
+**No VESCs in this list.** Decision D7 in `00-plan.md` used to recommend buying two, at 260
+dollars. You already own two 48 V scooter controllers, **and they have a reverse line**,
+which was the one thing that could have ruled them out — without reverse on each side
+independently the robot cannot turn on the spot, only in wide arcs. So the plan is now to
+drive the controllers you have from the Teensy, and to buy back the telemetry they do not
+give you with a handful of cheap sensors. That costs 76 dollars instead of 260. Section 1b is
+the parts list and the conditions that come with it.
+
 | Qty | Part | Est. | Lead | Notes |
 |---|---|---|---|---|
-| 1 | VESC, 75 V / 100 A class (Flipsky FSESC 75100, Spintend Ubox) | 130 | Long | **Buy one, not two.** Prove it works with your motor before doubling up. Must have CAN and a motor temperature input. |
 | 1 | Teensy 4.1 | 32 | Stock | Has three CAN controllers on the chip. It still needs an external transceiver. |
-| 2 | CAN transceiver breakout, 3.3 V (SN65HVD230 / MCP2562FD) | 10 | Stock | Buy a spare. They are the first thing you blow up. |
+| 2 | CAN transceiver breakout, 3.3 V (SN65HVD230 / MCP2562FD) | 10 | Stock | Not needed to drive the scooter controllers, which have no CAN. Buy them anyway — they are 5 dollars each and they are what you need the day you move to VESCs. |
 | 1 | RC transmitter and receiver set, 8+ channels | 180 | Stock | See section 6 for what the channels are for. |
 | 1 | Multimeter with a clamp for DC current | 60 | Stock | The clamp matters. You cannot break into a 40 A circuit to measure it. |
 | 1 | Bench power supply, 60 V 5 A, adjustable current limit | 90 | Stock | The current limit turns a wiring mistake into a beep instead of a fire. Borrow one if you can. |
@@ -31,10 +38,71 @@ no body.
 
 ### The one thing to check on day one
 
-Before anything else, get **one VESC driving one pod motor from the VESC's own configuration
-tool**, with the pod on blocks. Not from the Teensy. If the hub motor's hall sensors are
-damaged, or its winding resistance is wrong for the controller, you want to find out now and
-not in month four.
+Before anything else, get **one pod motor spinning from its own scooter controller and a
+physical throttle**, with the pod on blocks. No Teensy, no Arduino, no code. If a hub motor's
+hall sensors are damaged you want to find out today and not in month four, and this test
+costs nothing because you already own every part of it.
+
+---
+
+## 1b. Driving the scooter controllers from the Teensy — about 76 dollars
+
+A throttle is three wires: **+5 V, ground, and a signal wire** carrying roughly 0.8 V at rest
+and 4.2 V at full. The controller cannot tell whether a thumb or a computer made that
+voltage. So you replace the throttle with a chip that makes the voltage on command.
+
+**Measure your real throttle first.** Read the signal wire at rest and at full with the
+multimeter and match those numbers. Do not assume 0.8 and 4.2.
+
+| Qty | Part | Est. | Lead | Notes |
+|---|---|---|---|---|
+| 2 | MCP4725 12-bit I2C DAC breakout | 8 | Stock | One per controller. Makes the throttle voltage. Two share one I2C bus at addresses 0x62 and 0x63. |
+| 1 | I2C level shifter, 4 channel (BSS138 or TXS0102) | 4 | Stock | The DAC has to run at 5 V to reach full throttle, and **the Teensy is not 5 V tolerant.** Without this you damage its pins. |
+| 4 | Opto-isolator, PC817, plus resistors | 5 | Stock | Two per controller: one pulls the **reverse** line, one pulls the **e-brake** line. Isolated, so a controller fault cannot travel back into the Teensy. |
+| 2 | Watchdog: TLC555 or TPS3823, plus a signal relay with normally-closed contacts | 14 | Stock | **Not optional.** See the warning below. |
+| 2 | ACS758 100 A bidirectional hall current sensor | 20 | Stock | Puts back the current reading the VESC would have given you. One per pack lead. |
+| — | Resistors for the motor thermistor divider | 2 | Stock | Reads the hub motor's **own** temperature sensor straight into the Teensy. This is the defence against risk R5, and it replaces arbitration rule 9's data source. |
+| — | Resistors for two pack voltage dividers | 2 | Stock | Arbitration rules 5 and 11 used to read pack voltage off the VESC's CAN messages. There is no CAN now, so the Teensy has to measure it. Mind the ground reference. |
+| — | Wiring to bring both motors' hall sensors to the Teensy | 6 | Stock | Arbitration rule 4 asked "is each track alive?" and got the answer from CAN. Now the Teensy counts hall edges instead: commanded to move, halls not changing, track is dead. |
+| — | Shielded 4-core signal cable and connectors | 15 | Stock | Throttle lines run beside motor phase wires. Shield them or the robot twitches. |
+
+### Do not use an Arduino PWM pin for the throttle
+
+An Arduino has no true analogue output. `analogWrite` gives a square wave, and filtering it
+with a resistor and capacitor gives a slow, noisy voltage. Noise on a throttle line is a
+robot that twitches. The DAC is 4 dollars.
+
+### Warning: a DAC does not spring back
+
+A real throttle returns to zero when you let go. **A DAC holds its last value forever.** If
+the Teensy crashes mid-drive, the throttle voltage stays exactly where it was and the robot
+keeps going.
+
+So the watchdog is a hardware part, not a software one: the Teensy sends a heartbeat pulse,
+and a relay with **normally-closed** contacts is held open by it. Stop the pulses — crash,
+reset, unplugged wire — and the relay falls closed and **shorts the throttle signal to
+ground**. Nothing in software has to work for this to happen.
+
+Wire the emergency stop into the controller's **e-brake** input as well. That is what it is
+there for.
+
+### What you still give up, and what it costs to get back
+
+| The VESC would give you | With scooter controllers |
+|---|---|
+| Motor temperature | **Bought back for 2 dollars.** The hub motor has its own thermistor in its cable. Read it directly. |
+| Motor current | **Bought back for 20 dollars** with the ACS758 sensors. |
+| Field-oriented control — smooth torque from standstill | **Cannot be bought back.** Scooter controllers use six-step commutation, which judders at walking pace. Skid steer lives at walking pace. |
+| Tunable current limit, ramp rate, cutoff | **Cannot be bought back.** Fixed in their firmware, tuned for a 15 kg scooter carrying a person, not a 100 kg tracked robot. |
+| Full-speed reverse | Scooter reverse is usually capped near 30% and often refuses to change direction while the wheel is still turning. |
+
+Also check for **cruise control**. Some scooter controllers engage it automatically after a
+few seconds of steady throttle. On a robot in a crowd that is dangerous. If yours does it and
+cannot be turned off, that alone is worth the 260 dollars.
+
+**The upgrade path stays open.** Two VESCs are 260 dollars whenever you decide the juddering
+at low speed is unacceptable. The Teensy, the CAN transceivers, the wiring and the frame are
+all unchanged — you swap the controllers and drop the DACs.
 
 ---
 
@@ -42,7 +110,6 @@ not in month four.
 
 | Qty | Part | Est. | Lead | Notes |
 |---|---|---|---|---|
-| 1 | VESC, second one, identical to the first | 130 | Long | Identical. Do not mix models across the two sides; the tuning will not transfer. |
 | 2 | DC contactor, 48 V coil, 80 A+ **DC rated** | 200 | Long | Albright SW-series or Gigavac. **An AC-rated relay will weld shut.** `04-power-and-wiring.md` section 5. |
 | 2 | Fuse, 60 A, and holders | 25 | Stock | Class T or ANL. One per pack. |
 | 3 | Fuse, 10 A, and holders | 15 | Stock | 12 V converter, amplifier supply, spare. |
@@ -188,18 +255,29 @@ cannot be the same failure.
 
 | Section | Phase | Est. |
 |---|---|---|
-| 1 — de-risking | now | 550 |
-| 2 — frame and drive | 1 | 1,110 |
+| 1 — de-risking | now | 422 |
+| 1b — throttle interface for the scooter controllers | now | 76 |
+| 2 — frame and drive | 1 | 980 |
 | 2b — sealing the battery box | 1 | 80 |
 | 3 — compute and sensors | 2 | 740 |
 | 4 — face and sound | 4 | 400 |
 | 5 — body | 5 | 760 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 4,200** |
+| **Total** | | **≈ 4,010** |
 
-This sits at the top of the 2,700 to 4,200 range in `00-plan.md` section 7, which is what
-happens when estimates turn into named parts. The three places to cut, in order:
+Using the scooter controllers you already own instead of two VESCs took **about 180 dollars**
+off this, not 260, because 76 of it goes straight back into the throttle interface and into
+the current, voltage, speed and temperature sensing that the VESCs would have included for
+free. The saving is real but modest. The reason to do it is that it costs nothing to try and
+it gets the robot moving sooner.
+
+**Leaving the VESCs out is the one cut on this page that you may have to undo.** The others
+are cosmetic or optional. This one is a bet that six-step commutation is smooth enough at
+walking pace for a skid-steer robot, and you will not know until you drive it. Budget 260
+dollars as a contingency rather than treating it as saved.
+
+The three places to cut, in order:
 
 1. **The body.** Foam and paint is 760 dollars of the total and none of it makes the robot
    work. A rough body for the first outing is fine.
@@ -208,8 +286,8 @@ happens when estimates turn into named parts. The three places to cut, in order:
 3. **The GPS and IMU.** Only needed for `ASSIST` mode, which `00-plan.md` already lists as
    the first thing to drop.
 
-The three places **not** to cut: the DC contactors, the crimp tool, and the current-limited
-bench supply.
+The four places **not** to cut: the DC contactors, the crimp tool, the current-limited bench
+supply, and the **hardware throttle watchdog** in section 1b.
 
 ---
 
@@ -220,7 +298,8 @@ those break.
 
 | Qty | Part | Why |
 |---|---|---|
-| 1 | VESC | The most expensive thing that can die, and it kills one whole track. |
+| 1 | 48 V controller with a reverse line, 50 | You own exactly two and need exactly two. One dying kills one whole track, and the robot cannot turn on one track. |
+| 2 | MCP4725 DAC breakout | 4 dollars, and it is the single point of failure for a whole side's throttle. |
 | 2 | CAN transceiver | Cheap, and they fail. |
 | 1 | 12→5 V converter | Loses the Spine and the Face together. |
 | 1 | ESP32-S3 board | An eye. |
