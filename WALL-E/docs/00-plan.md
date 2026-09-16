@@ -120,6 +120,7 @@ follow from that:
 | L12 | Body length follows the **pod** length, not the anti-tip castors | A body sized to cover the castors is 745 mm on 363 mm pods, and looks like a crate on toy wheels. The castor arms show as outriggers instead |
 | L13 | Two Face boards, one per eye | Two 480×480 QSPI panels on one ESP32-S3 is tight and would tear. 12 dollars removes the risk. `05-bom.md` §4 |
 | L14 | The amplifier gets its own 48→32 V converter | A TPA3255 maxes out at 53.5 V and a "48 V" pack is 54.6 V full. It also keeps the audio spikes off the Jetson's rail. `04-power-and-wiring.md` §4 |
+| L15 | **Batteries stay in the frame, not in the body** | Not for the tipping, which is affordable. The shelf has no room, the body is the hottest and most sealed place on the robot, and it is the worst place for a cell to fail. If clearance is the problem, raise the box floor towards 190 mm instead. `06-why-the-batteries-are-low.md` |
 
 #### L7 — why we keep the short belts now
 

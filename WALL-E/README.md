@@ -79,6 +79,7 @@ WALL-E/
     03-safety-log.md         The safety test record. Fill in by hand before going near people
     04-power-and-wiring.md   Every wire, every fuse, and the emergency stop chain
     05-bom.md                What to buy, what it costs, how long it takes to arrive
+    06-why-the-batteries-are-low.md   Why the packs hang under the frame, with the numbers
     99-glossary.md           Every technical word used here, explained simply
   firmware/
     README.md                How to build and flash both boards, and how to test them

@@ -237,10 +237,10 @@ robot_h     = head_yc + eye_d/2;                // top of the robot
 sun_block   = atan(scr_recess/scr_d);
 
 // -- electronics shelf layout ------------------------------------------------
-// THREE rows, not two: the body is only 430 deep, so a row can only be about
-// 356 long, and the eight boxes do not fit in two rows of that length. The
-// shelf is wide (546) and shallow, so rows are cheap and length is not.
-// Row 0 is nearest the front, row 2 nearest the back.
+// Several short rows, not two long ones: the body is only 430 deep, so a row
+// can only be about 356 long, and the nine boxes do not fit in two rows of
+// that length. The shelf is wide (546) and shallow, so rows are cheap and
+// length is not. Row 0 is nearest the front.
 shelf_l     = body_l - 2*body_wall - 2*shelf_marg;
 shelf_w     = body_w - 2*body_wall - 2*shelf_marg;
 // [name, size, row]
@@ -303,6 +303,23 @@ function wsum(k) = mass_items[0][0]*mass_items[0][k] + mass_items[1][0]*mass_ite
                  + mass_items[4][0]*mass_items[4][k] + mass_items[5][0]*mass_items[5][k];
 com_x = wsum(1)/m_total;
 com_y = wsum(2)/m_total;
+
+// -- WHAT IF the batteries went in the body instead? -------------------------
+// A fair question, and this is the arithmetic that answers it. See the
+// BATTERY PLACEMENT echo block and docs/06-why-the-batteries-are-low.md.
+//
+// Packs would lie flat on the electronics shelf, 80 tall, so their centre of
+// mass rises from batt_com_y to here:
+bib_com_y   = shelf_y + shelf_t + batt_h/2;
+bib_com_all = (wsum(2) - 2*batt_kg*batt_com_y + 2*batt_kg*bib_com_y)/m_total;
+bib_tip_fwd = atan((pod_A/2 - com_x)/bib_com_all);
+// A pack is 400 long and the shelf is only ~356 deep, so they cannot lie
+// fore-aft. They would have to lie ACROSS the robot. Then:
+bib_need_x  = 2*batt_w + batt_gap_z;            // 244 of the shelf's length
+bib_need_z  = batt_l;                           // 400 of the shelf's width
+bib_area    = 100*bib_need_x*bib_need_z/shelf_area;
+// and the lowest point of the robot becomes the rail bottom, not the box floor
+bib_clear   = fr_bot;
 
 // -- tipping -----------------------------------------------------------------
 // The robot pivots about the edge of the ground contact patch. The patch is
@@ -680,6 +697,25 @@ echo(str("  ROLL sideways before it goes over:  ", round(tip_side*10)/10,
          " deg — sideways is never the problem, the pods are 700 apart"));
 echo(str("  anti-tip castor catches the pitch at: ", round(at_catch*10)/10,
          " deg (", at_x, " out, ", at_clear, " clear, lever ", round(at_lever), ")"));
+
+echo("");
+echo("--- BATTERY PLACEMENT: why they are LOW and not in the body ---------------");
+echo(str("  AS BUILT, packs in the frame:  battery CoM ", round(batt_com_y),
+         " · robot CoM ", round(com_y*10)/10,
+         " · tips forward at ", round(tip_fwd*10)/10, " deg"));
+echo(str("  IF MOVED to the body shelf:    battery CoM ", round(bib_com_y),
+         " · robot CoM ", round(bib_com_all*10)/10,
+         " · tips forward at ", round(bib_tip_fwd*10)/10, " deg"));
+echo(str("  COST:    ", round((bib_com_all - com_y)*10)/10,
+         " mm higher CoM, ", round((tip_fwd - bib_tip_fwd)*10)/10,
+         " deg less tipping margin, and the packs take ", round(bib_area),
+         "% of the shelf on top of the ", round(shelf_fill),
+         "% the electronics already use = ", round(bib_area + shelf_fill), "%"));
+echo(str("  ALSO:    a pack is ", batt_l, " long and the shelf is only ",
+         round(shelf_l), " deep, so they could not lie fore-aft at all —",
+         " they would have to lie ACROSS the robot"));
+echo(str("  GAIN:    ground clearance would go from ", tray_y0, " to ",
+         bib_clear, " mm, because the plywood box is the lowest part"));
 
 echo("");
 echo("--- THE POD JOINT --------------------------------------------------------");
