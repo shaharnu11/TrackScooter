@@ -8,6 +8,48 @@ The scooter work stays in `../archive/`.
 
 ---
 
+## Start here if you are building it
+
+**[BUILD.md](BUILD.md)** — the steps in order, with a check at the end of each one.
+
+The drawings it refers to are in `blueprint/`, and they are dimensioned:
+
+| Sheet | What it is |
+|---|---|
+| [`blueprint/s1.png`](blueprint/s1.png) | General arrangement — overall sizes and every important height |
+| [`blueprint/s2.png`](blueprint/s2.png) | Frame weldment — **this is the one the welder gets** |
+| [`blueprint/s3.png`](blueprint/s3.png) | Battery box — the six plywood panels, flat |
+| [`blueprint/s4.png`](blueprint/s4.png) | Chest panel — the two speaker holes |
+| [`blueprint/s5.png`](blueprint/s5.png) | Electronics shelf — what goes where |
+
+To redraw all of them after a change:
+
+```sh
+cd WALL-E && ./render_all.sh
+```
+
+It refuses to draw anything if the pod numbers or the 46 guards do not pass, so a
+clean run is also the model's own check that the change is consistent.
+
+### The files
+
+| File | What it is |
+|---|---|
+| `walle.scad` | The global file. One entry point, every view and every sheet. |
+| `pod_interface.scad` | The 23 facts about the **built** pods. The only place they live. |
+| `check_pod_interface.scad` | Proves that file still agrees with the Rev 012 pod model. |
+| `cad/walle_frame.scad` | Everything WALL-E decides, plus the 46 guards. |
+
+The pod numbers used to be typed into `cad/walle_frame.scad` by hand, copied from
+the pod model. They are now in one file, and `check_pod_interface.scad` compares all
+23 of them against the pod model itself. As of 2026-09-16 all 23 agree.
+
+Two things in there are still **assumptions, not measurements**, and both are in
+step 0 of [BUILD.md](BUILD.md): whether the pods still have their green plates on,
+and the part weights that the tipping angles are computed from.
+
+---
+
 ## What we are building
 
 Take the two track pods that were designed for the scooter. Instead of putting them one

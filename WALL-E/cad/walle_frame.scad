@@ -35,27 +35,20 @@ png_up          = false;    // true only for PNG renders — see the note at the
 // ============================================================================
 //  1. POD FACTS — MEASURED / BUILT. Do not "improve" these.
 // ============================================================================
-// Straight from apollo_track_pod_rev012.scad. Re-measure the first three on the
-// real pods before cutting steel; everything in this file hangs off them.
-pod_gp_zi   = 94;    // green plate INNER face, pod-local |z| (= carrier outer face)
-pod_gp_t    = 6;     // green plate thickness -> OUTER face at 100, the pod's widest point
-pod_gp_yc   = 227;   // green plate band centre, above the GROUND (hub 216 + gp_yc 11)
-pod_gp_w    = 60;    // green plate band height -> 197 .. 257 above ground
-pod_hub_h   = 216;   // hub axle height above ground
-pod_halfl   = 181.6; // pod half length  -> 363 overall
-pod_top     = 327;   // belt crown height
-pod_belt_w  = 118;   // belt width
-pod_A       = 231.2; // idler axle centres = GROUND CONTACT LENGTH
-pod_idler_d = 108;   // idler wheel OD
-pod_B       = 150;   // hub centre above the idler axle line
-pod_T       = 12;    // belt carcass thickness
-pod_pitch_r = 105.04;// sprocket cord radius
-
-// The M12 holes in the green plates. ALREADY DRILLED, pod-local x, both plates.
-// They sit 108..168 FORWARD of the hub, because Rev 012 ran its rails forward
-// from the pod. We are stuck with them — see the note at guard "joint offset".
-pod_bolt_x  = [-168, -108];
-pod_bolt_d  = 12;    // M12 10.9
+// These used to be typed out here as twenty-odd constants copied by hand from
+// apollo_track_pod_rev012.scad. That is a copy of a measurement, and a copy
+// always ends up disagreeing with the original, so they moved to ONE file:
+//
+//     ../pod_interface.scad
+//
+// which also records where each number came from and what is still unconfirmed
+// about the real pods. To prove it still agrees with the pod model, run:
+//
+//     openscad -o /dev/null WALL-E/check_pod_interface.scad
+//
+// It compares all 23 numbers and prints OK or MISMATCH for each. As of
+// 2026-09-16 all 23 agree.
+include <../pod_interface.scad>
 
 // ============================================================================
 //  2. THE CHOICES — this is what this file actually decides
@@ -68,8 +61,13 @@ pod_cl      = 500;   // POD CENTRE TO CENTRE, left to right. Owner, 2026-09-16.
 fr_h        = 60;    // rail height, y. 60 matches the green plate band exactly
 fr_w        = 30;    // rail thickness, z
 fr_t        = 3;     // wall
-rail_x0     = -275;  // rail front end
-rail_len    = 550;   // -> rear end at +275, symmetric about the ground contact
+rail_x0     = -275;  // rail REAR end. Front is +x on this robot — the chest
+                     //   panel, the eye barrels and cm_front_x are all at +x.
+                     //   This said "front end" and the cut list echoed hole
+                     //   positions "from the FRONT end" while measuring them
+                     //   from HERE, which would have put both M12 holes 336 mm
+                     //   out of place.
+rail_len    = 550;   // -> FRONT end at +275, symmetric about the ground contact
 
 // -- the battery box: plywood, slung between the rails ------------------------
 tray_t      = 12;    // plywood
@@ -226,11 +224,13 @@ ply_rho     = 650;   // kg/m3  birch
 $fa = 4; $fs = 0.7;
 
 pod_z       = pod_cl/2;                 // each pod's centre plane
-pod_gp_zo   = pod_gp_zi + pod_gp_t;     // 100 — pod's widest point, pod-local
-width_over  = pod_cl + 2*pod_gp_zo;     // 700 — overall robot width
+// pod_mount_z comes from ../pod_interface.scad. It is the pod's widest point
+// AND the face the rail bolts to — 100 with the green plates fitted, 94
+// without them. That question is still open; see the cautions in that file.
+width_over  = pod_cl + 2*pod_mount_z;   // 700 — overall robot width
 
 // the rail's OUTER face lies flat on the inboard green plate's outer face
-rail_zo     = pod_z - pod_gp_zo;        // 150
+rail_zo     = pod_z - pod_mount_z;      // 150
 rail_zi     = rail_zo - fr_w;           // 120 — rail inner face
 bay_w       = 2*rail_zi;                // 240 — clear width between the rails
 
@@ -840,7 +840,11 @@ else if (render_mode == "plates"){
 // command-line camera assumes Z-up, so PNG renders come out lying on their
 // side. png_up=true rotates the scene for rendering only — it does not touch
 // the geometry, the STL, or any number above.
-if (png_up) rotate([90,0,0]) scene(); else scene();
+// no_render lets ../walle.scad include this file for its numbers and its
+// modules without drawing the robot on top of a blueprint sheet. Standalone,
+// no_render is undefined and the scene draws as normal.
+suppress = is_undef(no_render) ? false : no_render;
+if (!suppress) { if (png_up) rotate([90,0,0]) scene(); else scene(); }
 
 // ============================================================================
 //  7. NUMBERS — always printed
@@ -1025,13 +1029,13 @@ echo(str("  ", fr_h, "x", fr_w, "x", fr_t, " box  cross members       2 x ", cm_
          "   -> ", 2*rail_len + 2*cm_len, " mm of box tube total"));
 echo(str("    each rail: 2 holes Ø25 through BOTH walls at ",
          pod_bolt_x[0] - rail_x0, " and ", pod_bolt_x[1] - rail_x0,
-         " mm from the rail's FRONT end, ", pod_gp_yc - fr_bot,
+         " mm from the rail's REAR end, ", pod_gp_yc - fr_bot,
          " mm up from the rail's bottom; weld a Ø25xØ13x", fr_w, " sleeve in each"));
 echo(str("  ", tray_t, " mm plywood  box floor        1 x ", tray_len, " x ", tray_clear + 2*tray_t));
 echo(str("  ", tray_t, " mm plywood  box side walls   2 x ", tray_len, " x ", box_wall_h,
          ", each with 2 holes Ø", bolt_access_d, " at ",
          pod_bolt_x[0] + tray_len/2, " and ", pod_bolt_x[1] + tray_len/2,
-         " mm from the FRONT edge, ", pod_gp_yc - tray_y0,
+         " mm from the REAR edge, ", pod_gp_yc - tray_y0,
          " mm up (M12 spanner access — FIT SILICONE PLUGS)"));
 echo(str("  ", tray_t, " mm plywood  box END walls    2 x ", tray_clear + 2*tray_t,
          " x ", box_wall_h, "   <- these are what close the box"));
