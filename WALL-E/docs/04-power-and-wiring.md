@@ -15,16 +15,19 @@ Two decisions from the architecture drive everything here:
 
 ```
 PACK A — larger, 48 V, 20 Ah                 (capacity is a placeholder)
- +─┬── FUSE 60 A ──── CONTACTOR A ────────── VESC LEFT ──── hub motor, left pod
-   │
-   ├── FUSE 10 A ──── DC-DC 48→12 V ───────── 12 V RAIL     (see section 3)
-   │                  isolated, 100 W
-   │
-   └── FUSE 10 A ──── DC-DC 48→32 V ───────── AUDIO AMPLIFIER
-                      non-isolated, 150 W    (why 32 V and not 48: section 4)
+ +── XT90-S ─┬── FUSE 60 A ── CONTACTOR A ─── CONTROLLER L ── hub motor, left pod
+  DISCONNECT │
+   sees ~43A ├── FUSE 10 A ── DC-DC 48→12 V ── 12 V RAIL     (see section 3)
+             │                isolated, 100 W
+             │
+             └── FUSE 10 A ── DC-DC 48→32 V ── AUDIO AMPLIFIER
+                              non-isolated,    (why 32 V and not 48: section 4)
+                              150 W
 
 PACK B — smaller, 48 V, 15 Ah
- +─┬── FUSE 60 A ──── CONTACTOR B ────────── VESC RIGHT ─── hub motor, right pod
+ +── XT90-S ──── FUSE 60 A ── CONTACTOR B ─── CONTROLLER R ── hub motor, right pod
+  DISCONNECT
+   sees ~40A
 
 
 PACK A (−) ══════════ GROUND BOND ══════════ PACK B (−)
@@ -52,7 +55,7 @@ driving — on a skid-steer machine that is a command to spin, not a command to 
 
 ## 2. How much current, really
 
-These are the numbers the wire sizes and fuses come from. The robot is 91 kg
+These are the numbers the wire sizes and fuses come from. The robot is 86.5 kg
 (`cad/walle_frame.scad`).
 
 ### Driving in a straight line on sand
@@ -180,10 +183,58 @@ The cost is one extra converter and one extra fuse on the pack.
 
 | # | Device | What it does | When you use it |
 |---|---|---|---|
-| 1 | **Main disconnect** — an Anderson connector on each pack, reachable without tools | Physically separates each pack. Nothing downstream is live. | Before touching any wiring. Before transport. Overnight. |
+| 1 | **Main disconnect** — an **XT90-S anti-spark** connector on each pack, reachable without tools | Physically separates each pack. Nothing downstream is live. | Before touching any wiring. Before transport. Overnight. |
 | 2 | **Emergency stop** — latching mushroom button, red, on the outside of the body | Opens both contactor coils. Motors dead, electronics alive. | Something is going wrong, right now. |
 | 3 | **Wireless emergency stop** — a relay on a dedicated receiver | Same effect as the button, from a distance. | The robot is further away than you can run. |
 | 4 | **Arm switch** — a toggle on the RC transmitter | Software only. The Spine sends zero. | Normal start and stop of a session. |
+
+### Why the main disconnect is XT90-S, and not XT60
+
+**Short answer: XT60 is the right part for the charge lead and the wrong part for the main
+disconnect.** Both were Anderson before. The charge lead is now XT60 and the disconnect is
+XT90-S, which is the same family, same tooling, same price bracket.
+
+Three reasons the main disconnect needs the bigger part.
+
+**1. Current.** Look at the tree in section 1: **pack A's disconnect carries everything.**
+The motor's 40 A plus the 12 V rail and the amplifier, so about 43 A. An XT60 is rated 60 A,
+so that is 72 % of its rating on a connector that is known to run warm past about 40 A. An
+XT90 is rated 90 A, which is 48 % — real margin, on the one connector that gets handled
+every single day.
+
+**2. It sparks, and XT60 has no answer to that.** Plugging a 48 V pack into the controllers'
+input capacitors dumps a large current into them for a few milliseconds, and you get a visible
+spark. Every spark pits the contact faces. Pitted contacts have more resistance, more
+resistance makes more heat, and heat makes the pitting worse. **The "-S" in XT90-S is an
+anti-spark resistor built into the connector**: it pre-charges those capacitors through the
+resistor during insertion, so the main contacts meet with the load already charged. There is
+no anti-spark XT60.
+
+**3. Mating cycles.** Read the right-hand column of the table above: before touching wiring,
+before transport, overnight. That is several cycles a day for months. Anderson SB50 is rated
+for hundreds of cycles, and XT90 is in that class. XT60's bullets are not — they loosen, and
+a loose high-current contact is the thing that starts fires.
+
+### The one rule you must not get wrong: the socket half goes on the battery
+
+Anderson SB connectors are **genderless** — both halves are identical, with the contacts
+recessed inside a housing. That is a safety property we are giving up, and it has to be
+replaced by a rule instead.
+
+An XT connector has a pin half and a socket half. **Put the SOCKET half on the battery.**
+
+The main disconnect sits at the pack terminals, ahead of the fuses. So when it is unplugged
+overnight, the battery side is live at 54.6 V with **nothing between it and hundreds of amps
+of pack**. If that side has exposed pins 7 mm apart, a dropped spanner or a bit of steel
+swarf across them is a dead short that no fuse in this robot will interrupt. With the socket
+half on the battery, the live contacts are recessed and nothing can bridge them.
+
+Get this backwards and you have built a short circuit that is waiting for a dropped tool.
+
+- Battery side: **socket half**, contacts recessed.
+- Load side: pin half.
+- Cap both halves when parted. A cheap silicone cap is a fine dust cover and a fine idiot
+  guard at the same time.
 
 ### The wireless stop has to fail the right way
 

@@ -116,7 +116,8 @@ all unchanged — you swap the controllers and drop the DACs.
 | 10 m | 10 AWG silicone wire, red and black | 40 | Stock | Silicone, not PVC. It has to stay flexible when hot. |
 | 10 m | 12 AWG silicone wire | 30 | Stock | Motor phases. |
 | 1 set | Ring lugs, heatshrink, and a proper crimp tool | 70 | Stock | The tool is not optional. See `04-power-and-wiring.md` section 8. |
-| 4 | Anderson connectors, 50 A+ | 30 | Stock | The main disconnect on each pack, plus spares. |
+| 4 | **XT90-S anti-spark** connector pairs | 20 | Stock | The main disconnect on each pack, plus two spares. **Was Anderson SB50.** The "-S" is not optional: it is the built-in resistor that pre-charges the controller capacitors, so the contacts stop sparking every time you plug in. **Put the SOCKET half on the battery** — the disconnect sits ahead of the fuses, so exposed pins on the pack side would be an unfused short waiting for a dropped spanner. See `04-power-and-wiring.md` §5. |
+| 8 | Silicone caps for the XT90 halves | 6 | Stock | Dust cover and idiot guard in one. Anderson housings were genderless and recessed; XT is not, so this replaces a safety property we gave up. |
 | 1 | Latching mushroom emergency stop, red, IP65 | 25 | Stock | Normally-closed contact. |
 | 1 | Isolated DC-DC, 48→12 V, 100 W (Mean Well SD-100C-12) | 70 | Stock | **Isolated.** Check it: no continuity from output negative to input negative. It is 159 × 97 × 38, which is bigger than it sounds — the shelf model accounts for that. |
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. |
@@ -140,7 +141,7 @@ has the reasoning. Cheap parts, so buy spares of all of them.
 | 2 | Screw-in membrane vent, M12, IP67 (Gore type or equivalent) | 16 | Stock | 1 needed, 1 spare. Goes in the **lid**. A sealed box breathes with the day/night temperature swing; this is the clean path so it does not pull dust through a leak. |
 | 4 | Cable gland, M16, IP68 | 10 | Stock | Charge leads and pack sense wiring out of the box. Not a drilled hole. |
 | 16 | M5 bolts, nuts and washers, 25 mm | 8 | Stock | 12 for the lid at 110 mm pitch, plus spares. A gasket only seals where it is squeezed. |
-| 1 | Anderson or XT60 charge connector with a dust cap, body-mounted | 15 | Stock | The packs charge **in place** and do not come out in the field. |
+| 2 | **XT60** charge connector with a dust cap, body-mounted | 12 | Stock | One per pack. The packs charge **in place** and do not come out in the field. XT60 is right here and wrong for the main disconnect: charging is a few amps, it is plugged in rarely, and there is no capacitor bank to spark into. |
 
 ### The contactor is the long pole
 
@@ -304,20 +305,20 @@ cannot be the same failure.
 |---|---|---|
 | 1 — de-risking | now | 422 |
 | 1b — throttle interface for the scooter controllers | now | 76 |
-| 2 — frame and drive, including sealing the box | 1 | 761 |
+| 2 — frame and drive, including sealing the box | 1 | 754 |
 | 3 — compute and sensors | 2 | 738 |
 | 4 — face and sound | 4 | 414 |
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 3,280** |
+| **Total** | | **≈ 3,270** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
 to 552, section 3 said 740 against 738, and section 4 said 400 when it actually
 sums to 459. The total was understated in one place and overstated in another.
 
-### How it got from 4,200 to 3,280
+### How it got from 4,200 to 3,270
 
 | Change | Saving |
 |---|---|
