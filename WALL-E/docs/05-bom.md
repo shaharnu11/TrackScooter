@@ -122,7 +122,7 @@ all unchanged — you swap the controllers and drop the DACs.
 | 1 | Isolated DC-DC, 48→12 V, 100 W (Mean Well SD-100C-12) | 70 | Stock | **Isolated.** Check it: no continuity from output negative to input negative. It is 159 × 97 × 38, which is bigger than it sounds — the shelf model accounts for that. |
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. |
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy and ESP32 only. No servos any more, so this is a much easier load. |
-| — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and VESC input protection. |
+| — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and controller input protection. |
 | — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 240 cross members, 1580 mm of 60×30 in total. |
 | — | M12 10.9 bolts, and the Ø25/Ø13×30 sleeves to weld into the rails | 25 | Stock | The sleeve is what stops an M12 crushing a 3 mm box wall. Not optional. |
 | 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels) and electronics shelf. |

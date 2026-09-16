@@ -100,7 +100,7 @@ Once that is true, the location is decided by everything else, and low wins on
 all of it:
 
 **The body is the hottest place on the robot.** Inside it there is a Jetson
-putting out 25 W, both VESCs and the amplifier, in a sealed foam-lined box, in
+putting out 25 W, both motor controllers and the amplifier, in a sealed foam-lined box, in
 the Negev. Lithium cells lose life quickly above 45 °C, and that is normal
 ageing, not a fault. Under the frame the packs sit in open air in the draught of
 driving — the best-cooled spot on the machine, free.
@@ -109,7 +109,7 @@ driving — the best-cooled spot on the machine, free.
 only 356 mm deep, so they could not even lie fore-aft. Lying across the robot the
 two of them use 50 % of the shelf area on top of the 32 % the electronics already
 need. That is 83 % of the shelf, and what is left has to hold a clear air path
-past the Jetson and both VESCs. It will not.
+past the Jetson and both motor controllers. It will not.
 
 That figure has since got worse, not better: the two speaker enclosures now sit
 over 54 % of the shelf as well.

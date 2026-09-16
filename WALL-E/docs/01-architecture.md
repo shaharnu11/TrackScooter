@@ -68,11 +68,15 @@ pause.
              │  mixing, ramping,    │      Cannot freeze. Holds every rule.
              │  watchdog, limits    │
              └──────────┬───────────┘
-                        │ CAN bus, 500 kbit
+                        │ I2C to 2 DACs, then an
+                        │ opto-isolated 0-3.3 V
+                        │ throttle line each
              ┌──────────┴──────────┐
              ▼                     ▼
       ┌─────────────┐       ┌─────────────┐
-      │ VESC left   │       │ VESC right  │
+      │ CONTROLLER  │       │ CONTROLLER  │
+      │ left, 48 V  │       │ right, 48 V │
+      │ NO FEEDBACK │       │ NO FEEDBACK │
       └──────┬──────┘       └──────┬──────┘
              ▼                     ▼
       ┌─────────────┐       ┌─────────────┐
@@ -152,8 +156,8 @@ it works.**
 
 ## 3b. One battery per pod, and the three traps that come with it
 
-We have two 48 V packs, and each one feeds its own pod: left pack to the left VESC, right pack
-to the right VESC. The positives stay completely separate.
+We have two 48 V packs, and each one feeds its own pod: left pack to the left controller, right
+pack to the right controller. The positives stay completely separate.
 
 This is a good decision. It removes the worst problem with two packs, which is connecting them
 in parallel. Two packs at different states of charge, joined together, dump a very large
@@ -173,10 +177,14 @@ The packs **will** drift apart, for three reasons: every turn loads the outer tr
 than the inner one, the two packs will not be equally healthy, and one of them is also feeding
 the electronics.
 
-**The fix (arbitration rule 11):** the VESCs already report their input voltage over CAN, and
-the Spine is already listening. So the Spine scales each side's command by that side's own pack
+**The fix (arbitration rule 11):** the Spine scales each side's command by that side's own pack
 voltage, aiming for the same volts at each motor rather than the same fraction. In code this is
 one multiplication per side, and it makes the problem disappear.
+
+**Where that voltage comes from changed.** It used to be read off the VESC's CAN messages for
+free. The scooter controllers report nothing, so each pack needs **a resistor divider into a
+Teensy analogue input** — two resistors per pack, and care with the ground reference. Cheap,
+but it is now a part you have to fit rather than a message you already have.
 
 ### Trap 2 — One dead side makes the robot pivot, not stop
 
@@ -190,15 +198,24 @@ The most likely cause is not a broken wire. It is one pack's **BMS cutting out**
 voltage, over-current, or over-temperature — which it is designed to do, without warning, on
 its own.
 
-**The fix (arbitration rules 4 and 5):** the Spine requires both VESCs to be reporting on CAN
-and both pack voltages to be above a floor. If either check fails, it ramps **both** sides to
-zero. Never one.
+**The fix (arbitration rules 4 and 5):** the Spine requires **both tracks to be turning as
+commanded** and both pack voltages to be above a floor. If either check fails, it ramps
+**both** sides to zero. Never one.
 
-### Trap 3 — The two packs need a shared ground, or CAN will not work
+"Turning as commanded" used to mean "reporting on CAN". With the scooter controllers it means
+**counting the hub motor's own hall sensor edges**: if a track is commanded to move and its
+halls are not changing, that track is dead. Safety log test 8 is the test for it.
 
-Two separate packs have two separate negative terminals. The CAN bus connecting the Spine to
-both VESCs needs one common zero-volt reference, and without it the two ends of the bus float
-against each other and the data is meaningless.
+### Trap 3 — The two packs need a shared ground, or nothing the Teensy measures is real
+
+Two separate packs have two separate negative terminals. Everything the Teensy measures about
+the far pack — its voltage divider, its ACS758 current sensor, its throttle line reference —
+is measured against pack negative. Without one common zero-volt reference, those two negatives
+float against each other and every reading from the far side is meaningless.
+
+**This trap got worse when the VESCs went, not better.** A floating CAN bus announces itself:
+the messages simply stop and rule 4 catches it. A floating analogue reference does not announce
+anything. It gives you a plausible-looking wrong number, and the Spine acts on it.
 
 **The fix: bond the two pack negatives together at one single point, and keep the two positives
 separate.** Each pack then returns its own current through the shared negative, but there is no
@@ -209,8 +226,9 @@ Two details on that bond:
 
 - Size it for the larger of the two motor currents, and keep it short and thick. It is
   carrying real current, not just a reference.
-- **Do not fuse it.** A fuse that opens in the ground bond leaves the CAN bus floating while
-  the robot is still driving, which is worse than the fault it was protecting against.
+- **Do not fuse it.** A fuse that opens in the ground bond leaves every analogue reading on
+  the far pack floating while the robot is still driving, which is worse than the fault it was
+  protecting against.
 
 ### The electronics supply: the larger pack, and why that is the right choice
 
@@ -246,20 +264,37 @@ electronics load will not be enough to even it out, and the smaller pack becomes
 Running the electronics from one pack means **the Spine dies when that pack dies.** So the
 chain of events if the larger pack's BMS cuts out is:
 
-1. The Spine loses power and stops sending CAN commands.
-2. The other VESC still has power, from the smaller pack.
+1. The Spine loses power and stops driving the DACs.
+2. The other controller still has power, from the smaller pack.
 3. Arbitration rules 4 and 5 cannot help, because the board that enforces them is off.
 
-The robot is then relying entirely on **the VESC's own command timeout**: if no command
-arrives for about a second, a VESC releases the motor and lets it coast. That behaviour is what
-stops the robot pivoting on its surviving track.
+**This is the step that decision D7 made dangerous, and it is the single most important
+paragraph in this document.**
 
-So this becomes a critical configuration item rather than a detail:
+With VESCs, the robot was relying on the **VESC's own command timeout**: no command for about
+a second and it released the motor. That behaviour is what stopped the robot pivoting on its
+surviving track, and it was free.
 
-- Set the command timeout explicitly in both VESCs. Do not assume the default is what you
-  want, and do not assume it is enabled.
+**A scooter controller has no such timeout.** It is an analogue device. It sees a throttle
+voltage and it drives. Worse, the DAC that produces that voltage **keeps holding its last
+value** when the Teensy dies — it does not fall to zero. So the exact failure that used to
+produce a graceful coast now produces a robot driving away at whatever throttle it had, with
+nothing at all in control of it.
+
+The **hardware watchdog** is the entire replacement for that lost behaviour. It is a separate
+timer chip that must be kicked by the Teensy every cycle; if the kicks stop, it opens a relay
+in the throttle lines. This is why `05-bom.md` lists it as non-negotiable rather than as a
+nice extra.
+
+So this becomes the critical item in the whole build, not a configuration detail:
+
+- **Fit the hardware watchdog.** Nothing else does this job. There is no setting to enable.
 - Test it, as safety log test 15: cut power to the Spine while the robot is driving, and
-  confirm the surviving track releases within a second and the robot does not turn.
+  confirm both tracks stop and the robot does not turn.
+- Test its blind spot too, as safety log test 16. The watchdog only fires when the kicks stop,
+  so a Teensy that is alive but has lost the I2C bus to the DACs will keep kicking while the
+  throttle stays stuck. The firmware must check every DAC write and **stop kicking on purpose**
+  when one fails.
 - Keep a buffer capacitor on the electronics rail anyway. That is for risk R6, the motor
   current spikes, and it is needed whichever pack the supply comes from.
 
@@ -319,8 +354,9 @@ One loop at 1 kHz that does exactly what section 3 describes. Nothing else. No l
 card, no screens, no clever features. Every line of code added here is a line that can stop
 the robot from stopping.
 
-It also reads the VESC status messages that arrive on CAN anyway, and forwards motor
-temperature and battery voltage up to the Brain.
+It also reads the sensors that replaced the VESC telemetry — the hub motors' thermistors, the
+pack voltage dividers, the ACS758 current sensors and the hall-edge speed counts — and forwards
+motor temperature and battery voltage up to the Brain.
 
 ### Looking around now means driving
 
@@ -409,15 +445,17 @@ something real at every stage.
 
 | Stage | What you build | How you know it works |
 |---|---|---|
-| 1 | One VESC on a bench, one pod motor, no Teensy | The motor spins from the VESC's own configuration tool |
-| 2 | Teensy sends CAN to one VESC | The motor responds to a number you type in |
+| 1 | One controller on a bench, one pod motor, a hand throttle, no Teensy | The motor spins from the throttle. You now know the controller and motor are healthy, with no code involved |
+| 2 | Teensy drives one DAC into that controller's throttle line | The motor responds to a number you type in |
 | 3 | Add the RC receiver, one motor | The stick spins the motor, and it stops when you switch the transmitter off |
-| 4 | Add the second VESC and mixing | Both tracks on blocks, the robot steers correctly in the air |
-| 5 | Add the E-stop and the arm switch | Every one of the section 3 failures gives a stop. **Test each one on purpose.** |
-| 6 | First drive, outdoors, no body, tethered E-stop | It drives and turns on sand |
-| 7 | Add the bumper sensors | It refuses to drive into a cardboard box |
-| 8 | Add the Face, with the Brain doing nothing else | Eyes animate and follow a hand |
-| 9 | Add the camera and the personality | Eyes follow a real person across the room |
+| 4 | **Add the hardware watchdog, before the second track** | Pull the Teensy's power while the motor runs: the relay opens and the motor stops. Do this stage **before** there are two tracks that can pivot the robot |
+| 5 | Add the second controller and mixing | Both tracks on blocks, the robot steers correctly in the air |
+| 6 | Add the E-stop and the arm switch | Every one of the section 3 failures gives a stop. **Test each one on purpose.** |
+| 7 | First drive, outdoors, no body, tethered E-stop | It drives and turns on sand. **Watch the current on a turn in place** — that is the peak, not straight-line driving |
+| 8 | Add the bumper sensors | It refuses to drive into a cardboard box |
+| 9 | Add the Face, with the Brain doing nothing else | Eyes animate and follow a hand |
+| 10 | Add the camera and the personality | Pupils follow a real person across the room. The head does not move |
+| 11 | Enable look-turns, on the channel 6 switch | The body turns slowly to keep a person in view, and **any stick input cancels it instantly** |
 | 10 | Add the body and the sound | — |
 
 Stage 5 is not optional and cannot be rushed. Go through the failure list in section 3 and

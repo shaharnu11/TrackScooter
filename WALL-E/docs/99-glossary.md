@@ -101,9 +101,30 @@ The box that does that switching. ESC means Electronic Speed Controller. It take
 
 **VESC**
 A specific, open-source motor controller design, very popular for electric skateboards and
-scooters. We use two, one per pod. We chose VESC because you can command it over CAN from
-your own code, set safety limits inside it, and read the motor temperature back. Cheap
-scooter controllers only accept a throttle and tell you nothing.
+scooters. You can command it over CAN from your own code, set safety limits inside it, and
+read the motor temperature back.
+
+**We are not using VESCs.** Decision D7, 2026-09-17: the two 48 V scooter controllers are
+already owned, and they have a reverse line, so they do the job for nothing. They only accept
+a throttle voltage and tell you nothing back. Everything the VESC would have reported — speed,
+pack voltage, current, motor temperature — is now a separate sensor on the list, and the
+command timeout it would have given for free is now the hardware watchdog. See `05-bom.md`
+section 1b for what that costs and `01-architecture.md` for why the watchdog is mandatory.
+
+VESC still matters as a word here, because two CAN transceivers stay in the drawer and moving
+to VESCs is the planned fallback if the controllers judder at walking pace.
+
+**DAC**
+Digital to Analogue Converter. The opposite of the ADC below. The Teensy sends a number over
+I2C and the MCP4725 turns it into a voltage between 0 and 3.3 V, which is what the scooter
+controller wants to see instead of a twist grip. **A DAC holds its last value when the board
+driving it dies** — it does not fall to zero. That single fact is why the robot needs a
+hardware watchdog.
+
+**Hardware watchdog**
+A separate timer chip that the main board must "kick" regularly. If the kicks stop, the chip
+acts on its own — here, it opens a relay in both throttle lines. It is deliberately dumb and
+deliberately not running your code, so that it still works when your code is what failed.
 
 **Torque**
 Turning force. Not the same as speed. A motor can push very hard while barely turning.

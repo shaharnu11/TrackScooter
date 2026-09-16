@@ -211,8 +211,10 @@ through opto-isolators. `05-bom.md` section 1b is the parts list, about 76 dolla
 
 **Recommendation: use the controllers you own, and hold 260 dollars as a contingency.** This
 is a bet that six-step control is smooth enough at walking pace. You will not know until you
-drive it. If it judders, two VESCs drop straight in — the Teensy, the CAN transceivers and
-the wiring are all unchanged.
+drive it. If it judders, two VESCs drop straight in: the Teensy, the CAN transceivers and the
+power wiring all stay. What you throw away is the throttle interface — the two DACs, the level
+shifter and the opto-isolators, about 30 dollars — and you gain back the telemetry and the
+command timeout. The hardware watchdog stays either way; it is cheap insurance.
 
 ---
 

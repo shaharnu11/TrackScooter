@@ -175,7 +175,7 @@ The cost is one extra converter and one extra fuse on the pack.
 
 > **Check the voltage rating of every part against the FULLY CHARGED pack voltage, not the
 > nominal figure.** Then check it again for the LiFePO4 case if the pack chemistry is not yet
-> decided. This applies to the VESCs, the DC-DC converters, the contactors and the fuses.
+> decided. This applies to the controllers, the DC-DC converters, the contactors and the fuses.
 
 ---
 
@@ -277,16 +277,16 @@ fine and does nothing.
 Use a contactor with an explicit DC rating at or above 48 V and 80 A. Albright SW-series and
 Gigavac parts are the usual choices.
 
-### Opening a contactor under load is hard on the VESCs
+### Opening a contactor under load is hard on the controllers
 
 When the contactor opens while the motors are pulling current, the motor inductance has
-nowhere to dump its energy and the VESC input voltage spikes. This is a known way to destroy
+nowhere to dump its energy and the controller input voltage spikes. This is a known way to destroy
 controllers.
 
 Two mitigations, both cheap:
 
-- Put a TVS diode across each VESC input, chosen to clamp above the maximum pack voltage but
-  below the VESC's limit.
+- Put a TVS diode across each controller input, chosen to clamp above the maximum pack
+  voltage but below the controller's limit.
 - For every stop that is **not** an emergency, have the Spine ramp the current to zero first
   and only then drop the contactor. The mushroom button bypasses this on purpose, because an
   emergency stop that waits for software is not an emergency stop.
@@ -300,15 +300,15 @@ take them from a free-air table and go thinner.
 
 | Run | Current | Gauge | Notes |
 |---|---|---|---|
-| Pack to contactor to VESC | 40 A peak | **10 AWG** | Silicone insulated. It has to stay flexible when hot. |
-| VESC to hub motor, 3 phases | 40 A peak | **12 AWG** | Or match whatever the motor's own leads are, whichever is thicker. |
+| Pack to contactor to controller | 40 A peak | **10 AWG** | Silicone insulated. It has to stay flexible when hot. |
+| Controller to hub motor, 3 phases | 40 A peak | **12 AWG** | Or match whatever the motor's own leads are, whichever is thicker. |
 | Pack negative to pack negative bond | see below | **10 AWG** | Short and direct. |
 | Pack to the 48→12 V converter | 1.2 A | **16 AWG** | Sized for the 10 A fuse, not the load. |
 | Pack to the amplifier's 32 V converter | 3 A | **16 AWG** | Same reason. |
 | 32 V converter to the amplifier | 5 A | **16 AWG** | |
 | 12 V rail distribution | 6 A | **16 AWG** | |
 | Contactor coils | 0.5 A | **20 AWG** | |
-| CAN bus | signal | **22 AWG twisted pair** | Section 7. |
+| Throttle lines, DAC to controller | signal | **22 AWG shielded** | Section 7. Shielded, not twisted pair — there is no CAN. |
 | Hall sensors and thermistors from the motors | signal | **24 AWG shielded** | Route away from the phase wires. |
 
 ### About the ground bond
@@ -316,37 +316,51 @@ take them from a free-air table and go thinner.
 Size it for the larger of the two motor currents — 40 A — because in normal running each
 pack's return current flows through it. It is not a thin reference wire.
 
-**Do not put a fuse in it.** If that fuse ever opened, the CAN bus would lose its common
-reference while the robot was still driving, and the Spine would stop being able to talk to
-the VESCs. That is a worse failure than anything the fuse was protecting against.
+**Do not put a fuse in it.** If that fuse ever opened, every measurement the Teensy makes on
+the far pack — its voltage divider, its ACS758 current sensor, its throttle line reference —
+would lose its common zero while the robot was still driving. And unlike a CAN bus, which
+simply goes quiet, a floating analogue reference keeps returning plausible wrong numbers that
+the Spine will act on. That is a worse failure than anything the fuse was protecting against.
 
 ---
 
-## 7. The CAN bus
+## 7. The throttle signal path
 
-500 kbit/s, three devices: Spine, left VESC, right VESC.
+**There is no CAN bus.** Decision D7 replaced the VESCs with the scooter controllers already
+owned, and those are analogue devices: they see a throttle voltage and they drive. This section
+used to specify a 500 kbit CAN bus. What it specifies now is the path that voltage travels,
+which is more fragile and needs more care, because it carries no error detection of any kind.
 
 ```
-   SPINE                VESC LEFT              VESC RIGHT
- ┌────────┐            ┌────────┐             ┌────────┐
- │ CANH ──┼────────────┼── CANH ┼─────────────┼── CANH │
- │ CANL ──┼────────────┼── CANL ┼─────────────┼── CANL │
- └───┬────┘            └────────┘             └───┬────┘
-   120 Ω                                        120 Ω
+  TEENSY 4.1            LEVEL        MCP4725 DAC      OPTO           CONTROLLER
+              3.3 V      SHIFT         x2                            throttle in
+  ┌────────┐  I2C      ┌───────┐    ┌──────────┐   ┌──────┐        ┌────────────┐
+  │ SDA ───┼───────────┼─ 5 V ─┼────┼─ DAC A ──┼───┼─ iso ┼────────┼─ 0-3.3 V L │
+  │ SCL ───┼───────────┼─ I2C ─┼────┼─ DAC B ──┼───┼─ iso ┼────────┼─ 0-3.3 V R │
+  │        │           └───────┘    └──────────┘   └──────┘        └────────────┘
+  │ KICK ──┼──────────────────────► WATCHDOG ─────► RELAY in both throttle lines
+  └────────┘                        TLC555
 ```
 
-Four rules, and breaking any of them gives you an intermittent bus, which is the worst kind
-of fault to chase:
+Four rules. The first one is the one that can hurt somebody.
 
-1. **One line, two ends.** Devices tap onto the pair; they do not each get their own branch
-   back to the Spine. A star layout does not work on CAN.
-2. **120 Ω at each end of the line, and nowhere else.** The Spine is one end, the far VESC is
-   the other. The middle VESC gets no resistor. Most VESCs have a solder jumper for this —
-   check which way it is set rather than assuming.
-3. **Twisted pair.** This is what makes CAN survive next to motor phase wires. Untwisted CAN
-   in a robot like this will work on the bench and fail under load.
-4. **The pack negatives must already be bonded** (section 1), or the two ends of the bus have
-   no shared idea of zero volts.
+1. **The relay in the throttle lines is not optional.** A DAC holds its last output when the
+   Teensy dies; it does not fall to zero. Without the watchdog relay, a dead Teensy means a
+   robot driving away at whatever throttle it last had. See `01-architecture.md`, "The
+   consequence that must be tested", and safety log tests 15 and 16.
+2. **Check every DAC write, and stop kicking the watchdog when one fails.** The watchdog only
+   fires when the kicks stop. A Teensy that is alive but has lost I2C will keep kicking while
+   the throttle sits stuck. The firmware has to choose to kill itself. Safety log test 16.
+3. **Shielded cable for the throttle lines, routed away from the phase wires.** These are
+   slow analogue signals with no error checking at all, running beside 40 A of switching
+   motor current. Noise on one does not produce an error — it produces throttle.
+4. **Opto-isolate each throttle line.** The controller's throttle ground is the pack negative
+   for that side. Tying the Teensy directly to it puts motor return current through the
+   Teensy's ground reference.
+
+**Keep the two CAN transceivers in the drawer.** `05-bom.md` still buys them, because they are
+five dollars each and they are what you need on the day a controller judders at walking pace
+and you move to VESCs. That is the 260 dollar contingency in section 7 of the BOM.
 
 ---
 
@@ -382,7 +396,7 @@ a current limit of 2 A — a current limit turns a wiring mistake into a beep in
 | 3 | Add the contactors, still on the bench supply. | They pull in and drop out, and you can hear both. |
 | 4 | Add the 48→12 V converter and the 12 V rail. Measure it. | 12 V, and the isolation: no continuity from 12 V negative to pack negative. |
 | 5 | Power the Spine only. | It boots, and its arm output holds the contactors in. |
-| 6 | Add the CAN bus and both VESCs, motors NOT connected. | Both VESCs appear on CAN and report their input voltage. |
+| 6 | Add both controllers and their throttle lines, motors NOT connected. | A multimeter on each throttle line follows the number the Teensy sends, 0 to 3.3 V. |
 | 7 | Add one motor, pod on blocks. | It spins the right way, and stops on every fault in `01-architecture.md` section 3. |
 | 8 | Add the second motor. | It steers correctly in the air. |
 | 9 | Swap the bench supply for the real packs. | Nothing changes. |

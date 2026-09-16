@@ -35,27 +35,56 @@ fail, because a hard stop on a 231 mm footprint can pitch the robot forward.
 | 5 | Brain USB unplugged | Pull the Jetson's serial cable in ASSIST mode | Watchdog fires, ramp to zero, fall back to MANUAL | | | |
 | 6 | Brain power lost | Cut power to the Jetson in ASSIST mode | Same as test 5 | | | |
 | 7 | Bumper triggered | Hold a board in front of a ToF sensor while driving forward | Forward motion vetoed. Reverse must still work | | | |
-| 8 | CAN wire disconnected | Unplug one CAN wire at a VESC | Both motors stop, not just one | | | |
+| 8 | Throttle signal wire disconnected | Unplug the throttle line between one DAC and one controller while driving | **Both** motors stop, not just one. The Teensy sees that track's speed sensor stop changing while commanded, and ramps both down (rule 4) | | | |
 | 9 | Arm switch off | Flick the arm switch to off while driving | Ramp to zero | | | |
 | 10 | Power on while armed | Connect the battery with the arm switch already ON | Robot must NOT move. It must require the switch to be cycled off then on | | | |
 | 11 | One pack disconnected | Open the left pack's main switch while driving forward | **Both** tracks stop. The robot must NOT pivot on the surviving track | | | |
 | 12 | The other pack disconnected | Repeat test 11 on the right pack | Same as test 11 | | | |
 | 13 | Uneven pack voltage | Drive with the packs at clearly different charge levels | It still drives straight. Any pull to one side means rule 11 compensation is not working | | | |
-| 14 | Ground bond removed | With the robot parked and unarmed, disconnect the negative bond between the packs | CAN drops, so the Spine sees both VESCs stop reporting and refuses to arm at all | | | |
-| 15 | **Spine unpowered mid-drive** | Cut power to the Teensy while driving forward | Both VESCs hit their own command timeout and release within 1 s. The robot must NOT pivot on one track | | | |
+| 14 | Ground bond removed | With the robot parked and unarmed, disconnect the negative bond between the packs | The Teensy's readings for the far pack go wrong or open-circuit, and it refuses to arm. **See the note below — this test changed completely when the VESCs went.** | | | |
+| 15 | **Spine unpowered mid-drive** | Cut power to the Teensy while driving forward | **The hardware watchdog loses its heartbeat and opens the relay within its timeout**, cutting the throttle lines. The robot must NOT pivot on one track, and must NOT keep driving. | | | |
+| 16 | **Teensy alive, I2C to a DAC dead** | Pull one I2C wire to a DAC while driving forward | The Teensy sees the write fail, **deliberately stops kicking the watchdog**, and the relay opens. See the note below: this is the failure the watchdog does not catch on its own. | | | |
+| 17 | Reverse line glitches while driving forward | With the track on blocks, toggle one controller's reverse line while it is driving forward | It must not slam into reverse. If the controller has no ramp of its own, the Teensy must command zero, wait for the track to stop, and only then change the line | | | |
+| 18 | **Current limit on a turn in place** | On sand, not on blocks, turn in place at full stick while watching the ACS758 readings | Current stays within the limit the wiring was sized for, and the Teensy backs the throttle off if it does not. A turn in place is the highest-current thing this robot does | | | |
 
 Tests 11 and 12 are the most important new ones, and they are specific to having one battery
 per pod. On a skid-steer machine, one dead track does not slow the robot down — the surviving
 track spins it on the spot. Both of these must produce a stop of **both** sides.
 
-Run test 14 parked and unarmed. It is checking that a missing ground bond fails safe rather
-than producing unpredictable CAN behaviour while driving.
+### Tests 8, 14, 15 and 16 were rewritten on 2026-09-17
 
-**Test 15 is the one the whole electronics supply decision rests on.** The electronics run from
-the larger pack only, so if that pack's BMS cuts out, the Spine switches off and cannot enforce
-any of the rules above. The only thing left protecting you is each VESC's own command timeout.
-Set that timeout explicitly in both controllers — do not assume the default is enabled — and
-prove it here before the robot goes near anybody.
+Decision D7 replaced the VESCs with the scooter controllers already owned. These four tests
+were written against VESC behaviour, and **three of them were checking for protection that no
+longer exists.** That is worse than having no test, because a test you expect to pass tells
+you the robot is safe when it is not.
+
+| Test | Was checking | Now checks |
+|---|---|---|
+| 8 | Unplugging a CAN wire | There is no CAN. It unplugs a **throttle line** instead, and the robot must notice the dead track through its speed sensor. |
+| 14 | That losing the ground bond dropped CAN and blocked arming | There is no CAN. The bond now matters **more**: the ACS758 current sensors and the pack voltage dividers all measure against pack negative, so a missing bond corrupts the Teensy's readings rather than announcing itself. |
+| 15 | Both VESCs hitting **their own command timeout** | **There is no command timeout.** A scooter controller driven by a DAC holds its last throttle voltage and keeps going. Only the hardware watchdog stops it. |
+| 16 | — | New. See below. |
+
+**Test 15 is the one the whole electronics supply decision rests on, and it changed meaning.**
+The electronics run from the larger pack only, so if that pack's BMS cuts out, the Spine
+switches off and cannot enforce any of the rules above. With VESCs, each one would have
+released its motor after about a second on its own. **Scooter controllers do not do this.**
+The DAC keeps holding whatever voltage it was last told to hold, and the robot drives away
+with nothing in control of it.
+
+The hardware watchdog in `05-bom.md` section 1b is the entire replacement for that behaviour.
+This is why it is listed as non-negotiable. Test 15 proves it works, and until test 15 is
+signed off there is nothing standing between a dead Teensy and a runaway robot.
+
+**Test 16 exists because the watchdog has one blind spot.** The watchdog only fires when the
+Teensy stops kicking it. So consider a Teensy that is perfectly alive but has lost the I2C bus
+to the DACs: it wants to command zero, it cannot, and it is still happily kicking the watchdog.
+The throttle stays wherever it was.
+
+The firmware has to close that gap itself. Every DAC write is checked, and **on a failed write
+the Teensy must stop kicking the watchdog on purpose** — choosing to kill itself because it has
+lost the ability to steer. Test 16 proves that path, and it is easy to leave out, because
+nothing fails visibly until the day it matters.
 
 Test 10 catches a mistake that is easy to make in code and dangerous in the field: a robot
 that starts driving the instant you plug the battery in, because the stick was not centred or
@@ -68,7 +97,8 @@ the switch was left on.
 The whole table above is re-run from the start after any of these:
 
 - Any change to the Spine firmware, however small
-- Any change to the wiring of the E-stop chain, the contactor, or the fusing
+- Any change to the wiring of the E-stop chain, the contactor, the watchdog, or the fusing
+- Any change to the throttle path: the DACs, their I2C wiring, or the opto-isolators
 - Any change to the radio equipment or its binding
 - Any change to how the Brain and the Spine talk to each other
 - The robot being transported, dropped, or repaired in the field
@@ -82,6 +112,6 @@ The last one matters at the event. After a repair in the dust at night, run at l
 
 | | Name | Date |
 |---|---|---|
-| All ten tests passed | | |
+| All eighteen tests passed | | |
 | Re-tested after last firmware change | | |
 | Re-tested on site at Midburn | | |
