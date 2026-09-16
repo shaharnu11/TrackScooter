@@ -1,0 +1,11 @@
+# Python bytecode from running the brain code locally
+__pycache__/
+*.pyc
+
+# Virtual environment for the brain
+.venv/
+
+# OpenSCAD exports. The PNG renders ARE committed; meshes are not.
+*.stl
+*.dxf
+*.csg

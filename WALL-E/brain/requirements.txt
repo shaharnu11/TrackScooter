@@ -1,0 +1,22 @@
+# Brain dependencies. Python 3.10 or newer, for the `X | None` type syntax.
+#
+# Install with:
+#   python3 -m venv .venv && . .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# Only pyserial is needed to run the control loop. Everything below it is for
+# the sensor threads in perception.py, which are still stubs — do not install
+# them until you have the hardware in front of you. On a Jetson some of these
+# want the NVIDIA build rather than the one from PyPI.
+
+pyserial>=3.5
+
+# --- sensors, once the hardware exists ---
+# depthai>=2.24          # OAK-D Lite camera
+# rplidar-roboticia>=0.9 # RPLIDAR A1
+# adafruit-circuitpython-bno08x  # IMU, heading and pitch
+# pyserial-asyncio       # only if the GPS parser needs it
+
+# --- voice, phase 4 ---
+# piper-tts              # text to speech, runs offline
+# faster-whisper         # speech to text, runs offline

@@ -77,57 +77,92 @@ WALL-E/
     01-architecture.md       How the three computers work together, and the safety rules
     02-shock-bolt.md         The one open problem in the built pods, and how to fix it
     03-safety-log.md         The safety test record. Fill in by hand before going near people
-    04-power-and-wiring.md   Every wire, every fuse, and the emergency stop chain (to come)
-    05-bom.md                What to buy, what it costs, how long it takes to arrive (to come)
+    04-power-and-wiring.md   Every wire, every fuse, and the emergency stop chain
+    05-bom.md                What to buy, what it costs, how long it takes to arrive
     99-glossary.md           Every technical word used here, explained simply
   firmware/
-    spine-teensy/            Code for the Spine (the motor board)
-    face-esp32/              Code for the Face (the eye board)
-  brain/                     Code for the Brain (Python, on the Jetson)
+    README.md                How to build and flash both boards, and how to test them
+    spine/                   The Spine: motor commands and every safety rule
+    face/                    The Face: eye animation. One board per eye
+  brain/
+    README.md                How to run it, and the three load-bearing ideas in it
+    main.py                  The 20 Hz control loop
+    test_safety.py           Invariant checks. Runs with no dependencies
   cad/
-    walle_frame.scad         The side-by-side frame. Parametric, with guards
-    walle_frame_*.png        Rendered views, regenerated from the model
+    walle_frame.scad         The whole robot. Parametric, with 33 guards
+    walle_robot_*.png        The robot with body and head
+    walle_head.png           The eye barrels
+    walle_shelf.png          The electronics layout, labelled
+    walle_frame_*.png        The bare frame, and the plywood cutting layout
 ```
 
 ---
 
-## The frame
+## The model
 
-`cad/walle_frame.scad` is the frame that holds the two pods left and right. Run it and it
-prints every dimension, the cut list, the tipping angles and a list of checks. Four views:
+`cad/walle_frame.scad` is the whole robot: the frame, the two pods, the batteries, the body,
+the head and the electronics layout. Run it and it prints every dimension, the cut list, the
+tipping angles, and 33 checks that all have to pass.
 
 ```bash
-openscad -o walle.stl -D 'render_mode="assembly"' cad/walle_frame.scad   # everything
+openscad -o walle.stl -D 'render_mode="robot"'    cad/walle_frame.scad   # everything
 openscad -o steel.stl -D 'render_mode="frame"'    cad/walle_frame.scad   # steel only, for welding
 openscad -o cut.dxf   -D 'render_mode="plates"'   cad/walle_frame.scad   # plywood, flat
+openscad -o head.stl  -D 'render_mode="head"'     cad/walle_frame.scad   # the eye barrels
 openscad -o sec.stl   -D 'render_mode="section"'  cad/walle_frame.scad   # cut open
 ```
 
-![the frame, three quarter view](cad/walle_frame_3q.png)
+![the robot, three quarter view](cad/walle_robot_3q.png)
 
-Front view. The two packs sit low, between the rails, one per pod. The red wheel on the
-centreline is an anti-tip castor, held clear of the ground.
+From the front. The body is narrower than the track span on purpose, so the pods stay proud
+at the sides — that is what makes the silhouette read as WALL-E rather than as a box on
+wheels.
 
-![front view](cad/walle_frame_front.png)
+![front view](cad/walle_robot_front.png)
 
 | Headline number | Value |
 |---|---|
 | Overall width | 700 mm (pods 500 apart, green plates stick out 100 each side) |
+| Overall height | 910 mm, to the top of the eye barrels |
+| Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
 | Rails | 60×30×3 box, 550 long, 240 mm clear between them |
 | Lowest point of the robot | 150 mm above the ground |
-| Body floor | 280 mm above the ground |
 | Whole robot, estimated | 91 kg — **every mass in the model is still a guess** |
-| Centre of mass | 360 mm above the ground, centred over the tracks |
+| Centre of mass | 332 mm above the ground, centred over the tracks |
 | Ground pressure | 0.167 kg/cm² over 546 cm² |
-| Tips forward at | 17.8° of pitch |
-| Anti-tip castor catches at | 9.9° — so it catches 8° before the robot goes over |
+| Tips forward at | 19.4° of pitch |
+| Anti-tip castor catches at | 9.9° — so it catches 9° before the robot goes over |
 | Steel needed | 1580 mm of 60×30×3 box tube |
 
 **The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
 already drilled in the green plates, so no new holes go into the built pods.
 
 The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a
-pack, and put the real numbers in the model before trusting 17.8°.
+pack, and put the real numbers in the model before trusting 19.4°.
+
+### Two things the model settled
+
+**There is no room for electronics in the frame.** The interior is almost entirely battery:
+8 mm above the packs, 24 mm between them, 13 mm to the cross members. So everything moved
+onto a shelf inside the body. It fits four rows and uses 32 % of the shelf area, which
+leaves room for the speakers and an air path.
+
+![the electronics shelf](cad/walle_shelf.png)
+
+**The body floor has to clear the belt crown, not the frame.** The pods are 327 mm tall at
+the top of the belt but the frame only reaches 257, so the body sits on four risers 78 mm
+tall. Miss this and the shell grinds on a moving belt.
+
+### The head
+
+Two 105 mm barrels, 128 mm apart, toed in 6°, each with a 2.1 inch round screen recessed
+60 mm behind a clear dome.
+
+![the head](cad/walle_head.png)
+
+The recess is not styling, it is a sun shade: a screen that deep behind a 53 mm aperture is
+in shadow for any sun above 49° elevation, and Negev midday sun is 75–80°. The dome seals
+the barrel against dust.
 
 **New to this? Read in this order:** `99-glossary.md`, then `00-plan.md`, then
 `01-architecture.md`. Do not start buying parts until you have read the plan, because the
