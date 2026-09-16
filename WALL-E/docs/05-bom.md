@@ -109,9 +109,24 @@ version may appear.
 | 2 | 2.1 inch round LCD, 480×480, QSPI (Waveshare) | 60 | Stock | 53 mm active area. The barrel in the CAD model is built around this size. |
 | 2 | Clear acrylic dome or lens, Ø99 | 20 | Stock | Dust seal and the glassy look. `cad/walle_frame.scad`. |
 | 4 | Metal-gear servo, 20 kg·cm | 60 | Stock | Head pan, head tilt, and one barrel tilt each. |
-| 1 | TPA3255 class-D amplifier board | 40 | Stock | Runs on the 32 V supply, not the pack. |
-| 2 | Full-range speaker, 6.5 inch | 70 | Stock | The Rev 012 deck already has the cutouts designed for these. |
+| 1 | TPA3255 class-D amplifier board | 40 | Stock | Runs on the 32 V supply, not the pack. `04-power-and-wiring.md` section 4. |
+| 2 | Full-range or coaxial speaker, 6.5 inch, **4 Ω** | 70 | Stock | One per amplifier channel. Ø165 cutout, Ø190 rim, 50 mm deep — the chest panel is drilled for exactly that. **Check the mounting depth on the one you buy**; over 200 mm and the enclosure has to grow. |
+| 2 | Speaker grille, Ø190, steel | 20 | Stock | Not optional. A crowd will push a finger through an open cone. |
+| — | 12 mm ply for the two enclosures, plus bracing | 25 | Stock | About 0.6 m². Sizes echoed by `cad/walle_frame.scad`. |
+| — | Gasket tape, acoustic wadding, M5 bolts for the drivers and the boxes | 20 | Stock | The boxes **bolt** to the chest panel — they shade 54 % of the shelf and have to lift out. |
 | — | LED strip, drivers, eye illumination | 120 | Stock | |
+
+### The speakers are not just an audio decision
+
+They are 7.4 kg, they sit 584 mm up, and both of them are forward of centre. That combination
+took **1.5° off the forward tipping margin** on its own, leaving 5.4° between going over and
+the anti-tip castor catching. See risk R10. Anything else you add high or forward spends the
+same number, so weigh the real parts before adding a third thing.
+
+The other thing worth knowing before you buy: **sensitivity matters more than power out here.**
+Outdoors there are no walls to reflect sound, so bass is largely hopeless whatever you do. A
+driver rated 3 dB higher in sensitivity is worth more than doubling the amplifier power. Pick
+on the sensitivity figure, not the "max watts" number on the box.
 
 ### Warning: two round screens is harder than it looks
 

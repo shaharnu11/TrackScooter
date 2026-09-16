@@ -27,6 +27,7 @@ render_mode = "assembly";   // [assembly, frame, section, plates, robot, head, s
 show_body_ghost = true;     // the body envelope, as a transparent block
 show_batteries  = true;
 show_pods       = true;
+show_speakers   = true;
 show_ground     = true;     // set false for PNG renders, or it fills the frame
 shelf_labels    = false;    // part names on the shelf. On for the shelf render
 png_up          = false;    // true only for PNG renders — see the note at the bottom
@@ -150,6 +151,31 @@ body_wall   = 12;    // thin ply skin over a foam core
 body_gap    = 8;     // body floor clearance over the pod belt crown
 chest_d     = 20;    // how deep the front chest panel is recessed
 chest_marg  = 55;    // border round the chest panel
+chest_t     = 12;    // the chest panel itself. It has to BE a panel: chest_d is
+                     //   deeper than body_wall, so the recess cuts clean
+                     //   through the front wall and leaves a hole. This is the
+                     //   plate that sits at the bottom of the recess, and it is
+                     //   also the speaker baffle.
+
+// -- speakers ----------------------------------------------------------------
+// Two 6.5 inch drivers in the chest, so WALL-E can talk and play music.
+// Numbers carried over from the scooter build, where they were measured.
+spk_cut_d   = 165;   // the HOLE in the baffle, not the rim
+spk_rim_d   = 190;   // the rim that lands on the baffle face
+spk_depth   = 50;    // driver depth behind the baffle (MEASURED)
+spk_disp    = 0.4;   // litres the driver body itself takes out of the box
+spk_edge    = 8;     // cutout edge -> inside face of the enclosure
+spk_box_t   = 12;    // enclosure plywood
+spk_box_d   = 260;   // how far each enclosure reaches back into the body
+spk_zc      = 140;   // driver centres, left and right of the centreline. 155
+                     //   left only 5 mm of chest border outboard of the rim
+spk_clr     = 20;    // clearance from the enclosure floor to the tallest box
+spk_grille  = true;  // draw the grilles. Not optional in a crowd
+// Each driver gets its OWN SEALED enclosure. It does not fire into the body.
+// Two reasons, and both of them bite. The body is not airtight — it has a
+// filtered air intake, a removable lid and cable entries — so an open back
+// would chuff and lose all its bass. And 100 W of pressure swinging around the
+// electronics bay shakes every connector on the shelf.
 
 // -- head --------------------------------------------------------------------
 neck_h      = 70;    // fixed for now. A real neck telescopes — out of scope
@@ -186,9 +212,11 @@ elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, Jetson, wiring, contactor
 body_kg     = 25;    // GUESS: foam + thin ply shell
 head_kg     = 5;     // GUESS: head, screens, servos, neck
 // body and head heights are now DERIVED from the geometry below, not guessed.
-// body_com_frac: the mass sits low in the body, because the shelf, the amp and
-// the speakers are all near the floor and the upper walls are foam.
+// body_com_frac: the mass sits low in the body, because the shelf and the amp
+// are on the floor and the upper walls are foam. The speakers are NOT in this
+// figure — they are high and forward, and they get their own mass item.
 body_com_frac = 0.40;
+spk_drv_kg  = 1.6;   // GUESS: one 6.5 inch driver, magnet and all
 steel_rho   = 7850;  // kg/m3
 ply_rho     = 650;   // kg/m3  birch
 
@@ -266,9 +294,9 @@ sun_block   = atan(scr_recess/scr_d);
 
 // -- electronics shelf layout ------------------------------------------------
 // Several short rows, not two long ones: the body is only 430 deep, so a row
-// can only be about 356 long, and the nine boxes do not fit in two rows of
-// that length. The shelf is wide (546) and shallow, so rows are cheap and
-// length is not. Row 0 is nearest the front.
+// runs fore-aft and can only be about 356 long, and the nine boxes do not fit
+// in two rows of that length. The rows then stack across the width, where
+// there is 546 to play with, so rows are cheap and row LENGTH is not.
 shelf_l     = body_l - 2*body_wall - 2*shelf_marg;
 shelf_w     = body_w - 2*body_wall - 2*shelf_marg;
 // [name, size, row]
@@ -303,15 +331,62 @@ function row_z(r)     = r == 0 ? 0 : row_z(r-1) + row_dep(r-1) + 15;
 row_max_len = max([for (r = shelf_rows) row_len(r)]);
 rows_dep    = row_z(len(shelf_rows)-1) + row_dep(len(shelf_rows)-1);
 
+// -- speakers in the chest ---------------------------------------------------
+// The chest panel: a real plate, set back chest_d from the outer face. This is
+// the speaker baffle, so its position sets everything else.
+chest_x1    = body_l/2 - chest_d;               // 195 — baffle FRONT face
+chest_x0    = chest_x1 - chest_t;               // 183 — baffle back face
+chest_y0    = body_y0 + chest_marg;             // recess bottom edge
+chest_y1    = body_y1 - chest_marg;             // recess top edge
+chest_z     = body_w/2 - chest_marg;            // recess half width
+
+// The drivers are NOT placed by eye. Each enclosure has to sit clear above the
+// electronics and under the body lid, and the driver centres on what is left.
+parts_top   = shelf_y + shelf_t + part_h_max;   // top of the tallest box
+spk_box_y0  = parts_top + spk_clr;              // enclosure floor
+spk_box_y1  = body_y1 - body_wall - 10;         // enclosure ceiling
+spk_box_h   = spk_box_y1 - spk_box_y0;
+spk_yc      = (spk_box_y0 + spk_box_y1)/2;      // driver centre height
+spk_box_w   = spk_cut_d + 2*spk_edge + 2*spk_box_t;
+spk_box_x1  = chest_x0;                         // enclosure front = baffle back
+spk_box_x0  = spk_box_x1 - spk_box_d;
+
+// sealed volume behind one driver, in litres
+spk_vol     = (spk_box_d - spk_box_t)*(spk_box_h - 2*spk_box_t)
+              *(spk_box_w - 2*spk_box_t)/1e6 - spk_disp;
+spk_com_x   = (spk_box_x0 + spk_box_x1)/2;      // the pair sits FORWARD of centre
+
+// How much of the shelf the two enclosures sit OVER. They do not touch the
+// electronics — there is spk_clr of headroom — but they are above it, so the
+// boxes have to come out to reach what is underneath. That is why they bolt to
+// the chest panel and are not glued in.
+spk_shadow_x = min(spk_box_x1, shelf_l/2) - max(spk_box_x0, -shelf_l/2);
+spk_shadow  = 2*spk_shadow_x*spk_box_w;
+shelf_reach = 100*(shelf_area - spk_shadow)/shelf_area;
+
 // -- masses ------------------------------------------------------------------
 // box tube cross-section area, m2
 fr_area     = (fr_h*fr_w - (fr_h - 2*fr_t)*(fr_w - 2*fr_t)) * 1e-6;
 cm_len      = bay_w;                            // cross member length
 steel_len   = (2*rail_len + 2*cm_len) * 1e-3;   // m
 m_steel     = fr_area * steel_len * steel_rho;
-m_tray      = ((tray_len*tray_clear                       // floor
-              + 2*tray_len*(fr_top - tray_floor)) * tray_t) * 1e-9 * ply_rho;
+// the battery box is now a CLOSED box, so this counts all six panels. It used
+// to count a floor and two short walls, and so it under-read.
+box_out_w   = tray_clear + 2*tray_t;
+m_tray      = (tray_len*box_out_w*tray_t                  // floor
+             + tray_len*box_out_w*tray_lid_t              // lid
+             + 2*tray_len*box_wall_h*tray_t               // side walls
+             + 2*box_out_w*box_wall_h*tray_t              // end walls
+              ) * 1e-9 * ply_rho;
 m_frame     = m_steel + m_tray + 1.5;           // +1.5 bolts, sleeves, brackets
+
+// one speaker: the driver, plus its enclosure worked out from the geometry
+// rather than guessed. The enclosure is open at the front, where the chest
+// panel closes it, so one wall's worth of plywood is missing on purpose.
+m_spk_box   = (spk_box_d*spk_box_h*spk_box_w
+             - (spk_box_d - spk_box_t)*(spk_box_h - 2*spk_box_t)
+               *(spk_box_w - 2*spk_box_t)) * 1e-9 * ply_rho;
+spk_kg      = spk_drv_kg + m_spk_box;
 
 // -- centre of mass ----------------------------------------------------------
 // [mass, x, y] for everything on the robot
@@ -322,13 +397,17 @@ mass_items = [
   [elec_kg,   0,               shelf_y + shelf_t + part_h_max/2],
   [body_kg,   0,               body_com_y ],
   [head_kg,   0,               head_com_y ],
+  // The speakers are the only mass on the robot that is NOT on the
+  // centreline fore/aft. Both of them are in the chest, so they pull com_x
+  // forward, which is the direction the robot already tips.
+  [2*spk_kg,  spk_com_x,       spk_yc     ],
 ];
-m_total = [for (i = mass_items) i[0]] == [] ? 0 :
-          mass_items[0][0]+mass_items[1][0]+mass_items[2][0]
-         +mass_items[3][0]+mass_items[4][0]+mass_items[5][0];
-function wsum(k) = mass_items[0][0]*mass_items[0][k] + mass_items[1][0]*mass_items[1][k]
-                 + mass_items[2][0]*mass_items[2][k] + mass_items[3][0]*mass_items[3][k]
-                 + mass_items[4][0]*mass_items[4][k] + mass_items[5][0]*mass_items[5][k];
+// Summed by recursion, not by hand. The hand-written version had to be edited
+// every time an item was added, and that is how a mass gets silently dropped.
+function msum(i)      = i < 0 ? 0 : mass_items[i][0] + msum(i-1);
+function wsum_i(k, i) = i < 0 ? 0 : mass_items[i][0]*mass_items[i][k] + wsum_i(k, i-1);
+m_total = msum(len(mass_items) - 1);
+function wsum(k) = wsum_i(k, len(mass_items) - 1);
 com_x = wsum(1)/m_total;
 com_y = wsum(2)/m_total;
 
@@ -570,17 +649,69 @@ module body_shell(){
     // it is how you reach the shelf.
     translate([-body_l/2 + body_wall, body_y0 + body_wall, -body_w/2 + body_wall])
       cube([body_l - 2*body_wall, body_h, body_w - 2*body_wall]);
-    // the chest panel, recessed into the front face
-    translate([body_l/2 - chest_d, body_y0 + chest_marg, -body_w/2 + chest_marg])
-      cube([chest_d + 1, body_h - 2*chest_marg, body_w - 2*chest_marg]);
+    // the recess in the front face. chest_d is DEEPER than body_wall, so this
+    // cuts the front wall away completely over the chest area — which is why
+    // the chest panel below has to be a real plate and not just a rebate.
+    translate([chest_x1, chest_y0, -chest_z])
+      cube([chest_d + 1, chest_y1 - chest_y0, 2*chest_z]);
   }
+  chest_panel();
   // the electronics shelf
   color(c_ply)
     translate([-shelf_l/2, shelf_y, -shelf_w/2]) cube([shelf_l, shelf_t, shelf_w]);
 }
 
+// ---- the chest panel, which is also the speaker baffle ---------------------
+module chest_panel(){
+  color([0.70,0.60,0.30])
+  difference(){
+    translate([chest_x0, chest_y0, -chest_z])
+      cube([chest_t, chest_y1 - chest_y0, 2*chest_z]);
+    for (sz = [1,-1])
+      translate([chest_x0 - 1, spk_yc, sz*spk_zc])
+        rotate([0,90,0]) cylinder(h = chest_t + 2, d = spk_cut_d);
+  }
+}
+
+// ---- speakers --------------------------------------------------------------
+// A sealed plywood enclosure per driver, hung off the back of the chest panel.
+// See the parameter block for why they are not simply firing into the body.
+module speaker_boxes(){
+  for (sz = [1,-1]) translate([0, 0, sz*spk_zc])
+    color(c_ply, 0.85)
+    difference(){
+      translate([spk_box_x0, spk_box_y0, -spk_box_w/2])
+        cube([spk_box_d, spk_box_h, spk_box_w]);
+      // the air space. Open at the front, where the chest panel closes it.
+      translate([spk_box_x0 + spk_box_t, spk_box_y0 + spk_box_t,
+                 -spk_box_w/2 + spk_box_t])
+        cube([spk_box_d, spk_box_h - 2*spk_box_t, spk_box_w - 2*spk_box_t]);
+    }
+}
+
+module speakers(){
+  for (sz = [1,-1]) translate([chest_x1, spk_yc, sz*spk_zc]) rotate([0,90,0]){
+    color([0.15,0.15,0.17]) cylinder(h = 4, d = spk_rim_d);          // rim
+    color([0.30,0.30,0.33]) translate([0, 0, -spk_depth])
+      cylinder(h = spk_depth, d1 = spk_cut_d/3, d2 = spk_cut_d - 4); // basket
+    color([0.22,0.22,0.25]) translate([0, 0, -spk_depth])
+      cylinder(h = 12, d = spk_cut_d/2.4);                           // magnet
+    // Grille. A festival crowd WILL push a finger through an open cone.
+    if (spk_grille) color([0.42,0.42,0.45]){
+      // an outer ring, then radial bars across it
+      difference(){
+        translate([0, 0, 4]) cylinder(h = 5, d = spk_rim_d);
+        translate([0, 0, 3]) cylinder(h = 7, d = spk_rim_d - 16);
+      }
+      for (a = [0:30:150]) rotate([0,0,a])
+        translate([-spk_rim_d/2, -2, 4]) cube([spk_rim_d, 4, 4]);
+    }
+  }
+}
+
 // ---- electronics on the shelf ---------------------------------------------
-// Laid out in two rows so every box can be reached from the front or the back.
+// Each row runs FORE AND AFT, and the rows stack ACROSS the robot's width, so
+// every box can be reached from above with a hand either side of it.
 module shelf_layout(){
   for (row = shelf_rows)
     for (i = [0 : len(row_parts(row)) - 1])
@@ -679,6 +810,7 @@ module robot_full(){
   risers();
   body_shell();
   shelf_layout();
+  if (show_speakers) { speaker_boxes(); speakers(); }
   head();
 }
 
@@ -690,6 +822,7 @@ else if (render_mode == "head")     head();
 else if (render_mode == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y, -shelf_w/2])
                                       cube([shelf_l, shelf_t, shelf_w]);
                                     shelf_layout(); }
+else if (render_mode == "chest")  { chest_panel(); speaker_boxes(); speakers(); }
 else if (render_mode == "section")  difference(){ robot_full(); translate([-800,-50,0]) cube([1600,1400,800]); }
 else if (render_mode == "plates"){
   // every plywood panel of the closed battery box, laid flat for cutting
@@ -749,7 +882,8 @@ echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
          round(m_tray*10)/10, " kg -> FRAME ", round(m_frame*10)/10,
          " kg  ·  WHOLE ROBOT ", round(m_total*10)/10,
          " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · electronics ",
-         elec_kg, " · body ", body_kg, " · head ", head_kg, ") — ALL GUESSES"));
+         elec_kg, " · body ", body_kg, " · speakers ", round(2*spk_kg*10)/10,
+         " · head ", head_kg, ") — ALL GUESSES"));
 echo(str("CoM:      x ", round(com_x*10)/10, " (0 = over the middle of the tracks)",
          "  ·  y ", round(com_y*10)/10, " above ground"));
 // contact area in cm2 = both patches in mm2 / 100
@@ -766,6 +900,29 @@ echo(str("  ROLL sideways before it goes over:  ", round(tip_side*10)/10,
          " deg — sideways is never the problem, the pods are 700 apart"));
 echo(str("  anti-tip castor catches the pitch at: ", round(at_catch*10)/10,
          " deg (", at_x, " out, ", at_clear, " clear, lever ", round(at_lever), ")"));
+
+echo("");
+echo("--- SPEAKERS: two 6.5 inch in the chest -----------------------------------");
+echo(str("  drivers:   Ø", spk_cut_d, " cutout, Ø", spk_rim_d, " rim, ", spk_depth,
+         " deep · centres ", round(spk_yc), " above ground, ", spk_zc,
+         " each side of the centreline"));
+echo(str("  baffle:    the CHEST PANEL, ", chest_t, " mm ply, set back ", chest_d,
+         " from the front face · cut 2 holes Ø", spk_cut_d, " at ",
+         spk_zc, " either side of centre, ", round(spk_yc - chest_y0),
+         " mm up from the panel's bottom edge"));
+echo(str("  enclosure: ", spk_box_d, " deep x ", round(spk_box_h), " tall x ",
+         round(spk_box_w), " wide, ", spk_box_t, " mm ply, SEALED, one per driver",
+         " -> ", round(spk_vol*10)/10, " litres of air behind each"));
+echo(str("  mass:      ", round(spk_kg*10)/10, " kg each (", spk_drv_kg,
+         " driver + ", round(m_spk_box*10)/10, " box) = ", round(2*spk_kg*10)/10,
+         " kg, and it sits FORWARD: com_x moved to ", round(com_x*10)/10, " mm"));
+echo(str("  amplifier: one channel each, 4 Ω. The amp is on the shelf below —",
+         " see docs/04-power-and-wiring.md section 4 for why it gets its own",
+         " 48->32 V supply"));
+echo(str("  SERVICE:   each enclosure sits OVER the shelf with ", spk_clr,
+         " mm of headroom, shading ", round(100 - shelf_reach),
+         "% of it. BOLT them to the chest panel, do not glue them in — only ",
+         round(shelf_reach), "% of the shelf is reachable with them in place"));
 
 echo("");
 echo("--- BATTERY PLACEMENT: why they are LOW and not in the body ---------------");
@@ -825,6 +982,21 @@ guards = [
   ["longest electronics row fits the shelf",           shelf_l - row_max_len, 40],
   ["all electronics rows fit the shelf depth",         shelf_w - rows_dep, 60],
   ["headroom over the tallest box, under the body top", body_y1 - (shelf_y + shelf_t + part_h_max), 100],
+  // speakers. The chest panel must EXIST, which it did not: chest_d is deeper
+  // than body_wall, so the recess cut the front wall clean away.
+  ["chest panel is a real plate, not a hole",         chest_t, 6],
+  ["speaker rim fits the chest recess, top and bottom", (chest_y1 - chest_y0)/2 - spk_rim_d/2, 20],
+  ["speaker rim fits the chest recess, left and right", chest_z - (spk_zc + spk_rim_d/2), 20],
+  ["gap between the two speaker rims",                2*spk_zc - spk_rim_d, 30],
+  ["speaker cutout fits the enclosure face",          spk_box_h/2 - spk_cut_d/2, 10],
+  ["speaker enclosures clear each other",             2*spk_zc - spk_box_w, 20],
+  ["enclosures stay inside the body sides",           body_w/2 - body_wall - (spk_zc + spk_box_w/2), 10],
+  ["enclosures clear the tallest electronics box",    spk_box_y0 - parts_top, 15],
+  ["enclosures clear the body lid",                   body_y1 - body_wall - spk_box_y1, 5],
+  ["enclosures do not foul the body back wall",       spk_box_x0 - (-body_l/2 + body_wall), 20],
+  ["driver depth fits behind the baffle",             spk_box_d - spk_box_t - spk_depth, 50],
+  ["sealed volume per driver, litres (6.5 inch wants 7-14)", spk_vol, 7],
+  ["shelf reachable from above without pulling a speaker box (%)", shelf_reach, 35],
   ["eye screen fills enough of the barrel (%)",        100*scr_d/eye_d, 45],
   ["eye barrel MOUTHS do not collide when toed in",    eye_mouth_cl - eye_d, 4],
   ["screen shaded from the midday sun (deg elevation)", 75 - sun_block, 0],

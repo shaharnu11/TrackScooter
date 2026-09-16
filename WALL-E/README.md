@@ -90,7 +90,7 @@ WALL-E/
     main.py                  The 20 Hz control loop
     test_safety.py           Invariant checks. Runs with no dependencies
   cad/
-    walle_frame.scad         The whole robot. Parametric, with 33 guards
+    walle_frame.scad         The whole robot. Parametric, with 46 guards
     walle_robot_*.png        The robot with body and head
     walle_head.png           The eye barrels
     walle_shelf.png          The electronics layout, labelled
@@ -103,13 +103,14 @@ WALL-E/
 
 `cad/walle_frame.scad` is the whole robot: the frame, the two pods, the batteries, the body,
 the head and the electronics layout. Run it and it prints every dimension, the cut list, the
-tipping angles, and 33 checks that all have to pass.
+tipping angles, and 46 checks that all have to pass.
 
 ```bash
 openscad -o walle.stl -D 'render_mode="robot"'    cad/walle_frame.scad   # everything
 openscad -o steel.stl -D 'render_mode="frame"'    cad/walle_frame.scad   # steel only, for welding
 openscad -o cut.dxf   -D 'render_mode="plates"'   cad/walle_frame.scad   # plywood, flat
 openscad -o head.stl  -D 'render_mode="head"'     cad/walle_frame.scad   # the eye barrels
+openscad -o chest.stl -D 'render_mode="chest"'    cad/walle_frame.scad   # speakers + enclosures
 openscad -o sec.stl   -D 'render_mode="section"'  cad/walle_frame.scad   # cut open
 ```
 
@@ -128,20 +129,20 @@ wheels.
 | Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
 | Rails | 60×30×3 box, 550 long, 240 mm clear between them |
 | Lowest point of the robot | 150 mm above the ground |
-| Whole robot, estimated | 91 kg — **every mass in the model is still a guess** |
-| Centre of mass | 332 mm above the ground, centred over the tracks |
-| Ground pressure | 0.167 kg/cm² over 546 cm² |
-| Tips forward at | 19.2° of pitch |
-| Anti-tip castor catches at | 12.3° — so it catches 6.9° before the robot goes over |
+| Whole robot, estimated | 100 kg — **every mass in the model is still a guess** |
+| Centre of mass | 349 mm up, and 4 mm forward of centre — the chest speakers |
+| Ground pressure | 0.184 kg/cm² over 546 cm² |
+| Tips forward at | 17.7° of pitch (backward 18.9°) |
+| Anti-tip castor catches at | 12.3° — so it catches 5.4° before the robot goes over |
 | Steel needed | 1580 mm of 60×30×3 box tube |
 
 **The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
 already drilled in the green plates, so no new holes go into the built pods.
 
 The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a
-pack, and put the real numbers in the model before trusting 19.2°.
+pack, and put the real numbers in the model before trusting 17.7°.
 
-### Three things the model settled
+### Four things the model settled
 
 **There is no room for electronics in the frame.** The interior is almost entirely battery:
 8 mm above the packs, 24 mm between them, 13 mm to the cross members. So everything moved
@@ -165,6 +166,37 @@ of the body and never come out in the field.
 
 Why the packs stay low rather than going in the body, with the numbers:
 [`docs/06-why-the-batteries-are-low.md`](docs/06-why-the-batteries-are-low.md).
+
+**The chest panel was a hole, not a panel.** `chest_d` recesses the chest 20 mm into a
+12 mm wall, so the recess cut the front wall clean away and you could see the electronics
+through WALL-E's chest. It is now a real 12 mm plate set back 20 mm — which is lucky,
+because that plate is exactly what the speakers needed to mount to.
+
+### The speakers
+
+Two 6.5 inch drivers in the chest panel, 280 mm apart, 584 mm above the ground. That is how
+WALL-E talks and plays music.
+
+![front view with the speakers](cad/walle_robot_front.png)
+
+**Each driver gets its own sealed plywood enclosure, 10.1 litres.** They do not fire into
+the body, and that is deliberate. The body is not airtight — it has a filtered air intake,
+a removable lid and cable entries — so an open back would chuff and lose all its bass. And
+100 W of pressure swinging around the electronics bay shakes every connector on the shelf.
+
+![the chest panel and the two sealed enclosures, from behind](cad/walle_chest.png)
+
+Two things the model flagged that are easy to miss:
+
+**The enclosures shade 54 % of the electronics shelf.** They clear it by 20 mm, so nothing
+clashes, but they sit above it. So they **bolt** to the chest panel — glue them in and
+half the electronics becomes unreachable.
+
+**They cost 1.5° of forward tipping margin.** 7.4 kg at 584 mm, and both of them forward of
+centre, which pulls the centre of mass 4 mm towards the direction the robot already tips.
+Forward tipping goes from 19.2° to 17.7°, and the castor still catches 5.4° before that.
+It passes, but it is the second thing to push that number down, so weigh the real parts
+before adding a third.
 
 ### The head
 

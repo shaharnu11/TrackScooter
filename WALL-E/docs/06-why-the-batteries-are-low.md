@@ -108,8 +108,11 @@ driving — the best-cooled spot on the machine, free.
 **The shelf cannot really take them.** A pack is 400 mm long and the shelf is
 only 356 mm deep, so they could not even lie fore-aft. Lying across the robot the
 two of them use 50 % of the shelf area on top of the 32 % the electronics already
-need. That is 83 % of the shelf, and what is left has to hold two 6.5 inch
-speakers and a clear air path.
+need. That is 83 % of the shelf, and what is left has to hold a clear air path
+past the Jetson and both VESCs. It will not.
+
+That figure has since got worse, not better: the two speaker enclosures now sit
+over 54 % of the shelf as well.
 
 **It is the worst place for a cell to fail.** A box under the frame vents
 downwards and away from everything. The same event on the electronics shelf
@@ -123,13 +126,23 @@ tipping instead of hurting it.
 
 | | Battery CoM | Robot CoM | Tips forward at |
 |---|---|---|---|
-| **As built** — packs in the frame | 217 mm | 332 mm | **19.2°** |
-| If moved to the body shelf | 399 mm | 364 mm | 17.6° |
+| **As built** — packs in the frame | 217 mm | 349 mm | **17.7°** |
+| If moved to the body shelf | 399 mm | 378 mm | 16.5° |
 
-Moving them up raises the centre of mass 32 mm and costs 1.6°. **That on its own
-is not a veto, and it is worth being honest about that** — the anti-tip castor
-catches the pitch at 12.3° either way, so the margin would go from 6.9° to 5.3°
-and still pass. Tipping is not the reason. The four points above are.
+Moving them up raises the centre of mass 29 mm and costs 1.3°. When this document
+was first written, that was not a veto on its own and it was worth saying so: the
+margin over the anti-tip castor would have gone from 6.9° to 5.3° and still passed
+comfortably.
+
+**The chest speakers have since spent most of that slack.** They added 7.4 kg at
+584 mm, both of them forward of centre, and took 1.5° off the forward tipping
+angle by themselves. The castor catches at 12.3°, so the margin is now 5.4° as
+built and would be **4.2°** with the packs in the body — against a guard minimum
+of 4°. It would still pass, but only just, and with nothing left for the next
+heavy thing.
+
+So tipping has gone from "not the reason" to "one of the reasons". The four points
+above are still the stronger ones.
 
 ---
 
@@ -140,26 +153,33 @@ and the lowest point becomes the rail bottoms at 197 mm. That is 47 mm of extra
 ground clearance, and on rutted sand it is a genuine gain.
 
 If clearance turns out to be the problem, **do not solve it by moving the packs
-into the body. Raise the box.** The pack top is at 272 mm and the pod belt crown
-above it is at 327, so there is unused headroom. The limit is not the crown — it
-is the M12 spanner holes in the side walls, which have to stay clear of the
-floor. That caps the floor at 190 mm. Checked against the model: at 190 the guard
-sits exactly on its minimum, and at 195 it fails.
+into the body. Raise the box.** There is unused headroom above it, because the
+thing that sets the body floor is the pod belt crown at 327 mm, not the box.
+
+**The limit is 173 mm, which is less than it first looks.** Closing the box cost
+some of the headroom: the lid and the foam pad added 20 mm to the top of the box,
+and the binding constraint moved. It is no longer the M12 spanner holes — it is
+the 20 mm of clearance the lid needs under the body floor, so you can get a
+spanner on the lid bolts at all. Checked against the model: at 173 that guard
+sits exactly on its minimum, and at 174 it fails.
 
 | | Ground clearance | Robot CoM | Tips forward at |
 |---|---|---|---|
-| Box floor at 150 (as built) | 150 mm | 332 mm | 19.2° |
-| Box floor at 190 (the limit) | **190 mm** | 340 mm | **18.8°** |
-| Packs in the body | 197 mm | 364 mm | 17.6° |
+| Box floor at 150 (as built) | 150 mm | 349 mm | 17.7° |
+| Box floor at 173 (the limit) | **173 mm** | 353 mm | **17.6°** |
+| Packs in the body | 197 mm | 378 mm | 16.5° |
 
-Raising the box buys 40 of the 47 mm for 0.4° instead of 1.6°, and none of the
-heat, access or failure-mode problems. Owner decision 2026-09-16: leave it at
-150 for now and revisit after the first drive on sand.
+So raising the box buys 23 mm of the 47 for almost nothing — 0.1° — while moving
+the packs into the body buys 47 mm for 1.3° and all the heat, access and
+failure-mode problems. Owner decision 2026-09-16: leave it at 150 for now and
+revisit after the first drive on sand.
 
-One consequence to design for if it does get raised: at a floor of 190 the side
-walls are only 60 mm of useful depth below the rail top, so the packs stand
-proud of the rails by more. The lid bolts then need blocks to land on rather than
-just the wall edges.
+Push past 173 and something worse happens than a failed guard. The box top starts
+to drive the **body** floor height instead of the belt crown, so the whole robot
+grows upward: at a floor of 190 the body rises 13 mm, the centre of mass goes to
+361, and you have spent 0.5° of tipping to gain clearance you partly gave back.
+If you ever need more than 173, raise it and drop `body_gap` in the same change,
+or lie the packs flat to get 30 mm back off the box height.
 
 ---
 
@@ -169,6 +189,9 @@ The box was open, which was a real fault, and it is now a closed box with a
 gasket, plugged spanner holes, a foam pad and a membrane vent in the lid. Charge
 through a sealed connector and do not open it in the field.
 
-Keep the packs low. Not because of the tipping, which is affordable, but because
-they need a sealed case wherever they go, and once that is true the body is the
-hottest, most crowded, and most dangerous place to put them.
+Keep the packs low. Mostly because they need a sealed case wherever they go, and
+once that is true the body is the hottest, most crowded and most dangerous place
+to put them — and now partly because of the tipping too, since the chest speakers
+have spent most of the margin that used to make the tipping argument optional.
+
+If ground clearance becomes the problem, raise the box floor towards 173 mm.
