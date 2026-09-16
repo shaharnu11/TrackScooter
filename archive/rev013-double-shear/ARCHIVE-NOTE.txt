@@ -1,0 +1,103 @@
+Rev 012 (2026-09-10) — LIVE. Forked from Rev 011; the POD is unchanged.
+
+WHY: the owner is building his own floor instead of using the scooter deck. It must hold two
+batteries, 400 x 110 x 80 each (measured), and he wanted the rails bolted straight to the
+rear pod.
+
+THE CHANGE: a narrow frame. Two 100x40x2 rails (bought) whose INNER faces lie flat on the rear
+pod's 60x6 green plates (bought, not cut). 2x M12 10.9 per side: from outside, through a
+Ø25xØ13 steel sleeve welded inside the rail and the green plate, into an M12 nut welded on the
+plate. The whole rear pod comes off with 4 bolts. The rails end 9 mm before the front shock.
+The rails are 172 apart inside, so the batteries sit one behind the other.
+
+2026-09-14: the bay was set to 1000 mm clear (bay_len_set), then a 6.5" speaker was added at
+each end of the deck, firing up. Each one sits in a sealed well whose sides are the rail inner
+faces, floor the tray, top the lid and outer end the cross member; the only new part is a
+12 mm plywood bulkhead facing the batteries. The bay is now the larger of bay_len_set and
+what the packs (840) plus the two wells (386) need: 1226 clear. WHEELBASE 1706 mm, rails 1413,
+standing height 269, chassis ~21.3 kg.
+
+The driver is Ø165 x 50 deep. ONE WARN: a Ø165 hole in a 172 mm bay leaves 3.5 mm to the rail.
+Most 6.5" drivers with a Ø165 rim need a cutout near Ø147 — measure yours and set spk_cut_d,
+and the well, bay, wheelbase and rail length all shrink from it.
+
+All chassis guards PASS (see README "Rev 012 — narrow frame"). The only WARNs are the lower
+shock bolt bending, inherited from Rev 011 — fix before the arms are built.
+
+NEW FILES: rev012_green_plate_templates.pdf (A4 portrait, one whole plate per page) and
+rev012_green_plate_templates_split.pdf (any paper, plates in two halves), both from
+make_rev012_templates.py — 1:1, reads the numbers from the .scad and measures the PDFs back;
+rev012_plates.dxf, rev012_*.png.
+
+NOT COPIED: rev011_fork_bracket_template.* — Rev 012 does not use the Rev 011d fork bracket.
+
+SUPERSEDES: the wide box-frame chassis drafted inside archive/rev011-uncut-11T-lowB/
+(render_mode="chassis" there: 350 bay, tabs through a rear cross tube, middle bar).
+
+================================================================================
+The Rev 011 note follows (pod history, still valid):
+
+Rev 011 (2026-08-10) — DESIGN OF RECORD. Forked from Rev 009 (uncut rim, 11T).
+
+WHY: the owner wanted more belt on the ground without buying a longer belt.
+The 1080 mm loop was being spent 265 sprocket wrap / 226 idler wraps / 386
+diagonals / 204 ground. Analysis showed (a) the isoceles triangle already
+maximises the base for a given apex height, so no layout change helps, and
+(b) the diagonals are governed by B. Lowering B converts diagonal into ground.
+
+THE CHANGE: B 170 -> 150 (vehicle sits 20 mm lower; the track conversion had
+raised it ~120 mm over the stock wheel, so this gives a little back and does
+not affect belt-to-fender clearance, which the sprocket sets).
+  ground contact  203.5 -> 231.2 mm  (+13.6%)
+  ground pressure ~0.27 -> ~0.24 kg/cm2 at ~130 kg all-up
+  wheel travel    +27.6/-25.0 -> +30.7/-29.2
+
+CASCADE (all re-solved, all guards PASS, zero warnings):
+  drop 38 -> 22    B=150 pushes the pivot toward the sprocket; 22 is what the
+                   arm-corner clearance allows.
+  theta 72 -> 80   the flatter arm (na 20.5 -> 10.8 deg) had rotated the shock
+                   back over the carrier; 80 restores an upright shock.
+  a_frac -> 0.434  keeps MR at 0.4351 = the purchased springs' design point.
+  arm rear corners CHAMFERED 10x10 (new fabrication step).
+  cut lengths: carrier 220, trailing arm 184, leading arm 166; shock hole at
+  51.1 from the pivot; upper shock eye at (+-52, +2).
+
+NEW GUARD: "arm rear corner to sprocket swept rib" — sweeps the chamfered
+corner over the full travel. This collision was UNGUARDED in every earlier
+revision; Rev 009 sits at 4.1 mm, Rev 011 at 5.8 mm. Worst case is full droop,
+and the trailing arm's inner plate is the one at risk (teeth reach |z|=25.5,
+that plate sits at |z|=25.4).
+
+UNCHANGED: the sprocket (11T, rib 18x16.54, wheel O198, cord O210) and all its
+print files/STLs; every purchased item (M12 GB901 8.8 stud axles + O15x12
+sleeves, shocks 150/100kg-8.5, 6302 bearings, tube stock, bronze bushings);
+the idler wheels (O108, tread 20.27 riding in the belt's 22 mm lug gap);
+keel still deleted; carriers still keel-hole-free.
+
+Supersedes: archive/rev009-uncut-11T (parent) and archive/rev010-cut-rim-10T-final
+(the grinder path, retired at the owner's request).
+
+--------------------------------------------------------------------------------
+2026-08-11 — 1:1 DRILLING TEMPLATES REISSUED (rev011_1to1_drilling_templates.pdf)
+
+Symptom: the leading arm bar printed ~153 mm against its own 165.7 callout.
+
+Cause was NOT the drawing. The old sheet's artwork measured 165.698 x 40.000 mm
+in the file, exact to 0.002 mm. It was laid out full-bleed on A4, and a
+full-bleed page is larger than any printer's printable area, so "Scale to Fit"
+(Preview's default) and "Shrink oversized pages" (Acrobat's default) both scale
+it down 6-9% without saying so. 165.7 x ~0.92 = ~153.
+
+Fix: the sheet is now generated by make_1to1_templates.py onto a 195 x 259.5 mm
+page — smaller than the printable area of BOTH A4 and Letter, so nothing is
+oversized and those two defaults become no-ops. One part per page, each page a
+single SVG whose unit is 1 mm (part and ruler cannot scale apart), each with an
+X and a Y scale check plus a reprint-percentage table. The generator re-opens
+its own PDF and asserts every outline, hole and ruler before exiting.
+
+Every part and hole is byte-identical to the old sheet EXCEPT one correction:
+the carrier's hub-axle key was drawn as a slot with flats 9.9 apart. The SCAD
+(apollo_track_pod_rev011.scad:641-642: circle(d=10.4) intersected with
+square([10.4, 8.9])), plates_rev011.dxf polylines 3/4, and the old sheet's OWN
+callout all say Ø10.4 with flats 8.9 apart and NO slot. It is drawn that way
+now. This is the torque-arm key — a slot there lets the axle rotate.
