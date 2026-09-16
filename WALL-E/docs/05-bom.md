@@ -56,8 +56,23 @@ not in month four.
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy, ESP32, head servos. |
 | — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and VESC input protection. |
 | — | Steel box tube 60×30×3 and 30×30, plate, M12 10.9 bolts | 300 | Stock | Cut list is echoed by `cad/walle_frame.scad`. |
-| 12 mm | Birch plywood sheet | 60 | Stock | Battery box and electronics shelf. |
+| 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels) and electronics shelf. |
 | 2 | Castor wheels, Ø75, and mounting steel | 60 | Stock | Anti-tip. `cad/walle_frame.scad`. |
+
+### Sealing the battery box — small money, and it decides whether the packs survive
+
+The box hangs inboard of the belts, which throw sand at it. `06-why-the-batteries-are-low.md`
+has the reasoning. Cheap parts, so buy spares of all of them.
+
+| Qty | Part | Cost, USD | Lead | Notes |
+|---|---|---|---|---|
+| 5 m | Closed-cell foam tape, 3 mm, self-adhesive | 10 | Stock | The lid gasket. EPDM, not open-cell — open-cell soaks up water and holds grit. |
+| 1 sheet | Closed-cell foam, 8 mm | 10 | Stock | The pad on top of the packs. Clamps them down and takes the vibration. |
+| 8 | Silicone blanking plug, Ø30 | 10 | Stock | 4 needed, 4 spare. **These plug the M12 spanner holes.** Without them the rest of the sealing is pointless. Check them every morning. |
+| 2 | Screw-in membrane vent, M12, IP67 (Gore type or equivalent) | 16 | Stock | 1 needed, 1 spare. Goes in the **lid**. A sealed box breathes with the day/night temperature swing; this is the clean path so it does not pull dust through a leak. |
+| 4 | Cable gland, M16, IP68 | 10 | Stock | Charge leads and pack sense wiring out of the box. Not a drilled hole. |
+| 16 | M5 bolts, nuts and washers, 25 mm | 8 | Stock | 12 for the lid at 110 mm pitch, plus spares. A gasket only seals where it is squeezed. |
+| 1 | Anderson or XT60 charge connector with a dust cap, body-mounted | 15 | Stock | The packs charge **in place** and do not come out in the field. |
 
 ### The contactor is the long pole
 
@@ -160,12 +175,13 @@ cannot be the same failure.
 |---|---|---|
 | 1 — de-risking | now | 550 |
 | 2 — frame and drive | 1 | 1,110 |
+| 2b — sealing the battery box | 1 | 80 |
 | 3 — compute and sensors | 2 | 740 |
 | 4 — face and sound | 4 | 400 |
 | 5 — body | 5 | 760 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 4,100** |
+| **Total** | | **≈ 4,200** |
 
 This sits at the top of the 2,700 to 4,200 range in `00-plan.md` section 7, which is what
 happens when estimates turn into named parts. The three places to cut, in order:

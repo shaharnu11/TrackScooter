@@ -90,7 +90,7 @@ WALL-E/
     main.py                  The 20 Hz control loop
     test_safety.py           Invariant checks. Runs with no dependencies
   cad/
-    walle_frame.scad         The whole robot. Parametric, with 30 guards
+    walle_frame.scad         The whole robot. Parametric, with 33 guards
     walle_robot_*.png        The robot with body and head
     walle_head.png           The eye barrels
     walle_shelf.png          The electronics layout, labelled
@@ -103,7 +103,7 @@ WALL-E/
 
 `cad/walle_frame.scad` is the whole robot: the frame, the two pods, the batteries, the body,
 the head and the electronics layout. Run it and it prints every dimension, the cut list, the
-tipping angles, and 30 checks that all have to pass.
+tipping angles, and 33 checks that all have to pass.
 
 ```bash
 openscad -o walle.stl -D 'render_mode="robot"'    cad/walle_frame.scad   # everything
@@ -131,17 +131,17 @@ wheels.
 | Whole robot, estimated | 91 kg — **every mass in the model is still a guess** |
 | Centre of mass | 332 mm above the ground, centred over the tracks |
 | Ground pressure | 0.167 kg/cm² over 546 cm² |
-| Tips forward at | 19.4° of pitch |
-| Anti-tip castor catches at | 9.9° — so it catches 9° before the robot goes over |
+| Tips forward at | 19.2° of pitch |
+| Anti-tip castor catches at | 12.3° — so it catches 6.9° before the robot goes over |
 | Steel needed | 1580 mm of 60×30×3 box tube |
 
 **The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
 already drilled in the green plates, so no new holes go into the built pods.
 
 The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a
-pack, and put the real numbers in the model before trusting 19.4°.
+pack, and put the real numbers in the model before trusting 19.2°.
 
-### Two things the model settled
+### Three things the model settled
 
 **There is no room for electronics in the frame.** The interior is almost entirely battery:
 8 mm above the packs, 24 mm between them, 13 mm to the cross members. So everything moved
@@ -153,6 +153,18 @@ leaves room for the speakers and an air path.
 **The body floor has to clear the belt crown, not the frame.** The pods are 327 mm tall at
 the top of the belt but the frame only reaches 257, so the body sits on four risers 78 mm
 tall. Miss this and the shell grinds on a moving belt.
+
+**The battery box has to be a closed box, and it was not one.** It was a three-sided U,
+open across the top and at both ends, hanging right where the belts throw sand. It is now
+six panels with a gasketed lid, plugs in the spanner holes, and a membrane vent — a sealed
+box breathes with the day/night temperature swing and pulls dust in through its worst leak,
+so it needs a clean air path. The packs charge in place through a connector on the outside
+of the body and never come out in the field.
+
+![the plywood cutting layout](cad/walle_frame_plates.png)
+
+Why the packs stay low rather than going in the body, with the numbers:
+[`docs/06-why-the-batteries-are-low.md`](docs/06-why-the-batteries-are-low.md).
 
 ### The head
 

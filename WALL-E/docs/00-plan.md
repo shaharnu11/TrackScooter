@@ -120,7 +120,10 @@ follow from that:
 | L12 | Body length follows the **pod** length, not the anti-tip castors | A body sized to cover the castors is 745 mm on 363 mm pods, and looks like a crate on toy wheels. The castor arms show as outriggers instead |
 | L13 | Two Face boards, one per eye | Two 480×480 QSPI panels on one ESP32-S3 is tight and would tear. 12 dollars removes the risk. `05-bom.md` §4 |
 | L14 | The amplifier gets its own 48→32 V converter | A TPA3255 maxes out at 53.5 V and a "48 V" pack is 54.6 V full. It also keeps the audio spikes off the Jetson's rail. `04-power-and-wiring.md` §4 |
-| L15 | **Batteries stay in the frame, not in the body** | Not for the tipping, which is affordable. The shelf has no room, the body is the hottest and most sealed place on the robot, and it is the worst place for a cell to fail. If clearance is the problem, raise the box floor towards 190 mm instead. `06-why-the-batteries-are-low.md` |
+| L15 | **Batteries stay in the frame, not in the body** | Not for the tipping, which is affordable. They need a sealed case wherever they go, and once that is true the body is the hottest, most crowded and most dangerous place for them. `06-why-the-batteries-are-low.md` |
+| L16 | The battery box is a **closed, gasketed box** with a membrane vent in the lid | Owner, 2026-09-16: sand. It was a three-sided U hanging where the belts throw sand. Now six panels, plugged spanner holes, foam pad, lid vent |
+| L17 | Packs charge **in place** and never come out in the field | Every opening of a sealed box at a dusty event undoes the sealing. Charge lead out through a gland to a connector on the body, behind a dust cap |
+| L18 | Box floor stays at 150 mm for now | Raising it to 190 would buy 40 mm of ground clearance for 0.4° of tipping. Owner: revisit after the first drive on sand |
 
 #### L7 — why we keep the short belts now
 
@@ -459,6 +462,9 @@ Ordered by how much damage each one does, not how likely it is.
 | R6c | The VESCs cook inside the body | One track dies, and the robot pivots | Direct consequence of L11: on a plywood shelf they have no steel to dump heat into. Each gets an aluminium plate bolted through to a body panel, and one filtered air path pushes air IN so the body runs at positive pressure |
 | R7 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
 | R8 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
+| R8b | Sand gets into the battery box | Grit between the cells and the box, chafed wiring, a short | L16: closed box, gasketed lid on 110 mm bolt pitch, silicone plugs in all four spanner holes. **Check the plugs are in every morning** — they are the weak point, and they point at the belts |
+| R8c | The sealed box breathes and pumps dust in through its worst leak | Slow, invisible version of R8b, and it defeats the gasket | Membrane vent in the lid, on the centreline over the gap between the packs, so the air has a clean path it does not have to find |
+| R8d | Charging in a sealed box has nowhere to put the heat | Packs age fast, or worse | About 12 W of loss at 5 A. Log the pack temperature through one full charge with the lid on, on the bench, before the event. If it climbs, charge with the body lid open or drop the current |
 | R9 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |
 | R10 | Scope grows, especially the body | Nothing is finished | Section 9 cut list, agreed in advance |
 | R11 | Midburn vehicle rules not met | Cannot operate at the event | D5 this week, before the frame is welded |

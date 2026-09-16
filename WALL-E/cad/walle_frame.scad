@@ -84,6 +84,23 @@ batt_upright = true; // true  = pack on its side: 80 wide, 110 tall  <- DEFAULT
                      // nothing next to the body. Guards below check both.
 batt_gap_z  = 24;    // gap between the two packs, for straps and wiring
 bolt_access_d = 30;  // hole in the box side wall to get a spanner on each M12
+                     //   Each one gets a SILICONE BLANKING PLUG. They are
+                     //   holes in a sealed box, and they point at the belts.
+
+// -- sealing the box ---------------------------------------------------------
+tray_lid_t  = 12;    // plywood lid over the top
+batt_pad    = 8;     // closed-cell foam between the packs and the lid. Does two
+                     //   jobs: clamps the packs down, and takes the vibration.
+gasket_t    = 3;     // closed-cell foam tape under the lid, compressed by the
+                     //   lid bolts. This is the actual seal.
+lid_bolt_p  = 110;   // lid bolt pitch. Closer than feels necessary, because a
+                     //   gasket only seals where it is squeezed.
+vent_d      = 12;    // screw-in membrane vent, in the LID, on the centreline.
+                     //   A fully sealed box BREATHES as the desert heats and
+                     //   cools, and every breath pulls dust through whichever
+                     //   leak is worst. A membrane vent gives it a clean path.
+                     //   It went in the lid because there is barely any wall
+                     //   above the packs — see the guards.
 
 // -- anti-tip wheels ---------------------------------------------------------
 // The whole reason these exist: the pods put only 231 mm of track on the
@@ -195,11 +212,18 @@ rail_x1     = rail_x0 + rail_len;       // 275
 cm_rear_x   = rail_x0 + fr_w/2 + 10;    // cross member centres
 cm_front_x  = rail_x1 - fr_w/2 - 10;
 
-// battery box: plywood U hung off the rail inner faces
+// battery box: a CLOSED plywood box hung off the rail inner faces.
+//
+// It was a three-sided U — floor and two side walls stopping at the rail top —
+// and that was wrong. The box hangs directly inboard of the belts, which throw
+// sand inward and upward, and a U is open at the top and at both ends. Owner,
+// 2026-09-16: the packs must be in a closed box. So: floor, two sides, two
+// ends, and a gasketed lid over the top.
 tray_zi     = rail_zi - tray_t;         // 108 — box inner wall face
 tray_clear  = 2*tray_zi;                // 216 — usable width inside the box
 tray_floor  = tray_y0 + tray_t;         // 162 — packs stand on this
 tray_len    = batt_l + 2*tray_t + 20;   // box outside length
+tray_in_len = tray_len - 2*tray_t;      // clear length inside, between the ends
 
 bw          = batt_upright ? batt_h : batt_w;   // pack width in z
 bh          = batt_upright ? batt_w : batt_h;   // pack height in y
@@ -208,7 +232,11 @@ batt_z      = (bw + batt_gap_z)/2;              // each pack's centre plane
 batt_y1     = tray_floor + bh;                  // pack top
 batt_com_y  = tray_floor + bh/2;
 
-deck_y      = max(fr_top, batt_y1) + 8;         // top of the frame-level stack
+// the lid, and the foam pad that holds the packs down against it
+box_top     = batt_y1 + batt_pad + tray_lid_t;  // top face of the lid
+box_wall_h  = box_top - tray_y0;                // how tall the side walls are
+
+deck_y      = max(fr_top, box_top) + 8;         // top of the frame-level stack
 
 // -- body and head geometry --------------------------------------------------
 // The body floor cannot sit at deck_y, because the pods' belt crown is HIGHER
@@ -439,13 +467,38 @@ module pod_bolts(){
 // and it keeps the sand off the packs.
 module box_side_2d(){
   difference(){
-    square([tray_len, fr_top - tray_y0]);
+    square([tray_len, box_wall_h]);
     // access for the 4 M12 heads — without these you cannot get a spanner on
-    // the bolts that hold the pods, so the pods cannot come off
+    // the bolts that hold the pods, so the pods cannot come off. Each one is
+    // closed with a silicone blanking plug in service.
     for (bx = pod_bolt_x)
       translate([bx + tray_len/2, pod_gp_yc - tray_y0]) circle(d = bolt_access_d);
   }
 }
+
+module box_end_2d(){
+  square([tray_clear + 2*tray_t, box_wall_h]);
+}
+
+// Lid bolts run all round the edge at lid_bolt_p pitch, because a gasket only
+// seals where it is squeezed. n_lid_x per long side, 2 per end.
+n_lid_x = max(2, round(tray_len / lid_bolt_p));
+module box_lid_2d(){
+  w = tray_clear + 2*tray_t;
+  difference(){
+    square([tray_len, w]);
+    for (i = [0:n_lid_x]) for (sz = [0,1])
+      translate([6 + i*(tray_len - 12)/n_lid_x, sz ? w - 6 : 6]) circle(d = 5);
+    for (sx = [0,1])
+      translate([sx ? tray_len - 6 : 6, w/2]) circle(d = 5);
+    // The membrane vent goes in the LID, not in a wall. The lid is the most
+    // sheltered surface on the box: the body floor sits 43 mm above it, so
+    // nothing has a straight path to it. It sits on the centreline, over the
+    // gap between the two packs, so the foam pad does not block the airway.
+    translate([tray_len/2, w/2]) circle(d = vent_d);
+  }
+}
+
 module battery_box(){
   color(c_ply, 0.9){
     translate([-tray_len/2, tray_y0, -tray_clear/2 - tray_t])
@@ -453,7 +506,20 @@ module battery_box(){
     for (s = [1,-1]) scale([1,1,s])
       translate([-tray_len/2, tray_y0, tray_zi])
         linear_extrude(tray_t) box_side_2d();                       // side walls
+    // END WALLS. The box was open at both ends, pointing straight at the
+    // belts. These are the panels that make it a box.
+    for (sx = [1,-1])
+      translate([sx*(tray_len/2 - tray_t) - (sx > 0 ? 0 : tray_t),
+                 tray_y0, -tray_clear/2 - tray_t])
+        cube([tray_t, box_wall_h, tray_clear + 2*tray_t]);
   }
+  // the gasket, then the lid
+  color([0.15,0.15,0.18])
+    translate([-tray_len/2, box_top - tray_lid_t - gasket_t, -tray_clear/2 - tray_t])
+      cube([tray_len, gasket_t, tray_clear + 2*tray_t]);
+  color(c_ply)
+    translate([-tray_len/2, box_top - tray_lid_t, -tray_clear/2 - tray_t])
+      cube([tray_len, tray_lid_t, tray_clear + 2*tray_t]);
 }
 
 module batteries(){
@@ -626,11 +692,14 @@ else if (render_mode == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y,
                                     shelf_layout(); }
 else if (render_mode == "section")  difference(){ robot_full(); translate([-800,-50,0]) cube([1600,1400,800]); }
 else if (render_mode == "plates"){
-  // the plywood box, laid flat for cutting
-  color(c_ply) translate([0,0,0])           square([tray_len, tray_clear + 2*tray_t]);
-  color(c_ply) translate([0, tray_clear + 2*tray_t + 20, 0])            box_side_2d();
-  color(c_ply) translate([0, tray_clear + 2*tray_t + 40 + (fr_top - tray_y0), 0])
-                                                                        box_side_2d();
+  // every plywood panel of the closed battery box, laid flat for cutting
+  bw2 = tray_clear + 2*tray_t;
+  color(c_ply)                                   square([tray_len, bw2]);   // floor
+  color(c_ply) translate([0, bw2 + 20])          box_lid_2d();              // lid
+  color(c_ply) translate([0, 2*bw2 + 40])        box_side_2d();             // side
+  color(c_ply) translate([0, 2*bw2 + 60 + box_wall_h])   box_side_2d();     // side
+  color(c_ply) translate([0, 2*bw2 + 80 + 2*box_wall_h]) box_end_2d();      // end
+  color(c_ply) translate([bw2 + 20, 2*bw2 + 80 + 2*box_wall_h]) box_end_2d();
 }
 }
 
@@ -727,8 +796,11 @@ echo(str("  load per pod ", round(jt_F), " N, arriving ", round(abs(jt_xc - com_
 guards = [
   // [name, actual, minimum, unit]
   ["battery width: both packs inside the plywood box", tray_clear - batt_need, 15],
-  ["battery height: pack top below the body floor",    deck_y - batt_y1, 5],
-  ["battery length inside the box",                    tray_len - 2*tray_t - batt_l, 10],
+  ["foam pad between the packs and the lid",           batt_pad, 5],
+  ["box lid clears the body floor above it",           body_y0 - box_top, 20],
+  ["battery length inside the closed box (end to end)", tray_in_len - batt_l, 10],
+  ["box side walls reach ABOVE the packs (sealed top)", box_top - tray_lid_t - batt_y1, 5],
+  ["gap between the packs clears the lid vent",         batt_gap_z - vent_d, 8],
   ["box floor above the ground (obstacle clearance)",  tray_y0, 120],
   ["rail inner face to the belt edge, per side",       rail_zi - pod_belt_w/2, 20],
   ["rail outer face sits ON the green plate (must be 0)", -abs(rail_zo - (pod_z - pod_gp_zo)), -0.01],
@@ -784,10 +856,20 @@ echo(str("    each rail: 2 holes Ø25 through BOTH walls at ",
          " mm from the rail's FRONT end, ", pod_gp_yc - fr_bot,
          " mm up from the rail's bottom; weld a Ø25xØ13x", fr_w, " sleeve in each"));
 echo(str("  ", tray_t, " mm plywood  box floor        1 x ", tray_len, " x ", tray_clear + 2*tray_t));
-echo(str("  ", tray_t, " mm plywood  box side walls   2 x ", tray_len, " x ", fr_top - tray_y0,
+echo(str("  ", tray_t, " mm plywood  box side walls   2 x ", tray_len, " x ", box_wall_h,
          ", each with 2 holes Ø", bolt_access_d, " at ",
          pod_bolt_x[0] + tray_len/2, " and ", pod_bolt_x[1] + tray_len/2,
-         " mm from the FRONT edge, ", pod_gp_yc - tray_y0, " mm up (M12 spanner access)"));
+         " mm from the FRONT edge, ", pod_gp_yc - tray_y0,
+         " mm up (M12 spanner access — FIT SILICONE PLUGS)"));
+echo(str("  ", tray_t, " mm plywood  box END walls    2 x ", tray_clear + 2*tray_t,
+         " x ", box_wall_h, "   <- these are what close the box"));
+echo(str("  ", tray_lid_t, " mm plywood  box LID       1 x ", tray_len, " x ",
+         tray_clear + 2*tray_t, ", ", 2*(n_lid_x + 1) + 2,
+         " x M5 round the edge at ", lid_bolt_p, " pitch"));
+echo(str("  sealing:  ", gasket_t, " mm closed-cell foam tape under the lid · ",
+         batt_pad, " mm foam pad on top of the packs · 4 x Ø", bolt_access_d,
+         " silicone blanking plugs · 1 x M", vent_d,
+         " screw-in membrane vent in the LID centre, over the gap between the packs"));
 echo(str("  anti-tip legs  30x30 box  2 x ", round(fr_bot - at_clear - at_d),
          " + 2 fore/aft ties · castors 2 x Ø", at_d));
 echo(str("  M12 10.9 bolts 4 off, through the rail into the nut welded on the ",
