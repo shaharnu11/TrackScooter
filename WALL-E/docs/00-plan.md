@@ -114,6 +114,8 @@ follow from that:
 | L6 | Body from foam and thin plywood | Mass up high makes the tipping worse. Keep the top light |
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
 | L8 | Frame mounting width 168 mm | Set by the built pods. Not a choice any more |
+| L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
+| L10 | Electronics fed from **both** packs through two isolated converters, OR'd | Even drain, and the computers survive one pack dropping out |
 
 #### L7 — why we keep the short belts now
 
@@ -134,7 +136,7 @@ plus keeping all the heavy things as low as possible. See decision D6.
 |---|---|---|---|
 | **D2** | How is the lower shock bolt retrofit done? | Whether the pods are safe to load | **Before Phase 2.** Read `02-shock-bolt.md` |
 | **D3** | Does WALL-E carry a person? | Frame strength, tipping, Midburn registration | Before Phase 2 |
-| **D4** | Donor battery voltage and capacity? | Every electronics purchase | Before Phase 1 buying |
+| **D4** | Pack capacity in Ah, and are both BMS units healthy? | Runtime estimate, fuse and cable sizing | Before Phase 1 buying |
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
 | **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
 | **D7** | Reuse the scooter controllers, or buy two VESCs? | Cost, and whether motor temperature can be read | Before Phase 1 buying |
@@ -445,16 +447,17 @@ Ordered by how much damage each one does, not how likely it is.
 | R1 | Somebody gets hurt | Ends the project, and much worse | Phase 3 gate. Physical E-stop. Human minder with a keyfob. Manual mode in crowds |
 | R2 | It tips forward | Broken robot, possibly a broken person | Anti-tip wheels (D6). All mass low. Ballast test in Phase 2 |
 | R3 | Lower shock bolt yields on the first hard hit | Suspension failure under load | The D2 retrofit, before the frame is loaded. See `02-shock-bolt.md` |
-| R4 | Hub motors overheat crawling | Dead robot mid-event | Log motor temperature from the first bench test. VESC current limits. Keep it light |
-| R5 | Motor current spikes reboot the Brain | Eyes and sounds die in front of an audience | Isolated DC-DC rail, own fuse, buffer capacitor |
-| R6 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
-| R7 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
-| R8 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |
-| R9 | Scope grows, especially the body | Nothing is finished | Section 9 cut list, agreed in advance |
-| R10 | Midburn vehicle rules not met | Cannot operate at the event | D5 this week, before the frame is welded |
-| R11 | Builder gets stuck on the electronics | Project stalls silently | Section 10 learning plan. Bench work early, so problems appear when there is time |
+| R4 | One pack's BMS cuts out while driving | The surviving track spins the robot on the spot instead of stopping | Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12 |
+| R5 | Hub motors overheat crawling | Dead robot mid-event | Log motor temperature from the first bench test. VESC current limits. Keep it light |
+| R6 | Motor current spikes reboot the Brain | Eyes and sounds die in front of an audience | Isolated DC-DC rail, own fuse, buffer capacitor |
+| R7 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
+| R8 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
+| R9 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |
+| R10 | Scope grows, especially the body | Nothing is finished | Section 9 cut list, agreed in advance |
+| R11 | Midburn vehicle rules not met | Cannot operate at the event | D5 this week, before the frame is welded |
+| R12 | Builder gets stuck on the electronics | Project stalls silently | Section 10 learning plan. Bench work early, so problems appear when there is time |
 
-R8 is worth checking early: the sprockets are already printed and fitted, so find out what
+R9 is worth checking early: the sprockets are already printed and fitted, so find out what
 filament was used. PLA softens at around 60 °C, and a black plastic part in direct Negev sun
 will reach that.
 
@@ -469,7 +472,7 @@ In order. Nothing later on this list should start before the things above it.
 3. Bench-test both hub motors with the original scooter controllers — free, and it de-risks
    the whole project
 4. Read `02-shock-bolt.md`, inspect the lower shock mounts on both pods, decide D2
-5. Confirm the battery voltage and capacity (D4)
+5. Confirm both pack capacities in Ah and that both BMS units are healthy (D4)
 6. Order one VESC, a Teensy, a CAN transceiver, and the radio set
 7. Start learning plan steps 1 to 5 while the parcels are in the post
 8. Design the frame in OpenSCAD

@@ -38,6 +38,17 @@ fail, because a hard stop on a 231 mm footprint can pitch the robot forward.
 | 8 | CAN wire disconnected | Unplug one CAN wire at a VESC | Both motors stop, not just one | | | |
 | 9 | Arm switch off | Flick the arm switch to off while driving | Ramp to zero | | | |
 | 10 | Power on while armed | Connect the battery with the arm switch already ON | Robot must NOT move. It must require the switch to be cycled off then on | | | |
+| 11 | One pack disconnected | Open the left pack's main switch while driving forward | **Both** tracks stop. The robot must NOT pivot on the surviving track | | | |
+| 12 | The other pack disconnected | Repeat test 11 on the right pack | Same as test 11 | | | |
+| 13 | Uneven pack voltage | Drive with the packs at clearly different charge levels | It still drives straight. Any pull to one side means rule 11 compensation is not working | | | |
+| 14 | Ground bond removed | With the robot parked and unarmed, disconnect the negative bond between the packs | CAN drops, so the Spine sees both VESCs stop reporting and refuses to arm at all | | | |
+
+Tests 11 and 12 are the most important new ones, and they are specific to having one battery
+per pod. On a skid-steer machine, one dead track does not slow the robot down — the surviving
+track spins it on the spot. Both of these must produce a stop of **both** sides.
+
+Run test 14 parked and unarmed. It is checking that a missing ground bond fails safe rather
+than producing unpredictable CAN behaviour while driving.
 
 Test 10 catches a mistake that is easy to make in code and dangerous in the field: a robot
 that starts driving the instant you plug the battery in, because the stick was not centred or

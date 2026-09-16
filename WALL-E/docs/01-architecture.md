@@ -105,12 +105,15 @@ rule lower down.
 | 1 | Is the E-stop circuit closed? | Motors dead. Nothing can override. | This is physical, not software. The contactor is open, so there is no power to the motors at all. |
 | 2 | Is the arm switch on the remote ON? | Send zero. | The robot must never move the instant you connect the battery. The driver has to deliberately arm it. |
 | 3 | Has a radio frame arrived in the last 100 ms? | Ramp to zero. | Radio out of range or transmitter battery flat. Stop is the only safe answer. |
-| 4 | Which mode does the remote's mode switch say? | — | `MANUAL` uses the sticks. `ASSIST` uses the Brain. |
-| 5 | In `ASSIST` only: has a Brain heartbeat arrived in the last 100 ms? | Ramp to zero and fall back to `MANUAL`. | The Brain is frozen or rebooting. |
-| 6 | Do the bumper sensors see anything close in the direction of travel? | Scale the command down, or to zero. | The veto. It can only reduce, never add. |
-| 7 | Is either motor too hot? | Scale both commands down. | Protects the hub motors from overheating at low speed. |
-| 8 | Apply the slew rate limit. | — | Turns any sudden change into a smooth ramp. |
-| 9 | Send on CAN. | — | |
+| 4 | **Are BOTH VESCs reporting on CAN?** | **Ramp BOTH to zero.** | See section 3b. One dead track does not stop a skid-steer robot, it makes it pivot. |
+| 5 | **Are both pack voltages above the floor?** | **Ramp BOTH to zero.** | A BMS cutting out is the most likely way one side dies. |
+| 6 | Which mode does the remote's mode switch say? | — | `MANUAL` uses the sticks. `ASSIST` uses the Brain. |
+| 7 | In `ASSIST` only: has a Brain heartbeat arrived in the last 100 ms? | Ramp to zero and fall back to `MANUAL`. | The Brain is frozen or rebooting. |
+| 8 | Do the bumper sensors see anything close in the direction of travel? | Scale the command down, or to zero. | The veto. It can only reduce, never add. |
+| 9 | Is either motor too hot? | Scale both commands down. | Protects the hub motors from overheating at low speed. |
+| 10 | Apply the slew rate limit. | — | Turns any sudden change into a smooth ramp. |
+| 11 | **Scale each side by its own pack voltage.** | — | See section 3b. Keeps it driving straight as the two packs drift apart. |
+| 12 | Send on CAN. | — | |
 
 ### The important property of this list
 
@@ -118,6 +121,81 @@ Every single failure leads to the robot stopping. There is no combination of bro
 that makes it speed up, turn unexpectedly, or ignore the driver. When you are unsure whether
 a design is safe, check it against this: **ask what each part does when it breaks, not when
 it works.**
+
+---
+
+## 3b. One battery per pod, and the three traps that come with it
+
+We have two 48 V packs, and each one feeds its own pod: left pack to the left VESC, right pack
+to the right VESC. The positives stay completely separate.
+
+This is a good decision. It removes the worst problem with two packs, which is connecting them
+in parallel. Two packs at different states of charge, joined together, dump a very large
+current into each other the moment you connect them. Keeping the positives separate means that
+can never happen, and each pack keeps its own BMS working independently.
+
+But splitting the power this way creates three problems that have to be designed for.
+
+### Trap 1 — It will drive crooked as the packs drift apart
+
+Skid steer only works if the left and right sides respond the same way to the same command.
+A duty cycle command means "apply this fraction of the pack voltage to the motor". So if one
+pack is at 50 V and the other at 44 V, the same stick position makes one track about 12 %
+faster than the other, and the robot pulls to one side the whole time.
+
+The packs **will** drift apart, for three reasons: every turn loads the outer track harder
+than the inner one, the two packs will not be equally healthy, and one of them is also feeding
+the electronics.
+
+**The fix (arbitration rule 11):** the VESCs already report their input voltage over CAN, and
+the Spine is already listening. So the Spine scales each side's command by that side's own pack
+voltage, aiming for the same volts at each motor rather than the same fraction. In code this is
+one multiplication per side, and it makes the problem disappear.
+
+### Trap 2 — One dead side makes the robot pivot, not stop
+
+This is the dangerous one, and it is easy to miss.
+
+On a car, losing drive to one wheel means you slow down. On a skid-steer machine, losing one
+track means **the other track keeps pushing and the robot spins on the spot.** In a crowd, a
+heavy machine that suddenly starts turning instead of stopping is exactly what you do not want.
+
+The most likely cause is not a broken wire. It is one pack's **BMS cutting out** — from low
+voltage, over-current, or over-temperature — which it is designed to do, without warning, on
+its own.
+
+**The fix (arbitration rules 4 and 5):** the Spine requires both VESCs to be reporting on CAN
+and both pack voltages to be above a floor. If either check fails, it ramps **both** sides to
+zero. Never one.
+
+### Trap 3 — The two packs need a shared ground, or CAN will not work
+
+Two separate packs have two separate negative terminals. The CAN bus connecting the Spine to
+both VESCs needs one common zero-volt reference, and without it the two ends of the bus float
+against each other and the data is meaningless.
+
+**The fix: bond the two pack negatives together at one single point, and keep the two positives
+separate.** Each pack then returns its own current through the shared negative, but there is no
+path between the positives, so the cross-charging problem in the opening paragraph still cannot
+happen.
+
+Two details on that bond:
+
+- Size it for the larger of the two motor currents, and keep it short and thick. It is
+  carrying real current, not just a reference.
+- **Do not fuse it.** A fuse that opens in the ground bond leaves the CAN bus floating while
+  the robot is still driving, which is worse than the fault it was protecting against.
+
+### And the electronics supply: take it from both packs, not one
+
+Feeding the Brain from one pack sounds simplest, but it makes that pack drain faster, which
+feeds straight back into trap 1.
+
+Better: **two isolated DC-DC converters, one on each pack, with their outputs joined through
+ideal-diode ORing.** It costs one extra converter, about 40 dollars, and buys two things. The
+electronics load is shared, so the packs drain evenly. And if one pack or BMS drops out
+entirely, the computers, the eyes, and the Spine all stay alive — so the robot can still
+announce it has a problem and still stop itself properly.
 
 ---
 
