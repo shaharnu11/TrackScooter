@@ -19,9 +19,12 @@ A full computer on one small board. It runs Linux, has USB ports, and can run he
 software like AI models. A Raspberry Pi is an SBC. It is powerful but its timing is not
 guaranteed, because Linux decides when your program gets to run.
 
-**Teensy 4.1**
+**Teensy 4.0**
 The microcontroller we use for the Spine. It is like an Arduino but much faster (600 MHz).
-We chose it because it has CAN built in and is very well supported.
+We chose it for its analogue inputs, its pin count and how well supported it is. It was a
+Teensy 4.1 until 2026-09-18; we dropped to the 4.0, which is the same chip, once the CAN bus
+and SD-card logging were both out of the design and the 4.1 had nothing left to offer.
+**It is not 5 V tolerant** — 5 V on a pin damages it.
 
 **ESP32-S3**
 A cheap microcontroller with WiFi and Bluetooth built in, and enough speed to drive small
@@ -111,8 +114,9 @@ pack voltage, current, motor temperature — is now a separate sensor on the lis
 command timeout it would have given for free is now the hardware watchdog. See `05-bom.md`
 section 1b for what that costs and `01-architecture.md` for why the watchdog is mandatory.
 
-VESC still matters as a word here, because two CAN transceivers stay in the drawer and moving
-to VESCs is the planned fallback if the controllers judder at walking pace.
+VESC still matters as a word here, because moving to VESCs is the planned fallback if the
+controllers judder at walking pace. That swap also needs two 3.3 V CAN transceivers, which are
+not on the buying list — you buy them with the VESCs, not before.
 
 **DAC**
 Digital to Analogue Converter. The opposite of the ADC below. The Teensy sends a number over

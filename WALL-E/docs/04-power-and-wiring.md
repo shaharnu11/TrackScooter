@@ -383,7 +383,7 @@ used to specify a 500 kbit CAN bus. What it specifies now is the path that volta
 which is more fragile and needs more care, because it carries no error detection of any kind.
 
 ```
-  TEENSY 4.1            LEVEL        MCP4725 DAC      OPTO           CONTROLLER
+  TEENSY 4.0            LEVEL        MCP4725 DAC      OPTO           CONTROLLER
               3.3 V      SHIFT         x2                            throttle in
   ┌────────┐  I2C      ┌───────┐    ┌──────────┐   ┌──────┐        ┌────────────┐
   │ SDA ───┼───────────┼─ 5 V ─┼────┼─ DAC A ──┼───┼─ iso ┼────────┼─ 0-3.3 V L │
@@ -409,9 +409,11 @@ Four rules. The first one is the one that can hurt somebody.
    for that side. Tying the Teensy directly to it puts motor return current through the
    Teensy's ground reference.
 
-**Keep the two CAN transceivers in the drawer.** `05-bom.md` still buys them, because they are
-five dollars each and they are what you need on the day a controller judders at walking pace
-and you move to VESCs. That is the 260 dollar contingency in section 7 of the BOM.
+**If you move to VESCs you will also need two 3.3 V CAN transceivers.** They are no longer on
+the buying list — owner decision 2026-09-18, because nothing in the current design uses CAN and
+they are a $2 commodity part. Add them to the order on the day a controller judders at walking
+pace and you take the 260 dollar contingency in section 7 of the BOM. **3.3 V, not 5 V:** the
+Teensy is not 5 V tolerant.
 
 ---
 

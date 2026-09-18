@@ -62,7 +62,7 @@ pause.
   SAFETY     ┌──────────────────────┐
 ┌──────────┐ │                      │
 │ ToF ring │ │   SPINE              │
-│ bumper   ├►│   Teensy 4.1         │◄── RC receiver also wires in HERE
+│ bumper   ├►│   Teensy 4.0         │◄── RC receiver also wires in HERE
 │ switch   │ │   no operating system│
 └──────────┘ │                      │
              │  mixing, ramping,    │      Cannot freeze. Holds every rule.
@@ -360,7 +360,7 @@ Four things, all independent, all allowed to be slow:
 > motion, and the safety layer can cancel it at any moment. The AI never produces a motor
 > number. This is what makes it safe to put a language model on a heavy machine.
 
-### Spine — Teensy 4.1, C++, no operating system
+### Spine — Teensy 4.0, C++, no operating system
 
 One loop at 1 kHz that does exactly what section 3 describes. Nothing else. No logging to SD
 card, no screens, no clever features. Every line of code added here is a line that can stop

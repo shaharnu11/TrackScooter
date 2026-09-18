@@ -95,7 +95,7 @@ unsafe.
 | Name | Board | Job | How fast must it be |
 |---|---|---|---|
 | **Brain** | Jetson Orin Nano | Camera, AI, sounds, deciding | Slow is fine: 0.1 to 3 seconds |
-| **Spine** | Teensy 4.1 | Reads the remote, talks to the motors | Very fast and exact: 1000 times a second |
+| **Spine** | Teensy 4.0 | Reads the remote, talks to the motors | Very fast and exact: 1000 times a second |
 | **Face** | ESP32-S3 | The two eye screens. No servos — the head is rigid | Steady: 30 times a second |
 
 The **Brain** runs Linux, like a normal computer. Linux is good at big jobs like AI, but it

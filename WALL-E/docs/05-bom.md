@@ -8,6 +8,20 @@ section 9's table were checked against real AliExpress listings on 2026-09-17 an
 a little high too. Check every one before ordering. Prices for the Jetson and the cameras in particular move a
 lot. Treat the totals as a planning figure, not a budget you can commit to.
 
+**About the currency.** The Est. column is **US dollars**, but you are buying in **shekels**.
+At ₪1 = $0.33 (checked 2026-09-18), ₪100 is about $33. Two things follow, and they matter more
+than they look:
+
+1. **Compare delivered prices, not part prices.** The dollar figures in this document are bare
+   part prices. An AliExpress price to Israel usually includes shipping; a US or EU
+   distributor's does not, and shipping one small board from the US can cost as much as the
+   board. A part that looks 50 % dearer on AliExpress can still be the cheaper way to get it.
+2. **Watch the order-total threshold.** Israel exempts small personal imports from VAT and
+   duty below roughly 75 dollars, and charges VAT above it. Verify the current figure before
+   you commit, but the shape of it means **several small orders can cost less than one big
+   one** — which also suits this document, because it is already split into phases you buy
+   at different times.
+
 **About the lead times.** "Stock" means a normal shop will post it this week. "Long" means
 plan four to eight weeks, usually because it ships from China or is a low-volume industrial
 part. The long-lead items are the ones to order first, even if you will not use them for
@@ -31,8 +45,7 @@ the parts list and the conditions that come with it.
 
 | Qty | Part | Est. | Lead | Notes | Buy from — **read §9 first** |
 |---|---|---|---|---|---|
-| 1 | Teensy 4.1 | 32 | Stock | Has three CAN controllers on the chip. It still needs an external transceiver. | [search](https://www.aliexpress.com/w/wholesale-Teensy-4.1.html) |
-| 2 | CAN transceiver breakout, 3.3 V (SN65HVD230 / MCP2562FD) | 10 | Stock | Not needed to drive the scooter controllers, which have no CAN. Buy them anyway — they are 5 dollars each and they are what you need the day you move to VESCs. | [search](https://www.aliexpress.com/w/wholesale-SN65HVD230-CAN-module.html) |
+| 1 | Teensy **4.0** | 38 | Stock | The Spine. 600 MHz i.MX RT1062 — **the same chip as the 4.1**. Downgraded from the 4.1 on 2026-09-18 because both reasons for picking it had expired: decision D7 killed the CAN bus, and `01-architecture.md` bans SD-card logging. The Spine needs about 21 pins with 6 analogue (2 pack voltages, 2 motor thermistors, 2 ACS758); the 4.0's 24 edge pins include 14 analogue, so it fits without using the awkward bottom pads. **Not 5 V tolerant** — it needs the level shifter in §1b. | [AliExpress ₪114.08](https://he.aliexpress.com/item/1005009258422669.html) |
 | 1 | RC transmitter and receiver set, 8+ channels | 120 | Stock | See section 6 for what the channels are for. | [search](https://www.aliexpress.com/w/wholesale-8-channel-RC-transmitter-receiver.html) |
 | 1 | Multimeter with a clamp for DC current | 60 | Stock | The clamp matters. You cannot break into a 40 A circuit to measure it. | [search](https://www.aliexpress.com/w/wholesale-DC-clamp-meter.html) |
 | 1 | Bench power supply, 60 V 5 A, adjustable current limit | 90 | Stock | The current limit turns a wiring mistake into a beep instead of a fire. Borrow one if you can. | [search](https://www.aliexpress.com/w/wholesale-bench-power-supply-60V-5A.html) |
@@ -103,8 +116,10 @@ few seconds of steady throttle. On a robot in a crowd that is dangerous. If your
 cannot be turned off, that alone is worth the 260 dollars.
 
 **The upgrade path stays open.** Two VESCs are 260 dollars whenever you decide the juddering
-at low speed is unacceptable. The Teensy, the CAN transceivers, the wiring and the frame are
-all unchanged — you swap the controllers and drop the DACs.
+at low speed is unacceptable. The Teensy, the wiring and the frame are all unchanged — you
+swap the controllers and drop the DACs. You would also need two 3.3 V CAN transceivers, which
+are **deliberately not on this list** (owner decision 2026-09-18): they are a $2 commodity part
+with no other use in the current design, so buy them alongside the VESCs if that day comes.
 
 ---
 
@@ -306,7 +321,7 @@ cannot be the same failure.
 
 | Section | Phase | Est. |
 |---|---|---|
-| 1 — de-risking | now | 362 |
+| 1 — de-risking | now | 358 |
 | 1b — throttle interface for the scooter controllers | now | 60 |
 | 2 — frame and drive, including sealing the box | 1 | 640 |
 | 3 — compute and sensors | 2 | 697 |
@@ -314,14 +329,14 @@ cannot be the same failure.
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 3,010** |
+| **Total** | | **≈ 3,004** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
 to 552, section 3 said 740 against 738, and section 4 said 400 when it actually
 sums to 459. The total was understated in one place and overstated in another.
 
-### How it got from 4,200 to 3,010
+### How it got from 4,200 to 3,004
 
 | Change | Saving |
 |---|---|
@@ -331,6 +346,7 @@ sums to 459. The total was understated in one place and overstated in another.
 | The head is rigid, so four servos are gone | **60**, less 15 for the camera mount |
 | Correcting section 4, which was understated | **−59** |
 | Checking real AliExpress prices, section 9 | **161** |
+| Dropping the two CAN transceivers nothing uses yet | **10**, less 6 for the real Teensy price |
 | Correcting the I2C multiplexer, which I had mis-set to 24 | **21** |
 
 The two big ones cost nothing in capability. **The plywood body actively made
@@ -469,7 +485,6 @@ those break.
 |---|---|---|
 | 1 | 48 V controller with a reverse line, 50 | You own exactly two and need exactly two. One dying kills one whole track, and the robot cannot turn on one track. |
 | 2 | MCP4725 DAC breakout | 4 dollars, and it is the single point of failure for a whole side's throttle. |
-| 2 | CAN transceiver | Cheap, and they fail. |
 | 1 | 12→5 V converter | Loses the Spine and the Face together. |
 | 1 | ESP32-S3 board | An eye. |
 | — | Every fuse value, several of each | Obvious, and always forgotten. |

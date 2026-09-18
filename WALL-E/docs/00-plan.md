@@ -211,8 +211,9 @@ through opto-isolators. `05-bom.md` section 1b is the parts list, about 76 dolla
 
 **Recommendation: use the controllers you own, and hold 260 dollars as a contingency.** This
 is a bet that six-step control is smooth enough at walking pace. You will not know until you
-drive it. If it judders, two VESCs drop straight in: the Teensy, the CAN transceivers and the
-power wiring all stay. What you throw away is the throttle interface — the two DACs, the level
+drive it. If it judders, two VESCs drop straight in: the Teensy and the
+power wiring all stay, and you add two 3.3 V CAN transceivers, which are not on the list until
+then. What you throw away is the throttle interface — the two DACs, the level
 shifter and the opto-isolators, about 30 dollars — and you gain back the telemetry and the
 command timeout. The hardware watchdog stays either way; it is cheap insurance.
 
@@ -259,7 +260,7 @@ A phase is not finished because the work is done. It is finished when its exit t
 | Read `02-shock-bolt.md`, inspect both pods, decide D2 | W1 |
 | Confirm the donor battery voltage and capacity (D4) | W2 |
 | Confirm the Midburn date and vehicle rules (D5) | — |
-| Order a Teensy 4.1, two MCP4725 DACs, a level shifter, the watchdog parts, a CAN transceiver, the radio set, a multimeter | W2 |
+| Order a Teensy 4.0, two MCP4725 DACs, a level shifter, the watchdog parts, the radio set, a multimeter | W2 |
 
 **Exit test:** both motors spin under their own power, and the measured pod dimensions are
 written down and match the model within a millimetre or two.
@@ -369,7 +370,7 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 | Drive electronics | throttle interface, contactor, fuses, heavy cable, lugs (controllers already owned) | 270 – 380 |
 | Radio control | Transmitter, receiver, wireless E-stop keyfob | 150 – 250 |
 | Compute | Jetson Orin Nano 8GB, storage, cooling | 300 – 350 |
-| Spine and Face boards | Teensy 4.1, CAN transceiver, ESP32-S3, 2 round LCDs | 80 – 120 |
+| Spine and Face boards | Teensy 4.0, ESP32-S3, 2 round LCDs | 80 – 120 |
 | Sensors | LiDAR, OAK-D camera, 6 × ToF, GPS, compass | 300 – 400 |
 | Power conditioning | Isolated DC-DC converters, buffer, distribution | 100 – 150 |
 | Audio | Class-D amplifier, wiring | 60 – 100 |
@@ -383,7 +384,7 @@ If the donor battery packs cannot be reused, add 600 to 1,200.
 
 ### Buy in this order, not all at once
 
-1. **Now:** a Teensy, the throttle interface parts, a CAN transceiver, the radio set, a multimeter. About 250
+1. **Now:** a Teensy, the throttle interface parts, the radio set, a multimeter. About 250
    dollars, and it is the cheapest way to find out whether the drive electronics are going to
    be a problem.
 2. **Now:** the shock bolt retrofit steel. Small money, and it unblocks loading the pods.
@@ -517,6 +518,6 @@ In order. Nothing later on this list should start before the things above it.
    the whole project
 4. Read `02-shock-bolt.md`, inspect the lower shock mounts on both pods, decide D2
 5. Confirm both pack capacities in Ah and that both BMS units are healthy (D4)
-6. Order a Teensy, the throttle interface parts, a CAN transceiver, and the radio set
+6. Order a Teensy, the throttle interface parts, and the radio set
 7. Start learning plan steps 1 to 5 while the parcels are in the post
 8. Design the frame in OpenSCAD
