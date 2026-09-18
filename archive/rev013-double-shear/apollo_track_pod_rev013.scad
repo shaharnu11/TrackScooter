@@ -605,10 +605,11 @@ bump_max   = 15;    // arm travel limit, deg (clearance guard checks this)
 // from the far arm plate, through the near plate, through the shock eye and
 // into a new outer STRAP plate. The eye load is now caught between two
 // supports, and the bolt is only a clamp — it never sees bending anywhere.
-ds_strap  = false; // OWNER 2026-09-18: the outer strap is OFF for now, so this
-                   // renders the bare cantilever. The lower shock bolt is over
-                   // yield while this is false — see the WARN lines. Set it back
-                   // to true, or fit another support, before the pods take load.
+ds_strap  = true;  // OWNER 2026-09-18: switched off for a look at the bare
+                   // cantilever, back ON 2026-09-19. With it false the lower
+                   // pin is at 304 MPa against a 235 limit, and no width
+                   // change fixes that — widening the pod moves the eye
+                   // FURTHER from the arm plate and makes it worse.
 ds_t      = 6;     // strap thickness — 40x6 bar, the stock already in the BOM
 ds_clr    = 1;     // running clearance, shock eye outer face to strap inner face
 ds_eye_w  = 24;    // shock LOWER EYE WIDTH across the boss — MEASURED 2026-09-18
@@ -633,9 +634,23 @@ ds_eye_bore = 8;   // shock LOWER EYE BORE — MEASURED 2026-09-18 by the owner:
                    //     adds an INNER JAW so the eye is gripped from both sides
                    //     ds_clr away, which is the only thing that keeps the bare
                    //     span short, and checks the bolt against ds_bolt_y.
-ds_bolt_y = 940;   // M8 through-bolt proof strength, MPa: 640 = cl.8.8,
-                   // 940 = cl.10.9. Only used when the bolt runs bare through
-                   // the eye. Checked at half of it, i.e. safety factor 2.
+ds_bolt_y = 1100;  // through-bolt proof strength, MPa: 640 = cl.8.8,
+                   // 940 = cl.10.9, 1100 = cl.12.9. Only used when the bolt
+                   // runs bare through an eye — which, with a Ø8 bore, is both
+                   // ends of both shocks. Checked at half of it, safety factor 2.
+                   // OWNER 2026-09-19: the pins stay M8, so cl.12.9 is not a
+                   // preference, it is the only grade that carries them. A
+                   // cl.10.9 M8 allows 470 and the lower pin sits at 504.
+                   // Buy these as cl.12.9 and mark them — a shop-drawer 8.8
+                   // put in the same hole is at three times its limit.
+ds_pin_d  = 8;     // bare pin across the eyes: 8 = M8, as the eyes are bored
+                   // today. 10 = M10, which needs the Ø8 bores opened out, and
+                   // roughly halves every bending figure below because the
+                   // section goes as d³. Check first whether the eye holds a
+                   // pressed bushing — if it does, its own bore may already be
+                   // big enough and nothing needs drilling.
+function pin_root(d) = d == 6 ? 4.77 : d == 8 ? 6.47 : d == 10 ? 8.16
+                     : d == 12 ? 9.85 : 0.81*d;   // ISO coarse thread minor Ø
 ds_eye_od = 20;    // shock LOWER EYE OUTER diameter, across the boss — MEASURE
                    // YOURS. It MUST be bigger than lsb_od (15), because with a
                    // Ø8 bore the sleeve cannot pass through and has to butt
@@ -662,6 +677,36 @@ ds_gus_notch = 4.5; // half-width of the SLOT up the outboard gusset's inboard
 ds_end    = 8;     // strap steel past each gusset line. Do not just make this
                    // bigger: the inboard end swings past the Ø22 pivot sleeve,
                    // which is guarded below. With ds_gus_x = 30 it leaves 2 mm.
+
+/* [Upper shock mount — REV 013: DOUBLE SHEAR] */
+// The upper eye carried the SAME fault as the lower one, and unlike the lower
+// one nothing was watching it. Rev 011c hung the eye pin off a single stub —
+// the comment at tab_stub_2d says so outright, "the eye pin cantilevers from
+// the stub out to the shock plane through washers". A shock pushes equally
+// hard at both ends, so that pin saw the same 2681 N on a 12 mm lever with
+// nothing on its far side: 1210 MPa with an M8, past even a cl.12.9 pin.
+// The cure is the shape the lower mount already uses: a SECOND stub on the
+// eye's inner face, keyed on the same hub axle, so the axle nut clamps both
+// and the pin is held at both ends. It is the mirror of the outer stub, which
+// tab_stub_2d already produces — the pod now cuts four of that blank, not two.
+// Room for it, all guarded below:
+//   - it sits at |z| 39.5..45.5, which IS inside the lug rows (31..49), but
+//     its far corner is only 66 from the axle and the lug tips sweep 84, so
+//     it passes under them;
+//   - the Ø123 motor casing ends at |z| 21.5, well inboard of it;
+//   - the drum is 35 wide, so |z| 17.5. Nothing else lives in that slice.
+us_clevis = true;  // false renders the Rev 011c cantilever, for comparison
+us_t      = 6;     // inner stub thickness — same 40x6 bar as the outer one
+us_clr    = 1;     // running clearance, shock eye face to inner stub
+us_bear_t = 6;     // how much of the OUTER stub the pin actually bears on.
+                   // stub_t is 12 = two 40x6 bars, and if the pin were a snug
+                   // fit through both, its outer support would sit 6 mm out at
+                   // the pair's mid-plane — a longer lever, 552 MPa, over the
+                   // 550 a cl.12.9 M8 allows. Drill the INNER bar Ø8.4 and the
+                   // OUTER one Ø12 clearance and the pin bears on the inner bar
+                   // alone, 3 mm from the eye instead of 6. 478 MPa. It costs a
+                   // different drill bit on one of two plates that are being
+                   // cut anyway. Set this to stub_t to model a snug pin in both.
 
 $fa = 4; $fs = 0.7;
 
@@ -731,16 +776,27 @@ shocks_inboard = true;                 // OWNER 2026-09-18, measured
 // lies against the carrier's INNER face, and the shock hangs off the stub's
 // inner face in turn. This read cz + carrier_t in three places, which put the
 // stub OUTBOARD — exactly where the new fork now bolts.
-stub_t  = 6;                           // 40x6 bar, as Rev 011c
-tab_z0  = cz - stub_t;                 // 76.5 — stub INNER face |z|
+stub_t  = 12;                          // 2026-09-19: 6 (one 40x6 bar, Rev 011c)
+                                       // left the lower strap 1 mm INSIDE the
+                                       // carrier plate. The stub is what spaces
+                                       // the shock off the carrier, so thicken
+                                       // it and the whole mount moves inboard
+                                       // into clear air. 11 is the minimum;
+                                       // 12 = two 40x6 bars, stock already here.
+                                       // This does NOT widen the pod: carriers
+                                       // stay 165 apart, fork gap stays 177.
+tab_z0  = cz - stub_t;                 // 70.5 — stub INNER face |z|
 // Shock centre plane. Inboard, the shock hangs on the stub's INNER face, so
 // the plane is set by the stub and the eye's own width — not by a guess at
 // "14 mm off the belt edge", which is what this used to say.
 sz     = shocks_inboard ? tab_z0 - ds_eye_w/2
                         : cz + carrier_t + 14;  // outboard of the carrier plate
 // ---- Rev 013 double-shear lower shock mount, derived ----------------------
-lsb_od  = 15;   // spacer sleeve OD  (FASTENERS.md §D)
-lsb_id  = 9;    // spacer sleeve ID
+lsb_od  = 15;         // spacer sleeve OD  (FASTENERS.md §D)
+lsb_id  = ds_pin_d+1; // spacer sleeve ID — follows the pin. Going to M10 bores
+                      // this out to 11, which makes the SLEEVE weaker, not
+                      // stronger. That only matters where the sleeve is the
+                      // beam, i.e. with ds_strap off.
 ds_z0   = sz + ds_eye_w/2 + ds_clr;    // 79 — strap INNER face |z|
 ds_z1   = ds_z0 + ds_t;                // 85 — strap OUTER face |z|
 ds_zs   = ds_z0 + ds_t/2;              // 82 — strap mid-plane, the 2nd support
@@ -756,6 +812,21 @@ ds_j0   = ds_j1 - ds_t;                // inner jaw INNER face |z|
 ds_jn   = ds_j1 - ds_t/2;              // inner jaw mid-plane, the 1st support
 // where the sleeve stops on the shock side
 ds_sl_out = ds_thru ? ds_z1 : ds_j1;
+// ---- Rev 013 double-shear UPPER shock mount, derived ----------------------
+// The eye sits against the outer stub's inner face, so the outer support is
+// that stub and the inner one is the new stub, ds_clr off the eye's other face.
+us_j1   = sz - ds_eye_w/2 - us_clr;    // 45.5 — inner stub OUTER face |z|
+us_j0   = us_j1 - us_t;                // 39.5 — inner stub INNER face |z|
+us_jn   = us_j1 - us_t/2;              // 42.5 — inner stub mid-plane, support 1
+us_sn   = tab_z0 + us_bear_t/2;        // 73.5 — outer support: the mid-plane of
+                                       // the bearing length, measured from the
+                                       // stub's INNER face, which is the face
+                                       // the eye lies against
+us_span = us_sn - us_jn;
+// Far corner of tab_stub_2d from the hub axle: the blank runs x -20..63 and
+// y -20..20, so the worst corner is the outboard bottom one. This is what has
+// to duck under the lug tips, because the inner stub stands in the lug rows.
+us_corner = norm([63, 20]);
 // Strap top edge: the spring stops the strap climbing past the eye, so the
 // edge distance above the Ø15 bore is whatever ds_spring leaves. The load at
 // full bump pushes the eye DOWN, so the steel that matters is below the bore
@@ -851,7 +922,7 @@ lsb_F   = spring_rate*(shock_ee - shock_len(bump_max));
 ds_arms = [["trailing", zi_tr + plate_t, zi_tr + plate_t/2],
            ["leading",  zi_ld + plate_t, zi_ld + plate_t/2]];
 // Bolt minor-diameter section — what is left where the sleeve cannot follow.
-ds_Zb = PI*pow(6.47,3)/32;
+ds_Zb = PI*pow(pin_root(ds_pin_d),3)/32;
 for (arm = ds_arms) let(
     // Rev 012 cantilever: arm plate outer face -> eye.
     // Rev 013 two supports, load at sz between them. Which pair of supports
@@ -872,10 +943,34 @@ for (arm = ds_arms) let(
            " arm: ",
            !ds_strap ? str("CANTILEVER lever ", round(sz - arm[1]), " mm")
            : str("double shear over ", round(lsb_span), " mm span, ",
-                 lsb_bare ? "bare M8 across the eye" : "sleeve right through"),
+                 lsb_bare ? str("bare M", ds_pin_d, " across the eye")
+                          : "sleeve right through"),
            ", ", round(lsb_F), " N at full bump -> ", round(lsb_s), " MPa (limit ",
            round(lsb_lim), ")",
            lsb_s > lsb_lim ? " — Support the eye's OUTER end (double shear: clevis / outer strap), or a much stiffer pin." : ""));
+
+// ---- UPPER shock eye pin: the check that never existed ---------------------
+// Every revision up to here guarded the lower eye six ways and the upper eye
+// not at all, which is how a 1210 MPa cantilever sat in the drawings unnoticed
+// from Rev 011c to Rev 013. A shock carries the same force at both ends, so
+// lsb_F is the load here too. Bare pin either way: the Ø8 eye bore takes no
+// sleeve, exactly as at the lower end.
+let(us_M = us_clevis
+             // load between two supports, its grip spread over the eye width
+             ? lsb_F*(sz - us_jn)*(us_sn - sz)/us_span - lsb_F*ds_eye_w/8
+             // Rev 011c: pin held by the outer stub only, eye hanging inboard
+             : lsb_F*(tab_z0 - sz),
+         us_s = us_M / ds_Zb,
+         us_lim = ds_bolt_y/2)
+  echo(str(us_s > us_lim ? "*** WARN " : "PASS ",
+           "upper shock PIN bending: ",
+           us_clevis ? str("double shear over ", round(us_span), " mm span")
+                     : str("CANTILEVER lever ", round(tab_z0 - sz), " mm"),
+           ", bare M", ds_pin_d, " across the eye, ", round(lsb_F),
+           " N at full bump -> ", round(us_s), " MPa (limit ", round(us_lim), ")",
+           us_s > us_lim
+             ? " — set us_clevis, raise ds_bolt_y, or open the eye for ds_pin_d=10."
+             : ""));
 
 // ---- Rev 013: does the bracket clear the coil, at every arm angle? ---------
 // The crude "how far along the arm is the gusset" test is not enough: the shock
@@ -1065,11 +1160,22 @@ y_w_bump    = -P + C*sin(bump_max - na);   // idler centre at full bump
 y_belt_bump = y_w_bump - D/2;              // belt inner surface, bottom run
 y_lug_bump  = y_belt_bump + lug_h;         // guide-lug tops
 lug_zone    = F/2 + lug_w;                 // |z| outer edge of lug rows
+// The lower shock mount reaches inboard PAST the belt edge — the inner jaw
+// stands at |z| 39.5, inside even the lug rows — and it swings with the arm.
+// Nothing checked it against the belt until 2026-09-19. Take the eye at full
+// bump, where the arm is highest and the belt's bottom run is highest too, and
+// measure from the lowest steel of the mount (ds_bot below the eye centre).
+sh_in_z  = ds_strap ? ds_j0 : sz - ds_eye_w/2;        // innermost |z| of it
+sh_floor = sh_in_z < lug_zone ? y_lug_bump : y_belt_bump;
 clearances = concat(
   // Rev 002: carrier plates ride OUTSIDE the belt width — tongue check only
   // applies if a future layout puts them back over the belt
   (cz < track_w/2 + 3) ?
     [["carrier tongue Ø48", (pivot[1] - 24) - ((cz < lug_zone) ? y_lug_bump : y_belt_bump)]] : [],
+  (sh_in_z < track_w/2) ?
+    [[str("lower shock mount (reaches |z| ", sh_in_z, ") over the ",
+          sh_in_z < lug_zone ? "lug rows" : "belt"),
+      (arm_pt([a, shock_y], bump_max)[1] - ds_bot) - sh_floor]] : [],
   use_keel ? [[str("keel standoff  Ø", keel_od), (y_keel - keel_od/2) - y_lug_bump]] : [],
   [
    [str("pivot spacer   Ø", bushing_od), (pivot[1] - bushing_od/2) - y_lug_bump],
@@ -1112,6 +1218,16 @@ echo(str(!shocks_inboard ? "n/a  shocks run outboard"
 for (c = clearances)
   echo(str(c[1] < 5 ? "*** WARN " : "PASS ", c[0], ": ", c[1],
            " mm above track at +", bump_max, "° bump"));
+// The upper clevis's inner stub stands in the lug rows in z (39.5..45.5 against
+// rows at 31..49), so it cannot pass BESIDE the lugs — it has to pass UNDER
+// them. That makes this a radial check about the hub axle, not a vertical one,
+// which is why it does not belong in the bump list above.
+if (us_clevis && us_j0 < lug_zone)
+  echo(str((r_wrap - lug_h) - us_corner >= 5 ? "PASS " : "*** WARN ",
+           "upper inner stub at |z| ", us_j0, "..", us_j1,
+           " stands in the lug rows — its far corner is ", us_corner,
+           " from the axle, lug tips sweep ", r_wrap - lug_h, ": ",
+           (r_wrap - lug_h) - us_corner, " mm clear underneath"));
 // keel window fit (all static-to-static or pivot-centred, so the gaps hold at
 // every articulation; small values acceptable) + in-plane wheel clearances
 keel_gaps = concat(use_keel ? [
@@ -1668,9 +1784,14 @@ module carrier_group(mount = use_bracket_eff ? "bracket" : "stub"){
   // -z the leading — a shock loads only the carrier it hangs from.
   // 011d merged: with the bracket, the blade IS the shock tab — separate
   // stubs exist only on the front pod (no bracket there yet)
-  if (mount == "stub" || mount == "stub_clear") color([0.36,0.43,0.56]) for (s=[1,-1])
-    translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
-      linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_clear" ? stub_yb : -20);
+  if (mount == "stub" || mount == "stub_clear") color([0.36,0.43,0.56]) for (s=[1,-1]){
+    // outer stub — thickness was drawn as a flat 6 while stub_t said otherwise
+    translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + stub_t)) + s*ex*55])
+      linear_extrude(stub_t) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_clear" ? stub_yb : -20);
+    // inner stub — same blank flipped, closing the clevis round the upper eye
+    if (us_clevis) translate([0,0, (s==1 ? us_j0 : -us_j1) + s*ex*55])
+      linear_extrude(us_t) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_clear" ? stub_yb : -20);
+  }
   // REV 012 rear pod: green plate = bracket + shock tab in one, flat on the
   // hub plate; the rails and bolts belong to the frame (rear_link)
   if (mount == "green") color(c_green) for (s=[1,-1]) scale([1,1,s])
