@@ -398,7 +398,10 @@ axle_d   = 10;   // hub-motor axle Ø (flatted, static — motor spins around it
 // the wheel moves 55 rearward; the Ø222 belt arc clears the stub's cut
 // edge by ~14. Shock eye pin cantilevers from the plate through washers
 // to the shock plane, as the stub's did. Bolt first, weld at final fit.
-use_bracket   = true;   // render + guard the rear-fork bracket
+use_bracket   = false;  // OFF 2026-09-18: the whole Rev 011d bracket existed
+                        // only to work around the DONOR rear fork. Owner is
+                        // building his own fork, so there is nothing to work
+                        // around. Assembly now renders the Rev 011c tab stubs.
 // REV 012 (owner, 2026-09-10): "why do we need the green plate at all?" —
 // we don't, once the deck goes. The whole Rev 011d bracket exists to work
 // around ONE fact: the donor's rear fork has a 117.7 inner gap and the belt
@@ -713,7 +716,17 @@ cz_calc = fork_gap/2 - carrier_t;
 // would silently flip the whole shock design to the wrong side of the plate.
 // A built pod does not get its layout guessed at. State it, then guard it.
 shocks_inboard = true;                 // OWNER 2026-09-18, measured
-sz     = shocks_inboard ? track_w/2 + 14        // between belt edge and carrier
+// The upper shock stubs. OWNER 2026-09-18: "the stubs are from inside", and
+// "the carrier plates are the last and first plates regarding z". So the stub
+// lies against the carrier's INNER face, and the shock hangs off the stub's
+// inner face in turn. This read cz + carrier_t in three places, which put the
+// stub OUTBOARD — exactly where the new fork now bolts.
+stub_t  = 6;                           // 40x6 bar, as Rev 011c
+tab_z0  = cz - stub_t;                 // 76.5 — stub INNER face |z|
+// Shock centre plane. Inboard, the shock hangs on the stub's INNER face, so
+// the plane is set by the stub and the eye's own width — not by a guess at
+// "14 mm off the belt edge", which is what this used to say.
+sz     = shocks_inboard ? tab_z0 - ds_eye_w/2
                         : cz + carrier_t + 14;  // outboard of the carrier plate
 // ---- Rev 013 double-shear lower shock mount, derived ----------------------
 lsb_od  = 15;   // spacer sleeve OD  (FASTENERS.md §D)
@@ -1509,10 +1522,13 @@ module force_gauge(ang, zc, mir=false){
 module shock3d(p, q, zc){
   v = q - p;  L = norm(v);  ang = atan2(v[1], v[0]);
   translate([p[0], p[1], zc]) rotate([0,0,ang]){
+    // REV 013 2026-09-18: these were hard-coded h=10 / bore d=10 and had no
+    // link to the measured eye at all, which is why a 24 mm eye still drew
+    // 10 mm long. Both read the measurements now.
     for (x=[0, L]) color([0.55,0.55,0.58])            // eyelets
       translate([x,0,0]) difference(){
-        cylinder(h=10, d=18, center=true);
-        cylinder(h=12, d=10, center=true); }
+        cylinder(h=ds_eye_w, d=ds_eye_bore + 6, center=true);
+        cylinder(h=ds_eye_w + 2, d=ds_eye_bore, center=true); }
     // REV 012c: owner measured 25 mm from the TOP eye centre to the spring
     // (shock_neck) — body and spring start there, only the thin rod above it
     color([0.72,0.72,0.75]) translate([shock_neck,0,0])        // damper body
@@ -1522,7 +1538,8 @@ module shock3d(p, q, zc){
     color([0.70,0.15,0.12]) translate([shock_neck,0,0])        // coil spring
       rotate([0,90,0]) linear_extrude(height=L-12-shock_neck,
                                       twist=2160*(L-12-shock_neck)/(L-22), $fn=24)
-        translate([14,0]) circle(d=4.2);
+        translate([(coil_d - 4.2)/2, 0]) circle(d=4.2);  // was a flat 14, which
+                                      // drew a Ø32 coil regardless of coil_d
   }
 }
 
@@ -1636,7 +1653,6 @@ module carrier_group(mount = use_bracket_eff ? "bracket" : "stub"){
   // -z the leading — a shock loads only the carrier it hangs from.
   // 011d merged: with the bracket, the blade IS the shock tab — separate
   // stubs exist only on the front pod (no bracket there yet)
-  tab_z0 = cz + carrier_t;
   if (mount == "stub" || mount == "stub_clear") color([0.36,0.43,0.56]) for (s=[1,-1])
     translate([0,0, (s==1 ? tab_z0 : -(tab_z0 + 6)) + s*ex*55])
       linear_extrude(6) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_clear" ? stub_yb : -20);
