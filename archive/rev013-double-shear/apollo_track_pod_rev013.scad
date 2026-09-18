@@ -698,6 +698,18 @@ ds_end    = 8;     // strap steel past each gusset line. Do not just make this
 us_clevis = true;  // false renders the Rev 011c cantilever, for comparison
 us_t      = 6;     // inner stub thickness — same 40x6 bar as the outer one
 us_clr    = 1;     // running clearance, shock eye face to inner stub
+us_web_x1 = 36;    // outboard end of the PACKER that fills the clevis throat,
+                   // in x. The two stubs are NOT two loose plates sharing an
+                   // axle: keyed alone, the inner one would slide along the
+                   // axle and feed its ~1340 N share into the Ø10 hub-motor
+                   // axle 40 mm inboard of the carrier — about 670 MPa in a
+                   // part that cannot be replaced. Welded to a packer they are
+                   // one U, and the load runs inner stub -> packer -> outer
+                   // stub -> carrier plate, the same path the outer stub has
+                   // always used. The key goes back to indexing and torque only.
+                   // The packer has to sit INBOARD of the eye: the eye boss and
+                   // then the spring fill the whole throat outboard of it.
+                   // Guarded against the boss below.
 us_bear_t = 6;     // how much of the OUTER stub the pin actually bears on.
                    // stub_t is 12 = two 40x6 bars, and if the pin were a snug
                    // fit through both, its outer support would sit 6 mm out at
@@ -1228,6 +1240,14 @@ if (us_clevis && us_j0 < lug_zone)
            " stands in the lug rows — its far corner is ", us_corner,
            " from the axle, lug tips sweep ", r_wrap - lug_h, ": ",
            (r_wrap - lug_h) - us_corner, " mm clear underneath"));
+// The packer is what stops the inner stub feeding the shock load into the
+// hub-motor axle, so it has to be there — but it also has to stop short of the
+// eye boss, which swings nothing but does sit in the throat.
+if (us_clevis)
+  echo(str((upP[0] - ds_eye_od/2) - us_web_x1 >= 4 ? "PASS " : "*** WARN ",
+           "upper clevis packer (40 x ", tab_z0 - us_j1, " bar, ",
+           us_web_x1 + 20, " long, Ø", axle_d + 0.4, " bore) to the Ø",
+           ds_eye_od, " eye boss: ", (upP[0] - ds_eye_od/2) - us_web_x1, " mm"));
 // keel window fit (all static-to-static or pivot-centred, so the gaps hold at
 // every articulation; small values acceptable) + in-plane wheel clearances
 keel_gaps = concat(use_keel ? [
@@ -1378,6 +1398,19 @@ module carrier_2d(m8 = use_bracket_eff ? [-12, 12] : []){
     translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
+  }
+}
+
+module us_web_2d(s){
+  // Packer that closes the upper clevis into one welded U. Same 40-wide
+  // footprint as the stubs it joins, running from the axle out to us_web_x1,
+  // and as thick as the throat (tab_z0 - us_j1). Cut it from 40 x 25 bar, or
+  // stack it out of the 40x6 already on the list plus a shim.
+  difference(){
+    translate([s == 1 ? -20 : -(us_web_x1), -20])
+      square([us_web_x1 + 20, 40]);
+    circle(d = axle_d + 0.4);     // axle passes through, clearance not a key:
+                                  // the two stubs either side carry the flats
   }
 }
 
@@ -1791,6 +1824,10 @@ module carrier_group(mount = use_bracket_eff ? "bracket" : "stub"){
     // inner stub — same blank flipped, closing the clevis round the upper eye
     if (us_clevis) translate([0,0, (s==1 ? us_j0 : -us_j1) + s*ex*55])
       linear_extrude(us_t) tab_stub_2d(s==1 ? upP : mx(upP), mount == "stub_clear" ? stub_yb : -20);
+    // packer — what makes the two stubs ONE part instead of two on an axle
+    if (us_clevis) color([0.30,0.36,0.48])
+      translate([0,0, (s==1 ? us_j1 : -tab_z0) + s*ex*55])
+        linear_extrude(tab_z0 - us_j1) us_web_2d(s);
   }
   // REV 012 rear pod: green plate = bracket + shock tab in one, flat on the
   // hub plate; the rails and bolts belong to the frame (rear_link)
