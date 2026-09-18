@@ -636,6 +636,10 @@ ds_eye_bore = 8;   // shock LOWER EYE BORE — MEASURED 2026-09-18 by the owner:
 ds_bolt_y = 940;   // M8 through-bolt proof strength, MPa: 640 = cl.8.8,
                    // 940 = cl.10.9. Only used when the bolt runs bare through
                    // the eye. Checked at half of it, i.e. safety factor 2.
+ds_eye_od = 20;    // shock LOWER EYE OUTER diameter, across the boss — MEASURE
+                   // YOURS. It MUST be bigger than lsb_od (15), because with a
+                   // Ø8 bore the sleeve cannot pass through and has to butt
+                   // against this face instead. Guarded below.
 ds_spring = 12;    // lower eye centre -> bottom of the spring — MEASURE YOURS.
                    // This is what caps how far the strap may reach ABOVE the
                    // eye, so it sets the strap's edge distance. Guarded below.
@@ -1095,6 +1099,11 @@ echo(str(cz + carrier_t - track_w/2 >= 10 ? "PASS " : "*** WARN ",
 // With shocks_inboard asserted rather than derived, nothing was left checking
 // that the shock actually FITS between the belt and the carrier. This is that
 // check: the old rule wanted the shock centre 10 mm clear of the carrier face.
+echo(str(ds_eye_od > lsb_od ? "PASS " : "*** WARN ",
+         "shock eye outer Ø", ds_eye_od, " vs sleeve outer Ø", lsb_od,
+         ". With a Ø", ds_eye_bore, " bore the sleeve cannot pass through the",
+         " eye, so it butts against the eye's end face. If the eye is narrower",
+         " than the sleeve there is nothing for the sleeve to press on."));
 echo(str(!shocks_inboard ? "n/a  shocks run outboard"
          : str(cz - sz >= 10 ? "PASS " : "*** WARN ",
                "inboard shock centre to carrier inner face: ", cz - sz,
@@ -1533,7 +1542,7 @@ module shock3d(p, q, zc){
     // 10 mm long. Both read the measurements now.
     for (x=[0, L]) color([0.55,0.55,0.58])            // eyelets
       translate([x,0,0]) difference(){
-        cylinder(h=ds_eye_w, d=ds_eye_bore + 6, center=true);
+        cylinder(h=ds_eye_w, d=ds_eye_od, center=true);
         cylinder(h=ds_eye_w + 2, d=ds_eye_bore, center=true); }
     // REV 012c: owner measured 25 mm from the TOP eye centre to the spring
     // (shock_neck) — body and spring start there, only the thin rod above it
