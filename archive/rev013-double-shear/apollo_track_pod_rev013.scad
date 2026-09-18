@@ -613,7 +613,13 @@ ds_t      = 6;     // strap thickness — 40x6 bar, the stock already in the BOM
 ds_clr    = 1;     // running clearance, shock eye outer face to strap inner face
 ds_eye_w  = 24;    // shock LOWER EYE WIDTH across the boss — MEASURED 2026-09-18
                    // by the owner: the eye tube is 24 long. Was a 10 guess.
-ds_eye_bore = 15;  // shock LOWER EYE BORE — MEASURE YOURS. THIS ONE DECIDES THE
+ds_eye_bore = 8;   // shock LOWER EYE BORE — MEASURED 2026-09-18 by the owner:
+                   // Ø8, and an M8 bolt runs through a Ø9xØ15 sleeve. So the
+                   // sleeve CANNOT pass through the eye: Ø15 will not go into
+                   // Ø8. The sleeve stops either side and the bare M8 crosses
+                   // the eye alone, on about 1/11 of the sleeve's section.
+                   // That bare span is now the weakest part of the pod.
+                   // Was 15, which assumed the eye rode on the sleeve. THIS
                    // WHOLE BRACKET, and the build notes disagree with themselves:
                    // FASTENERS.md §D says "eyes measured Ø8" on one line and
                    // "eye rides the spacer sleeve" (Ø15 OD) on the next. The
