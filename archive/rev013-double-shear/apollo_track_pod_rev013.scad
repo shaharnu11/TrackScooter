@@ -516,7 +516,11 @@ sleeve_od   = 25;   // steel sleeve welded inside the rail at each bolt, so the
 sleeve_id   = 13;   //   2 mm walls are not crushed by the bolt (guarded)
 
 // -- top of the shock (MEASURED) ---------------------------------------------
-shock_perch_d = 44; // TBD widest part at the top of the spring (tilt check only)
+coil_d      = 45;   // MEASURED 2026-09-18 by the owner: the spring coil is 45
+                    // across. Was hard-coded as 44 (r22) in three separate
+                    // guards and two label strings, none of which were linked
+                    // to each other. Now they all read this one number.
+shock_perch_d = coil_d; // widest part at the top of the spring (tilt check)
 shock_neck  = 25;   // MEASURED 2026-09-10: TOP eye centre -> top of the SPRING
 
 // -- front end: donor head tube + fork (ghost; link TBD) ----------------------
@@ -584,10 +588,14 @@ bump_max   = 15;    // arm travel limit, deg (clearance guard checks this)
 // from the far arm plate, through the near plate, through the shock eye and
 // into a new outer STRAP plate. The eye load is now caught between two
 // supports, and the bolt is only a clamp — it never sees bending anywhere.
-ds_strap  = true;  // false reproduces the Rev 012 cantilever, for comparison
+ds_strap  = false; // OWNER 2026-09-18: the outer strap is OFF for now, so this
+                   // renders the bare cantilever. The lower shock bolt is over
+                   // yield while this is false — see the WARN lines. Set it back
+                   // to true, or fit another support, before the pods take load.
 ds_t      = 6;     // strap thickness — 40x6 bar, the stock already in the BOM
 ds_clr    = 1;     // running clearance, shock eye outer face to strap inner face
-ds_eye_w  = 10;    // shock LOWER EYE WIDTH across the boss — MEASURE YOURS.
+ds_eye_w  = 24;    // shock LOWER EYE WIDTH across the boss — MEASURED 2026-09-18
+                   // by the owner: the eye tube is 24 long. Was a 10 guess.
 ds_eye_bore = 15;  // shock LOWER EYE BORE — MEASURE YOURS. THIS ONE DECIDES THE
                    // WHOLE BRACKET, and the build notes disagree with themselves:
                    // FASTENERS.md §D says "eyes measured Ø8" on one line and
@@ -837,7 +845,7 @@ function ds_coil_gap(p, t) =
       s  = w*d,                                  // distance along the shock axis
       rp = norm(w - s*d))                        // perpendicular, in the pod plane
   s < ds_spring ? 99                             // below the spring: nothing there
-                : sqrt(rp*rp + pow(p[2] - sz, 2)) - 22;
+                : sqrt(rp*rp + pow(p[2] - sz, 2)) - coil_d/2;
 // The strap and the inner jaw carve themselves clear (ds_coil_cut_2d). The
 // gussets cannot: they stand edge-on to the coil, so their cut line would be a
 // different curve at every height. Give them a straight top edge instead and
@@ -888,7 +896,7 @@ if (ds_strap) {
              round(c[1]), " MPa (limit ", c[2], ")"));
   ds_gaps = [
     ["strap outer face to the carrier inner face", cz - ds_z1, 4],
-    ["Ø44 coil to the nearest bracket steel, swept over travel", ds_coil_min, 2],
+    [str("Ø", coil_d, " coil to the nearest bracket steel, swept over travel"), ds_coil_min, 2],
     ["gusset inboard face clear of the idler wheel", zi_tr + plate_t - H/2, 2],
     // Along the shock axis, which is the direction the load actually acts in.
     // The spring's flat end is what stops the steel on the tension side.
@@ -1052,8 +1060,8 @@ keel_gaps = concat(use_keel ? [
   // coil spring (Ø~44, r22 about the shock line) vs the carrier tongue edge
   // (|x| ≤ 24): evaluated at the coil's top turn, ~25 mm below the upper eye,
   // the closest point since the line leans away from the tongue going down
-  ["shock coil Ø44 to carrier strip (40 wide — Rev 011c)",
-     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 20 - 22],
+  [str("shock coil Ø", coil_d, " to carrier strip (40 wide — Rev 011c)"),
+     (upP[0] + ((25)/(upP[1]-low0[1]))*(low0[0]-upP[0])) - 20 - coil_d/2],
   // Rev 011: THE guard that now caps `drop`. The arm bar's chamfered rear
   // corner sweeps toward the spinning sprocket as the arm droops; this was
   // silently unguarded until Rev 011 (Rev 009 sat at 4.1 mm). Swept over the
@@ -1103,7 +1111,7 @@ module ds_coil_cut_2d(dz){
   // The spring is a flat-ended cylinder starting ds_spring up from the eye, so
   // the footprint is a RECTANGLE, not a capsule — a capsule's round end would
   // eat the bore itself and is simply the wrong shape.
-  r = (22*22 - dz*dz > 0) ? sqrt(22*22 - dz*dz) : 0;
+  r = (coil_d*coil_d/4 - dz*dz > 0) ? sqrt(coil_d*coil_d/4 - dz*dz) : 0;
   if (r > 0)
     for (t = [-bump_max : 2.5 : bump_max]) {
       uL  = rot2(upP - pivot, na - t);        // upper eye, in arm-local terms
