@@ -344,14 +344,28 @@ casing_d  = 123;   // motor casing OD — MEASURED 2026-07-25 (was drawn 130).
 rib_h = (sprocket_teeth*belt_pitch/PI - T - sprocket_od)/2;
 
 /* [Fork mount — Rev 002: carriers hang from the scooter fork legs] */
-fork_gap = 140;  // inner spacing between fork legs: 140 FRONT AND REAR
+fork_gap = 177;  // inner spacing between fork legs.
+                 // REV 013, 2026-09-18 — THE STACK IS INVERTED. Owner is
+                 // building his OWN fork, and it BOLTS TO THE CARRIER PLATE'S
+                 // OUTER FACE. Up to Rev 012 it was the other way round: the
+                 // carrier was bolted to the fork leg's outer face, so cz was
+                 // derived FROM fork_gap. Now the carriers are the reference
+                 // and the fork follows them:
+                 //     fork_gap = 2 x (cz + carrier_t) = 2 x (82.5 + 6) = 177
+                 // The donor fork (117.7) and the Rev 011d blade conversion are
+                 // both irrelevant now — owner 2026-09-18, "forget about the
+                 // donor one". Belt clears the legs by 29.5 mm per side, up
+                 // from 11, because the legs moved outboard of the carriers.
+                 // Guarded against cz + carrier_t below; change one, not both.
                  // (Rev 003 — re-measured; both pods identical, was 120/140)
 leg_t    = 4;    // fork leg thickness (z) — MEASURED 2026-07-13 (was 30 placeholder)
-carrier_shim = 19;  // REV 013, FITTED and then MEASURED 2026-09-18 by the owner:
-                 // the sleeve on the M16 pivot axle just inboard of EACH carrier
-                 // plate is 19 mm, not the 20 first written here. So the outboard
-                 // pivot sleeve is 11.25 + 19 = 30.25 and the carrier
-                 // inner face moves 74 -> 93. Rev 012 briefly tried to buy the
+carrier_shim = 0;   // NO LONGER SETS THE CARRIER POSITION. cz is measured now
+                 // (see cz_meas), and with the fork bolting to the carrier's
+                 // outer face there is no fork-to-carrier shim in the stack at
+                 // all. The 19 mm the owner measured is the OUTBOARD PIVOT
+                 // SLEEVE on the M16 axle, which the model derives for itself
+                 // as sleeve_ln and echoes in the PIVOT STACK line — check that
+                 // echo against your 19 mm rather than setting it here. Rev 012 briefly tried to buy the
                  // same room by inventing fork_gap=168; that was reverted. The
                  // gap stays the donor's measured 140 and the extra width is
                  // recorded here as the hardware it actually is.
@@ -690,7 +704,8 @@ zi_ld  = zi_tr + plate_t + 1.5;        // leading fork inner face |z|
 cz_meas = 82.5;                        // = 165/2, MEASURED 2026-09-18
 cz      = cz_meas;
 // The old chain is kept, but only to be CHECKED against the tape below.
-cz_calc = fork_gap/2 + leg_t + carrier_shim;
+// The fork follows the carriers now, so this is the relationship to check.
+cz_calc = fork_gap/2 - carrier_t;
 
 // Shock plane. Also a measurement now, for the same reason: the owner reports
 // the shocks run INBOARD, mounted on the inner face of the stubs. The old rule
@@ -1049,14 +1064,15 @@ echo(str(cz - track_w/2 < 3 ? "*** TIGHT " : "OK ",
 // cz used to be CALCULATED and shocks_inboard used to be DECIDED. Both are now
 // stated from the built pod, so both need a check standing behind them,
 // otherwise a wrong tape reading just propagates in silence.
-echo(str(abs(cz_meas - cz_calc) <= 2 ? "OK " : "*** WARN ",
-         "measured carrier face ", cz_meas, " vs the fork+leg+shim chain ",
-         cz_calc, " — differ by ", abs(cz_meas - cz_calc),
-         " mm. A gap here means the shim, the leg thickness or the fork gap is",
-         " not what this file thinks. The donor's UNCONVERTED rear fork puts",
-         " the leg outer face at ", brk_leg_gap/2 + leg_t,
-         ", which with the ", carrier_shim, " mm shim gives ",
-         brk_leg_gap/2 + leg_t + carrier_shim, "."));
+echo(str(abs(cz_meas - cz_calc) <= 0.5 ? "OK " : "*** WARN ",
+         "measured carrier face ", cz_meas, " vs fork_gap/2 - carrier_t ",
+         cz_calc, ". The owner's fork bolts to the carrier's OUTER face, so",
+         " fork_gap must stay 2 x (cz + carrier_t) = ", 2*(cz + carrier_t),
+         ". If you move one, move the other."));
+echo(str(cz + carrier_t - track_w/2 >= 10 ? "PASS " : "*** WARN ",
+         "belt edge to the FORK LEG inner face: ", cz + carrier_t - track_w/2,
+         " mm per side (want 10+). The legs sit outboard of the carriers now,",
+         " so this is no longer the same number as the carrier clearance."));
 // With shocks_inboard asserted rather than derived, nothing was left checking
 // that the shock actually FITS between the belt and the carrier. This is that
 // check: the old rule wanted the shock centre 10 mm clear of the carrier face.
