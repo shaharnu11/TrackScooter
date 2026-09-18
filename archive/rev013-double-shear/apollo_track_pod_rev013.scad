@@ -347,10 +347,11 @@ rib_h = (sprocket_teeth*belt_pitch/PI - T - sprocket_od)/2;
 fork_gap = 140;  // inner spacing between fork legs: 140 FRONT AND REAR
                  // (Rev 003 — re-measured; both pods identical, was 120/140)
 leg_t    = 4;    // fork leg thickness (z) — MEASURED 2026-07-13 (was 30 placeholder)
-carrier_shim = 20;  // REV 013, FITTED 2026-09-16 by the owner: a 20 mm shim on
-                 // the M16 pivot axle just inboard of EACH carrier plate, so the
-                 // outboard pivot sleeve is 11.25 + 20 = 31.25 and the carrier
-                 // inner face moves 74 -> 94. Rev 012 briefly tried to buy the
+carrier_shim = 19;  // REV 013, FITTED and then MEASURED 2026-09-18 by the owner:
+                 // the sleeve on the M16 pivot axle just inboard of EACH carrier
+                 // plate is 19 mm, not the 20 first written here. So the outboard
+                 // pivot sleeve is 11.25 + 19 = 30.25 and the carrier
+                 // inner face moves 74 -> 93. Rev 012 briefly tried to buy the
                  // same room by inventing fork_gap=168; that was reverted. The
                  // gap stays the donor's measured 140 and the extra width is
                  // recorded here as the hardware it actually is.
@@ -935,7 +936,7 @@ echo(str("SHOCK FORCE (spring_rate=", spring_rate, " N/mm): ride sag ",
 echo(str("PIVOT STACK: centre spacer ≈ ", 2*sp_half, " · outboard sleeves ≈ ",
          sleeve_ln, " ×2 — all Ø22×3 tube, cut at the §9.3 dry-stack",
          carrier_shim > 0 ? str(" (that is the Rev 012 ", sleeve_ln - carrier_shim,
-           " plus the ", carrier_shim, " mm Rev 013 shim; cut ONE tube per side, do not stack two)")
+           " plus the ", carrier_shim, " mm Rev 013 measured shim; cut ONE tube per side, do not stack two)")
          : ""));
 echo(str("TENSIONER: axle at +", tension_pos, " of 25 mm slot take-up — ",
          25 - tension_pos, " mm remaining (render_mode=\"tensioner\" for the ",
