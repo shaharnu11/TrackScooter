@@ -681,13 +681,23 @@ pivot  = [0, -P];
 
 zi_tr  = H/2 + 1;                      // trailing fork inner face |z|
 zi_ld  = zi_tr + plate_t + 1.5;        // leading fork inner face |z|
-cz     = fork_gap/2 + leg_t + carrier_shim;  // carrier inner face. Rev 013: the
-                                       // fitted 20 mm pivot shims are part of
-                                       // this stack, so 70 + 4 + 20 = 94.
-// Shock plane (Rev 002c): inboard of the carriers ONLY if there is room
-// between the belt edge and the carrier inner face (there was at leg_t=30,
-// cz=90; at the measured leg_t=4, cz=64 leaves 5 mm — shocks go OUTBOARD).
-shocks_inboard = (cz >= track_w/2 + 24);
+// REV 013, 2026-09-18: cz IS A MEASUREMENT NOW, not a calculation.
+// The pods are BUILT. Their width is a fact to be read off with a tape, and
+// every attempt to derive it from fork_gap + leg_t + shim has been wrong,
+// because the chain depends on which fork the pod has and how the shim stacks.
+// The owner measured 165 mm CLEAR between the two carrier plates' inner faces,
+// so each one is at 82.5.
+cz_meas = 82.5;                        // = 165/2, MEASURED 2026-09-18
+cz      = cz_meas;
+// The old chain is kept, but only to be CHECKED against the tape below.
+cz_calc = fork_gap/2 + leg_t + carrier_shim;
+
+// Shock plane. Also a measurement now, for the same reason: the owner reports
+// the shocks run INBOARD, mounted on the inner face of the stubs. The old rule
+// (cz >= track_w/2 + 24) computes FALSE at cz=82.5 — it misses by 0.5 mm — and
+// would silently flip the whole shock design to the wrong side of the plate.
+// A built pod does not get its layout guessed at. State it, then guard it.
+shocks_inboard = true;                 // OWNER 2026-09-18, measured
 sz     = shocks_inboard ? track_w/2 + 14        // between belt edge and carrier
                         : cz + carrier_t + 14;  // outboard of the carrier plate
 // ---- Rev 013 double-shear lower shock mount, derived ----------------------
@@ -1033,7 +1043,28 @@ if (cz >= track_w/2 + 3)
 // fitted shims — fork_gap alone stopped describing where that plane sits.
 echo(str(cz - track_w/2 < 3 ? "*** TIGHT " : "OK ",
          "belt edge to the carrier mounting plane: ", cz - track_w/2,
-         " mm per side (fork_gap ", fork_gap, " + shim ", carrier_shim, ")"));
+         " mm per side (MEASURED cz ", cz, ")"));
+
+// ---- Rev 013: the two checks that replaced the two rules --------------------
+// cz used to be CALCULATED and shocks_inboard used to be DECIDED. Both are now
+// stated from the built pod, so both need a check standing behind them,
+// otherwise a wrong tape reading just propagates in silence.
+echo(str(abs(cz_meas - cz_calc) <= 2 ? "OK " : "*** WARN ",
+         "measured carrier face ", cz_meas, " vs the fork+leg+shim chain ",
+         cz_calc, " — differ by ", abs(cz_meas - cz_calc),
+         " mm. A gap here means the shim, the leg thickness or the fork gap is",
+         " not what this file thinks. The donor's UNCONVERTED rear fork puts",
+         " the leg outer face at ", brk_leg_gap/2 + leg_t,
+         ", which with the ", carrier_shim, " mm shim gives ",
+         brk_leg_gap/2 + leg_t + carrier_shim, "."));
+// With shocks_inboard asserted rather than derived, nothing was left checking
+// that the shock actually FITS between the belt and the carrier. This is that
+// check: the old rule wanted the shock centre 10 mm clear of the carrier face.
+echo(str(!shocks_inboard ? "n/a  shocks run outboard"
+         : str(cz - sz >= 10 ? "PASS " : "*** WARN ",
+               "inboard shock centre to carrier inner face: ", cz - sz,
+               " mm (want 10). The old automatic rule refused inboard below 10",
+               " and would have flipped the shocks outboard here.")));
 for (c = clearances)
   echo(str(c[1] < 5 ? "*** WARN " : "PASS ", c[0], ": ", c[1],
            " mm above track at +", bump_max, "° bump"));
@@ -1735,11 +1766,19 @@ function ch_V(s) = max([for (c = ch_cases) norm(ch_vsum([for (l = ch_side(s, c[0
 gp_yc   = ceil(upP[1] - shock_neck + gp_spring_clr + gp_w/2);   // 11 — band centre above the hub axle
 stub_yb = max(-20, ceil(upP[1] - shock_neck + gp_spring_clr));   // -19 — front pod shock tab bottom
 gp_m8   = [24];                      // ONE M8 to the hub plate above the axle key, + weld all round
-gp_z0   = cz + carrier_t;            // 80 — plate inner face, ON the hub plate
+// REV 013, 2026-09-18 (owner): the GREEN PLATES ARE INBOARD of the carriers.
+// "the carrier plates are the last and first plates regarding z position" — so
+// the carrier is the outermost steel on each side, and the green plate lies
+// against its INNER face, not its outer one. Until now this read
+// cz + carrier_t, which put the plate outboard and made the pod 12 mm wider
+// per side than it is.
+gp_z0   = cz - gp_t;                 // 76.5 — plate INNER face
 gp_x0   = -rear_ct_x + gp_gap;       // -188 — plate front end
 gp_x1_tr = round(upP[0]) + 20;       // +72 — right (+z) plate, past the rear shock eye
 gp_x1_ld = 20;                       // +20 — left (-z) plate, past the axle key
-gp_gap_z = sz - (gp_z0 + gp_t);      // 8 — plate outer face to the shock centreline
+gp_gap_z = sz - (gp_z0 + gp_t);      // shock centreline minus the plate OUTER
+                                     // face. Negative now the plate is inboard:
+                                     // the shock sits inboard of it
 
 // ---- where the rails end, and the 2 bolts per side (rear pod coords) --------
 ch_lead_xmin = -max(concat([upP[0]], [for (t = [-bump_max : 2.5 : bump_max]) ch_lo(t)[0]]));
@@ -1747,7 +1786,9 @@ rl_end_x = floor(ch_lead_xmin - shock_perch_d/2 - rl_shock_clr);  // -83 — rai
 rl_bolts = [gp_x0 + gp_end_edge, rl_end_x - rl_end_edge];         // [-168, -108]
 
 // ---- frame ------------------------------------------------------------------
-rail_in  = gp_z0 + gp_t;             // 86 — rail INNER face lies ON the green plate
+rail_in  = gp_z0 - fr_w;             // rail lies on the green plate's INNER
+                                     // face now the plate is inboard, so the
+                                     // rail runs inboard from it, not outboard
 rail_out = rail_in + fr_w;           // 126
 bay_w    = 2*rail_in;                // 172 — clear width between the rails
 fr_top   = hub_h + gp_yc + gp_w/2;   // 257 — flush with the green plate top
