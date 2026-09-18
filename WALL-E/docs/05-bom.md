@@ -48,7 +48,7 @@ the parts list and the conditions that come with it.
 | 1 | Teensy **4.0** | 38 | Stock | The Spine. 600 MHz i.MX RT1062 — **the same chip as the 4.1**. Downgraded from the 4.1 on 2026-09-18 because both reasons for picking it had expired: decision D7 killed the CAN bus, and `01-architecture.md` bans SD-card logging. The Spine needs about 21 pins with 6 analogue (2 pack voltages, 2 motor thermistors, 2 ACS758); the 4.0's 24 edge pins include 14 analogue, so it fits without using the awkward bottom pads. **Not 5 V tolerant** — it needs the level shifter in §1b. | [AliExpress ₪114.08](https://he.aliexpress.com/item/1005009258422669.html) |
 | 1 | RC transmitter and receiver set, 8+ channels | 120 | Stock | See section 6 for what the channels are for. | [search](https://www.aliexpress.com/w/wholesale-8-channel-RC-transmitter-receiver.html) |
 | 1 | Multimeter with a clamp for **DC** current | 25 | Stock | The clamp matters. You cannot break into a 40 A circuit to measure it. **Check the listing says DC amps, not only AC.** Most cheap clamp meters are AC-only and will read 0 A on a battery wire. Needs 100 A DC or more. You use it to find the controllers' real current limit, to calibrate the two ACS758 sensors, and to measure contactor coil inrush — see the 167 W warning in §9. | [AliExpress ₪77.35](https://he.aliexpress.com/item/1005002037433118.html) |
-| 1 | Bench power supply, 60 V 5 A, adjustable current limit | 90 | Stock | The current limit turns a wiring mistake into a beep instead of a fire. Borrow one if you can. | [search](https://www.aliexpress.com/w/wholesale-bench-power-supply-60V-5A.html) |
+| 1 | Bench power supply, 60 V 5 A, adjustable current limit | 69 | **3 weeks** | The current limit turns a wiring mistake into a beep instead of a fire. Borrow one if you can. Priced from a Jesverty 60V05A listing at ₪207.92, about 69 USD, or 61 with the on-page coupon. Two checks before paying: keep the **220 V EU plug** variant selected, and confirm the description says **CC / constant current** — you need the supply to drop its voltage automatically at the limit, not just display the current. 60 V is the minimum useful figure because a full 48 V pack sits at about 54.6 V. | [search: Jesverty 60V05A](https://www.aliexpress.com/w/wholesale-Jesverty-DC-lab-power-supply-60V-5A.html) — Jesverty Official Store, variant `60V05A-Model V`, 220 V EU plug |
 | — | Shock bolt retrofit steel and fasteners (decision D2) | 50 | Stock | See `02-shock-bolt.md`. Small money, and it unblocks putting load on the pods. | local |
 
 ### The one thing to check on day one
@@ -321,7 +321,7 @@ cannot be the same failure.
 
 | Section | Phase | Est. |
 |---|---|---|
-| 1 — de-risking | now | 323 |
+| 1 — de-risking | now | 302 |
 | 1b — throttle interface for the scooter controllers | now | 60 |
 | 2 — frame and drive, including sealing the box | 1 | 640 |
 | 3 — compute and sensors | 2 | 697 |
@@ -329,14 +329,14 @@ cannot be the same failure.
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 2,969** |
+| **Total** | | **≈ 2,948** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
 to 552, section 3 said 740 against 738, and section 4 said 400 when it actually
 sums to 459. The total was understated in one place and overstated in another.
 
-### How it got from 4,200 to 2,969
+### How it got from 4,200 to 2,948
 
 | Change | Saving |
 |---|---|
@@ -348,6 +348,7 @@ sums to 459. The total was understated in one place and overstated in another.
 | Checking real AliExpress prices, section 9 | **161** |
 | Dropping the two CAN transceivers nothing uses yet | **10**, less 6 for the real Teensy price |
 | A real clamp-meter price instead of a guess | **35** |
+| A real bench-supply price instead of a guess | **21** |
 | Correcting the I2C multiplexer, which I had mis-set to 24 | **21** |
 
 The two big ones cost nothing in capability. **The plywood body actively made
