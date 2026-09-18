@@ -2,8 +2,11 @@
 // #  WALL-E FRAME — the two Rev 012 track pods, SIDE BY SIDE, skid steer     #
 // #                                                                          #
 // #  The pods are BUILT. Every pod number in here is therefore a fixed       #
-// #  input, not a choice: carrier plates 168 apart, green plates at |z|      #
-// #  94..100, the M12 holes already drilled at pod-local x -168 and -108.    #
+// #  input, not a choice: carrier plate inner faces 148 apart, green plates  #
+// #  at |z| 80..86, the M12 holes already drilled at pod-local x -168 and    #
+// #  -108. Those |z| figures read 94..100 until 2026-09-17, which was a      #
+// #  reverted proposal no pod was built to. Numbers come from               #
+// #  pod_interface.scad; check_pod_interface.scad verifies them.            #
 // #  This file designs only the thing that does not exist yet — the frame    #
 // #  that holds the two pods left and right, carries a battery each side,    #
 // #  and stops the robot pitching onto its face.                            #

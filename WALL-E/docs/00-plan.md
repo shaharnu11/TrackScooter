@@ -32,7 +32,7 @@ on paper, and it moves the hard part of the project from metalwork to electronic
 | Item | Status |
 |---|---|
 | Pod design (Rev 012) | Complete, all clearance checks pass |
-| Both pods | **Built**, carrier plates 168 mm apart, shocks inboard at \|z\|=73 |
+| Both pods | **Built**, carrier plate inner faces 148 mm apart, shocks **outboard** at \|z\|=94 |
 | Belts | **Fitted** — 1080 mm, 18 links, 231 mm on the ground per pod |
 | Hub motors | **Both in hand** |
 | Original scooter controllers | **Both in hand** — see decision D7 |
@@ -46,31 +46,22 @@ These are now real, measurable numbers rather than design intent:
 
 | Thing | Value |
 |---|---|
-| Carrier plate spacing | 168 mm, so the frame mounting width is fixed at this |
+| Carrier plate spacing | Inner faces 148 mm apart, outer faces 160 mm. **The frame bolts to the green plates' outer faces, 172 mm apart** |
 | Ground contact, one pod | 231 mm long × 118 mm wide |
-| Pod size | 363 long × 327 tall × ~200 wide over the plates |
+| Pod size | 363 long × 327 tall × 172 wide over the green plates. The shocks sit outboard of that, at \|z\|=94 each side, so the pod is wider than the plates suggest — measure it |
 | Pod mounting band | A plate 60 mm tall, 197–257 mm above the ground, at the hub |
 | Suspension travel | +30.7 mm up, −29.2 mm down |
 | Ground pressure at 100 kg | 0.18 kg/cm², about a third of a walking person's foot |
 | Belt movement per motor turn | 660 mm |
 
-Confirm the 168 mm spacing with a tape measure across the two carrier plates before the
-frame is welded. It is the one dimension that, if wrong, makes the frame useless.
+Confirm the **172 mm mounting width** with a tape measure across the green plates' outer
+faces before the frame is welded. It is the one dimension that, if wrong, makes the frame
+useless.
 
-### One design problem is still open, and the pods were built with it
-
-The model raises two warnings about the **lower shock bolt**. They are explained in full in
-`02-shock-bolt.md`. The short version:
-
-- The shock's lower eye sits on a bolt that is held on one side only. The other end hangs
-  free, so the shock force bends it like a diving board.
-- At full suspension bump the force is 2681 N over a 41 mm lever, which gives 351 MPa of
-  bending stress. Mild steel bends permanently at 235 MPa.
-- Sitting still it is fine, at about 150 MPa. The problem is the first hard hit.
-
-Because the pods are already assembled, this is now a **retrofit** rather than a design
-change. The good news is that the standard fix — supporting the bolt's outer end so it is
-held at both ends — can be added from outside without taking a pod apart. Decision D2.
+**These numbers were corrected on 2026-09-17.** This table previously said 168 mm, which came
+from a proposal to widen the carrier spacing that was then reverted — so 168 never existed in
+a built pod, and the WALL-E frame was 14 mm per side too wide. `check_pod_interface.scad`
+caught it. Measure anyway; do not trust either number on faith.
 
 ### What this means for the plan
 
@@ -95,7 +86,7 @@ follow from that:
 | The event is mostly at night | Vision alone is not enough. Lighting is required, not decorative |
 | Crowds of people, some not sober | The safety layer is the reason this plan is shaped this way |
 | Builder is new to electronics | Section 10 is a learning plan, on the schedule as real time |
-| Pods are already built | The 168 mm spacing and the 231 mm footprint are now fixed inputs |
+| Pods are already built | The 172 mm mounting width and the 231 mm footprint are now fixed inputs |
 | One person, evenings and weekends | Section 8 assumes this. Extra hands change everything |
 
 ---
@@ -113,7 +104,7 @@ follow from that:
 | L5 | No SLAM. GPS and compass if position is needed at all | Open desert has no landmarks and the crowd keeps moving |
 | L6 | **Body from 12 mm plywood.** REVISED 2026-09-17: was foam with a thin ply skin and fibreglass over it | Mass up high makes the tipping worse, and plywood turned out to be the LIGHTER answer: the foam build was a 25 kg guess, the plywood box computes to 13.6 kg from its own geometry. 11.5 kg off the robot, 15 mm off the centre of mass, 0.7 deg more forward tipping margin, and 445 dollars cheaper |
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
-| L8 | Frame mounting width 168 mm | Set by the built pods. Not a choice any more |
+| L8 | Frame mounting width **172 mm**, across the green plates' outer faces | Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to |
 | L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
 | L10 | Electronics fed from the **larger** pack, one isolated converter | The extra load pushes both packs towards emptying together. Needs safety log test 15 |
 | L11 | Frame stays 550 mm long. **All electronics on a shelf inside the body** | The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16 |
@@ -128,6 +119,7 @@ follow from that:
 | L20 | Each driver gets its **own sealed 10.1 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector |
 | L21 | The enclosures **bolt** to the chest panel and lift out | They shade 54 % of the shelf. Glued in, half the electronics is unreachable |
 | L22 | Metal grilles over both drivers | A crowd will push a finger through an open cone |
+| L24 | **The lower shock bolt problem is closed** | Owner, 2026-09-18: fixed on the real pods. This was decision D2 and risk R3, and `02-shock-bolt.md` held the analysis. All three are deleted. If the fix ever needs revisiting, the analysis is in git history |
 | L23 | **The head is rigid. No pan, no nod, no tilt, no servos** | Owner, 2026-09-17. To look left or right the whole robot turns. Removes four gear trains, a bearing, a slip ring and a cable twist limit from a machine that lives in blowing sand, and takes the head from a 5 kg guess to 2.1 kg computed, which drops the centre of mass 18 mm. The cost is in firmware, not hardware: a gaze is now a drive command, so it needs rules L1 to L3 in `01-architecture.md` |
 
 #### L7 — why we keep the short belts now
@@ -147,7 +139,6 @@ plus keeping all the heavy things as low as possible. See decision D6.
 
 | # | Question | Blocks | Decide by |
 |---|---|---|---|
-| **D2** | How is the lower shock bolt retrofit done? | Whether the pods are safe to load | **Before Phase 2.** Read `02-shock-bolt.md` |
 | **D3** | Does WALL-E carry a person? | Frame strength, tipping, Midburn registration | Before Phase 2 |
 | **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime, which side gets the electronics, fuse and cable sizing | Before Phase 1 buying |
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
@@ -225,7 +216,7 @@ Four streams. Two of them start today and do not wait for each other.
 
 ```
   W1 FRAME ─── the critical path ────────────────────────────────►
-     measure pods → design in SCAD → shock bolt retrofit → build → mount pods
+     measure pods → design in SCAD → build → mount pods
 
   W2 DRIVE ELECTRONICS ── starts on a bench, no frame needed ────►
      test motors → throttle by hand → Teensy + DAC → watchdog → radio → E-stop → 2 motors → install
@@ -257,7 +248,6 @@ A phase is not finished because the work is done. It is finished when its exit t
 |---|---|
 | Measure the real pods: carrier spacing, mounting band height, overall width | W1 |
 | Bench-test both hub motors with the original scooter controllers | W2 |
-| Read `02-shock-bolt.md`, inspect both pods, decide D2 | W1 |
 | Confirm the donor battery voltage and capacity (D4) | W2 |
 | Confirm the Midburn date and vehicle rules (D5) | — |
 | Order a Teensy 4.0, two MCP4725 DACs, a level shifter, the watchdog parts, the radio set, a multimeter | W2 |
@@ -272,7 +262,7 @@ written down and match the model within a millimetre or two.
 | Model the side-by-side frame in OpenSCAD | Spin a hub motor from its own scooter controller and a hand throttle |
 | Batteries low, below the mounting beam | Get the Teensy to drive the throttle through the DAC, with the watchdog wired |
 | Anti-tip wheel mounts, 30–40 mm clear (D6) | Add the radio receiver, drive the motor from the stick |
-| Design and fit the shock bolt retrofit (D2) | Add the E-stop and the arm switch, with the watchdog |
+| Order the steel | Add the E-stop and the arm switch, with the watchdog |
 | Order the steel | Log motor temperature from the very first run |
 
 **Exit test, W1:** the frame model runs with zero warnings, and the retrofit is fitted to both
@@ -285,7 +275,7 @@ transmitter off, when you press the E-stop, and when you unplug the Teensy's ser
 | Task |
 |---|
 | Weld and assemble the frame |
-| Mount both pods on the 168 mm carrier spacing |
+| Mount both pods on the 172 mm mounting width |
 | Batteries in low, both scooter controllers, the Teensy, the contactor and the fusing |
 | Add mixing for two motors, and slew rate limiting |
 | Fit the anti-tip wheels |
@@ -364,7 +354,6 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 
 | Group | Items | Cost |
 |---|---|---|
-| Shock bolt retrofit | Steel strap, longer bolts, sleeves (D2) | 30 – 80 |
 | Frame | Steel tube, plate, plywood, welding consumables | 250 – 400 |
 | Anti-tip wheels | 2 castors and their mounts | 40 – 80 |
 | Drive electronics | throttle interface, contactor, fuses, heavy cable, lugs (controllers already owned) | 270 – 380 |
@@ -378,7 +367,7 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 | Lighting | LED strips, drivers, the eye illumination | 100 – 150 |
 | Tools and consumables | Soldering, crimping, multimeter, drill bits | 200 – 400 |
 | Spares kit | Section 6, Phase 6 | 250 – 350 |
-| **Total still to spend** | | **≈ 2,400 – 3,000** |
+| **Total still to spend** | | **≈ 2,370 – 2,920** |
 
 If the donor battery packs cannot be reused, add 600 to 1,200.
 
@@ -387,12 +376,11 @@ If the donor battery packs cannot be reused, add 600 to 1,200.
 1. **Now:** a Teensy, the throttle interface parts, the radio set, a multimeter. About 250
    dollars, and it is the cheapest way to find out whether the drive electronics are going to
    be a problem.
-2. **Now:** the shock bolt retrofit steel. Small money, and it unblocks loading the pods.
-3. **Phase 1:** the frame steel, the contactor, the fusing, heavy cable.
-4. **Phase 2:** the Jetson and the sensors. Do not buy these early. They sit in a drawer
+2. **Phase 1:** the frame steel, the contactor, the fusing, heavy cable.
+3. **Phase 2:** the Jetson and the sensors. Do not buy these early. They sit in a drawer
    losing value while you do metalwork, and a newer version may appear.
-5. **Phase 4:** the screens and the amplifier. No servos — the head is rigid.
-6. **Phase 5:** the body materials, bought against a finished robot you can measure.
+4. **Phase 4:** the screens and the amplifier. No servos — the head is rigid.
+5. **Phase 5:** the body materials, bought against a finished robot you can measure.
 
 ---
 
@@ -484,7 +472,6 @@ Ordered by how much damage each one does, not how likely it is.
 |---|---|---|---|
 | R1 | Somebody gets hurt | Ends the project, and much worse | Phase 3 gate. Physical E-stop. Human minder with a keyfob. Manual mode in crowds |
 | R2 | It tips forward | Broken robot, possibly a broken person | Anti-tip wheels (D6). All mass low. Ballast test in Phase 2 |
-| R3 | Lower shock bolt yields on the first hard hit | Suspension failure under load | The D2 retrofit, before the frame is loaded. See `02-shock-bolt.md` |
 | R4 | One pack's BMS cuts out while driving | The surviving track spins the robot on the spot instead of stopping | Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12 |
 | R5 | Hub motors overheat crawling | Dead robot mid-event | Read the motor's OWN thermistor into the Teensy and log it from the first bench test. The scooter controllers cannot limit current for us, so the Teensy has to back the throttle off itself. Keep it light |
 | R6 | Motor current spikes reboot the Brain | Eyes and sounds die in front of an audience | Isolated DC-DC rail, own fuse, buffer capacitor |
@@ -516,8 +503,7 @@ In order. Nothing later on this list should start before the things above it.
 2. Measure the built pods and write the numbers down
 3. Bench-test both hub motors with the original scooter controllers — free, and it de-risks
    the whole project
-4. Read `02-shock-bolt.md`, inspect the lower shock mounts on both pods, decide D2
-5. Confirm both pack capacities in Ah and that both BMS units are healthy (D4)
-6. Order a Teensy, the throttle interface parts, and the radio set
+4. Confirm both pack capacities in Ah and that both BMS units are healthy (D4)
+5. Order a Teensy, the throttle interface parts, and the radio set
 7. Start learning plan steps 1 to 5 while the parcels are in the post
 8. Design the frame in OpenSCAD
