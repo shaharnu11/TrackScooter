@@ -7,20 +7,19 @@ Two decisions from the architecture drive everything here:
 
 - **Each pack feeds its own pod.** The positives never meet. The negatives are bonded at one
   point. (`01-architecture.md` section 3b.)
-- **The electronics run from the larger pack**, through one isolated converter.
+- **The electronics run from their own 12 V battery**, not from either pack. Owner decision
+  D8, 2026-09-19. **But the contactor coils still run from pack A**, and section 3 explains
+  why that split is deliberate rather than untidy.
 
 ---
 
 ## 1. The power tree
 
 ```
-PACK A — larger, 48 V, 20 Ah                 (capacity is a placeholder)
+PACK A — 48 V, 17.5 Ah                       (capacity is a placeholder)
  +── XT90-S ─┬── FUSE 60 A ── CONTACTOR A ─── CONTROLLER L ── hub motor, left pod
   DISCONNECT │
-   sees ~43A ├── FUSE 10 A ── DC-DC 48→12 V ── 12 V RAIL     (see section 3)
-             │                isolated, 100 W
-             │
-             ├── FUSE 10 A ── DC-DC 48→32 V ── AUDIO AMPLIFIER
+   sees ~43A ├── FUSE 10 A ── DC-DC 48→32 V ── AUDIO AMPLIFIER
              │                non-isolated,    (why 32 V and not 48: section 4)
              │                150 W
              │
@@ -30,23 +29,28 @@ PACK A — larger, 48 V, 20 Ah                 (capacity is a placeholder)
                               wireless stop relay
                               (both coils, BOTH packs, run from PACK A)
 
-PACK B — smaller, 48 V, 15 Ah
+PACK B — 48 V, 17.5 Ah                       (the same as pack A — section 3)
  +── XT90-S ──── FUSE 60 A ── CONTACTOR B ─── CONTROLLER R ── hub motor, right pod
   DISCONNECT
    sees ~40A
 
+ELECTRONICS BATTERY — 12 V, 20 Ah LiFePO4    (240 Wh, on the shelf)
+ +── FUSE 15 A ── 12 V RAIL                  (see section 3)
+                    └── 12→5 V buck ── Teensy, ESP32
 
-PACK A (−) ══════════ GROUND BOND ══════════ PACK B (−)
-                   10 AWG, short, NOT FUSED
+
+PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY (−)
+            10 AWG, short, NOT FUSED      one point, section 3
 ```
 
 ### Three things about that tree
 
-**The two taps on pack A come off BEFORE contactor A.** This is deliberate. It means pressing
-the emergency stop kills both motors but leaves the Spine, the Brain and the face powered. The
-robot can then tell you it is stopped, log why, refuse to re-arm until the button is reset, and
-put a message on the eyes. If the electronics died with the motors, you would get a machine
-that goes dark and silent and tells you nothing.
+**The emergency stop leaves the electronics alive.** This is deliberate, and it now happens
+twice over. The Spine, the Brain and the face are on their own battery, which the contactors
+cannot touch at all. The amplifier and the coil chain tap pack A **before** contactor A, so
+they survive the stop too. Pressing the mushroom button therefore kills both motors and
+nothing else: the robot can tell you it is stopped, log why, refuse to re-arm until the button
+is reset, and put a message on the eyes. A machine that goes dark and silent tells you nothing.
 
 **The emergency stop is therefore not an isolator.** It stops movement. It does not make the
 robot electrically safe to work on. For that you need the separate main disconnect in section
@@ -61,7 +65,7 @@ driving — on a skid-steer machine that is a command to spin, not a command to 
 
 ## 2. How much current, really
 
-These are the numbers the wire sizes and fuses come from. The robot is 86.5 kg
+These are the numbers the wire sizes and fuses come from. The robot is 88.9 kg
 (`cad/walle_frame.scad`).
 
 ### Driving in a straight line on sand
@@ -129,13 +133,37 @@ happens.
 | 12→5 V converter, feeding the Teensy and the ESP32 | 5 W | 8 W |
 | **Total** | **38 W** | **58 W** |
 
-So a **100 W isolated 48→12 V converter** is the right part: comfortable at the continuous
-load, and it rides out the peak. Drawn from a 48 V pack that is 0.79 A.
+### This rail has its own battery. There is no converter any more
 
-**The runtime calculation does not change.** `01-architecture.md` section 3b bills pack A for
-1.15 A of electronics. The coils left this table but they did not leave pack A — they hold at
-roughly 0.3 A at 48 V — so pack A still sees about 0.79 + 0.3 = 1.09 A. The 1.15 A figure
-stands, with a little margin.
+**Owner decision D8, 2026-09-19.** This rail used to come from pack A through a 100 W isolated
+48→12 V converter. It now comes from a **12 V 20 Ah LiFePO4 battery on the electronics shelf**,
+and the converter is deleted. The Jetson dev kit takes 9–19 V in, so a 12 V battery feeds it
+with nothing in between.
+
+Three reasons, in the order they matter:
+
+1. **It deletes the one power part you cannot buy.** `05-bom.md` section 9 found that every
+   48→12 V module sold on AliExpress is **non-isolated**, so the isolated brick had to come
+   from a distributor at 70 dollars. There is no 48 V on this rail now, so the problem is gone
+   rather than solved.
+2. **The Jetson stops sharing copper with 40 A of motor current.** That is risk R6, and it
+   used to be held off by the isolation plus a capacitor. Now there is simply nothing for the
+   motors to pull down.
+3. **It frees both packs to be the same capacity.** See `01-architecture.md` section 3b: the
+   20 Ah / 15 Ah split only existed to make the electronics load even out two mismatched
+   packs. Two equal packs run 5.6 hours instead of 4.7.
+
+**Sizing.** 240 Wh against a 38 W continuous rail is 6.3 hours, so the electronics outlast the
+drive. That is the right way round: when the motors stop, the face and the logs are still up
+to tell you why.
+
+**It still needs a fuse.** 15 A at the battery terminal, close to the terminal. A 20 Ah
+LiFePO4 will happily push hundreds of amps into a short, and its BMS is not a fuse.
+
+**Do not charge it from the packs.** No DC-DC from 48 V to trickle it, because that rebuilds
+the exact shared-ground path this decision removed. It gets its own charger and its own
+connector on the body, alongside the two pack charge leads (`06-why-the-batteries-are-low.md`
+on charging in place).
 
 ### The contactor coils are NOT on this rail
 
@@ -148,7 +176,12 @@ Keeping them off the 12 V rail matters for a reason that is not tidiness. A buye
 one cheap contactor reports **coil inrush of 167 W against a 4.4 W specification**
 (`05-bom.md` section 9). If that is anywhere near right and the coils were on the 12 V rail,
 every contactor pull-in would brown out the Jetson's supply. On the pack they are pulling
-inrush from a 20 Ah battery instead, which does not care.
+inrush from a 48 V traction battery instead, which does not care.
+
+**This got more important with decision D8, not less.** The 12 V rail is now a battery, and a
+20 Ah LiFePO4 would also shrug off 167 W. But a coil on the electronics battery is a coil that
+does not drop when pack A dies, and that is the failure the next section is about. The coils
+are on pack A for what they *stop*, not for what they can survive.
 
 **The 5 A fuse is sized for that inrush, not for the holding current.** Two coils hold at
 roughly 0.3 A total. Use a slow-blow fuse and measure the real inrush with the bench supply's
@@ -158,10 +191,23 @@ current limit before it goes near the robot.
 
 This is worth understanding, because it changes what the hardware watchdog is actually for.
 
-Both coils run from **pack A**, which is also the electronics pack. So if pack A's BMS cuts
-out, the coils lose power, **both contactors open, and both motors are physically
-disconnected** — including the right-hand one, which still has a healthy pack B behind it.
-The robot coasts to a stop instead of pivoting on its surviving track.
+Both coils run from **pack A**. So if pack A's BMS cuts out, the coils lose power, **both
+contactors open, and both motors are physically disconnected** — including the right-hand one,
+which still has a healthy pack B behind it. The robot coasts to a stop instead of pivoting on
+its surviving track.
+
+**Decision D8 added a second, independent version of the same protection.** The Teensy's arm
+MOSFET sits in the coil chain (see the diagram in section 5), and the Teensy now runs from the
+electronics battery. So the chain breaks from either end:
+
+| What dies | What opens the contactors |
+|---|---|
+| Pack A | Its coils lose their supply directly |
+| The electronics battery | The Teensy dies, so its arm MOSFET in the chain opens |
+
+Both give a coast. That is why the coils were left on pack A rather than moved onto the new
+battery with everything else: on pack A they are covered from both directions, and on the
+electronics battery pack A could die with the contactors still happily closed.
 
 That is the exact failure `01-architecture.md` calls "the consequence that must be tested",
 and it is now handled in copper rather than in software. It costs nothing: it is a
@@ -179,16 +225,28 @@ keeps driving and the robot pivots. Only arbitration rule 4 — the Teensy count
 and seeing a dead track — stops that one. So safety log tests 11 and 12 are not the same
 test, even though they read like it. Test 11 proves the wiring; test 12 proves the firmware.
 
-**It must be an isolated converter.** A non-isolated buck converter shares its negative with
-the pack, which puts the motor return current through the same copper as the Jetson's ground
-reference. Every time the motor current changes, the Jetson's idea of zero volts moves. The
-symptoms are horrible and hard to diagnose: USB devices dropping out, the camera
-disconnecting, random reboots under acceleration.
+### The ground bond is now the only thing tying the electronics to the packs
 
-**Put a buffer capacitor on the 12 V rail.** Something in the region of 4700 µF. Motor current
-spikes pull the pack voltage down for a few milliseconds, and the converter's output sags with
-it. The capacitor covers the gap. Without it, a hard start can reboot the Jetson, which means
-losing the eyes exactly when the robot is doing something interesting.
+The isolated converter used to be what kept motor return current out of the Jetson's ground
+reference. A separate battery does that better — there is no shared copper at all — but it
+creates a new question: what is the electronics ground referenced to?
+
+It cannot float. The Teensy measures the pack voltage dividers, the two ACS758 current sensors
+and the throttle line references **against pack negative**. Floating them is trap 3 in
+`01-architecture.md` section 3b, and that trap is nasty because it does not announce itself:
+a floating analogue reference returns plausible wrong numbers and the Spine acts on them.
+
+**So bond the electronics battery negative to the same single point as the two packs.** One
+point, one bond, as in the tree in section 1. What you have built is the same topology as the
+isolated converter's output bonded at one point — except with no switching converter in it.
+
+The throttle lines stay opto-isolated regardless (section 7). That isolation was never about
+the supply; it is about the controller's throttle ground being its own pack negative.
+
+**Keep the buffer capacitor anyway.** Something in the region of 4700 µF across the 12 V rail.
+A battery holds its voltage far better than a converter did, so this is no longer the main
+defence, but it costs almost nothing and it covers the inrush when the Jetson's fans and the
+LiDAR all start together.
 
 ---
 
@@ -298,23 +356,28 @@ Test this by switching off the stop transmitter, not by pressing its button.
 ### The coil circuit
 
 ```
-12 V RAIL
+PACK A +, through the 5 A slow-blow fuse        <- NOT the 12 V rail
    │
    ├─[ MUSHROOM E-STOP ]──  normally closed, latching
    │
    ├─[ WIRELESS STOP RELAY ]── normally closed, opens on signal loss
    │
    ├─[ SPINE ARM OUTPUT ]── a MOSFET the Teensy holds on
-   │
-   ├──┬── CONTACTOR A coil ──┐
+   │                        (the Teensy is on the ELECTRONICS BATTERY)
+   ├──┬── CONTACTOR A coil ──┐   48 V coils, both of them
    │  └── CONTACTOR B coil ──┤
    │                         │
-  GND ───────────────────────┘
+  PACK A − ──────────────────┘
 ```
 
 Four things in series, any one of them breaks the chain, both contactors drop. The Spine's
 MOSFET being in the chain means a crashed or unpowered Spine also drops the contactors,
 which is the behaviour you want.
+
+**Note which supply is where, because the chain spans two of them.** The coils are 48 V and
+run from pack A. The Teensy that holds the arm MOSFET on runs from the electronics battery.
+That is deliberate, not an oversight: it means the chain opens when *either* supply dies.
+Section 3 has the table.
 
 ### The contactor must be DC rated
 
@@ -354,8 +417,8 @@ take them from a free-air table and go thinner.
 | Pack to contactor to controller | 40 A peak | **10 AWG** | Silicone insulated. It has to stay flexible when hot. |
 | Controller to hub motor, 3 phases | 40 A peak | **12 AWG** | Or match whatever the motor's own leads are, whichever is thicker. |
 | Pack negative to pack negative bond | see below | **10 AWG** | Short and direct. |
-| Pack to the 48→12 V converter | 1.2 A | **16 AWG** | Sized for the 10 A fuse, not the load. |
-| Pack to the amplifier's 32 V converter | 3 A | **16 AWG** | Same reason. |
+| Electronics battery to the 12 V rail | 3.2 A | **14 AWG** | Sized for the 15 A fuse, not the 38 W load. |
+| Pack to the amplifier's 32 V converter | 3 A | **16 AWG** | Sized for the 10 A fuse, not the load. |
 | 32 V converter to the amplifier | 5 A | **16 AWG** | |
 | 12 V rail distribution | 6 A | **16 AWG** | |
 | Contactor coils | 0.5 A | **20 AWG** | |
@@ -447,12 +510,15 @@ a current limit of 2 A — a current limit turns a wiring mistake into a beep in
 | 1 | Bond the pack negatives. Nothing else connected. | Continuity, and that it is the only ground path. |
 | 2 | Wire the coil circuit. No contactors yet, just a multimeter where the coils go. | The chain opens when each of the four switches opens. |
 | 3 | Add the contactors, still on the bench supply. | They pull in and drop out, and you can hear both. |
-| 4 | Add the 48→12 V converter and the 12 V rail. Measure it. | 12 V, and the isolation: no continuity from 12 V negative to pack negative. |
+| 4 | Add the electronics battery, its 15 A fuse and the 12 V rail. Measure it. | 12 V at the rail, and the bond: **one** path from 12 V negative to pack negative, through the ground bond and nothing else. |
 | 5 | Power the Spine only. | It boots, and its arm output holds the contactors in. |
 | 6 | Add both controllers and their throttle lines, motors NOT connected. | A multimeter on each throttle line follows the number the Teensy sends, 0 to 3.3 V. |
 | 7 | Add one motor, pod on blocks. | It spins the right way, and stops on every fault in `01-architecture.md` section 3. |
 | 8 | Add the second motor. | It steers correctly in the air. |
 | 9 | Swap the bench supply for the real packs. | Nothing changes. |
 
-Step 4's isolation check is worth doing carefully. If the converter turns out not to be
-isolated, you want to know before the Jetson is connected to it.
+Step 4's bonding check is worth doing carefully, and it is the opposite of the check that used
+to be here. With the isolated converter you wanted **no** continuity between 12 V negative and
+pack negative. With a separate battery you want **exactly one** path, through the ground bond.
+Zero paths means every analogue reading on the packs is floating, which is trap 3. Two or more
+means you have built a ground loop, and the motor current will find it.

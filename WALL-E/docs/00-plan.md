@@ -106,7 +106,7 @@ follow from that:
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
 | L8 | Frame mounting width **172 mm**, across the green plates' outer faces | Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to |
 | L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
-| L10 | Electronics fed from the **larger** pack, one isolated converter | The extra load pushes both packs towards emptying together. Needs safety log test 15 |
+| L10 | **The electronics run from their own 12 V battery.** REVISED 2026-09-19: they used to be fed from the larger pack through an isolated 48→12 V converter | See decision D8. It deletes the one power part that cannot be bought on AliExpress, takes the Jetson off a rail that also carries 40 A of motor current, and lets both traction packs be the same size. **The contactor coils do NOT move — they stay on pack A** |
 | L11 | Frame stays 550 mm long. **All electronics on a shelf inside the body** | The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16 |
 | L12 | Body length follows the **pod** length, not the anti-tip castors | A body sized to cover the castors is 745 mm on 363 mm pods, and looks like a crate on toy wheels. The castor arms show as outriggers instead |
 | L13 | Two Face boards, one per eye | Two 480×480 QSPI panels on one ESP32-S3 is tight and would tear. 12 dollars removes the risk. `05-bom.md` §4 |
@@ -116,7 +116,7 @@ follow from that:
 | L17 | Packs charge **in place** and never come out in the field | Every opening of a sealed box at a dusty event undoes the sealing. Charge lead out through a gland to a connector on the body, behind a dust cap |
 | L18 | Box floor stays at 150 mm for now | Raising it to 173 — the limit, set by lid-bolt access under the body floor — would buy 23 mm of ground clearance for 0.1° of tipping. Owner: revisit after the first drive on sand |
 | L19 | **Two 6.5 inch drivers in the chest panel**, 280 mm apart, 584 mm up | Owner, 2026-09-16. Position is derived, not chosen: the enclosures have to clear the tallest shelf box and the body lid, and the driver centres on what is left |
-| L20 | Each driver gets its **own sealed 10.1 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector |
+| L20 | Each driver gets its **own sealed 9.8 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector |
 | L21 | The enclosures **bolt** to the chest panel and lift out | They shade 54 % of the shelf. Glued in, half the electronics is unreachable |
 | L22 | Metal grilles over both drivers | A crowd will push a finger through an open cone |
 | L24 | **The lower shock bolt problem is closed** | Owner, 2026-09-18: fixed on the real pods. This was decision D2 and risk R3, and `02-shock-bolt.md` held the analysis. All three are deleted. If the fix ever needs revisiting, the analysis is in git history |
@@ -140,10 +140,11 @@ plus keeping all the heavy things as low as possible. See decision D6.
 | # | Question | Blocks | Decide by |
 |---|---|---|---|
 | **D3** | Does WALL-E carry a person? | Frame strength, tipping, Midburn registration | Before Phase 2 |
-| **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime, which side gets the electronics, fuse and cable sizing | Before Phase 1 buying |
+| **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime and fuse sizing. **No longer decides "which side gets the electronics"** — decision D8 took that load off the packs entirely, so now the two packs want to be the **same** capacity | Before Phase 1 buying |
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
 | **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
 | **D7** | Reuse the scooter controllers, or buy two VESCs? | Cost, and whether motor temperature can be read | **DECIDED 2026-09-17: reuse them.** They have a reverse line, and the motor's own thermistor gives the temperature. 260 dollars held as contingency |
+| **D8** | Run the electronics from pack A through a converter, or give them their own battery? | Which parts get bought, both pack capacities, and how clean the Jetson's supply is | **DECIDED 2026-09-19: their own 12 V battery.** See below |
 
 #### D6 — the tipping fix, since the belts are staying
 
@@ -207,6 +208,87 @@ power wiring all stay, and you add two 3.3 V CAN transceivers, which are not on 
 then. What you throw away is the throttle interface — the two DACs, the level
 shifter and the opto-isolators, about 30 dollars — and you gain back the telemetry and the
 command timeout. The hardware watchdog stays either way; it is cheap insurance.
+
+#### D8 — the electronics get their own battery
+
+The question that started this was whether there is room for a third battery. In the frame
+box there is not: the two traction packs leave 60 mm of spare width and 20 mm of spare
+length, and a third pack of the same size needs 104 mm. But a battery for the **electronics
+only** is a different part and a much smaller one, and it turns out to be worth fitting.
+
+**The old arrangement.** Pack A fed a 100 W isolated 48→12 V converter, which fed the Jetson,
+the fans and the 12→5 V buck for the Teensy and the ESP32. Pack A also drove the left motor.
+
+**The new one.** A 12 V 20 Ah LiFePO4 battery on the electronics shelf feeds the 12 V rail
+directly. The Jetson dev kit takes 9–19 V in, so nothing needs converting.
+
+##### What it buys
+
+**It deletes the part you cannot buy.** `05-bom.md` section 9 lists the isolated 48→12 V
+converter as one of the few things that must come from a distributor, because every module
+sold on AliExpress under that search is non-isolated. That was 70 dollars and a sourcing
+problem. Now there is no 48 V to step down, so the part is gone.
+
+**The Jetson stops sharing copper with the motors.** Risk R6 is motor current spikes dragging
+the rail down and rebooting the Brain mid-show. The defence used to be an isolated converter
+plus a 4700 µF capacitor. On its own battery there is nothing for the motors to pull on. Keep
+the capacitor, but it stops carrying the load alone.
+
+**Both traction packs can now be the same size.** The 20 Ah / 15 Ah split in
+`01-architecture.md` section 3b was never a preference — it existed so the electronics load on
+the larger pack would drag both packs towards empty at the same moment. With that load gone,
+the right answer is two equal packs, and the runtime improves for free:
+
+| | Pack A | Pack B | Robot runs for |
+|---|---|---|---|
+| Before: 20 Ah + 15 Ah, electronics on A | 4.25 A, 4.7 h | 3.1 A, 4.8 h | **4.7 h** |
+| After: 17.5 Ah each, motors only | 3.1 A, 5.6 h | 3.1 A, 5.6 h | **5.6 h** |
+
+That is the same number of cells rearranged, and it is about 19 % more driving. The
+electronics battery holds 240 Wh against a 38 W rail, so it runs 6.3 hours and outlasts the
+drive — the face and the logs stay up after the motors stop, which is what you want when
+something has gone wrong.
+
+##### The two things that must not change
+
+**The contactor coils stay on pack A.** They are 48 V and they do not follow the electronics.
+That tap is the whole reason pack A dying opens *both* contactors, so the robot coasts instead
+of pivoting on pack B's healthy track. Move the coils onto the electronics battery and you
+delete a safety property that currently costs nothing.
+
+Done this way both failure directions still stop the robot. Pack A dies, the coils lose power,
+both contactors open. The electronics battery dies, the Teensy dies with it, and the Teensy's
+arm MOSFET in the coil chain opens. Either way it coasts.
+
+**Its negative bonds to the same single point as the other two.** The ACS758 sensors and the
+pack voltage dividers all measure against pack negative. A floating third battery is exactly
+trap 3 in `01-architecture.md` section 3b, and that trap does not announce itself — it returns
+plausible wrong numbers that the Spine acts on.
+
+**The amplifier does not move either.** It keeps its own 48→32 V buck off pack A. Audio is the
+biggest and peakiest load on the robot, it does not need clean power, and from 12 V you would
+need a boost converter to reach 32 V. Putting it on the electronics battery would roughly
+triple the size that battery has to be.
+
+##### What it costs
+
+The battery **lies on its side**. Standing up it is 167 mm tall, and the tallest box on the
+shelf sets the floor of the speaker enclosures, so an upright pack takes air away from the
+drivers. Flat it is 77 mm, against a limit of 139 mm that `cad/walle_frame.scad` now computes
+and guards.
+
+Even lying flat it is not free, and the model prices it:
+
+| | Before | After |
+|---|---|---|
+| Sealed volume per driver (wants 7–14 litres) | 10.1 | **9.8** |
+| Shelf area used | 32 % | 40 % |
+| Whole robot | 86.5 kg | 88.9 kg |
+| Centre of mass | 315.6 mm | 318.2 mm |
+| Tips forward at | 19.4° | 19.3° |
+
+The castor still catches the pitch at 12.3°, so the margin barely moves. The real price is
+0.3 litres of bass and a third thing to charge.
 
 ---
 
