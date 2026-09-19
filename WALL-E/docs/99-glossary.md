@@ -312,8 +312,9 @@ noise and voltage dips on the motor side from reaching the computers.
 
 **Brownout**
 When the voltage dips too low for a moment and a computer resets. Motor current spikes cause
-this. It is why the computers get their own isolated power supply and a small backup, and
-not a shared wire with the motors.
+this. It is why the computers get their **own 12 V battery** rather than a wire shared with
+the motors. They used to get an isolated converter off the motor battery instead, which
+solved the same problem in a harder way — see decision D8 in `00-plan.md`.
 
 **Supercapacitor**
 A component that stores a small amount of energy and can release it very fast. Used to hold

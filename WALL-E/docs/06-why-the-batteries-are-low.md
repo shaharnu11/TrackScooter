@@ -23,10 +23,10 @@ Run `cad/walle_frame.scad` and the cut list prints all six panels.
 
 | Panel | Size | Notes |
 |---|---|---|
-| Floor | 444 × 240 | 12 mm ply |
-| Lid | 444 × 240 | 12 mm ply, 12 × M5 round the edge at 110 mm pitch |
+| Floor | 444 × 268 | 12 mm ply |
+| Lid | 444 × 268 | 12 mm ply, 12 × M5 round the edge at 110 mm pitch |
 | Side walls | 2 × 444 × 142 | Each with 2 × Ø30 spanner holes, 77 mm up |
-| End walls | 2 × 240 × 142 | **These are the new parts. They close the box** |
+| End walls | 2 × 268 × 142 | **These are the new parts. They close the box** |
 
 The walls are 142 mm tall now, not 107, so they reach above the packs and the
 lid has something to seal against.
@@ -74,6 +74,13 @@ through a cable gland, to a connector on the outside of the body behind a dust
 cap, and charge the robot without opening anything. This is how every e-bike and
 scooter with an integrated pack works.
 
+**There are three charge connectors now, not two.** Decision D8 added a 12 V
+battery for the electronics, and it lives on the shelf inside the body rather
+than in this box. It charges the same way and for the same reason — through its
+own connector on the body, without opening anything — but it takes a **LiFePO4
+charger at 14.6 V**, which is not the same charger as the packs use. Label the
+three connectors so that nobody puts 54.6 V into the 12 V one.
+
 The box opens for maintenance only, which means lifting the body off first. That
 is a workshop job, not a field job, and that is the right trade.
 
@@ -107,42 +114,53 @@ driving — the best-cooled spot on the machine, free.
 
 **The shelf cannot really take them.** A pack is 400 mm long and the shelf is
 only 356 mm deep, so they could not even lie fore-aft. Lying across the robot the
-two of them use 50 % of the shelf area on top of the 32 % the electronics already
-need. That is 83 % of the shelf, and what is left has to hold a clear air path
+two of them use 50 % of the shelf area on top of the 40 % the electronics already
+need. That is 90 % of the shelf, and what is left has to hold a clear air path
 past the Jetson and both motor controllers. It will not.
 
-That figure has since got worse, not better: the two speaker enclosures now sit
-over 54 % of the shelf as well.
+That figure has got worse twice since it was first written. The two speaker
+enclosures sit over 54 % of the shelf. And decision D8 put the electronics
+battery up there, which is what took the electronics from 32 % to 40 %. The shelf
+is the scarcest area on the robot, and the traction packs are the last thing that
+should compete for it.
+
+**The electronics battery is not an argument against this.** It is 2.5 kg and
+240 Wh, against 8 kg and roughly 850 Wh for one traction pack. Putting a small
+battery where the heat and the crowding are is a different proposition from
+putting two big ones there.
 
 **It is the worst place for a cell to fail.** A box under the frame vents
 downwards and away from everything. The same event on the electronics shelf
 happens inside the body, next to every board, with the head on top of it.
 
-**It throws away the best volume on the robot.** The frame interior is
-444 × 240 × 110 mm, lower than anything else, and mass down there *improves* the
-tipping instead of hurting it.
+**It throws away the best volume on the robot.** The box interior is
+420 × 244 × 118 mm clear, lower than anything else on the machine, and mass down
+there *improves* the tipping instead of hurting it.
 
 ### The tipping numbers, for completeness
 
 | | Battery CoM | Robot CoM | Tips forward at |
 |---|---|---|---|
-| **As built** — packs in the frame | 217 mm | 349 mm | **17.7°** |
-| If moved to the body shelf | 399 mm | 378 mm | 16.5° |
+| **As built** — packs in the frame | 217 mm | 318.2 mm | **19.3°** |
+| If moved to the body shelf | 399 mm | 351 mm | 17.6° |
 
-Moving them up raises the centre of mass 29 mm and costs 1.3°. When this document
-was first written, that was not a veto on its own and it was worth saying so: the
-margin over the anti-tip castor would have gone from 6.9° to 5.3° and still passed
-comfortably.
+Moving them up raises the centre of mass 32.7 mm and costs 1.7°. The castor
+catches the pitch at 12.3°, so the margin goes from **7.0°** as built to **5.3°**
+with the packs in the body, against a guard minimum of 4°.
 
-**The chest speakers have since spent most of that slack.** They added 7.4 kg at
-584 mm, both of them forward of centre, and took 1.5° off the forward tipping
-angle by themselves. The castor catches at 12.3°, so the margin is now 5.4° as
-built and would be **4.2°** with the packs in the body — against a guard minimum
-of 4°. It would still pass, but only just, and with nothing left for the next
-heavy thing.
+When this document was first written, that was not a veto on its own and it was
+worth saying so. It still is not a veto by itself — but the slack keeps getting
+spent by other things. The chest speakers took 1.5° on their own, with 7.4 kg at
+584 mm and both of them forward of centre. Every heavy thing that moves into the
+body comes out of the same 7°.
 
 So tipping has gone from "not the reason" to "one of the reasons". The four points
 above are still the stronger ones.
+
+> **Do not compare these numbers with an older copy of this document.** They are
+> re-read from `cad/walle_frame.scad` on 2026-09-19 and several are different from
+> what was written here before, because the model has moved on. Run the model
+> rather than trusting any table, including this one.
 
 ---
 
@@ -165,12 +183,12 @@ sits exactly on its minimum, and at 174 it fails.
 
 | | Ground clearance | Robot CoM | Tips forward at |
 |---|---|---|---|
-| Box floor at 150 (as built) | 150 mm | 349 mm | 17.7° |
-| Box floor at 173 (the limit) | **173 mm** | 353 mm | **17.6°** |
-| Packs in the body | 197 mm | 378 mm | 16.5° |
+| Box floor at 150 (as built) | 150 mm | 318.2 mm | 19.3° |
+| Box floor at 173 (the limit) | **173 mm** | 322.4 mm | **19.0°** |
+| Packs in the body | 197 mm | 351 mm | 17.6° |
 
-So raising the box buys 23 mm of the 47 for almost nothing — 0.1° — while moving
-the packs into the body buys 47 mm for 1.3° and all the heat, access and
+So raising the box buys 23 mm of the 47 for almost nothing — 0.3° — while moving
+the packs into the body buys 47 mm for 1.7° and all the heat, access and
 failure-mode problems. Owner decision 2026-09-16: leave it at 150 for now and
 revisit after the first drive on sand.
 

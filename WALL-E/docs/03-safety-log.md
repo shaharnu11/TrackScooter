@@ -46,13 +46,18 @@ fail, because a hard stop on a 231 mm footprint can pitch the robot forward.
 | 16 | **Teensy alive, I2C to a DAC dead** | Pull one I2C wire to a DAC while driving forward | The Teensy sees the write fail, **deliberately stops kicking the watchdog**, and the relay opens. See the note below: this is the failure the watchdog does not catch on its own. | | | |
 | 17 | Reverse line glitches while driving forward | With the track on blocks, toggle one controller's reverse line while it is driving forward | It must not slam into reverse. If the controller has no ramp of its own, the Teensy must command zero, wait for the track to stop, and only then change the line | | | |
 | 18 | **Current limit on a turn in place** | On sand, not on blocks, turn in place at full stick while watching the ACS758 readings | Current stays within the limit the wiring was sized for, and the Teensy backs the throttle off if it does not. A turn in place is the highest-current thing this robot does | | | |
+| 19 | **Electronics battery open mid-drive** | Pull the electronics battery's fuse while driving forward, with both packs healthy | The Teensy dies, so its arm MOSFET opens the coil chain and **both** contactors drop. The watchdog relay opens too. The robot coasts straight and does **not** pivot. New with decision D8 — see the note below | | | |
+| 20 | **Electronics battery bond intact** | With the robot parked and unarmed, measure from 12 V negative to pack negative | **Exactly one** path, through the ground bond. Zero means the Teensy's pack readings are floating (trap 3). More than one means a ground loop for the motor current to find | | | |
 
 **Tests 11 and 12 are not the same test, although they read like it.** Both contactor coils
 run from pack A (`04-power-and-wiring.md` section 3), so:
 
 - **Test 11, pack A open.** The coils lose power, both contactors open, both motors are
   disconnected. This test proves the **wiring**. It should pass even with the Teensy
-  unplugged, and it is worth trying that way once.
+  unplugged, and it is worth trying that way once — which matters more since decision D8,
+  because the Teensy now has its own battery and stays alive through this test. Unplug it
+  deliberately, or you are testing the arm MOSFET at the same time and will not know which of
+  the two actually stopped the robot.
 - **Test 12, pack B open.** Contactor B stays closed with no power behind it, so the left
   track keeps driving and the robot will pivot unless the firmware notices. This test proves
   **arbitration rule 4** — the Teensy counting hall edges and seeing a dead track.
@@ -78,12 +83,19 @@ you the robot is safe when it is not.
 | 15 | Both VESCs hitting **their own command timeout** | **There is no command timeout.** A scooter controller driven by a DAC holds its last throttle voltage and keeps going. Only the hardware watchdog stops it. |
 | 16 | — | New. See below. |
 
-**Test 15 is the one the whole electronics supply decision rests on, and it changed meaning.**
-The electronics run from the larger pack only, so if that pack's BMS cuts out, the Spine
-switches off and cannot enforce any of the rules above. With VESCs, each one would have
-released its motor after about a second on its own. **Scooter controllers do not do this.**
-The DAC keeps holding whatever voltage it was last told to hold, and the robot drives away
-with nothing in control of it.
+**Test 15 is the one the whole electronics supply decision rests on.** Whenever the Spine loses
+power it cannot enforce any of the rules above. With VESCs, each one would have released its
+motor after about a second on its own. **Scooter controllers do not do this.** The DAC keeps
+holding whatever voltage it was last told to hold, and the robot drives away with nothing in
+control of it.
+
+> **What decision D8 changed here, 2026-09-19.** This paragraph used to say the Spine switches
+> off when the larger pack's BMS cuts out, because the electronics ran from that pack. They
+> now run from their own 12 V battery, so a pack dying no longer unpowers the Spine. Test 15
+> keeps its meaning — cut the Teensy's power and the watchdog must stop the robot — but the
+> event that would cause it in the field has moved. **Test 19 is that event**, and it is not
+> the same test: test 15 cuts the Spine alone, while test 19 takes the Brain and the Face down
+> with it. Run both.
 
 The hardware watchdog in `05-bom.md` section 1b is the entire replacement for that behaviour.
 This is why it is listed as non-negotiable. Test 15 proves it works, and until test 15 is

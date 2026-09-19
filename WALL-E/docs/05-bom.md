@@ -136,7 +136,10 @@ with no other use in the current design, so buy them alongside the VESCs if that
 | 4 | **XT90-S anti-spark** connector pairs | 20 | Stock | The main disconnect on each pack, plus two spares. **Was Anderson SB50.** The "-S" is not optional: it is the built-in resistor that pre-charges the controller capacitors, so the contacts stop sparking every time you plug in. **Put the SOCKET half on the battery** — the disconnect sits ahead of the fuses, so exposed pins on the pack side would be an unfused short waiting for a dropped spanner. See `04-power-and-wiring.md` §5. | [search](https://www.aliexpress.com/w/wholesale-XT90-S-anti-spark-connector.html) |
 | 8 | Silicone caps for the XT90 halves | 6 | Stock | Dust cover and idiot guard in one. Anderson housings were genderless and recessed; XT is not, so this replaces a safety property we gave up. | [search](https://www.aliexpress.com/w/wholesale-XT90-connector-silicone-cap.html) |
 | 1 | Latching mushroom emergency stop, red, IP65 | 25 | Stock | Normally-closed contact. | **§9 — not here** |
-| 1 | Isolated DC-DC, 48→12 V, 100 W (Mean Well SD-100C-12) | 70 | Stock | **Isolated.** Check it: no continuity from output negative to input negative. It is 159 × 97 × 38, which is bigger than it sounds — the shelf model accounts for that. | **§9 — not here** |
+| 1 | **12 V 20 Ah LiFePO4 battery** — the electronics supply | 75 | Stock | **Replaces the isolated 48→12 V converter**, owner decision D8. 240 Wh against a 38 W rail is 6.3 hours. The Jetson takes 9–19 V in, so it runs off this directly. **Fit it LYING ON ITS SIDE**: upright it is 167 mm tall and it takes the air out of the speaker enclosures — `cad/walle_frame.scad` guards this. | [search](https://www.aliexpress.com/w/wholesale-12V-20Ah-LiFePO4-battery.html) |
+| 1 | LiFePO4 charger, 14.6 V 5 A | 25 | Stock | For the battery above. **A lead-acid charger is not a LiFePO4 charger** — the float voltage is wrong and it will sit there cooking the pack. | [search](https://www.aliexpress.com/w/wholesale-14.6V-5A-LiFePO4-charger.html) |
+| 1 | Fuse, 15 A, and holder, at the battery terminal | 5 | Stock | A 20 Ah LiFePO4 will push hundreds of amps into a short and its BMS is not a fuse. Mount it **at the terminal**, not at the far end of the run. | **§9 — not here** |
+| — | ~~Isolated DC-DC, 48→12 V, 100 W (Mean Well SD-100C-12)~~ | — | — | **Deleted 2026-09-19 by decision D8.** Saves 70 dollars and, more usefully, deletes the one power part that could not be bought on AliExpress — see §9. There is no 48 V on the electronics rail any more. | deleted |
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-48V-32V-150W.html) |
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy and ESP32 only. No servos any more, so this is a much easier load. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-12V-5V-5A.html) |
 | — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and controller input protection. | [search](https://www.aliexpress.com/w/wholesale-capacitor-4700uF-25V.html) |
@@ -158,7 +161,7 @@ has the reasoning. Cheap parts, so buy spares of all of them.
 | 2 | Screw-in membrane vent, M12, IP67 (Gore type or equivalent) | 16 | Stock | 1 needed, 1 spare. Goes in the **lid**. A sealed box breathes with the day/night temperature swing; this is the clean path so it does not pull dust through a leak. | [search](https://www.aliexpress.com/w/wholesale-M12-waterproof-breather-vent.html) |
 | 4 | Cable gland, M16, IP68 | 10 | Stock | Charge leads and pack sense wiring out of the box. Not a drilled hole. | [search](https://www.aliexpress.com/w/wholesale-cable-gland-M16-IP68.html) |
 | 16 | M5 bolts, nuts and washers, 25 mm | 8 | Stock | 12 for the lid at 110 mm pitch, plus spares. A gasket only seals where it is squeezed. | [search](https://www.aliexpress.com/w/wholesale-M5-bolt-nut-washer-set.html) |
-| 2 | **XT60** charge connector with a dust cap, body-mounted | 12 | Stock | One per pack. The packs charge **in place** and do not come out in the field. XT60 is right here and wrong for the main disconnect: charging is a few amps, it is plugged in rarely, and there is no capacitor bank to spark into. | [search](https://www.aliexpress.com/w/wholesale-XT60-panel-mount-connector.html) |
+| 3 | **XT60** charge connector with a dust cap, body-mounted | 18 | Stock | One per traction pack, plus one for the electronics battery. Everything charges **in place** and nothing comes out in the field. XT60 is right here and wrong for the main disconnect: charging is a few amps, it is plugged in rarely, and there is no capacitor bank to spark into. **Label all three.** Two are 48 V and one is 12 V, and the connectors are identical. | [search](https://www.aliexpress.com/w/wholesale-XT60-panel-mount-connector.html) |
 
 ### The contactor is the long pole
 
@@ -322,13 +325,13 @@ cannot be the same failure.
 |---|---|---|
 | 1 — de-risking | now | 252 |
 | 1b — throttle interface for the scooter controllers | now | 60 |
-| 2 — frame and drive, including sealing the box | 1 | 640 |
+| 2 — frame and drive, including sealing the box and the electronics battery | 1 | 681 |
 | 3 — compute and sensors | 2 | 697 |
 | 4 — face and sound | 4 | 384 |
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 2,898** |
+| **Total** | | **≈ 2,939** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
@@ -346,6 +349,7 @@ sums to 459. The total was understated in one place and overstated in another.
 | Correcting section 4, which was understated | **−59** |
 | Checking real AliExpress prices, section 9 | **161** |
 | Dropping the two CAN transceivers nothing uses yet | **10**, less 6 for the real Teensy price |
+| The electronics battery, decision D8 | **−41**: 105 for the battery, its charger and its fuse, plus 6 for a third charge connector, less the 70 the isolated converter cost |
 | A real clamp-meter price instead of a guess | **35** |
 | A real bench-supply price instead of a guess | **21** |
 | The shock bolt retrofit, fixed by the owner | **50** |
@@ -425,27 +429,32 @@ about that trap for the bigger 3.4 and 4 inch panels; it applies just as much
 here. **Check the interface in the listing, not the diagonal.** If it says RGB,
 MIPI, or 40-pin, it will not work with the Face board.
 
-**2. There is no isolated 48→12 V converter on AliExpress.** Every result for
-that search is a **non-isolated** buck module, from $1.09 to $36.84.
-`04-power-and-wiring.md` section 3 requires isolation, and explains why: a
-non-isolated converter shares its negative with the pack, which puts motor
-return current through the Jetson's ground reference. The symptoms are USB
+**2. There is no isolated 48→12 V converter on AliExpress — and this trap is what
+killed the part.** Every result for that search is a **non-isolated** buck module,
+from $1.09 to $36.84. Section 3 of `04-power-and-wiring.md` required isolation,
+because a non-isolated converter shares its negative with the pack, which puts
+motor return current through the Jetson's ground reference. The symptoms are USB
 devices dropping out, the camera disconnecting, and random reboots under
-acceleration — all horrible to diagnose. The Mean Well SD-100C-12 is a real
-isolated unit. **Buy it from a distributor and keep the 70 dollars in the
-budget.**
+acceleration — all horrible to diagnose. The only real answer was a Mean Well
+SD-100C-12 from a distributor, at 70 dollars.
 
-### The six parts to buy from a real distributor
+**Resolved 2026-09-19 by decision D8: the converter is deleted.** The electronics
+run from their own 12 V battery, so there is no 48 V left to step down and no
+isolation to get wrong. This entry stays here as the reason, not as a warning you
+still have to act on. If you ever reverse D8, reverse this too — **do not** put a
+$1.09 non-isolated module on the Jetson's rail.
+
+### The five parts to buy from a real distributor
 
 For these, a counterfeit does not waste a few dollars, it costs the robot or
 starts a fire. They are marked **§9 — not here** in the tables above.
 
 | Part | Why not AliExpress |
 |---|---|
-| 60 A and 10 A fuses | Fake current ratings are common. A fuse that does not open is not a fuse, and it is the only thing between a shorted pack and the wiring. |
+| 60 A, 15 A and 10 A fuses | Fake current ratings are common. A fuse that does not open is not a fuse, and it is the only thing between a shorted battery and the wiring. The 15 A one guards the electronics battery, which will push hundreds of amps into a short just like the traction packs will. |
 | DC contactor | It is part of the emergency stop chain. One listing checked at $10.99 has a buyer review reporting **coil inrush of 167 W against a 4.4 W specification** — see the warning below, because that number matters beyond the price. |
 | Latching mushroom E-stop | Same chain, same reasoning. |
-| Isolated 48→12 V converter | Trap 2 above. The isolated part is not sold there. |
+| ~~Isolated 48→12 V converter~~ | **Deleted by D8.** The 15 A fuse at the electronics battery takes its place on this list, for the same reason as the other fuses. |
 | Jetson Orin Nano | Relabelled and grey-market modules, often a different memory size than advertised. |
 | OAK-D Lite | Depth cameras there are usually grey imports with no warranty and no firmware support. Buy from Luxonis. |
 

@@ -173,9 +173,10 @@ A duty cycle command means "apply this fraction of the pack voltage to the motor
 pack is at 50 V and the other at 44 V, the same stick position makes one track about 12 %
 faster than the other, and the robot pulls to one side the whole time.
 
-The packs **will** drift apart, for three reasons: every turn loads the outer track harder
-than the inner one, the two packs will not be equally healthy, and one of them is also feeding
-the electronics.
+The packs **will** drift apart, for two reasons: every turn loads the outer track harder than
+the inner one, and the two packs will not be equally healthy. There used to be a third and
+larger reason — one pack also fed the electronics — and decision D8 removed it. Rule 11 still
+earns its place, but it has less to correct now.
 
 **The fix (arbitration rule 11):** the Spine scales each side's command by that side's own pack
 voltage, aiming for the same volts at each motor rather than the same fraction. In code this is
@@ -222,6 +223,12 @@ separate.** Each pack then returns its own current through the shared negative, 
 path between the positives, so the cross-charging problem in the opening paragraph still cannot
 happen.
 
+**Decision D8 added a third negative to that bond.** The electronics battery has its own, and
+it goes to the same single point. It is tempting to leave it floating, since a separate battery
+does not need the packs for anything — but the Teensy sitting on it reads the pack voltage
+dividers and the ACS758 sensors, and those readings are meaningless without a shared zero. One
+point, three negatives, two positives that never meet.
+
 Two details on that bond:
 
 - Size it for the larger of the two motor currents, and keep it short and thick. It is
@@ -230,52 +237,82 @@ Two details on that bond:
   the far pack floating while the robot is still driving, which is worse than the fault it was
   protecting against.
 
-### The electronics supply: the larger pack, and why that is the right choice
+### The electronics supply: their own battery, so both packs can be equal
 
-The two packs are **not the same capacity**. The electronics run from the larger one, through
-one isolated DC-DC converter.
+**Owner decision D8, 2026-09-19. This section used to say the opposite, and the reasoning it
+used to carry is worth keeping, because it explains why the packs are now the size they are.**
 
-This is better than it first looks. Mismatched capacities are a problem on their own: with the
-same motor current on both sides, the smaller pack empties sooner, so the two voltages diverge
-faster and trap 1 gets worse. And because rules 4 and 5 stop the robot when either side drops
-out, **the runtime of the whole robot is set by the smaller pack, not the average.**
+**The electronics have their own 12 V 20 Ah battery** on the shelf. Neither traction pack
+feeds them. The isolated 48→12 V converter is deleted. `04-power-and-wiring.md` section 3 is
+the specification.
 
-Putting the electronics load on the larger pack drains it faster on purpose, which pushes the
-two packs towards emptying at the same moment. The load you want is:
+#### What this section used to say, and why it was right at the time
+
+The two packs were going to be different sizes, 20 Ah and 15 Ah, and the electronics ran off
+the larger one. That was not a preference — it was a fix. Mismatched capacities are a problem
+on their own: with the same motor current on both sides the smaller pack empties sooner, the
+two voltages diverge faster, and trap 1 gets worse. And because rules 4 and 5 stop the robot
+when either side drops out, **the runtime of the whole robot is set by the smaller pack, not
+the average.**
+
+Loading the larger pack with the electronics drained it faster on purpose, which pushed the
+two packs towards emptying at the same moment. The load you needed was:
 
 ```
 electronics current  =  motor current per side  ×  ( larger capacity / smaller capacity − 1 )
 ```
 
-A worked example. Say the packs are 20 Ah and 15 Ah, and each side pulls about 3.1 A on
-average while crawling:
+That was a clever fix for a problem we no longer have to have.
+
+#### What it says now
+
+With the electronics on their own battery, both packs carry nothing but a motor. So make them
+**the same capacity** and the whole balancing act disappears. Using the same cells as before,
+rearranged, and about 3.1 A per side while crawling:
 
 | | Capacity | Current drawn | Runtime |
 |---|---|---|---|
-| Larger pack: left motor + all electronics | 20 Ah | 3.1 + 1.15 = 4.25 A | 4.7 hours |
-| Smaller pack: right motor only | 15 Ah | 3.1 A | 4.8 hours |
+| Pack A: left motor only | 17.5 Ah | 3.1 A | 5.6 hours |
+| Pack B: right motor only | 17.5 Ah | 3.1 A | 5.6 hours |
+| Electronics battery: 240 Wh | — | 38 W | 6.3 hours |
 
-The two land within a few minutes of each other, which is as good as it gets. Fill in the real
-capacities and check where yours land — if the mismatch is much bigger than 4:3, the
-electronics load will not be enough to even it out, and the smaller pack becomes the limit.
+Three things come out of that table.
+
+**The robot drives for 5.6 hours instead of 4.7.** Same cells, 19 % more, because no pack is
+carrying a passenger any more.
+
+**Trap 1 gets smaller.** Two equal packs, with the same load, drift apart only through turning
+and through how healthy each one is. Rule 11's voltage scaling still earns its place, but it
+has less work to do and less to correct.
+
+**The electronics outlast the drive, on purpose.** 6.3 hours against 5.6 means that when the
+motors stop, the Brain, the Spine and the face are still up. That is exactly when you want
+them: to show a message on the eyes, to finish the log, and to refuse to re-arm.
+
+> **What did not move: the contactor coils.** They are 48 V and they stay on pack A. That tap
+> is what opens both contactors when pack A dies, and the next section is entirely about why
+> that matters. Do not tidy them onto the new battery.
 
 ### The consequence that must be tested
 
-Running the electronics from one pack means **the Spine dies when that pack dies.** So the
-chain of events if the larger pack's BMS cuts out is:
+This section used to open by saying that running the electronics from one pack means **the
+Spine dies when that pack dies**. Decision D8 made that false, and it is the single best thing
+that decision bought. The Spine is on its own battery now, so a pack cutting out no longer
+takes the board that enforces the arbitration rules with it.
 
-1. The Spine loses power and stops driving the DACs.
-2. The other controller still has power, from the smaller pack.
-3. Arbitration rules 4 and 5 cannot help, because the board that enforces them is off.
+Two mechanisms cover the supply failures, and they cover different ones:
 
-**This specific case is now handled in copper.** Owner decision 2026-09-17: both contactor
-coils are 48 V and both run from **pack A**. So pack A dying takes the coils with it, both
-contactors open, and both motors are physically disconnected — including the right-hand one
-with its healthy pack B. The robot coasts. See `04-power-and-wiring.md` section 3.
+| What dies | What stops the robot |
+|---|---|
+| **Pack A** | Its 48 V coils lose power, both contactors open, both motors are disconnected — including the right-hand one with its healthy pack B. Copper, not code. |
+| **The electronics battery** | The Teensy dies, so its arm MOSFET in the coil chain opens, and both contactors drop the same way. |
+| **Pack B** | Neither of the above. Contactor B stays closed with no power behind it, so the left track keeps driving. **Only arbitration rule 4 catches this**, by counting hall edges and seeing a dead track. |
 
-That was free, and it is the best kind of safety: a consequence of which wire you tap, not
-code that has to run. **But it only covers pack A dying.** The rest of this section still
-applies, because the Teensy has many more ways to fail than losing its supply.
+The first two are the best kind of safety: a consequence of which wire you tap, not code that
+has to run. Both were free. The third is not, and it is why rule 4 is not optional.
+
+**None of this makes the Teensy's other failures safe.** It has many more ways to fail than
+losing its supply, and the rest of this section is about those.
 
 **This is the step that decision D7 made dangerous, and the rest of this section is the
 single most important part of this document.**
@@ -298,17 +335,21 @@ nice extra.
 So this becomes the critical item in the whole build, not a configuration detail:
 
 - **Fit the hardware watchdog.** Nothing else covers a Teensy that crashes, hangs, or loses
-  its I2C bus **while pack A is still alive** — the contactors stay closed, the DACs keep
-  holding their last throttle, and only the watchdog relay stops the robot. The pack A
-  coil trick above does not help here. There is no setting to enable.
+  its I2C bus **while every battery on the robot is still alive** — the contactors stay
+  closed, the DACs keep holding their last throttle, and only the watchdog relay stops the
+  robot. Neither the pack A coil tap nor the arm MOSFET helps here, because both of those need
+  a supply to actually fail. A crashed Teensy is still a powered Teensy. There is no setting
+  to enable.
 - Test it, as safety log test 15: cut power to the Spine while the robot is driving, and
   confirm both tracks stop and the robot does not turn.
 - Test its blind spot too, as safety log test 16. The watchdog only fires when the kicks stop,
   so a Teensy that is alive but has lost the I2C bus to the DACs will keep kicking while the
   throttle stays stuck. The firmware must check every DAC write and **stop kicking on purpose**
   when one fails.
-- Keep a buffer capacitor on the electronics rail anyway. That is for risk R6, the motor
-  current spikes, and it is needed whichever pack the supply comes from.
+- Keep a buffer capacitor on the electronics rail anyway. It used to be the main defence
+  against risk R6, the motor current spikes. Decision D8 took that job off it — the rail is a
+  battery now, and the motors have no path to pull it down — but it still costs almost nothing
+  and it covers the inrush when the fans and the LiDAR start together.
 
 ---
 
