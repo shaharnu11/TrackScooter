@@ -127,10 +127,19 @@ vesc_d      = [85, 65, 30];    // Flipsky 75100 class, one per pod
 jet_d       = [103, 90, 50];   // Jetson Orin Nano dev kit + cooler
 teensy_d    = [60, 40, 25];    // Teensy 4.1 in a small sealed box
 cont_d      = [60, 50, 70];    // main contactor
-// A real 100 W isolated 48->12 V brick is much bigger than it feels like it
-// should be: a Mean Well SD-100C-12 is 159 x 97 x 38. Placeholder guesses were
-// half that, which would have made the shelf layout a lie.
-dcdc_d      = [159, 97, 38];   // isolated 48 V -> 12 V, 100 W, electronics rail
+// The isolated 48->12 V brick used to be here, at 159 x 97 x 38 — a Mean Well
+// SD-100C-12, because a real 100 W isolated brick is much bigger than it feels
+// like it should be. Owner decision 2026-09-19 deleted it: the electronics run
+// from their own 12 V battery now, so there is no 48 V left to step down.
+// docs/04-power-and-wiring.md section 3.
+//
+// The battery LIES ON ITS SIDE. Standing up it is 167 tall, and the tallest
+// thing on the shelf sets the speaker enclosure floor, so an upright pack robs
+// the drivers of the air they need. The ebatt guard below holds that down.
+ebatt_d     = [181, 167, 77];  // 12 V 20 Ah LiFePO4, on its side
+ebatt_wh    = 240;             // 12 V x 20 Ah
+ebatt_kg    = 2.5;             // LiFePO4. The same case in lead-acid is 5.5
+rail12_w    = 38;              // 12 V rail, continuous W. docs/04 section 3
 amp_ps_d    = [120, 70, 35];   // 48 V -> 32 V buck, amplifier only. See
                                //   docs/04-power-and-wiring.md section 4: the
                                //   amp CANNOT run off a full 54.6 V pack.
@@ -415,7 +424,7 @@ shelf_parts = [
   ["Contactor",cont_d,   1],
   ["Fuse blk", fuse_d,   1],
   ["Teensy",   teensy_d, 1],
-  ["DC-DC 12V",dcdc_d,   2],
+  ["12V batt", ebatt_d,  2],
   ["Amp PSU",  amp_ps_d, 3],
   ["Amp",      amp_d,    3],
 ];
@@ -464,6 +473,18 @@ spk_vol     = (spk_box_d - spk_box_t)*(spk_box_h - 2*spk_box_t)
               *(spk_box_w - 2*spk_box_t)/1e6 - spk_disp;
 spk_com_x   = (spk_box_x0 + spk_box_x1)/2;      // the pair sits FORWARD of centre
 
+// The shelf and the speakers are coupled, and it is not obvious which way.
+// The tallest box on the shelf sets the enclosure FLOOR, the body lid sets its
+// ceiling, so every millimetre the shelf grows comes straight off the air
+// behind the drivers. Reverse-solve the minimum sealed volume back into a part
+// height, so the model can say "the battery is too tall" instead of leaving it
+// to surface as a mysterious speaker failure.
+spk_vol_min = 7;                                // 6.5 inch driver, litres
+spk_h_min   = (spk_vol_min + spk_disp)*1e6
+              /((spk_box_d - spk_box_t)*(spk_box_w - 2*spk_box_t)) + 2*spk_box_t;
+part_h_lim  = spk_box_y1 - spk_clr - spk_h_min - (shelf_y + shelf_t);
+ebatt_h_lim = part_h_lim - vesc_hs_t;           // part_h_max adds the heatsink
+
 // How much of the shelf the two enclosures sit OVER. They do not touch the
 // electronics — there is spk_clr of headroom — but they are above it, so the
 // boxes have to come out to reach what is underneath. That is why they bolt to
@@ -503,6 +524,10 @@ mass_items = [
   [m_frame,   (rail_x0 + rail_x1)/2, (fr_bot + fr_top)/2 ],
   [2*batt_kg, 0,               batt_com_y ],
   [elec_kg,   0,               shelf_y + shelf_t + part_h_max/2],
+  // the electronics battery is the one thing this design moved UP, so give it
+  // its own mass item rather than burying it in elec_kg. It is small enough
+  // that it barely shows in the tipping — check the echo, do not assume.
+  [ebatt_kg,  0,               shelf_y + shelf_t + ebatt_d[2]/2],
   [body_kg,   0,               body_com_y ],
   [head_kg,   0,               head_com_y ],
   // The speakers are the only mass on the robot that is NOT on the
@@ -1014,12 +1039,20 @@ echo(str("SHELF:    ", round(shelf_l), " x ", round(shelf_w), " at ", shelf_y,
          " rows, longest ", round(row_max_len), ", ", round(rows_dep),
          " deep in total · ", round(shelf_fill),
          "% of the shelf area used"));
+echo(str("POWER:    electronics on their OWN ", ebatt_wh, " Wh 12 V battery · ",
+         "the 12 V rail draws ", rail12_w, " W continuous -> ",
+         round(10*ebatt_wh/rail12_w)/10, " h · the isolated 48->12 V brick is ",
+         "DELETED · pack tap is now MOTORS ONLY, but the CONTACTOR COILS STAY ",
+         "ON PACK A — that is what drops both contactors when pack A dies. ",
+         "Battery lies FLAT (", ebatt_d[2], " tall, limit ", round(ebatt_h_lim),
+         ") or the speakers lose their air"));
 
 echo("");
 echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
          round(m_tray*10)/10, " kg -> FRAME ", round(m_frame*10)/10,
          " kg  ·  WHOLE ROBOT ", round(m_total*10)/10,
-         " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · electronics ",
+         " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · 12V batt ",
+         ebatt_kg, " · electronics ",
          elec_kg, " · body ", round(body_kg*10)/10, " · speakers ", round(2*spk_kg*10)/10,
          " · head ", round(head_kg*10)/10, ") — pods, batteries and electronics are GUESSES; body, head, speakers and frame are COMPUTED"));
 echo(str("CoM:      x ", round(com_x*10)/10, " (0 = over the middle of the tracks)",
@@ -1120,6 +1153,9 @@ guards = [
   ["longest electronics row fits the shelf",           shelf_l - row_max_len, 40],
   ["all electronics rows fit the shelf depth",         shelf_w - rows_dep, 60],
   ["headroom over the tallest box, under the body top", body_y1 - (shelf_y + shelf_t + part_h_max), 100],
+  // This one fails LONG before the headroom guard does. Headroom is measured to
+  // the body lid; the speakers run out of air far lower down.
+  ["electronics battery lying flat, not standing up", ebatt_h_lim - ebatt_d[2], 0],
   // speakers. The chest panel must EXIST, which it did not: chest_d is deeper
   // than body_wall, so the recess cut the front wall clean away.
   ["chest panel is a real plate, not a hole",         chest_t, 6],
