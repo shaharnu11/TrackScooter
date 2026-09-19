@@ -166,29 +166,29 @@ wheels.
 
 | Headline number | Value |
 |---|---|
-| Overall width | 700 mm (pods 500 apart, green plates stick out 100 each side) |
+| Overall width | 672 mm (pods 500 apart, green plates stick out either side) |
 | Overall height | 910 mm, to the top of the eye barrels |
 | Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
-| Rails | 60×30×3 box, 550 long, 240 mm clear between them |
+| Rails | 60×30×3 box, 550 long, 268 mm clear between them |
 | Lowest point of the robot | 150 mm above the ground |
-| Whole robot, estimated | 100 kg — **every mass in the model is still a guess** |
-| Centre of mass | 349 mm up, and 4 mm forward of centre — the chest speakers |
-| Ground pressure | 0.184 kg/cm² over 546 cm² |
-| Tips forward at | 17.7° of pitch (backward 18.9°) |
-| Anti-tip castor catches at | 12.3° — so it catches 5.4° before the robot goes over |
+| Whole robot | 88.9 kg — **the pods, packs and electronics are still guesses** |
+| Centre of mass | 318.2 mm up, and 4.4 mm forward of centre — the chest speakers |
+| Ground pressure | 0.163 kg/cm² over 546 cm² |
+| Tips forward at | 19.3° of pitch (backward 20.7°) |
+| Anti-tip castor catches at | 12.3° — so it catches 7.0° before the robot goes over |
 | Steel needed | 1580 mm of 60×30×3 box tube |
 
 **The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
 already drilled in the green plates, so no new holes go into the built pods.
 
 The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a
-pack, and put the real numbers in the model before trusting 17.7°.
+pack, and put the real numbers in the model before trusting 19.3°.
 
 ### Four things the model settled
 
 **There is no room for electronics in the frame.** The interior is almost entirely battery:
 8 mm above the packs, 24 mm between them, 13 mm to the cross members. So everything moved
-onto a shelf inside the body. It fits four rows and uses 32 % of the shelf area, which
+onto a shelf inside the body. It fits four rows and uses 40 % of the shelf area, which
 leaves room for the speakers and an air path.
 
 ![the electronics shelf](cad/walle_shelf.png)
@@ -234,11 +234,11 @@ Two things the model flagged that are easy to miss:
 clashes, but they sit above it. So they **bolt** to the chest panel — glue them in and
 half the electronics becomes unreachable.
 
-**They cost 1.5° of forward tipping margin.** 7.4 kg at 584 mm, and both of them forward of
-centre, which pulls the centre of mass 4 mm towards the direction the robot already tips.
-Forward tipping goes from 19.2° to 17.7°, and the castor still catches 5.4° before that.
-It passes, but it is the second thing to push that number down, so weigh the real parts
-before adding a third.
+**They cost about 1.5° of forward tipping margin.** 7.3 kg at 584 mm, and both of them forward
+of centre, which pulls the centre of mass 4.4 mm towards the direction the robot already tips.
+With them fitted the robot tips forward at 19.3°, and the castor still catches 7.0° before
+that. It passes, but the speakers are one of several things pushing that number down, so weigh
+the real parts before adding another.
 
 ### The head
 

@@ -254,6 +254,12 @@ carrying a 25 kg guess for foam and glass and the real plywood box works out at
 | Margin over the castor | 5.4° | **6.1°** |
 | Ground pressure | 0.184 kg/cm² | **0.163 kg/cm²** |
 
+> This table is a **snapshot from the day that decision was made**, kept because the
+> difference between the two columns is the argument. Several decisions have moved the robot
+> since, in both directions — the rigid head and the shorter speaker boxes took mass off, the
+> electronics battery put some back. For today's numbers run `cad/walle_frame.scad`, do not
+> read the right-hand column.
+
 | Qty | Part | Est. | Lead | Notes | Buy from — **read §9 first** |
 |---|---|---|---|---|---|
 | — | 12 mm birch plywood, about 1.7 m² | 130 | Stock | Floor, four walls, and the lid. Sizes come straight out of `cad/walle_frame.scad`. | timber yard |
