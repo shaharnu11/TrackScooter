@@ -69,9 +69,10 @@ But the robot is not stupid either. Two things run on their own:
 
 1. **A safety layer.** Sensors watch for obstacles. If something is close, the robot refuses
    to drive into it, even if the driver pushes the stick that way.
-2. **A personality layer.** A camera finds people's faces. The eyes look at them. The head
-   tilts. Sounds play. This is the part that makes people smile, and it is the reason to
-   build the robot at all.
+2. **A personality layer.** A camera finds people's faces. The eyes look at them, and the
+   whole robot turns slowly to face them, because the head is rigid and does not move on its
+   own. Sounds play. This is the part that makes people smile, and it is the reason to build
+   the robot at all.
 
 We chose this on purpose. A fully self-driving robot in a crowd of thousands of people, at
 night, in dust, is both dangerous and much more work. And nobody in the crowd would even
@@ -89,8 +90,8 @@ unsafe.
 | Name | Board | Job | How fast must it be |
 |---|---|---|---|
 | **Brain** | Jetson Orin Nano | Camera, AI, sounds, deciding | Slow is fine: 0.1 to 3 seconds |
-| **Spine** | Teensy 4.1 | Reads the remote, talks to the motors | Very fast and exact: 1000 times a second |
-| **Face** | ESP32-S3 | The two eye screens and servos | Steady: 30 times a second |
+| **Spine** | Teensy 4.0 | Reads the remote, talks to the motors | Very fast and exact: 1000 times a second |
+| **Face** | ESP32-S3 | The two eye screens. No servos — the head is rigid | Steady: 30 times a second |
 
 The **Brain** runs Linux, like a normal computer. Linux is good at big jobs like AI, but it
 has no promise about timing. It can freeze for two seconds and nobody notices. That is
@@ -117,7 +118,6 @@ WALL-E/
   docs/
     00-plan.md               The master plan: status, phases, budget, schedule, risks
     01-architecture.md       How the three computers work together, and the safety rules
-    02-shock-bolt.md         The one open problem in the built pods, and how to fix it
     03-safety-log.md         The safety test record. Fill in by hand before going near people
     04-power-and-wiring.md   Every wire, every fuse, and the emergency stop chain
     05-bom.md                What to buy, what it costs, how long it takes to arrive
@@ -269,7 +269,7 @@ match.
 
 | Thing | Value |
 |---|---|
-| **Carrier plate spacing — the frame mounting width** | **168 mm** |
+| **Green plate outer faces — the frame mounting width** | **172 mm** |
 | Ground contact, one pod | 231 mm long × 118 mm wide |
 | Pod size | 363 long × 327 tall × ~200 wide |
 | Where the pod bolts to the frame | A plate 60 mm tall, 197–257 mm above the ground |
@@ -289,10 +289,9 @@ person**. That is why tracks are the right choice for desert sand, not just a ni
 
 Full list with deadlines in `docs/00-plan.md` section 4. The three that matter most:
 
-1. **The lower shock bolt.** The pods were built with a known weak point: the bolt holding
-   each shock's lower end bends past its limit at full suspension travel. It is fine standing
-   still and the fix is cheap, but it must be done before the pods carry the full robot. Read
-   `docs/02-shock-bolt.md`.
+1. **Both pack capacities, in Ah, and are both BMS units healthy?** This sets the runtime and
+   the fuse sizing. Since decision D8 gave the electronics their own battery, the two traction
+   packs want to be the **same** capacity — see `docs/00-plan.md` decision D4.
 2. **Does WALL-E carry a person?** If yes, the frame is heavier and it must be registered as
    a mutant vehicle with Midburn. Check the current Midburn rules before the frame is welded.
 3. **How do we stop it tipping forward?** The pods put only 231 mm of track on the ground, so

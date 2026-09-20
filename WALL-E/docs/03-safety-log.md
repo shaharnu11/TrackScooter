@@ -137,6 +137,6 @@ The last one matters at the event. After a repair in the dust at night, run at l
 
 | | Name | Date |
 |---|---|---|
-| All eighteen tests passed | | |
+| All twenty tests passed | | |
 | Re-tested after last firmware change | | |
 | Re-tested on site at Midburn | | |

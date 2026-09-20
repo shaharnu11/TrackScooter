@@ -125,7 +125,7 @@ shelf_marg  = 25;    // keep-out round the shelf edge, for cable runs
 // real part sizes [length x, width z, height y], mm
 vesc_d      = [85, 65, 30];    // Flipsky 75100 class, one per pod
 jet_d       = [103, 90, 50];   // Jetson Orin Nano dev kit + cooler
-teensy_d    = [60, 40, 25];    // Teensy 4.1 in a small sealed box
+teensy_d    = [60, 40, 25];    // Teensy 4.0 in a small sealed box
 cont_d      = [60, 50, 70];    // main contactor
 // The isolated 48->12 V brick used to be here, at 159 x 97 x 38 — a Mean Well
 // SD-100C-12, because a real 100 W isolated brick is much bigger than it feels
