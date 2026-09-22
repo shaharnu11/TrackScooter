@@ -81,6 +81,27 @@ struct ToFState {
   bool     valid[TOF_COUNT] = {false};
 } tof;
 
+// ---------------------------------------------------------------------------
+//  Explicit prototypes. Do not delete them as "redundant".
+//
+//  The Arduino .ino preprocessor writes its own prototypes and inserts them
+//  near the top of the file. That generation is unreliable for functions that
+//  take a REFERENCE TO A USER-DEFINED TYPE: if a generated prototype lands
+//  above `struct SideState`, the file stops compiling with an error that
+//  points at a line nobody wrote. Declaring them here, after the struct, means
+//  the compiler never needs the generated ones.
+// ---------------------------------------------------------------------------
+bool side_out(SideState &s, float duty, uint8_t rev_pin, uint8_t brake_pin,
+              uint8_t dac_addr, uint32_t now);
+void sense_side(SideState &s, uint8_t vpin, float vscale,
+                uint8_t tpin, uint8_t cpin);
+void side_alive(SideState &s, float duty, uint32_t now);
+uint16_t throttle_counts(float mag);
+bool dac_write(uint8_t addr, uint16_t value);
+float therm_c(uint8_t pin);
+float clampf(float v, float lo, float hi);
+float slew1(float now, float want, float up, float down);
+
 // What we last actually sent. The slew limiter works on these.
 float duty_l = 0.0f, duty_r = 0.0f;
 
