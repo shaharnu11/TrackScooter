@@ -634,21 +634,31 @@ ds_eye_bore = 8;   // shock LOWER EYE BORE — MEASURED 2026-09-18 by the owner:
                    //     adds an INNER JAW so the eye is gripped from both sides
                    //     ds_clr away, which is the only thing that keeps the bare
                    //     span short, and checks the bolt against ds_bolt_y.
-ds_bolt_y = 1100;  // through-bolt proof strength, MPa: 640 = cl.8.8,
+ds_bolt_y = 940;   // through-bolt proof strength, MPa: 640 = cl.8.8,
                    // 940 = cl.10.9, 1100 = cl.12.9. Only used when the bolt
                    // runs bare through an eye — which, with a Ø8 bore, is both
                    // ends of both shocks. Checked at half of it, safety factor 2.
-                   // OWNER 2026-09-19: the pins stay M8, so cl.12.9 is not a
-                   // preference, it is the only grade that carries them. A
-                   // cl.10.9 M8 allows 470 and the lower pin sits at 504.
-                   // Buy these as cl.12.9 and mark them — a shop-drawer 8.8
-                   // put in the same hole is at three times its limit.
+                   // OWNER 2026-09-19: with a FULL-THREAD bolt the pins stay at
+                   // 504 MPa and cl.12.9 (limit 550) is the only grade that carries
+                   // them. OWNER 2026-09-22: the pins are plain-shank instead
+                   // (ds_pin_smooth), which drops them to ~267, so cl.10.9 (limit
+                   // 470) has a wide margin and even 8.8 (320) would pass. 10.9 is
+                   // the default because the cost is nil and it keeps the margin if
+                   // a bolt ever gets swapped for a full-thread one in a hurry.
 ds_pin_d  = 8;     // bare pin across the eyes: 8 = M8, as the eyes are bored
                    // today. 10 = M10, which needs the Ø8 bores opened out, and
                    // roughly halves every bending figure below because the
                    // section goes as d³. Check first whether the eye holds a
                    // pressed bushing — if it does, its own bore may already be
                    // big enough and nothing needs drilling.
+ds_pin_smooth = true;  // OWNER 2026-09-22: the pins are PART-THREADED (DIN 931) and
+                   // the PLAIN SHANK is what crosses the eye, so the bending section is
+                   // the full Ø8 shank, not the 6.47 mm thread root. That is not a detail:
+                   // section goes as d^3, so (8/6.47)^3 = 1.9, and the same bolt in the
+                   // same hole is nearly twice as strong with its threads kept out of the
+                   // eye. Pick the bolt length so the thread starts AFTER the far plate —
+                   // a plain shank of 30 mm covers the 24 mm eye plus both 6 mm plates.
+                   // Set false to model a full-thread (DIN 933) bolt.
 function pin_root(d) = d == 6 ? 4.77 : d == 8 ? 6.47 : d == 10 ? 8.16
                      : d == 12 ? 9.85 : 0.81*d;   // ISO coarse thread minor Ø
 ds_eye_od = 20;    // shock LOWER EYE OUTER diameter, across the boss — MEASURE
@@ -934,7 +944,7 @@ lsb_F   = spring_rate*(shock_ee - shock_len(bump_max));
 ds_arms = [["trailing", zi_tr + plate_t, zi_tr + plate_t/2],
            ["leading",  zi_ld + plate_t, zi_ld + plate_t/2]];
 // Bolt minor-diameter section — what is left where the sleeve cannot follow.
-ds_Zb = PI*pow(pin_root(ds_pin_d),3)/32;
+ds_Zb = PI*pow(ds_pin_smooth ? ds_pin_d : pin_root(ds_pin_d),3)/32;
 for (arm = ds_arms) let(
     // Rev 012 cantilever: arm plate outer face -> eye.
     // Rev 013 two supports, load at sz between them. Which pair of supports
@@ -955,7 +965,7 @@ for (arm = ds_arms) let(
            " arm: ",
            !ds_strap ? str("CANTILEVER lever ", round(sz - arm[1]), " mm")
            : str("double shear over ", round(lsb_span), " mm span, ",
-                 lsb_bare ? str("bare M", ds_pin_d, " across the eye")
+                 lsb_bare ? str(ds_pin_smooth ? "plain-shank M" : "threaded M", ds_pin_d, " across the eye")
                           : "sleeve right through"),
            ", ", round(lsb_F), " N at full bump -> ", round(lsb_s), " MPa (limit ",
            round(lsb_lim), ")",
@@ -978,7 +988,7 @@ let(us_M = us_clevis
            "upper shock PIN bending: ",
            us_clevis ? str("double shear over ", round(us_span), " mm span")
                      : str("CANTILEVER lever ", round(tab_z0 - sz), " mm"),
-           ", bare M", ds_pin_d, " across the eye, ", round(lsb_F),
+           ", ", ds_pin_smooth ? "plain-shank M" : "threaded M", ds_pin_d, " across the eye, ", round(lsb_F),
            " N at full bump -> ", round(us_s), " MPa (limit ", round(us_lim), ")",
            us_s > us_lim
              ? " — set us_clevis, raise ds_bolt_y, or open the eye for ds_pin_d=10."

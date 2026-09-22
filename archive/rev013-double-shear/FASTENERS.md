@@ -76,10 +76,10 @@ Four shocks total (2 per pod, one per arm), eyes measured **Ø8**.
 
 | Item | /pod | both | Notes |
 |---|---:|---:|---|
-| M8 part-threaded bolt, ≈**135** — lower eye | 2 | **4** | Through both arm plates; eye rides the spacer sleeve; smooth shank where eye + sleeve ride |
+| M8 **DIN 931 part-threaded, cl.10.9**, ≈**135** — lower eye | 2 | **4** | Through both arm plates, the inner jaw, the eye and the outer strap. The **plain shank must cross the eye** — plain length ≥ 30 mm covers the 24 mm eye plus both 6 mm plates, and the thread must start past the far plate. Threads in the eye cut the section from Ø8 to Ø6.47 and the stress from 267 to 504 MPa. Never a full-thread DIN 933 bolt here |
 | M8 nylock nut | 2 | **4** | |
 | Ø15 OD × Ø9 ID × ≈45 spacer sleeve | 2 | **4** | In the §7.1 steel order, not a fastener |
-| M8 pin/bolt ≈**35–40** + nylock — upper eye | 2 | **4** | ⚠ **Missing from §7.7** — see below |
+| M8 **DIN 931 part-threaded, cl.10.9**, ≈**70** + nylock — upper eye | 2 | **4** | Rev 013: the eye is now held between two stubs (double shear), so this pin spans 31 mm. Same rule: **plain shank across the eye**, thread only past the outer stub. ⚠ Was missing from §7.7 — see below |
 
 ⚠ **Gap in the published BOM:** the upper shock tab carries a Ø8.4 "eye pin hole" for an
 M8 pin (`apollo_track_pod_rev011.scad:652`, and the Ø8.4 in `plates_rev011.dxf` poly 26/28),
