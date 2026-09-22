@@ -132,6 +132,14 @@ rule lower down.
 > | 5 and 11 — pack voltage | VESC input voltage over CAN | **A resistor divider per pack** into a Teensy analogue input. Two resistors and care with the ground reference. Cheap, but it must be on the list. |
 > | 9 — is either motor too hot? | VESC motor temperature | **The hub motor's own thermistor**, read directly. This one actually got simpler — see `05-bom.md` section 1b. |
 >
+> **Implemented 2026-09-22** in `firmware/spine/spine.ino` and `config.h`. The CAN layer is
+> deleted; the throttle is an MCP4725 DAC per side with an opto-isolated reverse line, rule 4
+> counts hall edges, rules 5 and 11 read a divider per pack, and rule 9 reads each hub motor's
+> own thermistor. Two behaviours in that file exist only because of this change, and both look
+> like bugs until you know why: the firmware **stops kicking the watchdog** when a DAC write
+> fails (safety log test 16), and it **never flips a reverse line while the wheel is turning**
+> (test 17).
+>
 > **The bigger loss is the VESC command timeout.** A VESC releases the motor if no command
 > arrives for about a second, and section 4 below leans on that as the last line of defence
 > when the Spine dies. A scooter controller has no such behaviour: it holds whatever throttle
