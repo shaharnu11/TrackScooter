@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>03 — Safety log — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · docs/03-safety-log.md</div><h1>03 — Safety log</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-22 from <code>docs/03-safety-log.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../README.html">WALL-E</a><a href="02-overview.html">02 — What this robot is</a><a href="00-plan.html">00 — Master plan</a><a href="01-architecture.html">01 — Architecture</a><a href="05-bom.html">05 — Bill of materials</a><a href="FRAME_AND_PODS.html">Frame and pods — the mechanical facts, in one place</a><a href="BUILD.html">Building WALL-E</a><a href="04-power-and-wiring.html">04 — Power and wiring</a><a href="06-why-the-batteries-are-low.html">06 — Why the batteries are low, and how the box keeps sand out</a><a href="../firmware/README.html">Firmware</a><a href="../brain/README.html">Brain</a><a href="03-safety-log.html" class="here">03 — Safety log</a><a href="99-glossary.html">Glossary</a></nav><p>The record of the Phase 3 safety gate. Fill this in by hand as each test is done.</p>
+<p><strong>The rule:</strong> until every row below is signed off, the robot does not operate within ten metres of another person. There is no schedule pressure that justifies skipping this.</p>
+<p>Each test is done <strong>while the robot is driving</strong>, not while it is parked. A stop that works from standstill proves nothing.</p>
+<hr>
+<h3 id="what-counts-as-a-pass">What counts as a pass</h3>
+<p>For every test, all four of these must be true:</p>
+<ol>
+<li>The robot comes to a stop.</li>
+<li>It does not lurch, jump, or accelerate first.</li>
+<li>It does not turn to one side.</li>
+<li>It stays stopped, and does not restart on its own when the fault clears.</li>
+</ol>
+<p>A stop that arrives smoothly over half a second is a pass. A stop that slams the tracks is a fail, because a hard stop on a 231 mm footprint can pitch the robot forward.</p>
+<hr>
+<h3 id="the-tests">The tests</h3>
+<div class="tw"><table><thead><tr><th>#</th><th>Test</th><th>How to cause it</th><th>Expected result</th><th>Pass</th><th>Date</th><th>Notes</th></tr></thead><tbody><tr><td>1</td><td>Physical E-stop</td><td>Press the red mushroom button while driving</td><td>Contactor opens, motors dead immediately</td><td></td><td></td><td></td></tr><tr><td>2</td><td>Wireless E-stop</td><td>Press the keyfob from 20 m away</td><td>Same as test 1</td><td></td><td></td><td></td></tr><tr><td>3</td><td>Transmitter off</td><td>Switch the radio transmitter off mid-drive</td><td>Ramp to zero within 0.1 s of the last frame</td><td></td><td></td><td></td></tr><tr><td>4</td><td>Out of radio range</td><td>Walk the robot away until the link drops</td><td>Same as test 3, and it must not restart when the link returns without re-arming</td><td></td><td></td><td></td></tr><tr><td>5</td><td>Brain USB unplugged</td><td>Pull the Jetson's serial cable in ASSIST mode</td><td>Watchdog fires, ramp to zero, fall back to MANUAL</td><td></td><td></td><td></td></tr><tr><td>6</td><td>Brain power lost</td><td>Cut power to the Jetson in ASSIST mode</td><td>Same as test 5</td><td></td><td></td><td></td></tr><tr><td>7</td><td>Bumper triggered</td><td>Hold a board in front of a ToF sensor while driving forward</td><td>Forward motion vetoed. Reverse must still work</td><td></td><td></td><td></td></tr><tr><td>8</td><td>Throttle signal wire disconnected</td><td>Unplug the throttle line between one DAC and one controller while driving</td><td><strong>Both</strong> motors stop, not just one. The Teensy sees that track's speed sensor stop changing while commanded, and ramps both down (rule 4)</td><td></td><td></td><td></td></tr><tr><td>9</td><td>Arm switch off</td><td>Flick the arm switch to off while driving</td><td>Ramp to zero</td><td></td><td></td><td></td></tr><tr><td>10</td><td>Power on while armed</td><td>Connect the battery with the arm switch already ON</td><td>Robot must NOT move. It must require the switch to be cycled off then on</td><td></td><td></td><td></td></tr><tr><td>11</td><td>One pack disconnected</td><td>Open the left pack's main switch while driving forward</td><td><strong>Both</strong> tracks stop. The robot must NOT pivot on the surviving track</td><td></td><td></td><td></td></tr><tr><td>12</td><td>The other pack disconnected</td><td>Repeat test 11 on the right pack</td><td>Same as test 11</td><td></td><td></td><td></td></tr><tr><td>13</td><td>Uneven pack voltage</td><td>Drive with the packs at clearly different charge levels</td><td>It still drives straight. Any pull to one side means rule 11 compensation is not working</td><td></td><td></td><td></td></tr><tr><td>14</td><td>Ground bond removed</td><td>With the robot parked and unarmed, disconnect the negative bond between the packs</td><td>The Teensy's readings for the far pack go wrong or open-circuit, and it refuses to arm. <strong>See the note below — this test changed completely when the VESCs went.</strong></td><td></td><td></td><td></td></tr><tr><td>15</td><td><strong>Spine unpowered mid-drive</strong></td><td>Cut power to the Teensy while driving forward</td><td><strong>The hardware watchdog loses its heartbeat and opens the relay within its timeout</strong>, cutting the throttle lines. The robot must NOT pivot on one track, and must NOT keep driving.</td><td></td><td></td><td></td></tr><tr><td>16</td><td><strong>Teensy alive, I2C to a DAC dead</strong></td><td>Pull one I2C wire to a DAC while driving forward</td><td>The Teensy sees the write fail, <strong>deliberately stops kicking the watchdog</strong>, and the relay opens. See the note below: this is the failure the watchdog does not catch on its own.</td><td></td><td></td><td></td></tr><tr><td>17</td><td>Reverse line glitches while driving forward</td><td>With the track on blocks, toggle one controller's reverse line while it is driving forward</td><td>It must not slam into reverse. If the controller has no ramp of its own, the Teensy must command zero, wait for the track to stop, and only then change the line</td><td></td><td></td><td></td></tr><tr><td>18</td><td><strong>Current limit on a turn in place</strong></td><td>On sand, not on blocks, turn in place at full stick while watching the ACS758 readings</td><td>Current stays within the limit the wiring was sized for, and the Teensy backs the throttle off if it does not. A turn in place is the highest-current thing this robot does</td><td></td><td></td><td></td></tr><tr><td>19</td><td><strong>Electronics battery open mid-drive</strong></td><td>Pull the electronics battery's fuse while driving forward, with both packs healthy</td><td>The Teensy dies, so its arm MOSFET opens the coil chain and <strong>both</strong> contactors drop. The watchdog relay opens too. The robot coasts straight and does <strong>not</strong> pivot. New with decision D8 — see the note below</td><td></td><td></td><td></td></tr><tr><td>20</td><td><strong>Electronics battery bond intact</strong></td><td>With the robot parked and unarmed, measure from 12 V negative to pack negative</td><td><strong>Exactly one</strong> path, through the ground bond. Zero means the Teensy's pack readings are floating (trap 3). More than one means a ground loop for the motor current to find</td><td></td><td></td><td></td></tr></tbody></table></div>
+<p><strong>Tests 11 and 12 are not the same test, although they read like it.</strong> Both contactor coils run from pack A (<code>04-power-and-wiring.md</code> section 3), so:</p>
+<ul>
+<li><strong>Test 11, pack A open.</strong> The coils lose power, both contactors open, both motors are disconnected. This test proves the <strong>wiring</strong>. It should pass even with the Teensy unplugged, and it is worth trying that way once — which matters more since decision D8, because the Teensy now has its own battery and stays alive through this test. Unplug it deliberately, or you are testing the arm MOSFET at the same time and will not know which of the two actually stopped the robot.</li>
+<li><strong>Test 12, pack B open.</strong> Contactor B stays closed with no power behind it, so the left track keeps driving and the robot will pivot unless the firmware notices. This test proves <strong>arbitration rule 4</strong> — the Teensy counting hall edges and seeing a dead track.</li>
+</ul>
+<p>If test 12 passes for the wrong reason, you will not find out until the day pack B's BMS trips in a crowd. Run it with the robot on blocks first and watch which track keeps turning.</p>
+<p>Tests 11 and 12 are the most important new ones, and they are specific to having one battery per pod. On a skid-steer machine, one dead track does not slow the robot down — the surviving track spins it on the spot. Both of these must produce a stop of <strong>both</strong> sides.</p>
+<h4 id="tests-8-14-15-and-16-were-rewritten-on-2026-09-17">Tests 8, 14, 15 and 16 were rewritten on 2026-09-17</h4>
+<p>Decision D7 replaced the VESCs with the scooter controllers already owned. These four tests were written against VESC behaviour, and <strong>three of them were checking for protection that no longer exists.</strong> That is worse than having no test, because a test you expect to pass tells you the robot is safe when it is not.</p>
+<div class="tw"><table><thead><tr><th>Test</th><th>Was checking</th><th>Now checks</th></tr></thead><tbody><tr><td>8</td><td>Unplugging a CAN wire</td><td>There is no CAN. It unplugs a <strong>throttle line</strong> instead, and the robot must notice the dead track through its speed sensor.</td></tr><tr><td>14</td><td>That losing the ground bond dropped CAN and blocked arming</td><td>There is no CAN. The bond now matters <strong>more</strong>: the ACS758 current sensors and the pack voltage dividers all measure against pack negative, so a missing bond corrupts the Teensy's readings rather than announcing itself.</td></tr><tr><td>15</td><td>Both VESCs hitting <strong>their own command timeout</strong></td><td><strong>There is no command timeout.</strong> A scooter controller driven by a DAC holds its last throttle voltage and keeps going. Only the hardware watchdog stops it.</td></tr><tr><td>16</td><td>—</td><td>New. See below.</td></tr></tbody></table></div>
+<p><strong>Test 15 is the one the whole electronics supply decision rests on.</strong> Whenever the Spine loses power it cannot enforce any of the rules above. With VESCs, each one would have released its motor after about a second on its own. <strong>Scooter controllers do not do this.</strong> The DAC keeps holding whatever voltage it was last told to hold, and the robot drives away with nothing in control of it.</p>
+<blockquote><p><strong>What decision D8 changed here, 2026-09-19.</strong> This paragraph used to say the Spine switches off when the larger pack's BMS cuts out, because the electronics ran from that pack. They now run from their own 12 V battery, so a pack dying no longer unpowers the Spine. Test 15 keeps its meaning — cut the Teensy's power and the watchdog must stop the robot — but the event that would cause it in the field has moved. <strong>Test 19 is that event</strong>, and it is not the same test: test 15 cuts the Spine alone, while test 19 takes the Brain and the Face down with it. Run both.</p></blockquote>
+<p>The hardware watchdog in <code>05-bom.md</code> section 1b is the entire replacement for that behaviour. This is why it is listed as non-negotiable. Test 15 proves it works, and until test 15 is signed off there is nothing standing between a dead Teensy and a runaway robot.</p>
+<p><strong>Test 16 exists because the watchdog has one blind spot.</strong> The watchdog only fires when the Teensy stops kicking it. So consider a Teensy that is perfectly alive but has lost the I2C bus to the DACs: it wants to command zero, it cannot, and it is still happily kicking the watchdog. The throttle stays wherever it was.</p>
+<p>The firmware has to close that gap itself. Every DAC write is checked, and <strong>on a failed write the Teensy must stop kicking the watchdog on purpose</strong> — choosing to kill itself because it has lost the ability to steer. Test 16 proves that path, and it is easy to leave out, because nothing fails visibly until the day it matters.</p>
+<p>Test 10 catches a mistake that is easy to make in code and dangerous in the field: a robot that starts driving the instant you plug the battery in, because the stick was not centred or the switch was left on.</p>
+<hr>
+<h3 id="re-test-triggers">Re-test triggers</h3>
+<p>The whole table above is re-run from the start after any of these:</p>
+<ul>
+<li>Any change to the Spine firmware, however small</li>
+<li>Any change to the wiring of the E-stop chain, the contactor, the watchdog, or the fusing</li>
+<li>Any change to the throttle path: the DACs, their I2C wiring, or the opto-isolators</li>
+<li>Any change to the radio equipment or its binding</li>
+<li>Any change to how the Brain and the Spine talk to each other</li>
+<li>The robot being transported, dropped, or repaired in the field</li>
+</ul>
+<p>The last one matters at the event. After a repair in the dust at night, run at least tests 1, 2, 3 and 9 before the robot goes near people again.</p>
+<hr>
+<h3 id="sign-off">Sign-off</h3>
+<div class="tw"><table><thead><tr><th></th><th>Name</th><th>Date</th></tr></thead><tbody><tr><td>All twenty tests passed</td><td></td><td></td></tr><tr><td>Re-tested after last firmware change</td><td></td><td></td></tr><tr><td>Re-tested on site at Midburn</td><td></td><td></td></tr></tbody></table></div><footer>Generated by <code>build_guide.py</code> from <code>docs/03-safety-log.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

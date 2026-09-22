@@ -112,7 +112,7 @@ pod_interface.scad                                the only copy of pod facts
         │
 cad/walle_frame.scad                              everything else is derived
         │
-        └── 46 guards: clearances, stresses, bolt edge distances
+        └── guards: clearances, stresses, bolt edge distances (55 today)
 ```
 
 Change `pod_cl` (how far apart the pods sit) and the width, the bay, the battery

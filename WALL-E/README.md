@@ -13,13 +13,24 @@ Every drawing is inside that file. There are no image files to lose. For a paper
 PDF, open it and print — each part starts on a new page, and the blueprint sheets are vector,
 so they stay sharp.
 
+## Every document also has its own page
+
+Each markdown file has an HTML twin beside it, same name: `docs/00-plan.md` →
+[`docs/00-plan.html`](docs/00-plan.html), [`docs/BUILD.html`](docs/BUILD.html),
+[`docs/FRAME_AND_PODS.html`](docs/FRAME_AND_PODS.html), and so on. Use one when you want a
+single topic — to hand to the welder, to read on a phone, or to print on its own. Each page
+is self-contained (drawings included) and carries links to all the others.
+
+Both the guide and the pages come from the same markdown, built by the same script, so they
+cannot disagree.
+
 ## The folder
 
 ```
 WALL-E/
-  WALLE-GUIDE.html   the guide. Generated — do not edit it
-  build_guide.py     builds the guide from the sources below
-  docs/              all the words (markdown). THIS is the source of truth
+  WALLE-GUIDE.html   the whole project in one file. Generated — do not edit it
+  build_guide.py     builds the guide AND one page per document
+  docs/              all the words: X.md is the source, X.html is generated
   cad/               the model, the pod interface, and the render script
   firmware/          Spine (Teensy) and Face (ESP32) code
   brain/             Brain (Jetson) code
@@ -33,7 +44,7 @@ Edit the markdown in `docs/`, or the model in `cad/`, then:
 ```sh
 cd WALL-E
 cad/render_all.sh       # checks the pods, runs every guard, redraws everything
-python3 build_guide.py  # rebuilds WALLE-GUIDE.html
+python3 build_guide.py  # rebuilds WALLE-GUIDE.html and every document page
 ```
 
 `cad/render_all.sh` refuses to draw anything if the pod interface check or the guards fail, so

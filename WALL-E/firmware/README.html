@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Firmware — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · firmware/README.md</div><h1>Firmware</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-22 from <code>firmware/README.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../README.html">WALL-E</a><a href="../docs/02-overview.html">02 — What this robot is</a><a href="../docs/00-plan.html">00 — Master plan</a><a href="../docs/01-architecture.html">01 — Architecture</a><a href="../docs/05-bom.html">05 — Bill of materials</a><a href="../docs/FRAME_AND_PODS.html">Frame and pods — the mechanical facts, in one place</a><a href="../docs/BUILD.html">Building WALL-E</a><a href="../docs/04-power-and-wiring.html">04 — Power and wiring</a><a href="../docs/06-why-the-batteries-are-low.html">06 — Why the batteries are low, and how the box keeps sand out</a><a href="README.html" class="here">Firmware</a><a href="../brain/README.html">Brain</a><a href="../docs/03-safety-log.html">03 — Safety log</a><a href="../docs/99-glossary.html">Glossary</a></nav><p>Two boards, two jobs, and a hard line between them.</p>
+<div class="tw"><table><thead><tr><th>Folder</th><th>Board</th><th>Job</th><th>May it move the robot?</th></tr></thead><tbody><tr><td><code>spine/</code></td><td>Teensy 4.1</td><td>Motor commands, every safety rule, the watchdog</td><td><strong>Yes. Only this board.</strong></td></tr><tr><td><code>face/</code></td><td>ESP32-S3 × 2</td><td>Eye animation, head servos</td><td>No. It has no connection to the motors at all.</td></tr></tbody></table></div>
+<p>The Brain (the Jetson) lives in <code>../brain/</code> and is Python, not firmware.</p>
+<hr>
+<h3 id="the-spine">The Spine</h3>
+<p><strong>Board:</strong> Teensy 4.1. <strong>Library:</strong> FlexCAN_T4, which ships with Teensyduino.</p>
+<p>Build with the Arduino IDE (install Teensyduino first) or PlatformIO. Select Teensy 4.1 and upload. There is nothing to configure at build time — every tunable number is in <code>spine/config.h</code>.</p>
+<h4 id="what-it-does">What it does</h4>
+<p>One loop at 1 kHz. Every pass it rebuilds the motor commands from scratch using the fixed rule order in <code>../docs/01-architecture.md</code> section 3. The rules are in <code>arbitrate()</code> in the same order as the document, with the rule numbers in the comments, so the two can be checked against each other.</p>
+<h4 id="before-you-flash-it-to-a-robot-that-can-move">Before you flash it to a robot that can move</h4>
+<p>Read the five rules at the top of <code>spine/spine.ino</code>. The short version: no dynamic memory, nothing that blocks, nothing with unbounded runtime, every new failure path ramps to zero, and features belong on the Brain.</p>
+<h4 id="still-to-do">Still to do</h4>
+<p><code>tof_poll()</code> is empty. The bumper ring is not implemented yet.</p>
+<p>This is deliberately failing in the safe direction: with no valid sensor readings, <code>bumper_scale()</code> returns 0.5 and halves the speed. <strong>Do not make it return 1.0 to get full speed for a test.</strong> That silently switches off the veto, and it is exactly the kind of temporary change that stays in.</p>
+<h4 id="testing-it-without-a-robot">Testing it without a robot</h4>
+<p>The Brain link is plain text, so you can drive the board from a serial terminal at 115200:</p>
+<pre><code>C 0.2 0.0 1</code></pre>
+<p>means "20 % forward, no turn, sequence 1". Send one every 50 ms or the watchdog will stop obeying you, which is itself a good first test. The board prints a status line 20 times a second, including why it is not moving.</p>
+<hr>
+<h3 id="the-face">The Face</h3>
+<p><strong>Board:</strong> ESP32-S3, two of them, one per eye. <strong>Libraries:</strong> LovyanGFX.</p>
+<h4 id="same-binary-on-both-boards">Same binary on both boards</h4>
+<p>Tie <code>PIN_EYE_SELECT</code> to ground on the left board and leave it floating on the right. The firmware works out which eye it is at boot. There is only ever one binary to keep track of, and swapping in a spare board in the field needs no laptop.</p>
+<h4 id="why-two-boards-and-not-one">Why two boards and not one</h4>
+<p>The 480×480 round panels are QSPI and need real bandwidth. One ESP32-S3 can <em>probably</em> drive two, and would then tear the moment you add anything else. Two boards at 12 dollars each removes the risk and means one eye keeps working if the other board dies. <code>../docs/05-bom.md</code> section 4.</p>
+<p>The two are kept in step by a single wire: the left board pulses it, the right board starts its frame on the pulse. If that wire breaks, each eye runs on its own clock and the only symptom is that the blinks drift apart slightly.</p>
+<h4 id="still-to-do-2">Still to do</h4>
+<p><code>face/panel_cfg.h</code> is a placeholder. The QSPI panel's init sequence and pin mapping have to be copied from the vendor's example for the exact module you buy — it is the one part of this project that cannot be worked out from first principles.</p>
+<p>Everything else runs without it. You can develop and test the whole animation over the serial link with no screen attached, which is worth doing because the animation is the hard part.</p>
+<h4 id="testing-it">Testing it</h4>
+<p>Three commands, typed by hand at 115200:</p>
+<pre><code>GAZE -20 5
+MOOD curious
+BLINK</code></pre>
+<p>Moods: <code>idle</code>, <code>curious</code>, <code>happy</code>, <code>sad</code>, <code>alarm</code>, <code>sleepy</code>.</p>
+<p>If the link goes quiet for 1.5 seconds the eyes fall back to an idle behaviour — drifting around, blinking now and then. That is on purpose: a crashed Jetson should leave a robot that looks bored, not one that looks broken. Frozen eyes read as "switched off" to everyone watching.</p>
+<hr>
+<h3 id="the-two-details-in-here-that-are-easy-to-get-wrong">The two details in here that are easy to get wrong</h3>
+<p><strong>The slew limiter's direction.</strong> In <code>spine.ino</code>, <code>slew1()</code> treats "up" as away from zero and "down" as towards zero. Swap them and stopping becomes slower than starting, which is the wrong way round and would not be obvious from watching the robot drive.</p>
+<p><strong>Unknown CAN packets must not refresh the timeout.</strong> In <code>on_can_rx()</code>, a packet type we do not recognise returns <em>before</em> setting <code>last_ms</code>. If it did not, a VESC that had stopped reporting its status but was still sending something else would look alive to arbitration rule 4.</p><footer>Generated by <code>build_guide.py</code> from <code>firmware/README.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Brain — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · brain/README.md</div><h1>Brain</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-22 from <code>brain/README.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../README.html">WALL-E</a><a href="../docs/02-overview.html">02 — What this robot is</a><a href="../docs/00-plan.html">00 — Master plan</a><a href="../docs/01-architecture.html">01 — Architecture</a><a href="../docs/05-bom.html">05 — Bill of materials</a><a href="../docs/FRAME_AND_PODS.html">Frame and pods — the mechanical facts, in one place</a><a href="../docs/BUILD.html">Building WALL-E</a><a href="../docs/04-power-and-wiring.html">04 — Power and wiring</a><a href="../docs/06-why-the-batteries-are-low.html">06 — Why the batteries are low, and how the box keeps sand out</a><a href="../firmware/README.html">Firmware</a><a href="README.html" class="here">Brain</a><a href="../docs/03-safety-log.html">03 — Safety log</a><a href="../docs/99-glossary.html">Glossary</a></nav><p>The Jetson Orin Nano. Python. Runs the camera, the personality and the sounds.</p>
+<p><strong>This is the part that is allowed to be slow, and allowed to crash.</strong> If it dies, the driver keeps full control of the robot, because the radio receiver wires into the Spine and not into here. A Brain crash costs you the eyes and the sounds. <code>../docs/01-architecture.md</code> section 2.</p>
+<hr>
+<h3 id="files">Files</h3>
+<div class="tw"><table><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody><tr><td><code>main.py</code></td><td>The 20 Hz control loop. Start here.</td></tr><tr><td><code>spine_link.py</code></td><td>Serial to the Teensy. Commands out, telemetry in.</td></tr><tr><td><code>face_link.py</code></td><td>Serial to the two eye boards.</td></tr><tr><td><code>perception.py</code></td><td>Camera, LiDAR and IMU threads. Currently stubs.</td></tr><tr><td><code>personality.py</code></td><td>The state machine that picks a behaviour.</td></tr><tr><td><code>test_safety.py</code></td><td>Checks the invariants that keep the personality harmless.</td></tr></tbody></table></div>
+<h3 id="running-it">Running it</h3>
+<pre><code>python3 -m venv .venv &amp;&amp; . .venv/bin/activate
+pip install -r requirements.txt
+python3 main.py --spine /dev/ttyACM0 --face /dev/ttyUSB0 /dev/ttyUSB1</code></pre>
+<p>Only <code>pyserial</code> is needed to run the loop. The sensor libraries are commented out in <code>requirements.txt</code> until the hardware exists.</p>
+<p>Run the invariant checks with no dependencies at all:</p>
+<pre><code>python3 test_safety.py</code></pre>
+<hr>
+<h3 id="the-three-things-in-here-that-are-load-bearing">The three things in here that are load-bearing</h3>
+<h4 id="1-the-heartbeat-is-the-command-and-it-comes-from-the-control-loop">1. The heartbeat is the command, and it comes from the control loop</h4>
+<p>Not from a separate thread. This is the most important line in the whole Brain, and it is easy to get wrong in a way that looks like an improvement.</p>
+<p>A heartbeat on its own thread never misses a beat — which means it keeps telling the Spine "I am healthy" while the thinking part of the program is frozen. That defeats the watchdog, and the watchdog is the main safety feature of the architecture. <strong>If the control loop stalls, the beat must stall with it.</strong></p>
+<p>Note also that a zero command is still a heartbeat. "I am alive and I want nothing" and "I am dead" must stay distinguishable, so <code>main.py</code> sends a command every single pass, even when it is zero.</p>
+<h4 id="2-the-ai-never-produces-a-motor-number">2. The AI never produces a motor number</h4>
+<p>The personality chooses an <strong>action</strong> from a fixed list of six names:</p>
+<pre><code>idle · look_at · greet · retreat · nudge_forward · play_sound</code></pre>
+<p>A dull table lookup in <code>motion_for()</code> turns the name into a speed and a turn. The chooser can be a state machine today and a language model tomorrow, and it makes no difference to the safety argument — because there is no way to say "0.8 duty for four seconds" in that vocabulary.</p>
+<p><code>test_safety.py</code> enforces this. It checks that every action, including any added later, stays inside 30 % and that no action is missing from the table.</p>
+<h4 id="3-stale-data-must-look-stale-not-clear">3. Stale data must look stale, not clear</h4>
+<p>Every reading in <code>perception.py</code> carries the time it was taken, and callers check <code>fresh</code> before trusting it. A sensor that has stopped updating must look like a sensor that stopped — never like a sensor reporting "all clear".</p>
+<p><code>main.py</code> applies this to the IMU: no fresh pitch reading blocks movement, rather than being treated as level. The same rule is in the Spine firmware, where a bumper ring with no working sensor halves the speed instead of reporting a clear path.</p>
+<hr>
+<h3 id="sensor-threads-and-why-there-are-no-queues">Sensor threads and why there are no queues</h3>
+<p>The slow work runs in threads and writes into a single slot, overwriting whatever was there. A queue would let a backlog build up, and the robot would end up reacting to where a person was five seconds ago. For control, a stale-but-current reading is right and a complete history is wrong.</p>
+<h3 id="still-to-do">Still to do</h3>
+<p>All three sensor loops in <code>perception.py</code> are empty. In rough order of value:</p>
+<ol>
+<li><strong>The IMU.</strong> Smallest job, and it is a real safety input — the robot tips forward at 19.4° and the anti-tip castor catches it at 9.9°.</li>
+<li><strong>The camera.</strong> The OAK-D Lite runs the detection model on its own chip, so this thread only converts finished boxes into angles and distances.</li>
+<li><strong>The LiDAR.</strong> Lowest value, and <code>../docs/05-bom.md</code> section 7 lists it as the second thing to cut. The ToF ring on the Spine already covers the safety case.</li>
+</ol>
+<p>Sounds are not implemented at all. <code>Intent.sound</code> is carried through the personality and then ignored.</p><footer>Generated by <code>build_guide.py</code> from <code>brain/README.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>04 — Power and wiring — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · docs/04-power-and-wiring.md</div><h1>04 — Power and wiring</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-22 from <code>docs/04-power-and-wiring.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../README.html">WALL-E</a><a href="02-overview.html">02 — What this robot is</a><a href="00-plan.html">00 — Master plan</a><a href="01-architecture.html">01 — Architecture</a><a href="05-bom.html">05 — Bill of materials</a><a href="FRAME_AND_PODS.html">Frame and pods — the mechanical facts, in one place</a><a href="BUILD.html">Building WALL-E</a><a href="04-power-and-wiring.html" class="here">04 — Power and wiring</a><a href="06-why-the-batteries-are-low.html">06 — Why the batteries are low, and how the box keeps sand out</a><a href="../firmware/README.html">Firmware</a><a href="../brain/README.html">Brain</a><a href="03-safety-log.html">03 — Safety log</a><a href="99-glossary.html">Glossary</a></nav><p>Every wire on the robot, what size it has to be, and why. Read <code>01-architecture.md</code> first — this document is the physical version of the rules in there.</p>
+<p>Two decisions from the architecture drive everything here:</p>
+<ul>
+<li><strong>Each pack feeds its own pod.</strong> The positives never meet. The negatives are bonded at one point. (<code>01-architecture.md</code> section 3b.)</li>
+<li><strong>The electronics run from their own 12 V battery</strong>, not from either pack. Owner decision D8, 2026-09-19. <strong>But the contactor coils still run from pack A</strong>, and section 3 explains why that split is deliberate rather than untidy.</li>
+</ul>
+<hr>
+<h3 id="1-the-power-tree">1. The power tree</h3>
+<pre><code>PACK A — 48 V, 17.5 Ah                       (capacity is a placeholder)
+ +── XT90-S ─┬── FUSE 60 A ── CONTACTOR A ─── CONTROLLER L ── hub motor, left pod
+  DISCONNECT │
+   sees ~43A ├── FUSE 10 A ── DC-DC 48→32 V ── AUDIO AMPLIFIER
+             │                non-isolated,    (why 32 V and not 48: section 4)
+             │                150 W
+             │
+             └── FUSE 5 A ─── E-STOP CHAIN ─── CONTACTOR A COIL, 48 V
+                              in series:   └── CONTACTOR B COIL, 48 V
+                              mushroom button,
+                              wireless stop relay
+                              (both coils, BOTH packs, run from PACK A)
+
+PACK B — 48 V, 17.5 Ah                       (the same as pack A — section 3)
+ +── XT90-S ──── FUSE 60 A ── CONTACTOR B ─── CONTROLLER R ── hub motor, right pod
+  DISCONNECT
+   sees ~40A
+
+ELECTRONICS BATTERY — 12 V, 20 Ah LiFePO4    (240 Wh, on the shelf)
+ +── FUSE 15 A ── 12 V RAIL                  (see section 3)
+                    └── 12→5 V buck ── Teensy, ESP32
+
+
+PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY (−)
+            10 AWG, short, NOT FUSED      one point, section 3</code></pre>
+<h4 id="three-things-about-that-tree">Three things about that tree</h4>
+<p><strong>The emergency stop leaves the electronics alive.</strong> This is deliberate, and it now happens twice over. The Spine, the Brain and the face are on their own battery, which the contactors cannot touch at all. The amplifier and the coil chain tap pack A <strong>before</strong> contactor A, so they survive the stop too. Pressing the mushroom button therefore kills both motors and nothing else: the robot can tell you it is stopped, log why, refuse to re-arm until the button is reset, and put a message on the eyes. A machine that goes dark and silent tells you nothing.</p>
+<p><strong>The emergency stop is therefore not an isolator.</strong> It stops movement. It does not make the robot electrically safe to work on. For that you need the separate main disconnect in section</p>
+<ol>
+<li>Do not confuse the two, and do not let a helper confuse them either.</li>
+</ol>
+<p><strong>Two contactors, one coil circuit.</strong> Because the packs are separate, one contactor cannot cut both. Both coils are wired in parallel onto the same emergency stop chain, so any single break drops both sides together. Never wire a stop that can cut one track and leave the other driving — on a skid-steer machine that is a command to spin, not a command to stop.</p>
+<hr>
+<h3 id="2-how-much-current-really">2. How much current, really</h3>
+<p>These are the numbers the wire sizes and fuses come from. The robot is 88.9 kg (<code>cad/walle_frame.scad</code>).</p>
+<h4 id="driving-in-a-straight-line-on-sand">Driving in a straight line on sand</h4>
+<div class="tw"><table><thead><tr><th>Step</th><th>Working</th><th>Result</th></tr></thead><tbody><tr><td>Rolling resistance, tracks on soft sand</td><td>coefficient about 0.15</td><td>—</td></tr><tr><td>Force to keep it moving</td><td>0.15 × 91 kg × 9.81</td><td>134 N</td></tr><tr><td>Mechanical power at walking pace</td><td>134 N × 1.0 m/s</td><td>134 W</td></tr><tr><td>Electrical power at 75 % efficiency</td><td>134 / 0.75</td><td>179 W</td></tr><tr><td>Current from 48 V, both sides</td><td>179 / 48</td><td><strong>3.7 A total, 1.9 A per side</strong></td></tr></tbody></table></div>
+<p>That is a small number, and it is why the runtime is measured in hours rather than minutes.</p>
+<h4 id="turning-which-is-the-case-that-actually-sizes-the-wiring">Turning, which is the case that actually sizes the wiring</h4>
+<p>Skid steer turns by dragging both tracks sideways across the ground. There is no steering geometry helping; the friction has to be overcome by the motors. A pivot turn on sand costs roughly <strong>four times</strong> the straight-line power, and the two sides fight each other while it happens.</p>
+<div class="tw"><table><thead><tr><th>Case</th><th>Per side</th><th>Notes</th></tr></thead><tbody><tr><td>Straight, walking pace</td><td>2 A</td><td>the normal condition</td></tr><tr><td>Continuous pivot turning</td><td>8 A</td><td>budget for this, not for the straight line</td></tr><tr><td>Starting from rest, or climbing out of a rut</td><td>25 A</td><td>seconds at a time</td></tr><tr><td>Absolute limit</td><td><strong>40 A</strong></td><td>the number the wire and the fuse must survive</td></tr></tbody></table></div>
+<blockquote><h4 id="this-section-assumed-a-vesc-and-decision-d7-changed-that-on-2026-09-17">This section assumed a VESC, and decision D7 changed that on 2026-09-17</h4>
+<p>With a VESC you <strong>choose</strong> the 40 A figure, set it in the configuration tool, and then size the wire and the fuse to it. The number in the table is a decision.</p>
+<p>A scooter controller does not work that way. <strong>Its current limit is fixed in firmware and you cannot change it.</strong> So 40 A stops being a number you pick and becomes a number you have to go and measure.</p>
+<p><strong>Do this before finalising the wire gauge and the fuse rating:</strong></p>
+<ol>
+<li>Find the controller's rated peak current. It is usually printed on the case or in the</li>
+</ol>
+<p>listing. Scooter controllers in this class are commonly 30 A to 60 A peak.</p>
+<ol>
+<li>Confirm it with the clamp meter, on blocks, at stall — hold the track against a block</li>
+</ol>
+<p>and read the actual draw. Do not trust the label alone.</p>
+<ol>
+<li>If the real peak is <strong>above 40 A</strong>, the 12 AWG phase wire and the 60 A fuse in section 7</li>
+</ol>
+<p>have to be re-checked against the real figure, not against 40.</p>
+<ol>
+<li>If it is <strong>well below 40 A</strong>, that is not free either: it caps how hard the robot can</li>
+</ol>
+<p>pivot and climb out of a rut, which is the case that matters on sand.</p>
+<p>The battery current limit, which is the one that actually protects the pack and the fuse, is likewise fixed. The Teensy cannot command a current limit, so <strong>the only current control you have is backing off the throttle yourself</strong> when the ACS758 sensor reads high. That is a software limit on top of a hardware one, and it is slower and weaker than the VESC's.</p>
+<p>If this measurement comes back ugly, that is the 260 dollar contingency in <code>05-bom.md</code> section 7 doing its job. Spend it.</p></blockquote>
+<hr>
+<h3 id="3-the-12-v-rail">3. The 12 V rail</h3>
+<div class="tw"><table><thead><tr><th>Load</th><th>Continuous</th><th>Peak</th></tr></thead><tbody><tr><td>Jetson Orin Nano, with the camera and LiDAR on its USB</td><td>25 W</td><td>40 W</td></tr><tr><td>Cooling fans</td><td>5 W</td><td>5 W</td></tr><tr><td>12→5 V converter, feeding the Teensy and the ESP32</td><td>5 W</td><td>8 W</td></tr><tr><td><strong>Total</strong></td><td><strong>38 W</strong></td><td><strong>58 W</strong></td></tr></tbody></table></div>
+<h4 id="this-rail-has-its-own-battery-there-is-no-converter-any-more">This rail has its own battery. There is no converter any more</h4>
+<p><strong>Owner decision D8, 2026-09-19.</strong> This rail used to come from pack A through a 100 W isolated 48→12 V converter. It now comes from a <strong>12 V 20 Ah LiFePO4 battery on the electronics shelf</strong>, and the converter is deleted. The Jetson dev kit takes 9–19 V in, so a 12 V battery feeds it with nothing in between.</p>
+<p>Three reasons, in the order they matter:</p>
+<ol>
+<li><strong>It deletes the one power part you cannot buy.</strong> <code>05-bom.md</code> section 9 found that every 48→12 V module sold on AliExpress is <strong>non-isolated</strong>, so the isolated brick had to come from a distributor at 70 dollars. There is no 48 V on this rail now, so the problem is gone rather than solved.</li>
+<li><strong>The Jetson stops sharing copper with 40 A of motor current.</strong> That is risk R6, and it used to be held off by the isolation plus a capacitor. Now there is simply nothing for the motors to pull down.</li>
+<li><strong>It frees both packs to be the same capacity.</strong> See <code>01-architecture.md</code> section 3b: the 20 Ah / 15 Ah split only existed to make the electronics load even out two mismatched packs. Two equal packs run 5.6 hours instead of 4.7.</li>
+</ol>
+<p><strong>Sizing.</strong> 240 Wh against a 38 W continuous rail is 6.3 hours, so the electronics outlast the drive. That is the right way round: when the motors stop, the face and the logs are still up to tell you why.</p>
+<p><strong>It still needs a fuse.</strong> 15 A at the battery terminal, close to the terminal. A 20 Ah LiFePO4 will happily push hundreds of amps into a short, and its BMS is not a fuse.</p>
+<p><strong>Do not charge it from the packs.</strong> No DC-DC from 48 V to trickle it, because that rebuilds the exact shared-ground path this decision removed. It gets its own charger and its own connector on the body, alongside the two pack charge leads (<code>06-why-the-batteries-are-low.md</code> on charging in place).</p>
+<h4 id="the-contactor-coils-are-not-on-this-rail">The contactor coils are NOT on this rail</h4>
+<p>They used to be listed here at 6 W. <strong>They are 48 V coils and they run straight off pack A</strong>, through their own 5 A fuse and the E-stop chain. Owner decision 2026-09-17, resolving a contradiction: this table had them on the 12 V rail while <code>05-bom.md</code> section 2 specified a 48 V coil, and those cannot both be true.</p>
+<p>Keeping them off the 12 V rail matters for a reason that is not tidiness. A buyer review on one cheap contactor reports <strong>coil inrush of 167 W against a 4.4 W specification</strong> (<code>05-bom.md</code> section 9). If that is anywhere near right and the coils were on the 12 V rail, every contactor pull-in would brown out the Jetson's supply. On the pack they are pulling inrush from a 48 V traction battery instead, which does not care.</p>
+<p><strong>This got more important with decision D8, not less.</strong> The 12 V rail is now a battery, and a 20 Ah LiFePO4 would also shrug off 167 W. But a coil on the electronics battery is a coil that does not drop when pack A dies, and that is the failure the next section is about. The coils are on pack A for what they <em>stop</em>, not for what they can survive.</p>
+<p><strong>The 5 A fuse is sized for that inrush, not for the holding current.</strong> Two coils hold at roughly 0.3 A total. Use a slow-blow fuse and measure the real inrush with the bench supply's current limit before it goes near the robot.</p>
+<h4 id="running-both-coils-from-pack-a-makes-one-failure-safe-for-free">Running both coils from pack A makes one failure safe for free</h4>
+<p>This is worth understanding, because it changes what the hardware watchdog is actually for.</p>
+<p>Both coils run from <strong>pack A</strong>. So if pack A's BMS cuts out, the coils lose power, <strong>both contactors open, and both motors are physically disconnected</strong> — including the right-hand one, which still has a healthy pack B behind it. The robot coasts to a stop instead of pivoting on its surviving track.</p>
+<p><strong>Decision D8 added a second, independent version of the same protection.</strong> The Teensy's arm MOSFET sits in the coil chain (see the diagram in section 5), and the Teensy now runs from the electronics battery. So the chain breaks from either end:</p>
+<div class="tw"><table><thead><tr><th>What dies</th><th>What opens the contactors</th></tr></thead><tbody><tr><td>Pack A</td><td>Its coils lose their supply directly</td></tr><tr><td>The electronics battery</td><td>The Teensy dies, so its arm MOSFET in the chain opens</td></tr></tbody></table></div>
+<p>Both give a coast. That is why the coils were left on pack A rather than moved onto the new battery with everything else: on pack A they are covered from both directions, and on the electronics battery pack A could die with the contactors still happily closed.</p>
+<p>That is the exact failure <code>01-architecture.md</code> calls "the consequence that must be tested", and it is now handled in copper rather than in software. It costs nothing: it is a consequence of which pack the coil circuit taps, so choose it deliberately.</p>
+<p><strong>It does not make the watchdog optional.</strong> The watchdog covers a different failure: the Teensy crashing, hanging, or losing its I2C bus <strong>while pack A is still perfectly alive</strong>. In that case the contactors stay happily closed, the DACs keep holding their last throttle, and nothing but the watchdog relay will stop the robot. Both mechanisms are needed, and they catch different things.</p>
+<p><strong>One asymmetry to know about.</strong> Losing pack A stops the robot in hardware, as above. Losing <strong>pack B</strong> does not: contactor B stays closed but has no power behind it, so the left track keeps driving and the robot pivots. Only arbitration rule 4 — the Teensy counting hall edges and seeing a dead track — stops that one. So safety log tests 11 and 12 are not the same test, even though they read like it. Test 11 proves the wiring; test 12 proves the firmware.</p>
+<h4 id="the-ground-bond-is-now-the-only-thing-tying-the-electronics-to-the-pac">The ground bond is now the only thing tying the electronics to the packs</h4>
+<p>The isolated converter used to be what kept motor return current out of the Jetson's ground reference. A separate battery does that better — there is no shared copper at all — but it creates a new question: what is the electronics ground referenced to?</p>
+<p>It cannot float. The Teensy measures the pack voltage dividers, the two ACS758 current sensors and the throttle line references <strong>against pack negative</strong>. Floating them is trap 3 in <code>01-architecture.md</code> section 3b, and that trap is nasty because it does not announce itself: a floating analogue reference returns plausible wrong numbers and the Spine acts on them.</p>
+<p><strong>So bond the electronics battery negative to the same single point as the two packs.</strong> One point, one bond, as in the tree in section 1. What you have built is the same topology as the isolated converter's output bonded at one point — except with no switching converter in it.</p>
+<p>The throttle lines stay opto-isolated regardless (section 7). That isolation was never about the supply; it is about the controller's throttle ground being its own pack negative.</p>
+<p><strong>Keep the buffer capacitor anyway.</strong> Something in the region of 4700 µF across the 12 V rail. A battery holds its voltage far better than a converter did, so this is no longer the main defence, but it costs almost nothing and it covers the inrush when the Jetson's fans and the LiDAR all start together.</p>
+<hr>
+<h3 id="4-the-amplifier-gets-its-own-supply-and-not-the-pack-directly">4. The amplifier gets its own supply, and NOT the pack directly</h3>
+<p>Audio is the peakiest load on the robot. A bass note is a 100 W spike. Those spikes must stay off the rail the Jetson sits on, or the camera drops out every time the robot speaks. So the amplifier does not share the 12 V rail.</p>
+<p>The obvious move is to run it straight off the pack, because a class-D amplifier of the TPA3255 family takes a high supply voltage. <strong>That does not work, and the reason is worth understanding, because it catches people out.</strong></p>
+<p>A pack sold as "48 V" is 48 V <em>nominal</em>, not maximum:</p>
+<div class="tw"><table><thead><tr><th>Pack type</th><th>Cells</th><th>Nominal</th><th><strong>Fully charged</strong></th></tr></thead><tbody><tr><td>Li-ion</td><td>13S</td><td>48.1 V</td><td><strong>54.6 V</strong></td></tr><tr><td>LiFePO4</td><td>16S</td><td>51.2 V</td><td><strong>58.4 V</strong></td></tr></tbody></table></div>
+<p>The TPA3255's absolute maximum supply is 53.5 V. Either pack exceeds that straight off the charger. The amplifier would work for weeks — right up until the first drive on a freshly charged pack, and then it is gone.</p>
+<p><strong>So the amplifier gets a dedicated 48→32 V step-down converter</strong>, sized at about 150 W.</p>
+<ul>
+<li>32 V is comfortably inside the chip's range with room for supply ripple, and still gives roughly 2 × 80 W into 4 Ω, which is far more than loud enough.</li>
+<li>This one does <strong>not</strong> need to be isolated. The amplifier's ground can sit on the pack ground; it is the Jetson that needs isolating, not the speakers.</li>
+<li>Keep it physically and electrically separate from the 12 V converter. The whole point is that the two loads do not share a rail.</li>
+</ul>
+<p>The cost is one extra converter and one extra fuse on the pack.</p>
+<blockquote><p><strong>Check the voltage rating of every part against the FULLY CHARGED pack voltage, not the nominal figure.</strong> Then check it again for the LiFePO4 case if the pack chemistry is not yet decided. This applies to the controllers, the DC-DC converters, the contactors and the fuses.</p></blockquote>
+<hr>
+<h3 id="5-switches-in-the-order-you-use-them">5. Switches, in the order you use them</h3>
+<div class="tw"><table><thead><tr><th>#</th><th>Device</th><th>What it does</th><th>When you use it</th></tr></thead><tbody><tr><td>1</td><td><strong>Main disconnect</strong> — an <strong>XT90-S anti-spark</strong> connector on each pack, reachable without tools</td><td>Physically separates each pack. Nothing downstream is live.</td><td>Before touching any wiring. Before transport. Overnight.</td></tr><tr><td>2</td><td><strong>Emergency stop</strong> — latching mushroom button, red, on the outside of the body</td><td>Opens both contactor coils. Motors dead, electronics alive.</td><td>Something is going wrong, right now.</td></tr><tr><td>3</td><td><strong>Wireless emergency stop</strong> — a relay on a dedicated receiver</td><td>Same effect as the button, from a distance.</td><td>The robot is further away than you can run.</td></tr><tr><td>4</td><td><strong>Arm switch</strong> — a toggle on the RC transmitter</td><td>Software only. The Spine sends zero.</td><td>Normal start and stop of a session.</td></tr></tbody></table></div>
+<h4 id="why-the-main-disconnect-is-xt90-s-and-not-xt60">Why the main disconnect is XT90-S, and not XT60</h4>
+<p><strong>Short answer: XT60 is the right part for the charge lead and the wrong part for the main disconnect.</strong> Both were Anderson before. The charge lead is now XT60 and the disconnect is XT90-S, which is the same family, same tooling, same price bracket.</p>
+<p>Three reasons the main disconnect needs the bigger part.</p>
+<p><strong>1. Current.</strong> Look at the tree in section 1: <strong>pack A's disconnect carries everything.</strong> The motor's 40 A plus the 12 V rail and the amplifier, so about 43 A. An XT60 is rated 60 A, so that is 72 % of its rating on a connector that is known to run warm past about 40 A. An XT90 is rated 90 A, which is 48 % — real margin, on the one connector that gets handled every single day.</p>
+<p><strong>2. It sparks, and XT60 has no answer to that.</strong> Plugging a 48 V pack into the controllers' input capacitors dumps a large current into them for a few milliseconds, and you get a visible spark. Every spark pits the contact faces. Pitted contacts have more resistance, more resistance makes more heat, and heat makes the pitting worse. <strong>The "-S" in XT90-S is an anti-spark resistor built into the connector</strong>: it pre-charges those capacitors through the resistor during insertion, so the main contacts meet with the load already charged. There is no anti-spark XT60.</p>
+<p><strong>3. Mating cycles.</strong> Read the right-hand column of the table above: before touching wiring, before transport, overnight. That is several cycles a day for months. Anderson SB50 is rated for hundreds of cycles, and XT90 is in that class. XT60's bullets are not — they loosen, and a loose high-current contact is the thing that starts fires.</p>
+<h4 id="the-one-rule-you-must-not-get-wrong-the-socket-half-goes-on-the-batter">The one rule you must not get wrong: the socket half goes on the battery</h4>
+<p>Anderson SB connectors are <strong>genderless</strong> — both halves are identical, with the contacts recessed inside a housing. That is a safety property we are giving up, and it has to be replaced by a rule instead.</p>
+<p>An XT connector has a pin half and a socket half. <strong>Put the SOCKET half on the battery.</strong></p>
+<p>The main disconnect sits at the pack terminals, ahead of the fuses. So when it is unplugged overnight, the battery side is live at 54.6 V with <strong>nothing between it and hundreds of amps of pack</strong>. If that side has exposed pins 7 mm apart, a dropped spanner or a bit of steel swarf across them is a dead short that no fuse in this robot will interrupt. With the socket half on the battery, the live contacts are recessed and nothing can bridge them.</p>
+<p>Get this backwards and you have built a short circuit that is waiting for a dropped tool.</p>
+<ul>
+<li>Battery side: <strong>socket half</strong>, contacts recessed.</li>
+<li>Load side: pin half.</li>
+<li>Cap both halves when parted. A cheap silicone cap is a fine dust cover and a fine idiot guard at the same time.</li>
+</ul>
+<h4 id="the-wireless-stop-has-to-fail-the-right-way">The wireless stop has to fail the right way</h4>
+<p>The wireless stop relay must be wired so that <strong>losing the radio signal opens the circuit.</strong> A relay that only opens when it receives a "stop" message is useless, because the situation where you most need it is the situation where the radio has stopped working.</p>
+<p>Test this by switching off the stop transmitter, not by pressing its button.</p>
+<h4 id="the-coil-circuit">The coil circuit</h4>
+<pre><code>PACK A +, through the 5 A slow-blow fuse        &lt;- NOT the 12 V rail
+   │
+   ├─[ MUSHROOM E-STOP ]──  normally closed, latching
+   │
+   ├─[ WIRELESS STOP RELAY ]── normally closed, opens on signal loss
+   │
+   ├─[ SPINE ARM OUTPUT ]── a MOSFET the Teensy holds on
+   │                        (the Teensy is on the ELECTRONICS BATTERY)
+   ├──┬── CONTACTOR A coil ──┐   48 V coils, both of them
+   │  └── CONTACTOR B coil ──┤
+   │                         │
+  PACK A − ──────────────────┘</code></pre>
+<p>Four things in series, any one of them breaks the chain, both contactors drop. The Spine's MOSFET being in the chain means a crashed or unpowered Spine also drops the contactors, which is the behaviour you want.</p>
+<p><strong>Note which supply is where, because the chain spans two of them.</strong> The coils are 48 V and run from pack A. The Teensy that holds the arm MOSFET on runs from the electronics battery. That is deliberate, not an oversight: it means the chain opens when <em>either</em> supply dies. Section 3 has the table.</p>
+<h4 id="the-contactor-must-be-dc-rated">The contactor must be DC rated</h4>
+<p>This is the one place in this document where getting it wrong is genuinely dangerous.</p>
+<p>Breaking 48 V DC at 40 A draws an arc that does not self-extinguish, because unlike AC the current never passes through zero. A contactor or relay rated only for AC will weld its own contacts shut the first time it has to break under load — and then the emergency stop looks fine and does nothing.</p>
+<p>Use a contactor with an explicit DC rating at or above 48 V and 80 A. Albright SW-series and Gigavac parts are the usual choices.</p>
+<h4 id="opening-a-contactor-under-load-is-hard-on-the-controllers">Opening a contactor under load is hard on the controllers</h4>
+<p>When the contactor opens while the motors are pulling current, the motor inductance has nowhere to dump its energy and the controller input voltage spikes. This is a known way to destroy controllers.</p>
+<p>Two mitigations, both cheap:</p>
+<ul>
+<li>Put a TVS diode across each controller input, chosen to clamp above the maximum pack voltage but below the controller's limit.</li>
+<li>For every stop that is <strong>not</strong> an emergency, have the Spine ramp the current to zero first and only then drop the contactor. The mushroom button bypasses this on purpose, because an emergency stop that waits for software is not an emergency stop.</li>
+</ul>
+<hr>
+<h3 id="6-wire-sizes">6. Wire sizes</h3>
+<p>Short runs, bundled, in a hot enclosed body. The sizes below already allow for that — do not take them from a free-air table and go thinner.</p>
+<div class="tw"><table><thead><tr><th>Run</th><th>Current</th><th>Gauge</th><th>Notes</th></tr></thead><tbody><tr><td>Pack to contactor to controller</td><td>40 A peak</td><td><strong>10 AWG</strong></td><td>Silicone insulated. It has to stay flexible when hot.</td></tr><tr><td>Controller to hub motor, 3 phases</td><td>40 A peak</td><td><strong>12 AWG</strong></td><td>Or match whatever the motor's own leads are, whichever is thicker.</td></tr><tr><td>Pack negative to pack negative bond</td><td>see below</td><td><strong>10 AWG</strong></td><td>Short and direct.</td></tr><tr><td>Electronics battery to the 12 V rail</td><td>3.2 A</td><td><strong>14 AWG</strong></td><td>Sized for the 15 A fuse, not the 38 W load.</td></tr><tr><td>Pack to the amplifier's 32 V converter</td><td>3 A</td><td><strong>16 AWG</strong></td><td>Sized for the 10 A fuse, not the load.</td></tr><tr><td>32 V converter to the amplifier</td><td>5 A</td><td><strong>16 AWG</strong></td><td></td></tr><tr><td>12 V rail distribution</td><td>6 A</td><td><strong>16 AWG</strong></td><td></td></tr><tr><td>Contactor coils</td><td>0.5 A</td><td><strong>20 AWG</strong></td><td></td></tr><tr><td>Throttle lines, DAC to controller</td><td>signal</td><td><strong>22 AWG shielded</strong></td><td>Section 7. Shielded, not twisted pair — there is no CAN.</td></tr><tr><td>Hall sensors and thermistors from the motors</td><td>signal</td><td><strong>24 AWG shielded</strong></td><td>Route away from the phase wires.</td></tr></tbody></table></div>
+<h4 id="about-the-ground-bond">About the ground bond</h4>
+<p>Size it for the larger of the two motor currents — 40 A — because in normal running each pack's return current flows through it. It is not a thin reference wire.</p>
+<p><strong>Do not put a fuse in it.</strong> If that fuse ever opened, every measurement the Teensy makes on the far pack — its voltage divider, its ACS758 current sensor, its throttle line reference — would lose its common zero while the robot was still driving. And unlike a CAN bus, which simply goes quiet, a floating analogue reference keeps returning plausible wrong numbers that the Spine will act on. That is a worse failure than anything the fuse was protecting against.</p>
+<hr>
+<h3 id="7-the-throttle-signal-path">7. The throttle signal path</h3>
+<p><strong>There is no CAN bus.</strong> Decision D7 replaced the VESCs with the scooter controllers already owned, and those are analogue devices: they see a throttle voltage and they drive. This section used to specify a 500 kbit CAN bus. What it specifies now is the path that voltage travels, which is more fragile and needs more care, because it carries no error detection of any kind.</p>
+<pre><code>  TEENSY 4.0            LEVEL        MCP4725 DAC      OPTO           CONTROLLER
+              3.3 V      SHIFT         x2                            throttle in
+  ┌────────┐  I2C      ┌───────┐    ┌──────────┐   ┌──────┐        ┌────────────┐
+  │ SDA ───┼───────────┼─ 5 V ─┼────┼─ DAC A ──┼───┼─ iso ┼────────┼─ 0-3.3 V L │
+  │ SCL ───┼───────────┼─ I2C ─┼────┼─ DAC B ──┼───┼─ iso ┼────────┼─ 0-3.3 V R │
+  │        │           └───────┘    └──────────┘   └──────┘        └────────────┘
+  │ KICK ──┼──────────────────────► WATCHDOG ─────► RELAY in both throttle lines
+  └────────┘                        TLC555</code></pre>
+<p>Four rules. The first one is the one that can hurt somebody.</p>
+<ol>
+<li><strong>The relay in the throttle lines is not optional.</strong> A DAC holds its last output when the Teensy dies; it does not fall to zero. Without the watchdog relay, a dead Teensy means a robot driving away at whatever throttle it last had. See <code>01-architecture.md</code>, "The consequence that must be tested", and safety log tests 15 and 16.</li>
+<li><strong>Check every DAC write, and stop kicking the watchdog when one fails.</strong> The watchdog only fires when the kicks stop. A Teensy that is alive but has lost I2C will keep kicking while the throttle sits stuck. The firmware has to choose to kill itself. Safety log test 16.</li>
+<li><strong>Shielded cable for the throttle lines, routed away from the phase wires.</strong> These are slow analogue signals with no error checking at all, running beside 40 A of switching motor current. Noise on one does not produce an error — it produces throttle.</li>
+<li><strong>Opto-isolate each throttle line.</strong> The controller's throttle ground is the pack negative for that side. Tying the Teensy directly to it puts motor return current through the Teensy's ground reference.</li>
+</ol>
+<p><strong>If you move to VESCs you will also need two 3.3 V CAN transceivers.</strong> They are no longer on the buying list — owner decision 2026-09-18, because nothing in the current design uses CAN and they are a $2 commodity part. Add them to the order on the day a controller judders at walking pace and you take the 260 dollar contingency in section 7 of the BOM. <strong>3.3 V, not 5 V:</strong> the Teensy is not 5 V tolerant.</p>
+<hr>
+<h3 id="8-building-it-so-it-survives-midburn">8. Building it so it survives Midburn</h3>
+<p>Dust and vibration break more festival robots than electrical faults do.</p>
+<ul>
+<li><strong>Crimp, do not solder, anything that moves or vibrates.</strong> Solder wicks up inside the strands and makes a hard spot, and the wire then snaps just past it. Crimp properly, with the right tool, and add heatshrink over the joint.</li>
+<li><strong>Strain relieve every connector.</strong> The load must be on a cable tie or a P-clip, never on the connector body.</li>
+<li><strong>Keep the signal wires away from the phase wires.</strong> Where they have to cross, cross at a right angle rather than running alongside.</li>
+<li><strong>One filtered air path for the electronics.</strong> In and out, with a filter on the inlet and a fan pushing air <em>in</em> so the body stays at slightly positive pressure. Dust then leaves through the gaps instead of being sucked in through them.</li>
+<li><strong>Nothing important on the floor of the body.</strong> Sand collects there.</li>
+<li><strong>Label both ends of every wire</strong> before you install it. You will be working on this at night, in dust, by torchlight, with someone waiting.</li>
+</ul>
+<hr>
+<h3 id="9-commissioning-order">9. Commissioning order</h3>
+<p>Do not connect the packs until the end. Work through this with a bench supply set to 48 V and a current limit of 2 A — a current limit turns a wiring mistake into a beep instead of a fire.</p>
+<div class="tw"><table><thead><tr><th>#</th><th>Step</th><th>You are checking</th></tr></thead><tbody><tr><td>1</td><td>Bond the pack negatives. Nothing else connected.</td><td>Continuity, and that it is the only ground path.</td></tr><tr><td>2</td><td>Wire the coil circuit. No contactors yet, just a multimeter where the coils go.</td><td>The chain opens when each of the four switches opens.</td></tr><tr><td>3</td><td>Add the contactors, still on the bench supply.</td><td>They pull in and drop out, and you can hear both.</td></tr><tr><td>4</td><td>Add the electronics battery, its 15 A fuse and the 12 V rail. Measure it.</td><td>12 V at the rail, and the bond: <strong>one</strong> path from 12 V negative to pack negative, through the ground bond and nothing else.</td></tr><tr><td>5</td><td>Power the Spine only.</td><td>It boots, and its arm output holds the contactors in.</td></tr><tr><td>6</td><td>Add both controllers and their throttle lines, motors NOT connected.</td><td>A multimeter on each throttle line follows the number the Teensy sends, 0 to 3.3 V.</td></tr><tr><td>7</td><td>Add one motor, pod on blocks.</td><td>It spins the right way, and stops on every fault in <code>01-architecture.md</code> section 3.</td></tr><tr><td>8</td><td>Add the second motor.</td><td>It steers correctly in the air.</td></tr><tr><td>9</td><td>Swap the bench supply for the real packs.</td><td>Nothing changes.</td></tr></tbody></table></div>
+<p>Step 4's bonding check is worth doing carefully, and it is the opposite of the check that used to be here. With the isolated converter you wanted <strong>no</strong> continuity between 12 V negative and pack negative. With a separate battery you want <strong>exactly one</strong> path, through the ground bond. Zero paths means every analogue reading on the packs is floating, which is trap 3. Two or more means you have built a ground loop, and the motor current will find it.</p><footer>Generated by <code>build_guide.py</code> from <code>docs/04-power-and-wiring.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Frame and pods — the mechanical facts, in one place — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · docs/FRAME_AND_PODS.md</div><h1>Frame and pods — the mechanical facts, in one place</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-22 from <code>docs/FRAME_AND_PODS.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../README.html">WALL-E</a><a href="02-overview.html">02 — What this robot is</a><a href="00-plan.html">00 — Master plan</a><a href="01-architecture.html">01 — Architecture</a><a href="05-bom.html">05 — Bill of materials</a><a href="FRAME_AND_PODS.html" class="here">Frame and pods — the mechanical facts, in one place</a><a href="BUILD.html">Building WALL-E</a><a href="04-power-and-wiring.html">04 — Power and wiring</a><a href="06-why-the-batteries-are-low.html">06 — Why the batteries are low, and how the box keeps sand out</a><a href="../firmware/README.html">Firmware</a><a href="../brain/README.html">Brain</a><a href="03-safety-log.html">03 — Safety log</a><a href="99-glossary.html">Glossary</a></nav><p>This is the page to read before you cut, drill, or weld anything. It answers one question: <strong>where does the frame meet the pods, and what is allowed to change?</strong> The step-by-step build order is in <a href="BUILD.html">BUILD.md</a>, further down this same guide page.</p>
+<hr>
+<h3 id="1-the-rule-that-comes-before-everything">1. The rule that comes before everything</h3>
+<p>The two track pods are <strong>built</strong>. Nothing in the WALL-E project changes them. <strong>No new hole goes into a built pod.</strong> The frame is designed around what the pods already are, never the other way round.</p>
+<p>Because of that rule, the pod numbers are not typed into the frame model. They live in one file, <code>cad/pod_interface.scad</code>, and a checker compares that file against the real pod model:</p>
+<pre><code>cd WALL-E
+./pod_latest.sh                                        # point at the newest revision
+openscad -o chk.echo --export-format echo check_pod_interface.scad</code></pre>
+<p><code>cad/pod_latest.sh</code> picks the <strong>highest</strong> <code>archive/revNNN-*/apollo_track_pod_revNNN.scad</code> on disk and writes <code>pod_latest.scad</code>. So WALL-E always follows the latest pod revision. Nothing is pinned to an old one by hand. <code>render_all.sh</code> runs this first and <strong>stops</strong> if the check says MISMATCH, because every dimension downstream of a wrong pod number is also wrong.</p>
+<p>Today the newest revision is <strong>rev013-double-shear</strong>, and all 23 numbers agree.</p>
+<hr>
+<h3 id="2-the-z-stack-what-the-rail-actually-touches">2. The z stack — what the rail actually touches</h3>
+<p>Measured on the built pods (2026-09-18), outward from one pod's centre plane:</p>
+<div class="tw"><table><thead><tr><th>From</th><th>To</th><th>What</th></tr></thead><tbody><tr><td>0</td><td>59</td><td>belt, 118 wide</td></tr><tr><td>76.5</td><td>82.5</td><td><strong>green plate</strong>, 60×6 — the two M12 holes are in here</td></tr><tr><td>82.5</td><td>88.5</td><td><strong>carrier plate</strong>, 40×6</td></tr><tr><td>88.5</td><td>92.5</td><td>scooter fork leg — <strong>not fitted on WALL-E</strong></td></tr></tbody></table></div>
+<p><strong>This order changed.</strong> In rev012 the green plate was the outermost part and the rail bolted flat onto it. Rev013 measured the real pods: the plate is <strong>inboard</strong> of the carrier, so the carrier now stands <strong>6 mm proud</strong> of the plate.</p>
+<p>Consequence, and it is the whole reason this page exists:</p>
+<ul>
+<li>The rail comes in from the middle of the robot and <strong>lands on the carrier</strong>, at 88.5 from the pod centre. That is <code>pod_mount_z</code>.</li>
+<li>The M12 holes are 6 mm further out, in the green plate.</li>
+<li>So the bolts cross a <strong>6 mm air gap</strong>, and that gap needs a <strong>packer</strong>.</li>
+</ul>
+<p>The carrier cannot be dodged: it is only 40 mm wide (±20 either side of the hub axle) but it runs the full height of the 197–257 mm rail band.</p>
+<hr>
+<h3 id="3-the-joint-part-by-part">3. The joint, part by part</h3>
+<p>Per side, inboard to outboard:</p>
+<pre><code>M12 head  →  rail inner wall  →  Ø25/Ø13 sleeve in the rail  →  rail outer wall
+          →  PACKER 6 mm  →  green plate 6 mm  →  M12 nut welded on the far face</code></pre>
+<ul>
+<li><strong>Rail:</strong> 60×30×3 box, outer face at 161.5 from the robot centre line.</li>
+<li><strong>Sleeve:</strong> Ø25 outside, Ø13 bore, 30 long, welded through both rail walls. Without it an M12 at full torque crushes a 3 mm wall.</li>
+<li><strong>Packer:</strong> 60×6 offcut — the same stock as the green plates. One per side, drilled Ø13 at both M12 centres. <strong>Without the packer there is no clamp at all</strong>: the bolt would simply pull the rail wall into the gap.</li>
+<li><strong>Bolts:</strong> 2 × M12 10.9 per side. Four bolts and <strong>a pod is off the robot</strong>.</li>
+</ul>
+<p>Resulting overall width: <strong>677 mm</strong> (pods 500 apart, centre to centre).</p>
+<hr>
+<h3 id="4-numbers-you-can-check-with-a-tape-measure">4. Numbers you can check with a tape measure</h3>
+<div class="tw"><table><thead><tr><th>Measure this on the real pod</th><th>Should be</th></tr></thead><tbody><tr><td>Clear gap between the two carrier plates</td><td>165 mm</td></tr><tr><td>Over the two carrier plates, outer face to outer face</td><td>177 mm</td></tr><tr><td>Over the two green plates</td><td>165 mm</td></tr><tr><td>Green plate band, bottom edge above ground</td><td>197 mm</td></tr><tr><td>Green plate band, top edge above ground</td><td>257 mm</td></tr><tr><td>M12 hole centres, forward of the hub axle</td><td>108 and 168 mm</td></tr><tr><td>Belt width</td><td>118 mm</td></tr></tbody></table></div>
+<p>If any of these disagree with the pod, <strong>the pod wins</strong> — fix <code>cad/pod_interface.scad</code>, re-run the check, then re-run the guards. Do not adjust the frame numbers directly; they are all derived.</p>
+<hr>
+<h3 id="5-where-the-numbers-come-from-and-what-happens-if-you-change-one">5. Where the numbers come from, and what happens if you change one</h3>
+<pre><code>archive/rev013-*/apollo_track_pod_rev013.scad     the pods (never edited here)
+        │
+        ├── pod_latest.sh  →  pod_latest.scad     &quot;newest revision on disk&quot;
+        │        │
+        │        └── check_pod_interface.scad     23 numbers, OK or MISMATCH
+        │
+pod_interface.scad                                the only copy of pod facts
+        │
+cad/walle_frame.scad                              everything else is derived
+        │
+        └── guards: clearances, stresses, bolt edge distances (55 today)</code></pre>
+<p>Change <code>pod_cl</code> (how far apart the pods sit) and the width, the bay, the battery box and the anti-tip arms all move with it. Change a pod number by hand without the checker agreeing, and the model lies to you quietly. That is exactly what happened once before: the stack was written as 84/88/94/100, the frame came out 14 mm too wide per side, and only the checker caught it.</p>
+<hr>
+<h3 id="6-steel-list-for-the-pod-joint">6. Steel list for the pod joint</h3>
+<div class="tw"><table><thead><tr><th>Qty</th><th>Part</th><th>Stock</th></tr></thead><tbody><tr><td>2</td><td>Rail, 550 long</td><td>60×30×3 box</td></tr><tr><td>4</td><td>Sleeve, Ø25 × Ø13 × 30</td><td>turned or bought</td></tr><tr><td>2</td><td>Packer, 60 long, 2 × Ø13 holes</td><td>60×6 flat</td></tr><tr><td>4</td><td>Bolt M12 × 10.9, plus nyloc</td><td>—</td></tr><tr><td>4</td><td>M12 nut, welded to the green plate's far face</td><td>—</td></tr></tbody></table></div>
+<p>The full list, with prices and lead times, is in part 2 of the guide (<code>docs/05-bom.md</code>).</p><footer>Generated by <code>build_guide.py</code> from <code>docs/FRAME_AND_PODS.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

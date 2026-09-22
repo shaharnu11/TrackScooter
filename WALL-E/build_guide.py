@@ -164,6 +164,18 @@ figure svg path{fill:#16130e;stroke:none}
 figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
 .sheet figure{background:#fff}
 
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
 .note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
       border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
 .note strong:first-child{color:var(--warn)}
@@ -417,6 +429,14 @@ python3 build_guide.py  # rebuilds this one file
 
 `cad/render_all.sh` refuses to draw anything if the pod numbers or the guards do not
 pass, so a clean run is also the model's own proof that the change is consistent.
+
+## One page per document
+
+Every markdown file also gets its own HTML page beside it, with the same name:
+`docs/00-plan.md` becomes `docs/00-plan.html`. Use those when you want one topic on
+its own — to send to the welder, to read on a phone, or to print a single section.
+They are built by the same script from the same words, so they cannot drift from this
+guide. The whole project in one file is what you are reading now.
 """
 
 
@@ -435,6 +455,96 @@ def read(rel):
             continue
         return "\n".join(lines[i + 1:]) if re.match(r"^#\s+\S", ln) else md
     return md
+
+
+# ---------------------------------------------------------------------------
+#  ONE PAGE PER MARKDOWN FILE
+#
+#  The guide above is the whole project in one file. These are the same words
+#  cut up the way the folder is: docs/00-plan.md -> docs/00-plan.html, beside
+#  it, same name. Send one to the welder without sending all of it.
+#
+#  Each page is self-contained too: the drawings are embedded, exactly as in
+#  the guide, so a page still works when it is the only file you copied.
+# ---------------------------------------------------------------------------
+MD_LINK = re.compile(r'href="(?!https?:|#|mailto:)([^"]+)\.md(#[^"]*)?"')
+
+
+def all_markdown():
+    """Every .md in the project, guide order first, then whatever is left."""
+    found = []
+    for root, dirs, files in os.walk(HERE):
+        dirs[:] = [d for d in dirs if d not in ("build", ".git", "__pycache__")]
+        for f in files:
+            if f.endswith(".md"):
+                found.append(os.path.relpath(os.path.join(root, f), HERE))
+    order = ["README.md"] + [src for _, _, _, srcs in PARTS for src in srcs]
+    ordered = [p for p in order if p in found]
+    return ordered + sorted(p for p in found if p not in ordered)
+
+
+def doc_title(raw, rel):
+    for ln in raw.split("\n"):
+        if ln.strip():
+            m = re.match(r"^#\s+(.*)$", ln.strip())
+            return m.group(1).strip() if m else os.path.basename(rel)
+    return os.path.basename(rel)
+
+
+def build_pages():
+    pages, titles = all_markdown(), {}
+    for rel in pages:
+        with open(os.path.join(HERE, rel), encoding="utf-8") as f:
+            titles[rel] = doc_title(f.read(), rel)
+
+    written = []
+    for rel in pages:
+        outp = os.path.splitext(rel)[0] + ".html"
+        here_dir = os.path.dirname(os.path.join(HERE, outp)) or HERE
+
+        def rel_to(target):
+            return os.path.relpath(os.path.join(HERE, target), here_dir)
+
+        used_ids.clear()                      # anchors are per page, not global
+        anchors = []
+        body = convert(read(rel), shift=1, anchors=anchors)
+        # a link to another document should open that document's PAGE
+        body = MD_LINK.sub(lambda m: 'href="%s.html%s"' % (m.group(1), m.group(2) or ""),
+                           body)
+
+        nav = "".join(
+            '<a href="%s"%s>%s</a>'
+            % (rel_to(os.path.splitext(o)[0] + ".html"),
+               ' class="here"' if o == rel else "", html.escape(titles[o]))
+            for o in pages)
+        toc = ""
+        if len(anchors) > 2:
+            toc = ('<div class="toc pagetoc"><h2>On this page</h2><ol>'
+                   + "".join('<li><a href="#%s">%s</a></li>' % (a, html.escape(t))
+                             for t, a in anchors)
+                   + "</ol></div>")
+
+        page = ("<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
+                "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                "<title>%s — WALL-E</title><style>%s</style></head><body>"
+                "<div class=\"wrap\">"
+                "<header class=\"cover pagehd\"><div class=\"kick\">WALL-E · %s</div>"
+                "<h1>%s</h1>"
+                "<div class=\"meta\">One document of the project. The whole thing in "
+                "reading order is in <a href=\"%s\">the build guide</a>. "
+                "Generated %s from <code>%s</code> — do not edit this file.</div></header>"
+                "<nav class=\"pagenav\">%s</nav>%s%s"
+                "<footer>Generated by <code>build_guide.py</code> from <code>%s</code>. "
+                "Edit the markdown, not this page.</footer>"
+                "</div><a class=\"top\" href=\"#\">Top</a></body></html>"
+                % (html.escape(titles[rel]), CSS, html.escape(rel),
+                   html.escape(titles[rel]), rel_to("WALLE-GUIDE.html"),
+                   date.today().isoformat(), html.escape(rel), nav, toc, body,
+                   html.escape(rel)))
+        with open(os.path.join(HERE, outp), "w", encoding="utf-8") as f:
+            f.write(page)
+        written.append(outp)
+    return written
 
 
 def main():
@@ -469,6 +579,19 @@ def main():
             % (pid, num, html.escape(title), html.escape(when), "\n".join(chunks)))
         toc.append((num, title, when, pid, anchors))
 
+    # A doc that links to "BUILD.md" means part 6 of this guide, not a file on
+    # disk. Point it at the part, so no link inside the guide leaves the guide.
+    part_of = {}
+    for num, _t, _w, sources in PARTS:
+        for src in sources:
+            part_of[os.path.basename(src)] = "#part-%s" % num
+    joined = "\n".join(parts_html)
+    joined = re.sub(r'href="(?!https?:|#|mailto:)([^"]*?)([^/"]+\.md)(#[^"]*)?"',
+                    lambda m: 'href="%s"' % part_of.get(m.group(2),
+                                                        m.group(0)[6:-1]),
+                    joined)
+    parts_html = [joined]
+
     toc_html = ['<nav class="toc"><h2>Contents</h2><ol>']
     for num, title, when, pid, anchors in toc:
         subs = "".join('<a href="#%s">%s</a>' % (a, html.escape(t)) for t, a in anchors[:9])
@@ -501,7 +624,7 @@ def main():
            "%s%s%s"
            "<footer>Every drawing here is generated from <code>cad/walle.scad</code> and "
            "<code>cad/walle_frame.scad</code>, which refuse to render unless the pod "
-           "interface check and all 46 guards pass.</footer>"
+           "interface check and every guard pass.</footer>"
            "</div><a class=\"top\" href=\"#\">Top</a></body></html>"
            % (CSS, date.today().isoformat(), warn, "".join(toc_html), "\n".join(parts_html)))
 
@@ -510,6 +633,11 @@ def main():
 
     kb = os.path.getsize(OUTFILE) / 1024
     print("WALLE-GUIDE.html written — %d parts, %.0f KB" % (len(toc), kb))
+
+    pages = build_pages()
+    print("one page per document — %d written:" % len(pages))
+    for pg in pages:
+        print("   %-34s %6.0f KB" % (pg, os.path.getsize(os.path.join(HERE, pg)) / 1024))
     if missing_docs:
         print("  MISSING SOURCES: " + ", ".join(missing_docs))
     if missing_figs:
