@@ -383,7 +383,7 @@ failure** while the robot is driving:
 5. Unplug the Brain's USB cable
 6. Pull the power to the Brain
 7. Short a bumper sensor
-8. Disconnect one CAN wire
+8. Disconnect one throttle line
 
 **Exit test:** all eight produce a controlled stop, and none produces a lurch, a turn, or a
 runaway. Record the date and result for each one in `03-safety-log.md`.

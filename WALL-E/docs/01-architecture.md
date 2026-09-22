@@ -130,8 +130,8 @@ rule lower down.
 > | 5 and 11 — pack voltage | **A resistor divider per pack** into a Teensy analogue input. Two resistors and care with the ground reference. Cheap, but it must be on the list. |
 > | 9 — is either motor too hot? | **The hub motor's own thermistor**, read directly. See `05-bom.md` section 1b. |
 >
-> **Implemented 2026-09-22** in `firmware/spine/spine.ino` and `config.h`. The CAN layer is
-> deleted; the throttle is an MCP4725 DAC per side with an opto-isolated reverse line, rule 4
+> **Implemented 2026-09-22** in `firmware/spine/spine.ino` and `config.h`. The data-bus layer
+> is deleted; the throttle is an MCP4725 DAC per side with an opto-isolated reverse line, rule 4
 > counts hall edges, rules 5 and 11 read a divider per pack, and rule 9 reads each hub motor's
 > own thermistor. Two behaviours in that file exist only because of this change, and both look
 > like bugs until you know why: the firmware **stops kicking the watchdog** when a DAC write
@@ -149,7 +149,7 @@ rule lower down.
 > that used to be shared. **Test it deliberately and often**, and treat safety log test 15 as
 > mandatory rather than routine.
 | 11 | **Scale each side by its own pack voltage.** | — | See section 3b. Keeps it driving straight as the two packs drift apart. |
-| 12 | Send on CAN. | — | |
+| 12 | Write the throttle voltage and kick the watchdog. | — | An MCP4725 DAC per side, plus that side's reverse line. Kicking stops if a write fails. |
 
 ### The important property of this list
 
@@ -208,7 +208,7 @@ its own.
 commanded** and both pack voltages to be above a floor. If either check fails, it ramps
 **both** sides to zero. Never one.
 
-"Turning as commanded" used to mean "reporting on CAN". With the scooter controllers it means
+"Turning as commanded" cannot mean "the controller says so", because it says nothing. It means
 **counting the hub motor's own hall sensor edges**: if a track is commanded to move and its
 halls are not changing, that track is dead. Safety log test 8 is the test for it.
 

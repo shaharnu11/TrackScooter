@@ -22,8 +22,8 @@ guaranteed, because Linux decides when your program gets to run.
 **Teensy 4.0**
 The microcontroller we use for the Spine. It is like an Arduino but much faster (600 MHz).
 We chose it for its analogue inputs, its pin count and how well supported it is. It was a
-Teensy 4.1 until 2026-09-18; we dropped to the 4.0, which is the same chip, once the CAN bus
-and SD-card logging were both out of the design and the 4.1 had nothing left to offer.
+Teensy 4.1 until 2026-09-18; we dropped to the 4.0, which is the same chip, once the motor
+data bus and SD-card logging were both out of the design and the 4.1 had nothing left to offer.
 **It is not 5 V tolerant** — 5 V on a pin damages it.
 
 **ESP32-S3**
@@ -52,27 +52,18 @@ Both sides must agree on the speed, called the **baud rate** (for example 115200
 set up, but only connects two devices.
 
 **CAN bus (Controller Area Network)**
-A tougher way for *many* devices to share two wires. It was invented for cars, so it
-survives electrical noise, long cables, and vibration. Every message carries an address, so
-all devices hear every message and each one picks out the messages meant for it.
+A tougher way for *many* devices to share two wires, invented for cars, so it survives
+electrical noise and vibration.
 
-We use CAN between the Spine and the two motor controllers. This is the right choice because
-motor wires create a lot of electrical noise, and plain serial would get corrupted.
-
-**Transceiver**
-A small chip that converts between the microcontroller's weak signal and the tough
-CAN signal on the wire. The Teensy has the CAN logic built in but *not* the transceiver, so
-you must buy a small transceiver board separately. Forgetting this is a common mistake.
-
-**Termination resistor**
-A 120 ohm resistor fitted at each of the two far ends of a CAN cable. Without it, signals
-bounce back down the wire like an echo and corrupt the data. You need exactly two, one at
-each end, not one per device.
+**This robot does not use it.** The scooter controllers are analogue: they take a throttle
+voltage and report nothing back. The Spine's link to them is a DC voltage on a shielded wire
+with no error detection of any kind, which is why `04-power-and-wiring.md` section 7 treats
+that wire so carefully.
 
 **I2C**
-Another two-wire system, for connecting small sensors over short distances. Slower and more
-fragile than CAN, but almost every cheap sensor uses it. Each device on the wire needs a
-different address.
+A two-wire system for connecting small sensors over short distances. Fragile over long runs,
+but almost every cheap sensor uses it, and it is how the Spine reaches the two throttle DACs.
+Each device on the wire needs a different address.
 
 **PWM (Pulse Width Modulation)**
 Switching a voltage on and off very fast. If it is on half the time, the device behaves as

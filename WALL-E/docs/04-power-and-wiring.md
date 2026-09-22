@@ -429,7 +429,7 @@ pack's return current flows through it. It is not a thin reference wire.
 
 **Do not put a fuse in it.** If that fuse ever opened, every measurement the Teensy makes on
 the far pack — its voltage divider, its ACS758 current sensor, its throttle line reference —
-would lose its common zero while the robot was still driving. And unlike a CAN bus, which
+would lose its common zero while the robot was still driving. And unlike a digital link, which
 simply goes quiet, a floating analogue reference keeps returning plausible wrong numbers that
 the Spine will act on. That is a worse failure than anything the fuse was protecting against.
 
