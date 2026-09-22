@@ -112,9 +112,9 @@ footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
 <p>The two track pods are <strong>built</strong>. Nothing in the WALL-E project changes them. <strong>No new hole goes into a built pod.</strong> The frame is designed around what the pods already are, never the other way round.</p>
 <p>Because of that rule, the pod numbers are not typed into the frame model. They live in one file, <code>cad/pod_interface.scad</code>, and a checker compares that file against the real pod model:</p>
 <pre><code>cd WALL-E
-./pod_latest.sh                                        # point at the newest revision
-openscad -o chk.echo --export-format echo check_pod_interface.scad</code></pre>
-<p><code>cad/pod_latest.sh</code> picks the <strong>highest</strong> <code>archive/revNNN-*/apollo_track_pod_revNNN.scad</code> on disk and writes <code>pod_latest.scad</code>. So WALL-E always follows the latest pod revision. Nothing is pinned to an old one by hand. <code>render_all.sh</code> runs this first and <strong>stops</strong> if the check says MISMATCH, because every dimension downstream of a wrong pod number is also wrong.</p>
+cad/pod_latest.sh                                      # point at the newest revision
+openscad -o chk.echo --export-format echo cad/check_pod_interface.scad</code></pre>
+<p><code>cad/pod_latest.sh</code> picks the <strong>highest</strong> <code>archive/revNNN-*/apollo_track_pod_revNNN.scad</code> on disk and writes <code>pod_latest.scad</code>. So WALL-E always follows the latest pod revision. Nothing is pinned to an old one by hand. <code>cad/render_all.sh</code> runs this first and <strong>stops</strong> if the check says MISMATCH, because every dimension downstream of a wrong pod number is also wrong.</p>
 <p>Today the newest revision is <strong>rev013-double-shear</strong>, and all 23 numbers agree.</p>
 <hr>
 <h3 id="2-the-z-stack-what-the-rail-actually-touches">2. The z stack — what the rail actually touches</h3>
@@ -148,11 +148,11 @@ openscad -o chk.echo --export-format echo check_pod_interface.scad</code></pre>
 <h3 id="5-where-the-numbers-come-from-and-what-happens-if-you-change-one">5. Where the numbers come from, and what happens if you change one</h3>
 <pre><code>archive/rev013-*/apollo_track_pod_rev013.scad     the pods (never edited here)
         │
-        ├── pod_latest.sh  →  pod_latest.scad     &quot;newest revision on disk&quot;
+        ├── cad/pod_latest.sh → cad/pod_latest.scad   &quot;newest revision on disk&quot;
         │        │
-        │        └── check_pod_interface.scad     23 numbers, OK or MISMATCH
+        │        └── cad/check_pod_interface.scad     23 numbers, OK or MISMATCH
         │
-pod_interface.scad                                the only copy of pod facts
+cad/pod_interface.scad                            the only copy of pod facts
         │
 cad/walle_frame.scad                              everything else is derived
         │

@@ -201,7 +201,7 @@ Then the anti-tip legs: two 87 mm uprights with Ø75 castors, 280 mm out from th
 centre, set so the castor wheel is **35 mm clear of the ground**.
 
 **Check:** measure both diagonals across the bay. They must match. Then check
-the clear bay is 268 mm at both ends, not just in the middle.
+the clear bay is 263 mm at both ends, not just in the middle.
 
 ---
 

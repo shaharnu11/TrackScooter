@@ -81,11 +81,13 @@ Four shocks total (2 per pod, one per arm), eyes measured **Ø8**.
 | Ø15 OD × Ø9 ID × ≈45 spacer sleeve | 2 | **4** | In the §7.1 steel order, not a fastener |
 | M8 **DIN 931 part-threaded, cl.10.9**, ≈**70** + nylock — upper eye | 2 | **4** | Rev 013: the eye is now held between two stubs (double shear), so this pin spans 31 mm. Same rule: **plain shank across the eye**, thread only past the outer stub. ⚠ Was missing from §7.7 — see below |
 
-⚠ **Gap in the published BOM:** the upper shock tab carries a Ø8.4 "eye pin hole" for an
-M8 pin (`apollo_track_pod_rev011.scad:652`, and the Ø8.4 in `plates_rev011.dxf` poly 26/28),
-but §7.7 lists only the fork bolts and the *lower* shock bolts. Length is not specified
-anywhere; the tab is a single 6 mm plate, so head + shock eye + 6 + washer + nylock lands
-around 35–40. **Measure it at the §9.5 fitting** with the real shock eye in hand.
+⚠ **Gap in the published BOM, and the length changed in Rev 013:** the upper shock tab
+carries a Ø8.4 "eye pin hole" for an M8 pin (`apollo_track_pod_rev011.scad:652`, and the
+Ø8.4 in `plates_rev011.dxf` poly 26/28), but §7.7 lists only the fork bolts and the *lower*
+shock bolts. The old estimate of 35–40 was for the Rev 011 tab: **a single 6 mm plate**, so
+head + eye + 6 + washer + nylock. **Rev 013 holds the eye between two stubs (double shear),
+so the pin spans 31 mm and the length is ≈70** — use the §D row, not 35–40. **Measure it at
+the §9.5 fitting** with the real shock eye in hand before ordering.
 
 Confirm the lower bolt length at §9.5 too — §7.7 only says "≈135".
 
@@ -154,7 +156,7 @@ M12 nylock nut ..............................  8
 M12 washer ..................................  8
 M8 × 30 cl.10.9 bolt ........................  4
 M8 part-threaded bolt ≈135 ..................  4
-M8 pin/bolt ≈35–40 (upper shock eye) ........  4   ← not in §7.7, measure at §9.5
+M8 part-thread ≈70 (upper shock eye) ........  4   Rev 013 double shear — see §D
 M8 nylock nut ............................... 12
 M6 × 60 full-thread bolt 8.8 (cut to 45) ....  4   push bolts — Rev 011b
 M6 jam nut ..................................  4

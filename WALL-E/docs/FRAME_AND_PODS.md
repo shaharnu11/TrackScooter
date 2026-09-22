@@ -19,13 +19,13 @@ the real pod model:
 
 ```
 cd WALL-E
-./pod_latest.sh                                        # point at the newest revision
-openscad -o chk.echo --export-format echo check_pod_interface.scad
+cad/pod_latest.sh                                      # point at the newest revision
+openscad -o chk.echo --export-format echo cad/check_pod_interface.scad
 ```
 
 `cad/pod_latest.sh` picks the **highest** `archive/revNNN-*/apollo_track_pod_revNNN.scad`
 on disk and writes `pod_latest.scad`. So WALL-E always follows the latest pod
-revision. Nothing is pinned to an old one by hand. `render_all.sh` runs this
+revision. Nothing is pinned to an old one by hand. `cad/render_all.sh` runs this
 first and **stops** if the check says MISMATCH, because every dimension
 downstream of a wrong pod number is also wrong.
 
@@ -104,11 +104,11 @@ the frame numbers directly; they are all derived.
 ```
 archive/rev013-*/apollo_track_pod_rev013.scad     the pods (never edited here)
         │
-        ├── pod_latest.sh  →  pod_latest.scad     "newest revision on disk"
+        ├── cad/pod_latest.sh → cad/pod_latest.scad   "newest revision on disk"
         │        │
-        │        └── check_pod_interface.scad     23 numbers, OK or MISMATCH
+        │        └── cad/check_pod_interface.scad     23 numbers, OK or MISMATCH
         │
-pod_interface.scad                                the only copy of pod facts
+cad/pod_interface.scad                            the only copy of pod facts
         │
 cad/walle_frame.scad                              everything else is derived
         │
