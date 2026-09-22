@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The plan and the shape of the robot</title><style>
+:root{--bg:#f6f5f1;--fg:#23201b;--mut:#6a6357;--line:#ddd8cc;--card:#fffdf8;
+      --acc:#b8791f;--accbg:#fdf3e2;--code:#f0ece2;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 90px}
+a{color:var(--acc)}
+header.top{border-bottom:2px solid var(--line);margin-bottom:26px;padding-bottom:14px}
+header.top .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+h1{font-size:30px;line-height:1.25;margin:.25em 0 .2em}
+h2{font-size:23px;margin:1.9em 0 .5em;padding-top:.3em;border-top:1px solid var(--line)}
+h3{font-size:19px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.nav a{display:inline-block;padding:5px 11px;border:1px solid var(--line);
+       border-radius:999px;background:var(--card);text-decoration:none;font-size:13.5px}
+.nav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.card{display:block;background:var(--card);border:1px solid var(--line);
+      border-radius:10px;padding:14px 16px;margin:10px 0;text-decoration:none;color:inherit}
+.card:hover{border-color:var(--acc)}
+.card .n{display:inline-block;min-width:26px;height:26px;line-height:26px;
+         text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+         font-size:14px;margin-right:9px}
+.card .t{font-weight:600;font-size:17px}
+.card .w{color:var(--mut);font-size:14.5px;margin:.4em 0 0 35px}
+.src{color:var(--mut);font-size:13px;margin:.35em 0 0 35px}
+.lead{font-size:17px;color:var(--mut)}
+.note{background:var(--accbg);border:1px solid var(--line);border-left:3px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:12px 14px;margin:18px 0;font-size:15px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.toc div{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin-bottom:6px}
+.toc ul{margin:0;padding-left:18px} .toc li{margin:.15em 0;font-size:14.5px}
+.filehdr{margin-top:2.4em;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:4px}
+footer{margin-top:50px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#16150f;--fg:#ece7dc;--mut:#9c9384;--line:#35322a;--card:#1e1c16;
+        --acc:#d99c3c;--accbg:#2a2318;--code:#26241d;}
+}
+</style></head><body><div class="wrap"><nav class="nav"><a href="index.html">Start here</a><a href="plan.html" class="here">1. The plan</a><a href="buying.html">2. What to buy</a><a href="frame.html">3. Frame</a><a href="power.html">4. Power</a><a href="electronics.html">5. Boards</a><a href="safety.html">6. Safety</a><a href="glossary.html">7. Glossary</a></nav><header class="top"><div class="kicker">WALL-E guide · part 1</div><h1>The plan and the shape of the robot</h1></header><p class="lead">Read first. What is being built, in what phases, and what has to be true before each phase can start.</p><div class="toc"><div>On this page</div><ul><li><a href="#wall-e">WALL-E</a></li><li><a href="#00-master-plan">00 — Master plan</a></li><li><a href="#01-architecture">01 — Architecture</a></li></ul></div><p class="filehdr">from README.md</p>
+<h2 id="wall-e">WALL-E</h2>
+<p>A two-track robot built from the two Rev 012 track pods, for Midburn in the Negev desert.</p>
+<p>This folder holds everything for the robot: the documents, the code for three small computers, and the CAD for the frame. Nothing in here changes the scooter project. The scooter work stays in <code>../archive/</code>.</p>
+<hr>
+<h3 id="start-here-if-you-are-building-it">Start here if you are building it</h3>
+<p><strong><a href="BUILD.md">BUILD.md</a></strong> — the steps in order, with a check at the end of each one.</p>
+<p>The drawings it refers to are in <code>blueprint/</code>, and they are dimensioned:</p>
+<div class="tw"><table><thead><tr><th>Sheet</th><th>What it is</th></tr></thead><tbody><tr><td><a href="blueprint/s1.png"><code>blueprint/s1.png</code></a></td><td>General arrangement — overall sizes and every important height</td></tr><tr><td><a href="blueprint/s2.png"><code>blueprint/s2.png</code></a></td><td>Frame weldment — <strong>this is the one the welder gets</strong></td></tr><tr><td><a href="blueprint/s3.png"><code>blueprint/s3.png</code></a></td><td>Battery box — the six plywood panels, flat</td></tr><tr><td><a href="blueprint/s4.png"><code>blueprint/s4.png</code></a></td><td>Chest panel — the two speaker holes</td></tr><tr><td><a href="blueprint/s5.png"><code>blueprint/s5.png</code></a></td><td>Electronics shelf — what goes where</td></tr></tbody></table></div>
+<p>To redraw all of them after a change:</p>
+<pre><code>cd WALL-E &amp;&amp; ./render_all.sh</code></pre>
+<p>It refuses to draw anything if the pod numbers or the 46 guards do not pass, so a clean run is also the model's own check that the change is consistent.</p>
+<h4 id="the-files">The files</h4>
+<div class="tw"><table><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody><tr><td><code>walle.scad</code></td><td>The global file. One entry point, every view and every sheet.</td></tr><tr><td><code>pod_interface.scad</code></td><td>The 23 facts about the <strong>built</strong> pods. The only place they live.</td></tr><tr><td><code>pod_latest.sh</code></td><td>Writes <code>pod_latest.scad</code>, pointing at the <strong>newest</strong> pod revision on disk.</td></tr><tr><td><code>check_pod_interface.scad</code></td><td>Proves the interface file still agrees with that pod model.</td></tr><tr><td><code>cad/walle_frame.scad</code></td><td>Everything WALL-E decides, plus the 46 guards.</td></tr></tbody></table></div>
+<p>The pod numbers used to be typed into <code>cad/walle_frame.scad</code> by hand, copied from the pod model. They are now in one file, and <code>check_pod_interface.scad</code> compares all 23 of them against the pod model itself — always the <strong>newest</strong> revision in <code>archive/</code>, never one pinned by hand. As of 2026-09-22 all 23 agree with rev013-double-shear.</p>
+<p>One thing in there is still an <strong>assumption, not a measurement</strong>, and it is in step 0 of <a href="BUILD.md">BUILD.md</a>: the part weights that the tipping angles are computed from.</p>
+<p>The old "are the green plates fitted?" question is <strong>answered</strong>. Rev 013 measured the built pods: the plates are fitted, but they sit <strong>inboard</strong> of the carriers, so the rail lands on the carrier and the bolts need a 6 mm packer. See <a href="FRAME_AND_PODS.md">FRAME_AND_PODS.md</a>.</p>
+<hr>
+<h3 id="what-we-are-building">What we are building</h3>
+<p>Take the two track pods that were designed for the scooter. Instead of putting them one behind the other like a motorbike, put them <strong>side by side</strong>, left and right. Then there is no steering fork at all. To turn, you drive the left track faster than the right track. A digger and a tank turn this way. WALL-E turns this way too.</p>
+<p>On top of the two pods sits a box. Inside the box are the batteries, three small computers, and two speakers. On top of the box is WALL-E's head, with two screens for eyes.</p>
+<h4 id="how-it-is-driven">How it is driven</h4>
+<p>A person holds a radio remote control and drives it. This is called <strong>teleoperation</strong>, or teleop for short. The robot is <em>not</em> self-driving.</p>
+<p>But the robot is not stupid either. Two things run on their own:</p>
+<ol>
+<li><strong>A safety layer.</strong> Sensors watch for obstacles. If something is close, the robot refuses to drive into it, even if the driver pushes the stick that way.</li>
+<li><strong>A personality layer.</strong> A camera finds people's faces. The eyes look at them, and the whole robot turns slowly to face them, because the head is rigid and does not move on its own. Sounds play. This is the part that makes people smile, and it is the reason to build the robot at all.</li>
+</ol>
+<p>We chose this on purpose. A fully self-driving robot in a crowd of thousands of people, at night, in dust, is both dangerous and much more work. And nobody in the crowd would even notice good navigation. They <em>will</em> notice eyes that follow them.</p>
+<hr>
+<h3 id="the-three-computers">The three computers</h3>
+<p>The most important idea in this whole project: <strong>do not use one computer.</strong> Use three.</p>
+<p>The three jobs have completely different speed requirements. Mixing them makes the robot unsafe.</p>
+<div class="tw"><table><thead><tr><th>Name</th><th>Board</th><th>Job</th><th>How fast must it be</th></tr></thead><tbody><tr><td><strong>Brain</strong></td><td>Jetson Orin Nano</td><td>Camera, AI, sounds, deciding</td><td>Slow is fine: 0.1 to 3 seconds</td></tr><tr><td><strong>Spine</strong></td><td>Teensy 4.0</td><td>Reads the remote, talks to the motors</td><td>Very fast and exact: 1000 times a second</td></tr><tr><td><strong>Face</strong></td><td>ESP32-S3</td><td>The two eye screens. No servos — the head is rigid</td><td>Steady: 30 times a second</td></tr></tbody></table></div>
+<p>The <strong>Brain</strong> runs Linux, like a normal computer. Linux is good at big jobs like AI, but it has no promise about timing. It can freeze for two seconds and nobody notices. That is fine for a camera. It is <em>not</em> fine for motors.</p>
+<p>The <strong>Spine</strong> runs no operating system at all. Just one small program in a loop. It cannot freeze. It holds the emergency rules. If the Brain stops talking to it, the Spine stops the motors by itself.</p>
+<p>The radio receiver and the emergency stop wire into the <strong>Spine</strong>, not into the Brain. So if the Brain crashes, the driver keeps full control of the robot. You lose the eyes and the sounds, and that is all.</p>
+<p>The <strong>Face</strong> is separate so the eyes keep moving smoothly even when the Brain is busy. An eye that stutters looks broken and ruins the illusion instantly.</p>
+<hr>
+<h3 id="folder-guide">Folder guide</h3>
+<pre><code>WALL-E/
+  README.md                  &lt;- you are here
+  docs/
+    00-plan.md               The master plan: status, phases, budget, schedule, risks
+    01-architecture.md       How the three computers work together, and the safety rules
+    03-safety-log.md         The safety test record. Fill in by hand before going near people
+    04-power-and-wiring.md   Every wire, every fuse, and the emergency stop chain
+    05-bom.md                What to buy, what it costs, how long it takes to arrive
+    06-why-the-batteries-are-low.md   Why the packs hang under the frame, with the numbers
+    99-glossary.md           Every technical word used here, explained simply
+  firmware/
+    README.md                How to build and flash both boards, and how to test them
+    spine/                   The Spine: motor commands and every safety rule
+    face/                    The Face: eye animation. One board per eye
+  brain/
+    README.md                How to run it, and the three load-bearing ideas in it
+    main.py                  The 20 Hz control loop
+    test_safety.py           Invariant checks. Runs with no dependencies
+  cad/
+    walle_frame.scad         The whole robot. Parametric, with 46 guards
+    walle_robot_*.png        The robot with body and head
+    walle_head.png           The eye barrels
+    walle_shelf.png          The electronics layout, labelled
+    walle_frame_*.png        The bare frame, and the plywood cutting layout</code></pre>
+<hr>
+<h3 id="the-model">The model</h3>
+<p><code>cad/walle_frame.scad</code> is the whole robot: the frame, the two pods, the batteries, the body, the head and the electronics layout. Run it and it prints every dimension, the cut list, the tipping angles, and 46 checks that all have to pass.</p>
+<pre><code>openscad -o walle.stl -D &#x27;render_mode=&quot;robot&quot;&#x27;    cad/walle_frame.scad   # everything
+openscad -o steel.stl -D &#x27;render_mode=&quot;frame&quot;&#x27;    cad/walle_frame.scad   # steel only, for welding
+openscad -o cut.dxf   -D &#x27;render_mode=&quot;plates&quot;&#x27;   cad/walle_frame.scad   # plywood, flat
+openscad -o head.stl  -D &#x27;render_mode=&quot;head&quot;&#x27;     cad/walle_frame.scad   # the eye barrels
+openscad -o chest.stl -D &#x27;render_mode=&quot;chest&quot;&#x27;    cad/walle_frame.scad   # speakers + enclosures
+openscad -o sec.stl   -D &#x27;render_mode=&quot;section&quot;&#x27;  cad/walle_frame.scad   # cut open</code></pre>
+<p>!<a href="cad/walle_robot_3q.png">the robot, three quarter view</a></p>
+<p>From the front. The body is narrower than the track span on purpose, so the pods stay proud at the sides — that is what makes the silhouette read as WALL-E rather than as a box on wheels.</p>
+<p>!<a href="cad/walle_robot_front.png">front view</a></p>
+<div class="tw"><table><thead><tr><th>Headline number</th><th>Value</th></tr></thead><tbody><tr><td>Overall width</td><td>677 mm (pods 500 apart, the pods stick out either side)</td></tr><tr><td>Overall height</td><td>910 mm, to the top of the eye barrels</td></tr><tr><td>Body</td><td>430 long × 620 wide × 400 tall, floor at 335 mm</td></tr><tr><td>Rails</td><td>60×30×3 box, 550 long, 263 mm clear between them</td></tr><tr><td>Lowest point of the robot</td><td>150 mm above the ground</td></tr><tr><td>Whole robot</td><td>88.9 kg — <strong>the pods, packs and electronics are still guesses</strong></td></tr><tr><td>Centre of mass</td><td>318.2 mm up, and 4.4 mm forward of centre — the chest speakers</td></tr><tr><td>Ground pressure</td><td>0.163 kg/cm² over 546 cm²</td></tr><tr><td>Tips forward at</td><td>19.3° of pitch (backward 20.7°)</td></tr><tr><td>Anti-tip castor catches at</td><td>12.3° — so it catches 7.0° before the robot goes over</td></tr><tr><td>Steel needed</td><td>1580 mm of 60×30×3 box tube</td></tr></tbody></table></div>
+<p><strong>The pod comes off with two bolts per side.</strong> The frame reuses the four M12 holes that are already drilled in the green plates, so no new holes go into the built pods. The rail itself lands on the carrier, which stands 6 mm proud of the plate, so each side needs a 6 mm packer under the bolts — <a href="FRAME_AND_PODS.md">FRAME_AND_PODS.md</a> has the stack, part by part.</p>
+<p>The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a pack, and put the real numbers in the model before trusting 19.3°.</p>
+<h4 id="four-things-the-model-settled">Four things the model settled</h4>
+<p><strong>There is no room for electronics in the frame.</strong> The interior is almost entirely battery: 8 mm above the packs, 24 mm between them, 13 mm to the cross members. So everything moved onto a shelf inside the body. It fits four rows and uses 40 % of the shelf area, which leaves room for the speakers and an air path.</p>
+<p>!<a href="cad/walle_shelf.png">the electronics shelf</a></p>
+<p><strong>The body floor has to clear the belt crown, not the frame.</strong> The pods are 327 mm tall at the top of the belt but the frame only reaches 257, so the body sits on four risers 78 mm tall. Miss this and the shell grinds on a moving belt.</p>
+<p><strong>The battery box has to be a closed box, and it was not one.</strong> It was a three-sided U, open across the top and at both ends, hanging right where the belts throw sand. It is now six panels with a gasketed lid, plugs in the spanner holes, and a membrane vent — a sealed box breathes with the day/night temperature swing and pulls dust in through its worst leak, so it needs a clean air path. The packs charge in place through a connector on the outside of the body and never come out in the field.</p>
+<p>!<a href="cad/walle_frame_plates.png">the plywood cutting layout</a></p>
+<p>Why the packs stay low rather than going in the body, with the numbers: <a href="docs/06-why-the-batteries-are-low.md"><code>docs/06-why-the-batteries-are-low.md</code></a>.</p>
+<p><strong>The chest panel was a hole, not a panel.</strong> <code>chest_d</code> recesses the chest 20 mm into a 12 mm wall, so the recess cut the front wall clean away and you could see the electronics through WALL-E's chest. It is now a real 12 mm plate set back 20 mm — which is lucky, because that plate is exactly what the speakers needed to mount to.</p>
+<h4 id="the-speakers">The speakers</h4>
+<p>Two 6.5 inch drivers in the chest panel, 280 mm apart, 584 mm above the ground. That is how WALL-E talks and plays music.</p>
+<p>!<a href="cad/walle_robot_front.png">front view with the speakers</a></p>
+<p><strong>Each driver gets its own sealed plywood enclosure, 9.8 litres.</strong> They do not fire into the body, and that is deliberate. The body is not airtight — it has a filtered air intake, a removable lid and cable entries — so an open back would chuff and lose all its bass. And 100 W of pressure swinging around the electronics bay shakes every connector on the shelf.</p>
+<p>!<a href="cad/walle_chest.png">the chest panel and the two sealed enclosures, from behind</a></p>
+<p>Two things the model flagged that are easy to miss:</p>
+<p><strong>The enclosures shade 54 % of the electronics shelf.</strong> They clear it by 20 mm, so nothing clashes, but they sit above it. So they <strong>bolt</strong> to the chest panel — glue them in and half the electronics becomes unreachable.</p>
+<p><strong>They cost about 1.5° of forward tipping margin.</strong> 7.3 kg at 584 mm, and both of them forward of centre, which pulls the centre of mass 4.4 mm towards the direction the robot already tips. With them fitted the robot tips forward at 19.3°, and the castor still catches 7.0° before that. It passes, but the speakers are one of several things pushing that number down, so weigh the real parts before adding another.</p>
+<h4 id="the-head">The head</h4>
+<p>Two 105 mm barrels, 128 mm apart, toed in 6°, each with a 2.1 inch round screen recessed 60 mm behind a clear dome.</p>
+<p>!<a href="cad/walle_head.png">the head</a></p>
+<p>The recess is not styling, it is a sun shade: a screen that deep behind a 53 mm aperture is in shadow for any sun above 49° elevation, and Negev midday sun is 75–80°. The dome seals the barrel against dust.</p>
+<p><strong>New to this? Read in this order:</strong> <code>99-glossary.md</code>, then <code>00-plan.md</code>, then <code>01-architecture.md</code>. Do not start buying parts until you have read the plan, because the parts list only makes sense after it.</p>
+<hr>
+<h3 id="what-we-already-have">What we already have</h3>
+<p><strong>Both pods are built, to Rev 012.</strong> The belts are fitted and both hub motors are in hand, along with the original scooter controllers. Nothing electronic exists yet, and the frame that holds the two pods side by side has not been designed — that is the first job.</p>
+<p>These numbers come from the Rev 012 model, which the pods were built to. Confirm the first one with a tape measure before the frame is welded, because it is the dimension the frame has to match.</p>
+<div class="tw"><table><thead><tr><th>Thing</th><th>Value</th></tr></thead><tbody><tr><td><strong>Green plate outer faces — the frame mounting width</strong></td><td><strong>172 mm</strong></td></tr><tr><td>Ground contact, one pod</td><td>231 mm long × 118 mm wide</td></tr><tr><td>Pod size</td><td>363 long × 327 tall × ~200 wide</td></tr><tr><td>Where the pod bolts to the frame</td><td>A plate 60 mm tall, 197–257 mm above the ground</td></tr><tr><td>Suspension travel</td><td>+30.7 mm up, −29.2 mm down</td></tr><tr><td>Ground pressure at 100 kg total</td><td>0.18 kg/cm²</td></tr><tr><td>Belt movement per motor turn</td><td>660 mm</td></tr></tbody></table></div>
+<p>See <code>../archive/rev012-inline-batteries/</code> for where these come from.</p>
+<p>That last ground pressure number is worth understanding. Your own foot presses the ground at roughly 0.5 kg/cm². This robot, at 100 kg, presses <strong>less than a third as hard as a walking person</strong>. That is why tracks are the right choice for desert sand, not just a nice look.</p>
+<hr>
+<h3 id="open-questions">Open questions</h3>
+<p>Full list with deadlines in <code>docs/00-plan.md</code> section 4. The three that matter most:</p>
+<ol>
+<li><strong>Both pack capacities, in Ah, and are both BMS units healthy?</strong> This sets the runtime and the fuse sizing. Since decision D8 gave the electronics their own battery, the two traction packs want to be the <strong>same</strong> capacity — see <code>docs/00-plan.md</code> decision D4.</li>
+<li><strong>Does WALL-E carry a person?</strong> If yes, the frame is heavier and it must be registered as a mutant vehicle with Midburn. Check the current Midburn rules before the frame is welded.</li>
+<li><strong>How do we stop it tipping forward?</strong> The pods put only 231 mm of track on the ground, so that is the robot's whole front-to-back footprint. Longer belts are no longer an option now the pods are assembled, so the plan is anti-tip wheels plus keeping every heavy thing as low as possible.</li>
+</ol>
+<p class="filehdr">from docs/00-plan.md</p>
+<h2 id="00-master-plan">00 — Master plan</h2>
+<p>The whole project: where it stands, what must happen in what order, what it costs, and what can go wrong. Read this before buying anything or cutting any steel.</p>
+<p>Read <code>99-glossary.md</code> alongside it if a word is unfamiliar, and <code>01-architecture.md</code> for the detail of how the electronics fit together.</p>
+<hr>
+<h3 id="1-what-done-looks-like">1. What "done" looks like</h3>
+<p>A tracked robot, about 677 mm wide and roughly a metre tall, that clearly reads as WALL-E to anybody who has seen the film. It is driven by a person with a radio remote. Its eyes find faces and follow them. It makes WALL-E's noises. It runs for a full evening on the sand of the Negev, in a crowd, without hurting anybody and without breaking down.</p>
+<p>Three things are deliberately <strong>not</strong> goals:</p>
+<ul>
+<li>It does not drive itself. See section 4, L2.</li>
+<li>It does not carry passengers, unless decision D3 changes that.</li>
+<li>It does not talk in full sentences. Short recorded sounds beat synthesised speech for this character, and cost almost nothing.</li>
+</ul>
+<hr>
+<h3 id="2-where-the-project-stands-today">2. Where the project stands today</h3>
+<p><strong>Both pods are built, to Rev 012.</strong> This is a much stronger starting position than a design on paper, and it moves the hard part of the project from metalwork to electronics.</p>
+<div class="tw"><table><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody><tr><td>Pod design (Rev 013)</td><td>Complete, all clearance checks pass</td></tr><tr><td>Both pods</td><td><strong>Built</strong>, 165 mm clear between the carrier plates (MEASURED 2026-09-18), shocks <strong>inboard</strong> at \</td><td>z\</td><td>=58.5</td></tr><tr><td>Belts</td><td><strong>Fitted</strong> — 1080 mm, 18 links, 231 mm on the ground per pod</td></tr><tr><td>Hub motors</td><td><strong>Both in hand</strong></td></tr><tr><td>Original scooter controllers</td><td><strong>Both in hand</strong> — see decision D7</td></tr><tr><td>Frame for the side-by-side layout</td><td>Not designed. This project designs it</td></tr><tr><td>Electronics</td><td>Nothing bought, nothing built</td></tr><tr><td>Body</td><td>Nothing</td></tr></tbody></table></div>
+<h4 id="what-built-to-rev-013-gives-us">What "built to Rev 013" gives us</h4>
+<p>These are now real, measurable numbers rather than design intent:</p>
+<div class="tw"><table><thead><tr><th>Thing</th><th>Value</th></tr></thead><tbody><tr><td>Carrier plate spacing</td><td>165 mm clear inside, <strong>177 mm over the outer faces. The frame bolts to those carrier faces</strong> — the green plates are 6 mm further in, so the bolts get a 6 mm packer</td></tr><tr><td>Ground contact, one pod</td><td>231 mm long × 118 mm wide</td></tr><tr><td>Pod size</td><td>363 long × 327 tall × 177 wide over the carriers. Since Rev 013 the shocks run <strong>inboard</strong>, at \</td><td>z\</td><td>=58.5, so the carriers are the widest point — measure it</td></tr><tr><td>Pod mounting band</td><td>A plate 60 mm tall, 197–257 mm above the ground, at the hub</td></tr><tr><td>Suspension travel</td><td>+30.7 mm up, −29.2 mm down</td></tr><tr><td>Ground pressure at 100 kg</td><td>0.18 kg/cm², about a third of a walking person's foot</td></tr><tr><td>Belt movement per motor turn</td><td>660 mm</td></tr></tbody></table></div>
+<p>Confirm the <strong>177 mm mounting width</strong> with a tape measure across the carriers' outer faces before the frame is welded. It is the one dimension that, if wrong, makes the frame useless. The green plates measure 165 mm over the same way — that 6 mm step per side is the packer.</p>
+<p><strong>Corrected again on 2026-09-22</strong>, when WALL-E was repointed at the newest pod revision: Rev 013 measured the built pods and the green plate turned out to be <strong>inboard</strong> of the carrier, not outboard. The mounting face moved from 172 to 177 mm over, the robot from 672 to 677 mm wide, and the joint gained a packer. <code>pod_latest.sh</code> now keeps this pointed at the newest revision so it cannot silently go stale again.</p>
+<p><strong>These numbers were corrected on 2026-09-17.</strong> This table previously said 168 mm, which came from a proposal to widen the carrier spacing that was then reverted — so 168 never existed in a built pod, and the WALL-E frame was 14 mm per side too wide. <code>check_pod_interface.scad</code> caught it. Measure anyway; do not trust either number on faith.</p>
+<h4 id="what-this-means-for-the-plan">What this means for the plan</h4>
+<p>With the pods built, the critical path is now the <strong>frame and the electronics</strong>. Two things follow from that:</p>
+<ol>
+<li>The frame can be designed this week, because every dimension it has to match already exists on a finished pod and can be measured.</li>
+<li>You own two hub motors, so the entire drive electronics chain can be built and tested on a workbench immediately, in parallel with the frame. That removes the scariest unknown early.</li>
+</ol>
+<hr>
+<h3 id="3-hard-constraints">3. Hard constraints</h3>
+<div class="tw"><table><thead><tr><th>Constraint</th><th>Consequence</th></tr></thead><tbody><tr><td>No network at the event</td><td>Every model runs on the robot. No cloud, no phone tethering</td></tr><tr><td>Negev heat, 40 °C and direct sun</td><td>Active cooling. No PLA anywhere structural. Heat test before you go</td></tr><tr><td>Fine abrasive sand</td><td>Covers on every bearing and bushing. Daily cleaning. Spares</td></tr><tr><td>The event is mostly at night</td><td>Vision alone is not enough. Lighting is required, not decorative</td></tr><tr><td>Crowds of people, some not sober</td><td>The safety layer is the reason this plan is shaped this way</td></tr><tr><td>Builder is new to electronics</td><td>Section 10 is a learning plan, on the schedule as real time</td></tr><tr><td>Pods are already built</td><td>The 172 mm mounting width and the 231 mm footprint are now fixed inputs</td></tr><tr><td>One person, evenings and weekends</td><td>Section 8 assumes this. Extra hands change everything</td></tr></tbody></table></div>
+<hr>
+<h3 id="4-decisions">4. Decisions</h3>
+<h4 id="locked-do-not-revisit-without-a-reason">Locked — do not revisit without a reason</h4>
+<div class="tw"><table><thead><tr><th>#</th><th>Decision</th><th>Why</th></tr></thead><tbody><tr><td>L1</td><td>Pods side by side, skid steer</td><td>Deletes the undesigned steering link, and it is how WALL-E works</td></tr><tr><td>L2</td><td>Teleoperated, not self-driving</td><td>Safer in a crowd, far less work, and the crowd cannot tell</td></tr><tr><td>L3</td><td>Three boards: Brain, Spine, Face</td><td>Timing requirements differ by 1000×. <code>01-architecture.md</code> §1</td></tr><tr><td>L4</td><td>Radio receiver and E-stop wire into the Spine</td><td>The driver keeps control when the Brain crashes</td></tr><tr><td>L5</td><td>No SLAM. GPS and compass if position is needed at all</td><td>Open desert has no landmarks and the crowd keeps moving</td></tr><tr><td>L6</td><td><strong>Body from 12 mm plywood.</strong> REVISED 2026-09-17: was foam with a thin ply skin and fibreglass over it</td><td>Mass up high makes the tipping worse, and plywood turned out to be the LIGHTER answer: the foam build was a 25 kg guess, the plywood box computes to 13.6 kg from its own geometry. 11.5 kg off the robot, 15 mm off the centre of mass, 0.7 deg more forward tipping margin, and 445 dollars cheaper</td></tr><tr><td>L7</td><td>Keep the fitted 18-link belts</td><td>Was decision D1. See below</td></tr><tr><td>L8</td><td>Frame mounting width <strong>177 mm</strong>, across the carriers' outer faces (green plates 6 mm inboard, packer fills it)</td><td>Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to</td></tr><tr><td>L9</td><td>One 48 V pack per pod, positives separate, negatives bonded at one point</td><td>Was D4. Avoids paralleling two packs entirely. <code>01-architecture.md</code> §3b</td></tr><tr><td>L10</td><td><strong>The electronics run from their own 12 V battery.</strong> REVISED 2026-09-19: they used to be fed from the larger pack through an isolated 48→12 V converter</td><td>See decision D8. It deletes the one power part that cannot be bought on AliExpress, takes the Jetson off a rail that also carries 40 A of motor current, and lets both traction packs be the same size. <strong>The contactor coils do NOT move — they stay on pack A</strong></td></tr><tr><td>L11</td><td>Frame stays 550 mm long. <strong>All electronics on a shelf inside the body</strong></td><td>The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16</td></tr><tr><td>L12</td><td>Body length follows the <strong>pod</strong> length, not the anti-tip castors</td><td>A body sized to cover the castors is 745 mm on 363 mm pods, and looks like a crate on toy wheels. The castor arms show as outriggers instead</td></tr><tr><td>L13</td><td>Two Face boards, one per eye</td><td>Two 480×480 QSPI panels on one ESP32-S3 is tight and would tear. 12 dollars removes the risk. <code>05-bom.md</code> §4</td></tr><tr><td>L14</td><td>The amplifier gets its own 48→32 V converter</td><td>A TPA3255 maxes out at 53.5 V and a "48 V" pack is 54.6 V full. It also keeps the audio spikes off the Jetson's rail. <code>04-power-and-wiring.md</code> §4</td></tr><tr><td>L15</td><td><strong>Batteries stay in the frame, not in the body</strong></td><td>Not for the tipping, which is affordable. They need a sealed case wherever they go, and once that is true the body is the hottest, most crowded and most dangerous place for them. <code>06-why-the-batteries-are-low.md</code></td></tr><tr><td>L16</td><td>The battery box is a <strong>closed, gasketed box</strong> with a membrane vent in the lid</td><td>Owner, 2026-09-16: sand. It was a three-sided U hanging where the belts throw sand. Now six panels, plugged spanner holes, foam pad, lid vent</td></tr><tr><td>L17</td><td>Packs charge <strong>in place</strong> and never come out in the field</td><td>Every opening of a sealed box at a dusty event undoes the sealing. Charge lead out through a gland to a connector on the body, behind a dust cap</td></tr><tr><td>L18</td><td>Box floor stays at 150 mm for now</td><td>Raising it to 173 — the limit, set by lid-bolt access under the body floor — would buy 23 mm of ground clearance for 0.1° of tipping. Owner: revisit after the first drive on sand</td></tr><tr><td>L19</td><td><strong>Two 6.5 inch drivers in the chest panel</strong>, 280 mm apart, 584 mm up</td><td>Owner, 2026-09-16. Position is derived, not chosen: the enclosures have to clear the tallest shelf box and the body lid, and the driver centres on what is left</td></tr><tr><td>L20</td><td>Each driver gets its <strong>own sealed 9.8 litre enclosure</strong>. They do not fire into the body</td><td>The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector</td></tr><tr><td>L21</td><td>The enclosures <strong>bolt</strong> to the chest panel and lift out</td><td>They shade 54 % of the shelf. Glued in, half the electronics is unreachable</td></tr><tr><td>L22</td><td>Metal grilles over both drivers</td><td>A crowd will push a finger through an open cone</td></tr><tr><td>L24</td><td><strong>The lower shock bolt problem is closed</strong></td><td>Owner, 2026-09-18: fixed on the real pods. This was decision D2 and risk R3, and <code>02-shock-bolt.md</code> held the analysis. All three are deleted. If the fix ever needs revisiting, the analysis is in git history</td></tr><tr><td>L23</td><td><strong>The head is rigid. No pan, no nod, no tilt, no servos</strong></td><td>Owner, 2026-09-17. To look left or right the whole robot turns. Removes four gear trains, a bearing, a slip ring and a cable twist limit from a machine that lives in blowing sand, and takes the head from a 5 kg guess to 2.1 kg computed, which drops the centre of mass 18 mm. The cost is in firmware, not hardware: a gaze is now a drive command, so it needs rules L1 to L3 in <code>01-architecture.md</code></td></tr></tbody></table></div>
+<h5 id="l7-why-we-keep-the-short-belts-now">L7 — why we keep the short belts now</h5>
+<p>Longer belts would give about 400 mm of ground contact instead of 231 mm, and would make the robot much harder to tip forward. While the arms were uncut, that was cheap and was the recommendation.</p>
+<p>It is no longer cheap. Changing the belt length changes the arm lengths, so it means stripping both finished pods, re-cutting the arms, re-solving the shock geometry, and rebuilding. That is weeks of work undoing work that is already done.</p>
+<p><strong>So we keep the 231 mm footprint and solve the tipping a different way:</strong> anti-tip wheels, plus keeping all the heavy things as low as possible. See decision D6.</p>
+<h4 id="open-each-one-has-a-deadline-because-something-waits-on-it">Open — each one has a deadline, because something waits on it</h4>
+<div class="tw"><table><thead><tr><th>#</th><th>Question</th><th>Blocks</th><th>Decide by</th></tr></thead><tbody><tr><td><strong>D3</strong></td><td>Does WALL-E carry a person?</td><td>Frame strength, tipping, Midburn registration</td><td>Before Phase 2</td></tr><tr><td><strong>D4</strong></td><td>Both pack capacities in Ah, and are both BMS units healthy?</td><td>Runtime and fuse sizing. <strong>No longer decides "which side gets the electronics"</strong> — decision D8 took that load off the packs entirely, so now the two packs want to be the <strong>same</strong> capacity</td><td>Before Phase 1 buying</td></tr><tr><td><strong>D5</strong></td><td>Confirmed Midburn date and mutant vehicle rules</td><td>The entire schedule</td><td>This week</td></tr><tr><td><strong>D6</strong></td><td>Anti-tip wheels: how many, where, how high off the ground?</td><td>Frame design</td><td>Phase 1</td></tr><tr><td><strong>D7</strong></td><td>Reuse the scooter controllers, or buy two VESCs?</td><td>Cost, and whether motor temperature can be read</td><td><strong>DECIDED 2026-09-17: reuse them.</strong> They have a reverse line, and the motor's own thermistor gives the temperature. 260 dollars held as contingency</td></tr><tr><td><strong>D8</strong></td><td>Run the electronics from pack A through a converter, or give them their own battery?</td><td>Which parts get bought, both pack capacities, and how clean the Jetson's supply is</td><td><strong>DECIDED 2026-09-19: their own 12 V battery.</strong> See below</td></tr></tbody></table></div>
+<h5 id="d6-the-tipping-fix-since-the-belts-are-staying">D6 — the tipping fix, since the belts are staying</h5>
+<p>The robot's whole front-to-back footprint is 231 mm, so ±115 mm from the centre. With all the mass low, it starts to go over at about 16 degrees of pitch. Braking hard, or driving off a small step, can reach that.</p>
+<p>The fix used on wheelchairs and forklifts is an <strong>anti-tip wheel</strong>: a small castor mounted front and back, set deliberately <strong>30 to 40 mm above the ground</strong>. In normal driving it never touches anything, so it does not carry load and does not interfere with the suspension. It only touches when the robot has already started to pitch, and then it stops the pitch before it becomes a fall.</p>
+<p>This is much better than a tail skid that always touches, because a permanent third contact point fights against the pods' ±30 mm of suspension travel in a way that is hard to predict.</p>
+<p>Alongside it: put both battery packs <strong>below</strong> the pod mounting beam, down near the 145 mm floor line. Roughly 24 kg of ballast at 190 mm above the ground does most of the stability work for free, and it costs nothing because the batteries have to go somewhere anyway.</p>
+<h5 id="d7-the-scooter-controllers-you-already-have">D7 — the scooter controllers you already have</h5>
+<p><strong>REVISED 2026-09-17. This decision used to recommend buying two VESCs. It no longer does.</strong></p>
+<p>The controllers <strong>have a reverse line</strong>, confirmed by the owner. That was the one fact that could have ruled them out: skid steer needs each side to run forwards and backwards on its own, and without reverse the robot could only make wide arcs, never turn on the spot.</p>
+<p><strong>Use them now, for free, to prove the motors work.</strong> Bench-test both hub motors with their original controllers and a physical throttle before you buy anything. No code. If a motor is dead, you want to know today.</p>
+<p><strong>Then drive them from the Teensy.</strong> They accept a throttle voltage and nothing else, so a digital-to-analogue converter fakes it. The reverse and e-brake lines are switched to ground through opto-isolators. <code>05-bom.md</code> section 1b is the parts list, about 76 dollars.</p>
+<p><strong>Two of the three old objections have been answered:</strong></p>
+<ol>
+<li><em>They report no motor temperature.</em> The hub motor has <strong>its own thermistor</strong> in its cable. Read it straight into the Teensy for the price of two resistors. Risk R5 keeps its defence.</li>
+<li><em>They report no current.</em> An ACS758 hall sensor on each pack lead, 20 dollars the pair.</li>
+<li><em>Their current limits, ramp and cut-off are fixed in firmware and cannot be tuned for a slow heavy robot.</em> <strong>Still true, and not fixable.</strong> So is the six-step commutation, which judders at walking pace — exactly where a skid-steer robot spends its life.</li>
+</ol>
+<p><strong>Two new conditions come with this decision:</strong></p>
+<ul>
+<li>A <strong>hardware watchdog</strong> is now mandatory. A throttle springs back to zero; a DAC holds its last value forever, so a Teensy crash mid-drive leaves the robot driving. A relay with normally-closed contacts, held open by a heartbeat pulse, shorts the throttle to ground when the pulses stop. Nothing in software has to work for that to happen.</li>
+<li>Check for <strong>automatic cruise control</strong>. Some scooter controllers engage it after a few seconds of steady throttle. In a crowd that is dangerous. If it cannot be disabled, buy the VESCs.</li>
+</ul>
+<p><strong>Recommendation: use the controllers you own, and hold 260 dollars as a contingency.</strong> This is a bet that six-step control is smooth enough at walking pace. You will not know until you drive it. If it judders, two VESCs drop straight in: the Teensy and the power wiring all stay, and you add two 3.3 V CAN transceivers, which are not on the list until then. What you throw away is the throttle interface — the two DACs, the level shifter and the opto-isolators, about 30 dollars — and you gain back the telemetry and the command timeout. The hardware watchdog stays either way; it is cheap insurance.</p>
+<h5 id="d8-the-electronics-get-their-own-battery">D8 — the electronics get their own battery</h5>
+<p>The question that started this was whether there is room for a third battery. In the frame box there is not: the two traction packs leave 60 mm of spare width and 20 mm of spare length, and a third pack of the same size needs 104 mm. But a battery for the <strong>electronics only</strong> is a different part and a much smaller one, and it turns out to be worth fitting.</p>
+<p><strong>The old arrangement.</strong> Pack A fed a 100 W isolated 48→12 V converter, which fed the Jetson, the fans and the 12→5 V buck for the Teensy and the ESP32. Pack A also drove the left motor.</p>
+<p><strong>The new one.</strong> A 12 V 20 Ah LiFePO4 battery on the electronics shelf feeds the 12 V rail directly. The Jetson dev kit takes 9–19 V in, so nothing needs converting.</p>
+<h6 id="what-it-buys">What it buys</h6>
+<p><strong>It deletes the part you cannot buy.</strong> <code>05-bom.md</code> section 9 lists the isolated 48→12 V converter as one of the few things that must come from a distributor, because every module sold on AliExpress under that search is non-isolated. That was 70 dollars and a sourcing problem. Now there is no 48 V to step down, so the part is gone.</p>
+<p><strong>The Jetson stops sharing copper with the motors.</strong> Risk R6 is motor current spikes dragging the rail down and rebooting the Brain mid-show. The defence used to be an isolated converter plus a 4700 µF capacitor. On its own battery there is nothing for the motors to pull on. Keep the capacitor, but it stops carrying the load alone.</p>
+<p><strong>Both traction packs can now be the same size.</strong> The 20 Ah / 15 Ah split in <code>01-architecture.md</code> section 3b was never a preference — it existed so the electronics load on the larger pack would drag both packs towards empty at the same moment. With that load gone, the right answer is two equal packs, and the runtime improves for free:</p>
+<div class="tw"><table><thead><tr><th></th><th>Pack A</th><th>Pack B</th><th>Robot runs for</th></tr></thead><tbody><tr><td>Before: 20 Ah + 15 Ah, electronics on A</td><td>4.25 A, 4.7 h</td><td>3.1 A, 4.8 h</td><td><strong>4.7 h</strong></td></tr><tr><td>After: 17.5 Ah each, motors only</td><td>3.1 A, 5.6 h</td><td>3.1 A, 5.6 h</td><td><strong>5.6 h</strong></td></tr></tbody></table></div>
+<p>That is the same number of cells rearranged, and it is about 19 % more driving. The electronics battery holds 240 Wh against a 38 W rail, so it runs 6.3 hours and outlasts the drive — the face and the logs stay up after the motors stop, which is what you want when something has gone wrong.</p>
+<h6 id="the-two-things-that-must-not-change">The two things that must not change</h6>
+<p><strong>The contactor coils stay on pack A.</strong> They are 48 V and they do not follow the electronics. That tap is the whole reason pack A dying opens <em>both</em> contactors, so the robot coasts instead of pivoting on pack B's healthy track. Move the coils onto the electronics battery and you delete a safety property that currently costs nothing.</p>
+<p>Done this way both failure directions still stop the robot. Pack A dies, the coils lose power, both contactors open. The electronics battery dies, the Teensy dies with it, and the Teensy's arm MOSFET in the coil chain opens. Either way it coasts.</p>
+<p><strong>Its negative bonds to the same single point as the other two.</strong> The ACS758 sensors and the pack voltage dividers all measure against pack negative. A floating third battery is exactly trap 3 in <code>01-architecture.md</code> section 3b, and that trap does not announce itself — it returns plausible wrong numbers that the Spine acts on.</p>
+<p><strong>The amplifier does not move either.</strong> It keeps its own 48→32 V buck off pack A. Audio is the biggest and peakiest load on the robot, it does not need clean power, and from 12 V you would need a boost converter to reach 32 V. Putting it on the electronics battery would roughly triple the size that battery has to be.</p>
+<h6 id="what-it-costs">What it costs</h6>
+<p>The battery <strong>lies on its side</strong>. Standing up it is 167 mm tall, and the tallest box on the shelf sets the floor of the speaker enclosures, so an upright pack takes air away from the drivers. Flat it is 77 mm, against a limit of 139 mm that <code>cad/walle_frame.scad</code> now computes and guards.</p>
+<p>Even lying flat it is not free, and the model prices it:</p>
+<div class="tw"><table><thead><tr><th></th><th>Before</th><th>After</th></tr></thead><tbody><tr><td>Sealed volume per driver (wants 7–14 litres)</td><td>10.1</td><td><strong>9.8</strong></td></tr><tr><td>Shelf area used</td><td>32 %</td><td>40 %</td></tr><tr><td>Whole robot</td><td>86.5 kg</td><td>88.9 kg</td></tr><tr><td>Centre of mass</td><td>315.6 mm</td><td>318.2 mm</td></tr><tr><td>Tips forward at</td><td>19.4°</td><td>19.3°</td></tr></tbody></table></div>
+<p>The castor still catches the pitch at 12.3°, so the margin barely moves. The real price is 0.3 litres of bass and a third thing to charge.</p>
+<hr>
+<h3 id="5-workstreams-and-the-critical-path">5. Workstreams and the critical path</h3>
+<p>Four streams. Two of them start today and do not wait for each other.</p>
+<pre><code>  W1 FRAME ─── the critical path ────────────────────────────────►
+     measure pods → design in SCAD → build → mount pods
+
+  W2 DRIVE ELECTRONICS ── starts on a bench, no frame needed ────►
+     test motors → throttle by hand → Teensy + DAC → watchdog → radio → E-stop → 2 motors → install
+
+                    W3 SENSE, BRAIN AND FACE ──────────────────────►
+                       Jetson → LiDAR → camera → personality → eyes → head
+
+                              W4 BODY ─────────────────────────────►
+                                 shell → paint → lighting</code></pre>
+<p>W1 and W2 start on day one. W3 needs no frame either, but attention is the real scarce resource, so it starts once W2 works on the bench. W4 starts last, because the body must fit around finished hardware and because it is the stream most likely to eat all remaining time.</p>
+<p><strong>The biggest scheduling mistake available to you</strong> is to start with W3, the AI, because it is the most interesting. Then the frame arrives late, there is no time to integrate, and you bring a very clever box that cannot move.</p>
+<hr>
+<h3 id="6-phases-with-exit-tests">6. Phases, with exit tests</h3>
+<p>A phase is not finished because the work is done. It is finished when its exit test passes.</p>
+<h4 id="phase-0-measure-decide-order-week-1">Phase 0 — Measure, decide, order (week 1)</h4>
+<div class="tw"><table><thead><tr><th>Task</th><th>Stream</th></tr></thead><tbody><tr><td>Measure the real pods: carrier spacing, mounting band height, overall width</td><td>W1</td></tr><tr><td>Bench-test both hub motors with the original scooter controllers</td><td>W2</td></tr><tr><td>Confirm the donor battery voltage and capacity (D4)</td><td>W2</td></tr><tr><td>Confirm the Midburn date and vehicle rules (D5)</td><td>—</td></tr><tr><td>Order a Teensy 4.0, two MCP4725 DACs, a level shifter, the watchdog parts, the radio set, a multimeter</td><td>W2</td></tr></tbody></table></div>
+<p><strong>Exit test:</strong> both motors spin under their own power, and the measured pod dimensions are written down and match the model within a millimetre or two.</p>
+<h4 id="phase-1-frame-design-and-prove-the-drive-on-a-bench-weeks-2-">Phase 1 — Frame design, and prove the drive on a bench (weeks 2 – 7)</h4>
+<div class="tw"><table><thead><tr><th>W1 frame</th><th>W2 bench electronics</th></tr></thead><tbody><tr><td>Model the side-by-side frame in OpenSCAD</td><td>Spin a hub motor from its own scooter controller and a hand throttle</td></tr><tr><td>Batteries low, below the mounting beam</td><td>Get the Teensy to drive the throttle through the DAC, with the watchdog wired</td></tr><tr><td>Anti-tip wheel mounts, 30–40 mm clear (D6)</td><td>Add the radio receiver, drive the motor from the stick</td></tr><tr><td>Order the steel</td><td>Add the E-stop and the arm switch, with the watchdog</td></tr><tr><td>Order the steel</td><td>Log motor temperature from the very first run</td></tr></tbody></table></div>
+<p><strong>Exit test, W1:</strong> the frame model runs with zero warnings, and the retrofit is fitted to both pods. <strong>Exit test, W2:</strong> the stick drives one motor, and the motor stops when you switch the transmitter off, when you press the E-stop, and when you unplug the Teensy's serial cable.</p>
+<h4 id="phase-2-build-the-frame-and-drive-it-weeks-6-12">Phase 2 — Build the frame and drive it (weeks 6 – 12)</h4>
+<div class="tw"><table><thead><tr><th>Task</th></tr></thead><tbody><tr><td>Weld and assemble the frame</td></tr><tr><td>Mount both pods on the 172 mm mounting width</td></tr><tr><td>Batteries in low, both scooter controllers, the Teensy, the contactor and the fusing</td></tr><tr><td>Add mixing for two motors, and slew rate limiting</td></tr><tr><td>Fit the anti-tip wheels</td></tr></tbody></table></div>
+<p><strong>Exit test:</strong> it drives forward, backward, turns both ways, and spins in place, on sand, with a tethered E-stop in a walking person's hand. Add ballast to match the planned body weight and confirm it does not pitch alarmingly under braking, and that the anti-tip wheels catch it.</p>
+<h4 id="phase-3-the-safety-gate-weeks-12-13">Phase 3 — The safety gate (weeks 12 – 13)</h4>
+<p>Not a build phase. A test phase, and the most important one in the project.</p>
+<p>Work down the arbitration list in <code>01-architecture.md</code> §3 and <strong>deliberately cause every failure</strong> while the robot is driving:</p>
+<ol>
+<li>Press the physical E-stop</li>
+<li>Trigger the wireless keyfob E-stop</li>
+<li>Switch the transmitter off</li>
+<li>Walk the robot out of radio range</li>
+<li>Unplug the Brain's USB cable</li>
+<li>Pull the power to the Brain</li>
+<li>Short a bumper sensor</li>
+<li>Disconnect one CAN wire</li>
+</ol>
+<p><strong>Exit test:</strong> all eight produce a controlled stop, and none produces a lurch, a turn, or a runaway. Record the date and result for each one in <code>03-safety-log.md</code>.</p>
+<blockquote><p>Until Phase 3 passes, the robot does not operate within ten metres of another person. There is no schedule pressure that justifies skipping this.</p></blockquote>
+<h4 id="phase-4-senses-face-and-personality-weeks-10-18">Phase 4 — Senses, face, and personality (weeks 10 – 18)</h4>
+<div class="tw"><table><thead><tr><th>Task</th></tr></thead><tbody><tr><td>LiDAR fitted, obstacle map built, bumper veto wired into the Spine</td></tr><tr><td>Jetson installed on its isolated power rail, temperature logging running</td></tr><tr><td>Camera fitted, face detection running, gaze targets sent to the Face</td></tr><tr><td>Eye screens working from the ESP32</td></tr><tr><td>Head built: rigid post, two ply barrels, camera under the brow</td></tr><tr><td>Look-turn enable on RC channel 6, capped and cancelled by the stick</td></tr><tr><td>Amplifier and sound clips into the two 3.22 litre speaker wells</td></tr></tbody></table></div>
+<p><strong>Exit test:</strong> the robot refuses to drive into a cardboard box even when you push the stick at it, and its pupils follow a person walking across a room. The head itself does not move — if the person walks out of the camera's 69 degree view, the robot turns its body to keep them, slowly, and stops the moment you touch the stick.</p>
+<h4 id="phase-5-body-paint-lighting-weeks-14-24">Phase 5 — Body, paint, lighting (weeks 14 – 24)</h4>
+<p>Shell from 12 mm plywood, arms fitted, sealed or varnished against the day-to-night humidity swing, night lighting. The eye barrels are stacks of 12 plywood rings, glued up and sanded round.</p>
+<p><strong>Exit test:</strong> somebody who has seen the film says "WALL-E" without being prompted.</p>
+<h4 id="phase-6-field-readiness-weeks-24-28">Phase 6 — Field readiness (weeks 24 – 28)</h4>
+<p>The phase everybody skips and then regrets.</p>
+<div class="tw"><table><thead><tr><th>Task</th></tr></thead><tbody><tr><td>Dust covers on every bearing, bushing, and the LiDAR window</td></tr><tr><td>Heat test: run it in full midday sun until something complains</td></tr><tr><td>Endurance test: a full evening on sand, on one charge</td></tr><tr><td>Night test: can the driver see it, can it see, are the eyes visible</td></tr><tr><td>Spares kit: printed sprocket, belt links, fuses, a spare 48 V controller, spare DACs, a spare eye panel</td></tr><tr><td>Field repair kit and a printed copy of the wiring diagram</td></tr></tbody></table></div>
+<p><strong>Exit test:</strong> a full evening of driving on sand with no intervention that is not in the spares kit.</p>
+<hr>
+<h3 id="7-budget">7. Budget</h3>
+<p>Approximate, in US dollars, for what is <strong>still to buy</strong>. The pods are built, so all pod material, shocks, bearings, axles, belts and sprockets are already paid for and not counted.</p>
+<div class="tw"><table><thead><tr><th>Group</th><th>Items</th><th>Cost</th></tr></thead><tbody><tr><td>Frame</td><td>Steel tube, plate, plywood, welding consumables</td><td>250 – 400</td></tr><tr><td>Anti-tip wheels</td><td>2 castors and their mounts</td><td>40 – 80</td></tr><tr><td>Drive electronics</td><td>throttle interface, contactor, fuses, heavy cable, lugs (controllers already owned)</td><td>270 – 380</td></tr><tr><td>Radio control</td><td>Transmitter, receiver, wireless E-stop keyfob</td><td>150 – 250</td></tr><tr><td>Compute</td><td>Jetson Orin Nano 8GB, storage, cooling</td><td>300 – 350</td></tr><tr><td>Spine and Face boards</td><td>Teensy 4.0, ESP32-S3, 2 round LCDs</td><td>80 – 120</td></tr><tr><td>Sensors</td><td>LiDAR, OAK-D camera, 6 × ToF, GPS, compass</td><td>300 – 400</td></tr><tr><td>Power conditioning</td><td>Isolated DC-DC converters, buffer, distribution</td><td>100 – 150</td></tr><tr><td>Audio</td><td>Class-D amplifier, wiring</td><td>60 – 100</td></tr><tr><td>Body and head</td><td>12 mm plywood, glue, hinges, gas strut, sealer. Steel already owned</td><td>280 - 360</td></tr><tr><td>Lighting</td><td>LED strips, drivers, the eye illumination</td><td>100 – 150</td></tr><tr><td>Tools and consumables</td><td>Soldering, crimping, multimeter, drill bits</td><td>200 – 400</td></tr><tr><td>Spares kit</td><td>Section 6, Phase 6</td><td>250 – 350</td></tr><tr><td><strong>Total still to spend</strong></td><td></td><td><strong>≈ 2,370 – 2,920</strong></td></tr></tbody></table></div>
+<p>If the donor battery packs cannot be reused, add 600 to 1,200.</p>
+<h4 id="buy-in-this-order-not-all-at-once">Buy in this order, not all at once</h4>
+<ol>
+<li><strong>Now:</strong> a Teensy, the throttle interface parts, the radio set, a multimeter. About 250 dollars, and it is the cheapest way to find out whether the drive electronics are going to be a problem.</li>
+<li><strong>Phase 1:</strong> the frame steel, the contactor, the fusing, heavy cable.</li>
+<li><strong>Phase 2:</strong> the Jetson and the sensors. Do not buy these early. They sit in a drawer losing value while you do metalwork, and a newer version may appear.</li>
+<li><strong>Phase 4:</strong> the screens and the amplifier. No servos — the head is rigid.</li>
+<li><strong>Phase 5:</strong> the body materials, bought against a finished robot you can measure.</li>
+</ol>
+<hr>
+<h3 id="8-schedule">8. Schedule</h3>
+<p>Weeks from the start, because the target date needs confirming first (D5). Assumes one person working evenings and weekends, learning as they go.</p>
+<div class="tw"><table><thead><tr><th>Weeks</th><th>Phase</th><th>Streams</th></tr></thead><tbody><tr><td>1</td><td>0 — measure, decide, order</td><td>W1 + W2</td></tr><tr><td>2 – 7</td><td>1 — frame design / bench electronics</td><td>W1 + W2 in parallel</td></tr><tr><td>6 – 12</td><td>2 — build the frame and drive it</td><td>W1 → W2</td></tr><tr><td>12 – 13</td><td>3 — safety gate</td><td>—</td></tr><tr><td>10 – 18</td><td>4 — senses, face, personality</td><td>W3</td></tr><tr><td>14 – 24</td><td>5 — body and paint</td><td>W4</td></tr><tr><td>24 – 28</td><td>6 — field readiness</td><td>all</td></tr></tbody></table></div>
+<p><strong>About six months of part-time work.</strong> Having the pods built saves roughly six weeks off the critical path compared with building them from the cut list.</p>
+<p>The ranges overlap on purpose, because metalwork has waiting time — paint drying, parts in the post — and that waiting time is where the electronics get built.</p>
+<p>Count backwards from the event date and add <strong>six weeks of slack</strong>. If that does not fit, do not compress the phases. Use section 9 and cut scope instead.</p>
+<hr>
+<h3 id="9-if-time-runs-short-cut-in-this-order">9. If time runs short, cut in this order</h3>
+<p>Decide this now, while calm, rather than in a panic three weeks before the event.</p>
+<p><strong>Must have. Without these there is no robot:</strong></p>
+<ol>
+<li>It drives and steers on sand</li>
+<li>Every failure in the Phase 3 list produces a stop</li>
+<li>It looks like WALL-E</li>
+<li>The eyes move and follow people</li>
+<li>It makes WALL-E's sounds</li>
+</ol>
+<p><strong>Cut first, in this order, and lose almost nothing:</strong></p>
+<ol>
+<li>The language model and any speech recognition</li>
+<li><code>ASSIST</code> mode — manual driving only</li>
+<li>GPS and compass</li>
+<li>The LiDAR, keeping only the ToF bumper ring</li>
+<li>Moving arms — static arms look fine</li>
+<li>The neck mechanism — a fixed neck with a moving head still reads correctly</li>
+</ol>
+<p>Note what is at the top of the cut list: the AI. That is deliberate. A crowd reacts to the eyes, the sounds, and the movement. Nobody will ask what model is running.</p>
+<hr>
+<h3 id="10-learning-plan">10. Learning plan</h3>
+<p>You have not worked with microcontrollers, motor controllers, or AI models before. That is on the schedule as real time rather than pretended away. Each step is an evening or two, and each one produces something that works.</p>
+<div class="tw"><table><thead><tr><th>Step</th><th>What you learn</th><th>You know it worked when</th></tr></thead><tbody><tr><td>1</td><td>Multimeter: voltage, continuity, current</td><td>You can measure a battery and find a broken wire</td></tr><tr><td>2</td><td>Soldering and crimping</td><td>A joint you made survives being pulled hard</td></tr><tr><td>3</td><td>Arduino: blink an LED</td><td>The LED blinks at a rate you chose</td></tr><tr><td>4</td><td>Arduino: read a potentiometer, print it over serial</td><td>Numbers change on screen as you turn the knob</td></tr><tr><td>5</td><td>Arduino: turn the potentiometer into a voltage on the MCP4725 DAC, and read it back with the multimeter</td><td>0 to 3.3 V follows the knob. This replaces the old "drive a servo" exercise, which taught PWM the robot no longer uses anywhere — and it is the real throttle task in miniature</td></tr><tr><td>6</td><td>Spin a motor from its scooter controller and a hand throttle, no code</td><td>The hub motor turns, and you know it is healthy</td></tr><tr><td>7</td><td>Teensy: one value written to the DAC</td><td>The motor moves because of a number in your code</td></tr><tr><td>8</td><td>Read the radio receiver on the Teensy</td><td>Stick numbers print on your screen</td></tr><tr><td>9</td><td>Put steps 7 and 8 together</td><td>The stick drives the motor</td></tr><tr><td>10</td><td>Add the watchdog and the arm switch</td><td>Pulling a cable stops the motor</td></tr></tbody></table></div>
+<p>Steps 1 to 5 use about 30 dollars of parts and no project hardware. Do them while waiting for deliveries. <strong>Step 10 is the whole Spine</strong>, in concept — everything after that is detail.</p>
+<p>For the Brain, the same principle: get a camera window to appear on a screen before you try to run a model. Then run a model on one saved photograph. Then on live video. Then connect it to the robot. Four separate evenings, each one testable.</p>
+<hr>
+<h3 id="11-risk-register">11. Risk register</h3>
+<p>Ordered by how much damage each one does, not how likely it is.</p>
+<div class="tw"><table><thead><tr><th>#</th><th>Risk</th><th>Effect</th><th>What we do about it</th></tr></thead><tbody><tr><td>R1</td><td>Somebody gets hurt</td><td>Ends the project, and much worse</td><td>Phase 3 gate. Physical E-stop. Human minder with a keyfob. Manual mode in crowds</td></tr><tr><td>R2</td><td>It tips forward</td><td>Broken robot, possibly a broken person</td><td>Anti-tip wheels (D6). All mass low. Ballast test in Phase 2</td></tr><tr><td>R4</td><td>One pack's BMS cuts out while driving</td><td>The surviving track spins the robot on the spot instead of stopping</td><td>Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12</td></tr><tr><td>R5</td><td>Hub motors overheat crawling</td><td>Dead robot mid-event</td><td>Read the motor's OWN thermistor into the Teensy and log it from the first bench test. The scooter controllers cannot limit current for us, so the Teensy has to back the throttle off itself. Keep it light</td></tr><tr><td>R6</td><td>Motor current spikes reboot the Brain</td><td>Eyes and sounds die in front of an audience</td><td>Isolated DC-DC rail, own fuse, buffer capacitor</td></tr><tr><td>R6b</td><td>The electronics pack's BMS cuts out, so the Spine dies too</td><td>No board left to enforce any stop rule</td><td>The scooter controllers have NO command timeout of their own, so this defence is now entirely the hardware watchdog: heartbeat stops, relay falls closed, throttle shorted to ground. Prove it by safety log test 15</td></tr><tr><td>R6c</td><td>The motor controllers cook inside the body</td><td>One track dies, and the robot pivots</td><td>Direct consequence of L11: on a plywood shelf they have no steel to dump heat into. Each gets an aluminium plate bolted through to a body panel, and one filtered air path pushes air IN so the body runs at positive pressure</td></tr><tr><td>R7</td><td>Frame arrives late, no time to integrate</td><td>A clever box that cannot move</td><td>Frame design starts week 2. Electronics run in parallel on a bench</td></tr><tr><td>R8</td><td>Sand destroys bushings and bearings</td><td>Progressive seizure over the event</td><td>Covers. Daily cleaning. Spares in the kit</td></tr><tr><td>R8b</td><td>Sand gets into the battery box</td><td>Grit between the cells and the box, chafed wiring, a short</td><td>L16: closed box, gasketed lid on 110 mm bolt pitch, silicone plugs in all four spanner holes. <strong>Check the plugs are in every morning</strong> — they are the weak point, and they point at the belts</td></tr><tr><td>R8c</td><td>The sealed box breathes and pumps dust in through its worst leak</td><td>Slow, invisible version of R8b, and it defeats the gasket</td><td>Membrane vent in the lid, on the centreline over the gap between the packs, so the air has a clean path it does not have to find</td></tr><tr><td>R8d</td><td>Charging in a sealed box has nowhere to put the heat</td><td>Packs age fast, or worse</td><td>About 12 W of loss at 5 A. Log the pack temperature through one full charge with the lid on, on the bench, before the event. If it climbs, charge with the body lid open or drop the current</td></tr><tr><td>R10</td><td>Forward tipping margin keeps getting eaten</td><td>The castor catches, the robot stops looking like it meant to</td><td>The speakers alone took 1.5°, leaving 5.4° over the castor. <strong>Every new part forward of centre or high up spends this number.</strong> Weigh the real pods, packs, body and speakers and put the measured figures in the model before adding anything else</td></tr><tr><td>R11</td><td>Speaker enclosures rattle or buzz at volume</td><td>Sounds broken, and it is the thing the crowd hears</td><td>Sealed boxes, braced, and the drivers bolted through with gasket tape. Test at full volume on the bench before the body goes on</td></tr><tr><td>R9</td><td>Printed sprocket softens in the sun</td><td>Drive failure</td><td>Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare</td></tr><tr><td>R10</td><td>Scope grows, especially the body</td><td>Nothing is finished</td><td>Section 9 cut list, agreed in advance</td></tr><tr><td>R11</td><td>Midburn vehicle rules not met</td><td>Cannot operate at the event</td><td>D5 this week, before the frame is welded</td></tr><tr><td>R12</td><td>Builder gets stuck on the electronics</td><td>Project stalls silently</td><td>Section 10 learning plan. Bench work early, so problems appear when there is time</td></tr></tbody></table></div>
+<p>R9 is worth checking early: the sprockets are already printed and fitted, so find out what filament was used. PLA softens at around 60 °C, and a black plastic part in direct Negev sun will reach that.</p>
+<hr>
+<h3 id="12-what-happens-next">12. What happens next</h3>
+<p>In order. Nothing later on this list should start before the things above it.</p>
+<ol>
+<li>Confirm the Midburn date and vehicle rules (D5)</li>
+<li>Measure the built pods and write the numbers down</li>
+<li>Bench-test both hub motors with the original scooter controllers — free, and it de-risks the whole project</li>
+<li>Confirm both pack capacities in Ah and that both BMS units are healthy (D4)</li>
+<li>Order a Teensy, the throttle interface parts, and the radio set</li>
+<li>Start learning plan steps 1 to 5 while the parcels are in the post</li>
+<li>Design the frame in OpenSCAD</li>
+</ol>
+<p class="filehdr">from docs/01-architecture.md</p>
+<h2 id="01-architecture">01 — Architecture</h2>
+<p>How the three boards fit together, and the rules that decide who is allowed to move the robot. Read <code>99-glossary.md</code> first if any word here is unfamiliar.</p>
+<p>This is the most important document in the project. Everything else follows from it.</p>
+<hr>
+<h3 id="1-the-core-decision-three-boards-not-one">1. The core decision: three boards, not one</h3>
+<p>The natural instinct is to buy one powerful computer and let it do everything: read the camera, run the AI, and drive the motors. <strong>Do not do this.</strong> It is the main way projects like this become dangerous.</p>
+<p>The reason is timing. The three jobs have completely different needs:</p>
+<div class="tw"><table><thead><tr><th>Job</th><th>Must react within</th><th>What happens if it is late</th></tr></thead><tbody><tr><td>Stop the motors</td><td>1 millisecond</td><td>Somebody gets hurt</td></tr><tr><td>Animate the eyes</td><td>30 milliseconds</td><td>The face stutters and looks broken</td></tr><tr><td>Understand a camera frame</td><td>100 milliseconds</td><td>Nothing, nobody notices</td></tr><tr><td>Decide what to say</td><td>3 seconds</td><td>Nothing, it feels natural</td></tr></tbody></table></div>
+<p>A Linux computer cannot promise one millisecond. Linux is allowed to pause your program whenever it wants, to do something else. Normally the pause is tiny. Occasionally it is two full seconds. You cannot prevent this and you cannot predict it.</p>
+<p>Two seconds of a 200 kg machine continuing at its last speed, in a crowd, is unacceptable. So the motor commands live on a board that has no operating system and therefore cannot pause.</p>
+<hr>
+<h3 id="2-the-layout">2. The layout</h3>
+<pre><code>        ┌────────────────┐
+        │  RADIO REMOTE  │   The driver. A normal RC transmitter.
+        │  in a human&#x27;s  │
+        │     hands      │
+        └───────┬────────┘
+                │  radio, 2.4 GHz
+                ▼
+   ┌─────────────────────────┐
+   │   RC RECEIVER           │
+   └───────────┬─────────────┘
+               │ iBus serial
+               │
+  SENSE        ▼                                   FACE
+┌─────────┐  ┌──────────────────────┐   USB    ┌──────────────┐
+│ LiDAR   │  │                      │  serial  │  ESP32-S3    │
+│ OAK-D   ├─►│   BRAIN              ├─────────►│  2 LCD eyes  │
+│ GPS     │  │   Jetson Orin Nano   │          │  NO SERVOS   │
+│ mic     │  │   Linux              │          └──────────────┘
+└─────────┘  │                      │
+             │  camera, AI, sound   │      Can freeze. That is allowed.
+             └──────────┬───────────┘
+                        │ USB serial, 20 Hz
+                        │ commands + heartbeat
+                        ▼
+  SAFETY     ┌──────────────────────┐
+┌──────────┐ │                      │
+│ ToF ring │ │   SPINE              │
+│ bumper   ├►│   Teensy 4.0         │◄── RC receiver also wires in HERE
+│ switch   │ │   no operating system│
+└──────────┘ │                      │
+             │  mixing, ramping,    │      Cannot freeze. Holds every rule.
+             │  watchdog, limits    │
+             └──────────┬───────────┘
+                        │ I2C to 2 DACs, then an
+                        │ opto-isolated 0-3.3 V
+                        │ throttle line each
+             ┌──────────┴──────────┐
+             ▼                     ▼
+      ┌─────────────┐       ┌─────────────┐
+      │ CONTROLLER  │       │ CONTROLLER  │
+      │ left, 48 V  │       │ right, 48 V │
+      │ NO FEEDBACK │       │ NO FEEDBACK │
+      └──────┬──────┘       └──────┬──────┘
+             ▼                     ▼
+      ┌─────────────┐       ┌─────────────┐
+      │ hub motor   │       │ hub motor   │
+      │ left pod    │       │ right pod   │
+      └─────────────┘       └─────────────┘</code></pre>
+<h4 id="two-things-in-that-diagram-matter-more-than-the-rest">Two things in that diagram matter more than the rest</h4>
+<p><strong>The radio receiver wires into the Spine, not into the Brain.</strong> This means the driver keeps full control of the robot even if the Jetson is switched off, crashed, or still booting. If the radio went through the Brain, a Linux crash would take away the driver's steering at the worst possible moment. Instead, a Brain crash costs you the eyes and the sounds, and the robot still drives normally.</p>
+<p><strong>The bumper sensors wire into the Spine too.</strong> Same reason. The last line of defence must not depend on the most complicated part of the machine.</p>
+<hr>
+<h3 id="3-who-is-allowed-to-move-the-robot">3. Who is allowed to move the robot</h3>
+<p>The Spine runs one loop, 1000 times a second. Every pass through the loop, it decides the motor commands from scratch using this fixed order. A rule higher in the list always beats a rule lower down.</p>
+<div class="tw"><table><thead><tr><th>#</th><th>Check</th><th>If it fails</th><th>Why</th></tr></thead><tbody><tr><td>1</td><td>Is the E-stop circuit closed?</td><td>Motors dead. Nothing can override.</td><td>This is physical, not software. The contactor is open, so there is no power to the motors at all.</td></tr><tr><td>2</td><td>Is the arm switch on the remote ON?</td><td>Send zero.</td><td>The robot must never move the instant you connect the battery. The driver has to deliberately arm it.</td></tr><tr><td>3</td><td>Has a radio frame arrived in the last 100 ms?</td><td>Ramp to zero.</td><td>Radio out of range or transmitter battery flat. Stop is the only safe answer.</td></tr><tr><td>4</td><td><strong>Is each track actually turning as commanded?</strong></td><td><strong>Ramp BOTH to zero.</strong></td><td>See section 3b. One dead track does not stop a skid-steer robot, it makes it pivot. <strong>This rule was written for VESCs reporting on CAN. Scooter controllers report nothing — see the note below.</strong></td></tr><tr><td>5</td><td><strong>Are both pack voltages above the floor?</strong></td><td><strong>Ramp BOTH to zero.</strong></td><td>A BMS cutting out is the most likely way one side dies. <strong>Also came off the VESC's CAN messages — see the note below.</strong></td></tr><tr><td>6</td><td>Which mode does the remote's mode switch say?</td><td>—</td><td><code>MANUAL</code> uses the sticks. <code>ASSIST</code> uses the Brain.</td></tr><tr><td>7</td><td>In <code>ASSIST</code> only: has a Brain heartbeat arrived in the last 100 ms?</td><td>Ramp to zero and fall back to <code>MANUAL</code>.</td><td>The Brain is frozen or rebooting.</td></tr><tr><td>8</td><td>Do the bumper sensors see anything close in the direction of travel?</td><td>Scale the command down, or to zero.</td><td>The veto. It can only reduce, never add.</td></tr><tr><td>9</td><td>Is either motor too hot?</td><td>Scale both commands down.</td><td>Protects the hub motors from overheating at low speed.</td></tr><tr><td>10</td><td>Apply the slew rate limit.</td><td>—</td><td>Turns any sudden change into a smooth ramp.</td></tr></tbody></table></div>
+<blockquote><h4 id="rules-4-5-and-11-lost-their-data-source-on-2026-09-17">Rules 4, 5 and 11 lost their data source on 2026-09-17</h4>
+<p>Decision D7 changed the motor controllers from VESCs to the scooter controllers already owned. VESCs broadcast their status on CAN — motor current, input voltage, temperature, fault codes — and three arbitration rules were built on that broadcast. <strong>Scooter controllers send nothing back at all.</strong> There is no CAN bus to the motors any more.</p>
+<p>Each rule needs a new source. None is expensive, but none is automatic either:</p>
+<div class="tw"><table><thead><tr><th>Rule</th><th>Was</th><th>Now needs</th></tr></thead><tbody><tr><td>4 — is each track alive?</td><td>VESC reporting on CAN</td><td><strong>A speed sensor per track.</strong> The hub motor's hall wires already give one, and the Teensy can count their edges. If a track is commanded to move and its halls are not changing, that track is dead.</td></tr><tr><td>5 and 11 — pack voltage</td><td>VESC input voltage over CAN</td><td><strong>A resistor divider per pack</strong> into a Teensy analogue input. Two resistors and care with the ground reference. Cheap, but it must be on the list.</td></tr><tr><td>9 — is either motor too hot?</td><td>VESC motor temperature</td><td><strong>The hub motor's own thermistor</strong>, read directly. This one actually got simpler — see <code>05-bom.md</code> section 1b.</td></tr></tbody></table></div>
+<p><strong>The bigger loss is the VESC command timeout.</strong> A VESC releases the motor if no command arrives for about a second, and section 4 below leans on that as the last line of defence when the Spine dies. A scooter controller has no such behaviour: it holds whatever throttle voltage is on its input, forever.</p>
+<p>That defence is now <strong>entirely</strong> the hardware watchdog in <code>05-bom.md</code> section 1b — a relay with normally-closed contacts, held open by a heartbeat from the Teensy, which shorts the throttle to ground the moment the pulses stop. It is a single cheap part carrying a load that used to be shared. <strong>Test it deliberately and often</strong>, and treat safety log test 15 as mandatory rather than routine.</p></blockquote>
+<div class="tw"><table><tbody><tr><td>11</td><td><strong>Scale each side by its own pack voltage.</strong></td><td>—</td><td>See section 3b. Keeps it driving straight as the two packs drift apart.</td></tr><tr><td>12</td><td>Send on CAN.</td><td>—</td><td></td></tr></tbody></table></div>
+<h4 id="the-important-property-of-this-list">The important property of this list</h4>
+<p>Every single failure leads to the robot stopping. There is no combination of broken parts that makes it speed up, turn unexpectedly, or ignore the driver. When you are unsure whether a design is safe, check it against this: <strong>ask what each part does when it breaks, not when it works.</strong></p>
+<hr>
+<h3 id="3b-one-battery-per-pod-and-the-three-traps-that-come-with-it">3b. One battery per pod, and the three traps that come with it</h3>
+<p>We have two 48 V packs, and each one feeds its own pod: left pack to the left controller, right pack to the right controller. The positives stay completely separate.</p>
+<p>This is a good decision. It removes the worst problem with two packs, which is connecting them in parallel. Two packs at different states of charge, joined together, dump a very large current into each other the moment you connect them. Keeping the positives separate means that can never happen, and each pack keeps its own BMS working independently.</p>
+<p>But splitting the power this way creates three problems that have to be designed for.</p>
+<h4 id="trap-1-it-will-drive-crooked-as-the-packs-drift-apart">Trap 1 — It will drive crooked as the packs drift apart</h4>
+<p>Skid steer only works if the left and right sides respond the same way to the same command. A duty cycle command means "apply this fraction of the pack voltage to the motor". So if one pack is at 50 V and the other at 44 V, the same stick position makes one track about 12 % faster than the other, and the robot pulls to one side the whole time.</p>
+<p>The packs <strong>will</strong> drift apart, for two reasons: every turn loads the outer track harder than the inner one, and the two packs will not be equally healthy. There used to be a third and larger reason — one pack also fed the electronics — and decision D8 removed it. Rule 11 still earns its place, but it has less to correct now.</p>
+<p><strong>The fix (arbitration rule 11):</strong> the Spine scales each side's command by that side's own pack voltage, aiming for the same volts at each motor rather than the same fraction. In code this is one multiplication per side, and it makes the problem disappear.</p>
+<p><strong>Where that voltage comes from changed.</strong> It used to be read off the VESC's CAN messages for free. The scooter controllers report nothing, so each pack needs <strong>a resistor divider into a Teensy analogue input</strong> — two resistors per pack, and care with the ground reference. Cheap, but it is now a part you have to fit rather than a message you already have.</p>
+<h4 id="trap-2-one-dead-side-makes-the-robot-pivot-not-stop">Trap 2 — One dead side makes the robot pivot, not stop</h4>
+<p>This is the dangerous one, and it is easy to miss.</p>
+<p>On a car, losing drive to one wheel means you slow down. On a skid-steer machine, losing one track means <strong>the other track keeps pushing and the robot spins on the spot.</strong> In a crowd, a heavy machine that suddenly starts turning instead of stopping is exactly what you do not want.</p>
+<p>The most likely cause is not a broken wire. It is one pack's <strong>BMS cutting out</strong> — from low voltage, over-current, or over-temperature — which it is designed to do, without warning, on its own.</p>
+<p><strong>The fix (arbitration rules 4 and 5):</strong> the Spine requires <strong>both tracks to be turning as commanded</strong> and both pack voltages to be above a floor. If either check fails, it ramps <strong>both</strong> sides to zero. Never one.</p>
+<p>"Turning as commanded" used to mean "reporting on CAN". With the scooter controllers it means <strong>counting the hub motor's own hall sensor edges</strong>: if a track is commanded to move and its halls are not changing, that track is dead. Safety log test 8 is the test for it.</p>
+<h4 id="trap-3-the-two-packs-need-a-shared-ground-or-nothing-the-tee">Trap 3 — The two packs need a shared ground, or nothing the Teensy measures is real</h4>
+<p>Two separate packs have two separate negative terminals. Everything the Teensy measures about the far pack — its voltage divider, its ACS758 current sensor, its throttle line reference — is measured against pack negative. Without one common zero-volt reference, those two negatives float against each other and every reading from the far side is meaningless.</p>
+<p><strong>This trap got worse when the VESCs went, not better.</strong> A floating CAN bus announces itself: the messages simply stop and rule 4 catches it. A floating analogue reference does not announce anything. It gives you a plausible-looking wrong number, and the Spine acts on it.</p>
+<p><strong>The fix: bond the two pack negatives together at one single point, and keep the two positives separate.</strong> Each pack then returns its own current through the shared negative, but there is no path between the positives, so the cross-charging problem in the opening paragraph still cannot happen.</p>
+<p><strong>Decision D8 added a third negative to that bond.</strong> The electronics battery has its own, and it goes to the same single point. It is tempting to leave it floating, since a separate battery does not need the packs for anything — but the Teensy sitting on it reads the pack voltage dividers and the ACS758 sensors, and those readings are meaningless without a shared zero. One point, three negatives, two positives that never meet.</p>
+<p>Two details on that bond:</p>
+<ul>
+<li>Size it for the larger of the two motor currents, and keep it short and thick. It is carrying real current, not just a reference.</li>
+<li><strong>Do not fuse it.</strong> A fuse that opens in the ground bond leaves every analogue reading on the far pack floating while the robot is still driving, which is worse than the fault it was protecting against.</li>
+</ul>
+<h4 id="the-electronics-supply-their-own-battery-so-both-packs-can-b">The electronics supply: their own battery, so both packs can be equal</h4>
+<p><strong>Owner decision D8, 2026-09-19. This section used to say the opposite, and the reasoning it used to carry is worth keeping, because it explains why the packs are now the size they are.</strong></p>
+<p><strong>The electronics have their own 12 V 20 Ah battery</strong> on the shelf. Neither traction pack feeds them. The isolated 48→12 V converter is deleted. <code>04-power-and-wiring.md</code> section 3 is the specification.</p>
+<h5 id="what-this-section-used-to-say-and-why-it-was-right-at-the-ti">What this section used to say, and why it was right at the time</h5>
+<p>The two packs were going to be different sizes, 20 Ah and 15 Ah, and the electronics ran off the larger one. That was not a preference — it was a fix. Mismatched capacities are a problem on their own: with the same motor current on both sides the smaller pack empties sooner, the two voltages diverge faster, and trap 1 gets worse. And because rules 4 and 5 stop the robot when either side drops out, <strong>the runtime of the whole robot is set by the smaller pack, not the average.</strong></p>
+<p>Loading the larger pack with the electronics drained it faster on purpose, which pushed the two packs towards emptying at the same moment. The load you needed was:</p>
+<pre><code>electronics current  =  motor current per side  ×  ( larger capacity / smaller capacity − 1 )</code></pre>
+<p>That was a clever fix for a problem we no longer have to have.</p>
+<h5 id="what-it-says-now">What it says now</h5>
+<p>With the electronics on their own battery, both packs carry nothing but a motor. So make them <strong>the same capacity</strong> and the whole balancing act disappears. Using the same cells as before, rearranged, and about 3.1 A per side while crawling:</p>
+<div class="tw"><table><thead><tr><th></th><th>Capacity</th><th>Current drawn</th><th>Runtime</th></tr></thead><tbody><tr><td>Pack A: left motor only</td><td>17.5 Ah</td><td>3.1 A</td><td>5.6 hours</td></tr><tr><td>Pack B: right motor only</td><td>17.5 Ah</td><td>3.1 A</td><td>5.6 hours</td></tr><tr><td>Electronics battery: 240 Wh</td><td>—</td><td>38 W</td><td>6.3 hours</td></tr></tbody></table></div>
+<p>Three things come out of that table.</p>
+<p><strong>The robot drives for 5.6 hours instead of 4.7.</strong> Same cells, 19 % more, because no pack is carrying a passenger any more.</p>
+<p><strong>Trap 1 gets smaller.</strong> Two equal packs, with the same load, drift apart only through turning and through how healthy each one is. Rule 11's voltage scaling still earns its place, but it has less work to do and less to correct.</p>
+<p><strong>The electronics outlast the drive, on purpose.</strong> 6.3 hours against 5.6 means that when the motors stop, the Brain, the Spine and the face are still up. That is exactly when you want them: to show a message on the eyes, to finish the log, and to refuse to re-arm.</p>
+<blockquote><p><strong>What did not move: the contactor coils.</strong> They are 48 V and they stay on pack A. That tap is what opens both contactors when pack A dies, and the next section is entirely about why that matters. Do not tidy them onto the new battery.</p></blockquote>
+<h4 id="the-consequence-that-must-be-tested">The consequence that must be tested</h4>
+<p>This section used to open by saying that running the electronics from one pack means <strong>the Spine dies when that pack dies</strong>. Decision D8 made that false, and it is the single best thing that decision bought. The Spine is on its own battery now, so a pack cutting out no longer takes the board that enforces the arbitration rules with it.</p>
+<p>Two mechanisms cover the supply failures, and they cover different ones:</p>
+<div class="tw"><table><thead><tr><th>What dies</th><th>What stops the robot</th></tr></thead><tbody><tr><td><strong>Pack A</strong></td><td>Its 48 V coils lose power, both contactors open, both motors are disconnected — including the right-hand one with its healthy pack B. Copper, not code.</td></tr><tr><td><strong>The electronics battery</strong></td><td>The Teensy dies, so its arm MOSFET in the coil chain opens, and both contactors drop the same way.</td></tr><tr><td><strong>Pack B</strong></td><td>Neither of the above. Contactor B stays closed with no power behind it, so the left track keeps driving. <strong>Only arbitration rule 4 catches this</strong>, by counting hall edges and seeing a dead track.</td></tr></tbody></table></div>
+<p>The first two are the best kind of safety: a consequence of which wire you tap, not code that has to run. Both were free. The third is not, and it is why rule 4 is not optional.</p>
+<p><strong>None of this makes the Teensy's other failures safe.</strong> It has many more ways to fail than losing its supply, and the rest of this section is about those.</p>
+<p><strong>This is the step that decision D7 made dangerous, and the rest of this section is the single most important part of this document.</strong></p>
+<p>With VESCs, the robot was relying on the <strong>VESC's own command timeout</strong>: no command for about a second and it released the motor. That behaviour is what stopped the robot pivoting on its surviving track, and it was free.</p>
+<p><strong>A scooter controller has no such timeout.</strong> It is an analogue device. It sees a throttle voltage and it drives. Worse, the DAC that produces that voltage <strong>keeps holding its last value</strong> when the Teensy dies — it does not fall to zero. So the exact failure that used to produce a graceful coast now produces a robot driving away at whatever throttle it had, with nothing at all in control of it.</p>
+<p>The <strong>hardware watchdog</strong> is the entire replacement for that lost behaviour. It is a separate timer chip that must be kicked by the Teensy every cycle; if the kicks stop, it opens a relay in the throttle lines. This is why <code>05-bom.md</code> lists it as non-negotiable rather than as a nice extra.</p>
+<p>So this becomes the critical item in the whole build, not a configuration detail:</p>
+<ul>
+<li><strong>Fit the hardware watchdog.</strong> Nothing else covers a Teensy that crashes, hangs, or loses its I2C bus <strong>while every battery on the robot is still alive</strong> — the contactors stay closed, the DACs keep holding their last throttle, and only the watchdog relay stops the robot. Neither the pack A coil tap nor the arm MOSFET helps here, because both of those need a supply to actually fail. A crashed Teensy is still a powered Teensy. There is no setting to enable.</li>
+<li>Test it, as safety log test 15: cut power to the Spine while the robot is driving, and confirm both tracks stop and the robot does not turn.</li>
+<li>Test its blind spot too, as safety log test 16. The watchdog only fires when the kicks stop, so a Teensy that is alive but has lost the I2C bus to the DACs will keep kicking while the throttle stays stuck. The firmware must check every DAC write and <strong>stop kicking on purpose</strong> when one fails.</li>
+<li>Keep a buffer capacitor on the electronics rail anyway. It used to be the main defence against risk R6, the motor current spikes. Decision D8 took that job off it — the rail is a battery now, and the motors have no path to pull it down — but it still costs almost nothing and it covers the inrush when the fans and the LiDAR start together.</li>
+</ul>
+<hr>
+<h3 id="4-the-watchdog-in-detail">4. The watchdog, in detail</h3>
+<p>This deserves its own section because it is easy to skip and it is the feature that matters most.</p>
+<p>The Brain sends a small message to the Spine 20 times a second, so one every 50 ms. The message contains the requested speed and turn, plus a counter that goes up by one each time.</p>
+<p>The Spine remembers when the last message arrived. Every loop it checks: <em>was it less than 100 ms ago?</em></p>
+<ul>
+<li><strong>Yes</strong> — carry on normally.</li>
+<li><strong>No</strong> — the Brain is considered dead. Ramp both motors to zero over 0.5 seconds and stop obeying the Brain until fresh messages come back for a full second.</li>
+</ul>
+<p>Note what this does <strong>not</strong> do: it does not slam the brakes. A sudden stop on a tall robot could tip it forward. Ramping down over half a second stops it safely without pitching it over.</p>
+<p>Note also that in <code>MANUAL</code> mode a dead Brain does not stop the robot at all, because the driver's sticks come straight into the Spine. The Brain's heartbeat only gates the Brain's own authority.</p>
+<hr>
+<h3 id="5-what-each-board-actually-runs">5. What each board actually runs</h3>
+<h4 id="brain-jetson-orin-nano-linux-python">Brain — Jetson Orin Nano, Linux, Python</h4>
+<p>Four things, all independent, all allowed to be slow:</p>
+<ol>
+<li><strong>Obstacle map.</strong> Read the LiDAR, build an occupancy grid, work out which directions are blocked. This is not AI. It is geometry, and it is fully predictable.</li>
+<li><strong>People detection.</strong> The OAK-D camera runs a YOLO model on its own chip, so the Jetson gets a ready-made list of where people are without spending any effort. Output is simple: "person at 20 degrees left, 3 metres away."</li>
+<li><strong>Personality.</strong> A state machine picks a behaviour: idle, curious, greeting, shy, retreating. It sends gaze targets to the Face and plays sound clips. Optionally an LLM chooses the behaviour instead of fixed rules, but see the warning below.</li>
+<li><strong>Logging.</strong> Record motor temperature, battery voltage, and any veto events to a file. You will need this after the first time something goes wrong in the field.</li>
+</ol>
+<blockquote><p><strong>The AI never drives.</strong> The personality layer chooses from a short fixed list: <code>idle</code>, <code>look_at</code>, <code>greet</code>, <code>retreat</code>, <code>play_sound</code>, <code>nudge_forward</code>. A plain reliable program turns the choice into motion, and the safety layer can cancel it at any moment. The AI never produces a motor number. This is what makes it safe to put a language model on a heavy machine.</p></blockquote>
+<h4 id="spine-teensy-40-c-no-operating-system">Spine — Teensy 4.0, C++, no operating system</h4>
+<p>One loop at 1 kHz that does exactly what section 3 describes. Nothing else. No logging to SD card, no screens, no clever features. Every line of code added here is a line that can stop the robot from stopping.</p>
+<p>It also reads the sensors that replaced the VESC telemetry — the hub motors' thermistors, the pack voltage dividers, the ACS758 current sensors and the hall-edge speed counts — and forwards motor temperature and battery voltage up to the Brain.</p>
+<h4 id="looking-around-now-means-driving">Looking around now means driving</h4>
+<p>With a fixed head, <strong><code>GAZE</code> can only move pupils.</strong> To actually look left or right, the robot has to turn its whole body. That has three consequences, and the third is the one that can hurt somebody.</p>
+<p><strong>1. The camera's field of view is the robot's field of view.</strong> The OAK-D Lite sees 69 degrees, so <code>+-34.5</code> degrees ahead and nothing else. It is blind across the remaining 111 degrees until the body turns. The model now prints this, and it only sees the full width of its own path from 489 mm ahead — closer than that, its own track edges are out of frame. That is the job the ToF bumper ring was already doing, and it is now load-bearing rather than a nice extra.</p>
+<p><strong>2. A turn in place is the hardest thing the drive ever does.</strong> Skid steering a tracked vehicle means running the two belts in opposite directions and scrubbing them sideways across the ground. It is the highest-current manoeuvre there is, and in soft Negev sand the belts dig in rather than slide, which raises it further. Every "look left" spends the current budget of a hard acceleration. Two things follow:</p>
+<ul>
+<li>The current limit that section 1b's ACS758 sensors enforce will be hit by <em>turning</em>, not by driving. Test it by turning in place on sand, not by driving in a straight line.</li>
+<li>Turning in place is also what wears belts and pulls them off. Prefer a gentle arc over a pirouette wherever the behaviour allows it.</li>
+</ul>
+<p><strong>3. The personality layer can now command motion, and it must not have that authority.</strong> This is the part to get right. Before, "be curious about that person" moved a servo, and the worst case was a twitchy head. Now the same intent moves 86 kg of robot. A frozen or confused Brain used to produce a stuck head; now it can produce a robot that keeps turning.</p>
+<p>So a look-driven turn is <strong>not</strong> a special case. It is an ordinary drive command and it goes through every rule in section 2 exactly like a stick input: the slew limit, the current limit, the tilt cut-out, the bumper stop, and the watchdog. Three rules on top of that:</p>
+<div class="tw"><table><thead><tr><th></th><th>Rule</th></tr></thead><tbody><tr><td>L1</td><td>The Brain may only request a turn as a <strong>heading offset with a timeout</strong>, never as a raw motor command. If the Brain stops talking, the turn stops with it — the existing heartbeat already does this.</td></tr><tr><td>L2</td><td><strong>Cap look-turns well below the driving limit.</strong> A gaze turn gets a fraction of full turn rate, so a runaway look is a slow spin you can walk away from, not a spin that knocks somebody over.</td></tr><tr><td>L3</td><td><strong>The operator's stick always wins.</strong> Any stick movement cancels an in-progress look-turn immediately. The operator must never have to fight the personality for control.</td></tr></tbody></table></div>
+<p>Rule L3 is why the RC channel that used to be "head pan override" is not deleted but <strong>repurposed as a look-turn enable</strong>. Put it on a switch. If the crowd is tight, the robot stops turning on its own and only the operator drives.</p>
+<h4 id="face-esp32-s3-c">Face — ESP32-S3, C++</h4>
+<p>Receives short intent messages from the Brain, such as <code>GAZE 20 -5</code> or <code>MOOD curious</code>, and then runs the animation itself: pupil movement and blinking, on the two screens.</p>
+<p><strong>There are no servos.</strong> Owner decision 2026-09-17: the head is a rigid welded post. It does not pan, nod, or tilt. Everything the face does, it does with 480x480 pixels per eye.</p>
+<p>That is a real gain in a sand-blown desert — no gear train, no bearing, no slip ring, and no cable twist limit — but it moves a problem into the firmware. See "Looking around now means driving" below.</p>
+<p>The Brain says <em>what to feel</em>. The Face decides <em>how to show it</em>. This split is why the face stays smooth while the Brain is busy, and it means you can develop and test the head with the Brain unplugged.</p>
+<hr>
+<h3 id="6-modes-the-driver-can-select">6. Modes the driver can select</h3>
+<p>Two positions on a switch on the remote:</p>
+<p><strong>MANUAL</strong> — the sticks drive the tracks directly. The bumper veto and the temperature limit still apply, because those are in the Spine. The Brain is purely cosmetic in this mode: the eyes still follow people and the sounds still play, but it cannot move the robot at all.</p>
+<p>This is the mode to use in a crowd.</p>
+<p><strong>ASSIST</strong> — the Brain may also request movement, for behaviours like slowly turning towards a person who is talking. The driver's stick still overrides instantly: any stick input above a small deadband takes priority over the Brain for the next two seconds.</p>
+<p>Start with <code>MANUAL</code> working perfectly. Only build <code>ASSIST</code> once you trust everything else. <code>MANUAL</code> alone plus a good face is already the whole show.</p>
+<hr>
+<h3 id="7-build-and-test-order">7. Build and test order</h3>
+<p>Do not build this in the order of the diagram. Build it in the order that lets you test something real at every stage.</p>
+<div class="tw"><table><thead><tr><th>Stage</th><th>What you build</th><th>How you know it works</th></tr></thead><tbody><tr><td>1</td><td>One controller on a bench, one pod motor, a hand throttle, no Teensy</td><td>The motor spins from the throttle. You now know the controller and motor are healthy, with no code involved</td></tr><tr><td>2</td><td>Teensy drives one DAC into that controller's throttle line</td><td>The motor responds to a number you type in</td></tr><tr><td>3</td><td>Add the RC receiver, one motor</td><td>The stick spins the motor, and it stops when you switch the transmitter off</td></tr><tr><td>4</td><td><strong>Add the hardware watchdog, before the second track</strong></td><td>Pull the Teensy's power while the motor runs: the relay opens and the motor stops. Do this stage <strong>before</strong> there are two tracks that can pivot the robot</td></tr><tr><td>5</td><td>Add the second controller and mixing</td><td>Both tracks on blocks, the robot steers correctly in the air</td></tr><tr><td>6</td><td>Add the E-stop and the arm switch</td><td>Every one of the section 3 failures gives a stop. <strong>Test each one on purpose.</strong></td></tr><tr><td>7</td><td>First drive, outdoors, no body, tethered E-stop</td><td>It drives and turns on sand. <strong>Watch the current on a turn in place</strong> — that is the peak, not straight-line driving</td></tr><tr><td>8</td><td>Add the bumper sensors</td><td>It refuses to drive into a cardboard box</td></tr><tr><td>9</td><td>Add the Face, with the Brain doing nothing else</td><td>Eyes animate and follow a hand</td></tr><tr><td>10</td><td>Add the camera and the personality</td><td>Pupils follow a real person across the room. The head does not move</td></tr><tr><td>11</td><td>Enable look-turns, on the channel 6 switch</td><td>The body turns slowly to keep a person in view, and <strong>any stick input cancels it instantly</strong></td></tr><tr><td>10</td><td>Add the body and the sound</td><td>—</td></tr></tbody></table></div>
+<p>Stage 5 is not optional and cannot be rushed. Go through the failure list in section 3 and deliberately cause each one: pull the radio antenna, unplug the Brain's USB cable, press the E-stop mid-drive, short the bumper sensor. If any of them does not produce a stop, the robot is not ready to be near people.</p><footer>Generated from the markdown in this repo by <code>build_guides.py</code> on 2026-09-22. Do not edit these HTML files — edit the markdown and run the script again.</footer></div></body></html>

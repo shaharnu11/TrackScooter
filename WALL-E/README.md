@@ -1,6 +1,7 @@
  # WALL-E
 
-A two-track robot built from the two Rev 012 track pods, for Midburn in the Negev desert.
+A two-track robot built from the two track pods in `../archive/`, for Midburn in the Negev
+desert. It always follows the **newest** pod revision on disk — today rev013-double-shear.
 
 This folder holds everything for the robot: the documents, the code for three small
 computers, and the CAD for the frame. Nothing in here changes the scooter project.
@@ -10,7 +11,14 @@ The scooter work stays in `../archive/`.
 
 ## Start here if you are building it
 
-**[BUILD.md](BUILD.md)** — the steps in order, with a check at the end of each one.
+**[`guide/index.html`](guide/index.html)** — the guide book. Seven pages, in the order you
+need them: the plan, what to buy, the frame and pods, power, boards and firmware, safety,
+glossary. Open it in a browser. It is built from the markdown in this folder by
+`python3 build_guides.py`, so the markdown stays the source of truth and the pages never
+drift from it.
+
+Then **[BUILD.md](BUILD.md)** — the steps in order, with a check at the end of each one.
+For the pod joint specifically, read **[FRAME_AND_PODS.md](FRAME_AND_PODS.md)** first.
 
 The drawings it refers to are in `blueprint/`, and they are dimensioned:
 
@@ -37,16 +45,22 @@ clean run is also the model's own check that the change is consistent.
 |---|---|
 | `walle.scad` | The global file. One entry point, every view and every sheet. |
 | `pod_interface.scad` | The 23 facts about the **built** pods. The only place they live. |
-| `check_pod_interface.scad` | Proves that file still agrees with the Rev 012 pod model. |
+| `pod_latest.sh` | Writes `pod_latest.scad`, pointing at the **newest** pod revision on disk. |
+| `check_pod_interface.scad` | Proves the interface file still agrees with that pod model. |
 | `cad/walle_frame.scad` | Everything WALL-E decides, plus the 46 guards. |
 
 The pod numbers used to be typed into `cad/walle_frame.scad` by hand, copied from
 the pod model. They are now in one file, and `check_pod_interface.scad` compares all
-23 of them against the pod model itself. As of 2026-09-16 all 23 agree.
+23 of them against the pod model itself — always the **newest** revision in `archive/`,
+never one pinned by hand. As of 2026-09-22 all 23 agree with rev013-double-shear.
 
-Two things in there are still **assumptions, not measurements**, and both are in
-step 0 of [BUILD.md](BUILD.md): whether the pods still have their green plates on,
-and the part weights that the tipping angles are computed from.
+One thing in there is still an **assumption, not a measurement**, and it is in step 0
+of [BUILD.md](BUILD.md): the part weights that the tipping angles are computed from.
+
+The old "are the green plates fitted?" question is **answered**. Rev 013 measured the
+built pods: the plates are fitted, but they sit **inboard** of the carriers, so the rail
+lands on the carrier and the bolts need a 6 mm packer. See
+[FRAME_AND_PODS.md](FRAME_AND_PODS.md).
 
 ---
 
@@ -166,10 +180,10 @@ wheels.
 
 | Headline number | Value |
 |---|---|
-| Overall width | 672 mm (pods 500 apart, green plates stick out either side) |
+| Overall width | 677 mm (pods 500 apart, the pods stick out either side) |
 | Overall height | 910 mm, to the top of the eye barrels |
 | Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
-| Rails | 60×30×3 box, 550 long, 268 mm clear between them |
+| Rails | 60×30×3 box, 550 long, 263 mm clear between them |
 | Lowest point of the robot | 150 mm above the ground |
 | Whole robot | 88.9 kg — **the pods, packs and electronics are still guesses** |
 | Centre of mass | 318.2 mm up, and 4.4 mm forward of centre — the chest speakers |
@@ -179,7 +193,9 @@ wheels.
 | Steel needed | 1580 mm of 60×30×3 box tube |
 
 **The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
-already drilled in the green plates, so no new holes go into the built pods.
+already drilled in the green plates, so no new holes go into the built pods. The rail itself
+lands on the carrier, which stands 6 mm proud of the plate, so each side needs a 6 mm packer
+under the bolts — [FRAME_AND_PODS.md](FRAME_AND_PODS.md) has the stack, part by part.
 
 The tipping numbers are only as good as the mass guesses feeding them. Weigh a pod, weigh a
 pack, and put the real numbers in the model before trusting 19.3°.

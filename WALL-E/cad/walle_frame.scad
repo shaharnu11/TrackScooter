@@ -318,15 +318,18 @@ body_com_frac = (m_body_shell*body_shell_frac + body_extra*body_extra_frac)
 $fa = 4; $fs = 0.7;
 
 pod_z       = pod_cl/2;                 // each pod's centre plane
-// pod_mount_z comes from ../pod_interface.scad. It is the pod's widest point
-// AND the face the rail bolts to — 100 with the green plates fitted, 94
-// without them. That question is still open; see the cautions in that file.
-width_over  = pod_cl + 2*pod_mount_z;   // 672 — overall robot width
+// pod_mount_z comes from ../pod_interface.scad. Since rev013 measured the
+// built pods it is the CARRIER's outer face at 88.5, not the green plate:
+// the plate moved inboard (76.5..82.5) and the carrier now stands 6 mm proud
+// of it. The rail lands on the carrier; pod_packer_t fills the gap at the
+// bolts. Read the mounting-face section of pod_interface.scad before touching
+// anything below.
+width_over  = pod_cl + 2*pod_mount_z;   // 677 — overall robot width
 
-// the rail's OUTER face lies flat on the inboard green plate's outer face
-rail_zo     = pod_z - pod_mount_z;      // 150
-rail_zi     = rail_zo - fr_w;           // 120 — rail inner face
-bay_w       = 2*rail_zi;                // 240 — clear width between the rails
+// the rail's OUTER face lies flat on the inboard CARRIER face
+rail_zo     = pod_z - pod_mount_z;      // 161.5
+rail_zi     = rail_zo - fr_w;           // 131.5 — rail inner face
+bay_w       = 2*rail_zi;                // 263 — clear width between the rails
 
 fr_bot      = pod_gp_yc - pod_gp_w/2;   // 197 — rail bottom, flush with the plate
 fr_top      = fr_bot + fr_h;            // 257 — rail top, flush with the plate
@@ -662,14 +665,16 @@ module frame_steel(){
     }
 }
 
-// ---- M12s: in from the INBOARD side, through the rail and the green plate,
-//      into a nut welded on the green plate's outer face. Axis along z.
+// ---- M12s: in from the INBOARD side, through the rail, through the 6 mm
+//      PACKER that fills the carrier-to-plate step, through the green plate,
+//      into a nut welded on the plate's far face. Axis along z.
 //      The head therefore faces the battery bay, which is why the plywood box
 //      wall needs an access hole at each bolt — see battery_box().
 module pod_bolts(){
   for (s = [1,-1]) scale([1,1,s]) for (bx = pod_bolt_x)
     translate([bx, pod_gp_yc, rail_zi - 12]) {
-      color([0.75,0.72,0.55]) cylinder(h = 12 + fr_w + pod_gp_t + 10, d = pod_bolt_d - 0.2);
+      color([0.75,0.72,0.55])
+        cylinder(h = 12 + fr_w + pod_packer_t + pod_gp_t + 10, d = pod_bolt_d - 0.2);
       color([0.75,0.72,0.55]) cylinder(h = 10, d = 21.9, $fn = 6);      // head
     }
 }
@@ -1002,7 +1007,7 @@ echo(str("LAYOUT:   pods ", pod_cl, " apart centre to centre -> ", width_over,
          " per pod, TOTAL FOOTPRINT ", pod_A, " long x ", pod_cl + pod_belt_w, " wide"));
 echo(str("FRAME:    rails ", fr_h, "x", fr_w, "x", fr_t, " box, ", rail_len,
          " long, outer faces ", 2*rail_zo, " apart, ", bay_w, " clear inside · ",
-         "rails ", fr_bot, "..", fr_top, " above ground, flush with the green plates"));
+         "rails ", fr_bot, "..", fr_top, " above ground, flush with the green plate band"));
 echo(str("BATTERY:  pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
          batt_upright ? "UPRIGHT (80 wide, 110 tall)" : "FLAT (110 wide, 80 tall)",
          " · box floor ", tray_floor, ", pack top ", batt_y1,
@@ -1131,7 +1136,13 @@ guards = [
   ["gap between the packs clears the lid vent",         batt_gap_z - vent_d, 8],
   ["box floor above the ground (obstacle clearance)",  tray_y0, 120],
   ["rail inner face to the belt edge, per side",       rail_zi - pod_belt_w/2, 20],
-  ["rail outer face sits ON the green plate (must be 0)", -abs(rail_zo - (pod_z - pod_gp_zo)), -0.01],
+  ["rail outer face sits ON the pod mounting face (must be 0)", -abs(rail_zo - (pod_z - pod_mount_z)), -0.01],
+  // the carrier stands proud of the green plate, so the bolts cross an air
+  // gap. If this ever goes to 0 the packer is not needed and the BOM changes.
+  ["packer thickness, rail face to green plate (60x6 offcut)", pod_packer_t, 5.9],
+  // and the packer must not be so thick that the M12 runs out of thread
+  ["M12 grip: rail 2 walls + packer + plate, under the 100 mm bolt",
+   100 - (fr_w + pod_packer_t + pod_gp_t), 10],
   ["front bolt to the green plate's front end",        (pod_bolt_x[0] - (-188)) - 1.5*(pod_bolt_d + 1), 0],
   ["both bolts land within the rail",                  min(pod_bolt_x[0] - rail_x0, rail_x1 - pod_bolt_x[1]), 40],
   ["anti-tip catches BEFORE the robot tips forward",   tip_fwd - at_catch, 4],

@@ -44,7 +44,7 @@ on every sheet below it is wrong too.
 
 | | |
 |---|---|
-| Overall | 910 mm tall, 672 mm wide, 430 mm body length |
+| Overall | 910 mm tall, 677 mm wide, 430 mm body length |
 | Weight | about 100 kg, and **that is a guess** — see step 0 |
 | Lowest point | the plywood box floor, 150 mm above the ground |
 | Tips forward at | 17.7°, and the castor catches it at 12.3° |
@@ -54,30 +54,30 @@ on every sheet below it is wrong too.
 
 # Step 0. Before you cut anything
 
-Two things in the model are still assumptions, and both are cheap to check now
-and expensive to discover later.
+The part weights are still assumptions, and the pod joint is worth a tape
+measure. Both are cheap to check now and expensive to discover later.
 
-### 0a. Do the pods still have their green plates on?
+### 0a. Which face does the rail bolt to? (answered — but look anyway)
 
-This is the one that matters. The model assumes the green plates **are** fitted,
-which puts the pod's widest point at 86 mm from its centre and makes the robot
-672 mm wide overall. The rails bolt to the INNER face of those plates.
+This used to be an open question. Rev 013 measured the built pods on
+2026-09-18 and closed it:
 
-The Rev 012 pod model itself asks whether the plates are needed at all, and in
-its own chassis mode it drops them and picks up on the carrier plates instead.
+- The green plates **are** fitted, but they sit **inboard** of the carriers, at
+  76.5 to 82.5 mm from the pod centre.
+- The carrier is next, 82.5 to 88.5, so it stands **6 mm proud** of the plate.
+- The rail therefore **lands on the carrier**, at 88.5. The robot is 677 mm
+  wide overall.
+- The two M12 holes are in the **green plate**, 6 mm behind that face. Each
+  side gets a **6 mm packer** (a 60×6 offcut, 2 holes Ø13) filling the gap.
 
-Go and look at the physical pods.
+Without the packer the bolts pull the rail wall into the air gap and the joint
+has no clamp at all. Do not skip it.
 
-- **Plates fitted.** Nothing to do. Carry on.
-- **No plates.** Open `pod_interface.scad` and set:
+Go and look at the physical pods anyway, and check the table in step 0a2. The
+scooter's fork legs, if they are still bolted on at 88.5 to 92.5, come **off**
+for WALL-E — they belong to the scooter.
 
-  ```
-  pod_has_green_plate = false;
-  ```
-
-  The rails then land on the carrier faces at 80 instead of 86, the robot gets
-  12 mm narrower, and each rail moves out 6 mm. Run `./render_all.sh` again and
-  use the new sheets.
+Full stack, part by part: [FRAME_AND_PODS.md](FRAME_AND_PODS.md).
 
 ### 0a2. Measure the gap between the fork legs before you cut anything
 
@@ -94,16 +94,20 @@ the moment the steel is already cut, so verify it yourself:
 
 | Measure | Should be |
 |---|---|
-| Inner gap between the two fork legs | 140 mm |
-| Fork leg thickness | 4 mm |
+| Clear gap between the two carrier plates | 165 mm |
+| Over the carriers, outer face to outer face | 177 mm |
+| Over the two green plates | 165 mm |
 | Carrier plate thickness | 6 mm |
 | Green plate thickness | 6 mm |
-| Outer face to outer face, green plate to green plate | 172 mm |
+| Green plate band, bottom and top above ground | 197 and 257 mm |
+| M12 hole centres, forward of the hub axle | 108 and 168 mm |
 
 If any of these differ, change them in `pod_interface.scad`, then run:
 
 ```
-openscad -o /tmp/check.csg WALL-E/check_pod_interface.scad
+cd WALL-E
+./pod_latest.sh
+openscad -o chk.echo --export-format echo check_pod_interface.scad
 ./render_all.sh
 ```
 
@@ -166,9 +170,10 @@ crushing a 3 mm wall with an M12 bolt.
 > distances were being measured from the rear, which would have put both holes
 > 336 mm out of place. Measure from the rear.
 
-**Check:** hold a rail against a pod's green plate. The two sleeves should line
-up with the two drilled holes in the plate with no forcing. Do this before you
-weld anything else.
+**Check:** hold a rail against a pod, flat on the **carrier** face, with the
+6 mm packer between the rail and the green plate. The two sleeves should line up
+with the two drilled holes in the plate with no forcing. Do this before you weld
+anything else.
 
 ---
 
@@ -176,10 +181,10 @@ weld anything else.
 
 From sheet 2, plan view. Distances are from the rail's rear end.
 
-- Rail outer faces **328 mm apart**, so **268 mm clear** between them.
+- Rail outer faces **323 mm apart**, so **263 mm clear** between them.
 - Rear cross member at **25 mm**.
 - Front cross member at **525 mm**.
-- Both cross members are 240 mm long and sit **between** the rails.
+- Both cross members sit **between** the rails, so cut them to the bay: **263 mm**.
 
 The rails end up sitting **197 to 257 mm above the ground**, which is flush with
 the green plates.

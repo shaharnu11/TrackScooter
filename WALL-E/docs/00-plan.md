@@ -10,7 +10,7 @@ detail of how the electronics fit together.
 
 ## 1. What "done" looks like
 
-A tracked robot, about 672 mm wide and roughly a metre tall, that clearly reads as WALL-E to
+A tracked robot, about 677 mm wide and roughly a metre tall, that clearly reads as WALL-E to
 anybody who has seen the film. It is driven by a person with a radio remote. Its eyes find
 faces and follow them. It makes WALL-E's noises. It runs for a full evening on the sand of
 the Negev, in a crowd, without hurting anybody and without breaking down.
@@ -31,8 +31,8 @@ on paper, and it moves the hard part of the project from metalwork to electronic
 
 | Item | Status |
 |---|---|
-| Pod design (Rev 012) | Complete, all clearance checks pass |
-| Both pods | **Built**, carrier plate inner faces 148 mm apart, shocks **outboard** at \|z\|=94 |
+| Pod design (Rev 013) | Complete, all clearance checks pass |
+| Both pods | **Built**, 165 mm clear between the carrier plates (MEASURED 2026-09-18), shocks **inboard** at \|z\|=58.5 |
 | Belts | **Fitted** — 1080 mm, 18 links, 231 mm on the ground per pod |
 | Hub motors | **Both in hand** |
 | Original scooter controllers | **Both in hand** — see decision D7 |
@@ -40,23 +40,29 @@ on paper, and it moves the hard part of the project from metalwork to electronic
 | Electronics | Nothing bought, nothing built |
 | Body | Nothing |
 
-### What "built to Rev 012" gives us
+### What "built to Rev 013" gives us
 
 These are now real, measurable numbers rather than design intent:
 
 | Thing | Value |
 |---|---|
-| Carrier plate spacing | Inner faces 148 mm apart, outer faces 160 mm. **The frame bolts to the green plates' outer faces, 172 mm apart** |
+| Carrier plate spacing | 165 mm clear inside, **177 mm over the outer faces. The frame bolts to those carrier faces** — the green plates are 6 mm further in, so the bolts get a 6 mm packer |
 | Ground contact, one pod | 231 mm long × 118 mm wide |
-| Pod size | 363 long × 327 tall × 172 wide over the green plates. The shocks sit outboard of that, at \|z\|=94 each side, so the pod is wider than the plates suggest — measure it |
+| Pod size | 363 long × 327 tall × 177 wide over the carriers. Since Rev 013 the shocks run **inboard**, at \|z\|=58.5, so the carriers are the widest point — measure it |
 | Pod mounting band | A plate 60 mm tall, 197–257 mm above the ground, at the hub |
 | Suspension travel | +30.7 mm up, −29.2 mm down |
 | Ground pressure at 100 kg | 0.18 kg/cm², about a third of a walking person's foot |
 | Belt movement per motor turn | 660 mm |
 
-Confirm the **172 mm mounting width** with a tape measure across the green plates' outer
-faces before the frame is welded. It is the one dimension that, if wrong, makes the frame
-useless.
+Confirm the **177 mm mounting width** with a tape measure across the carriers' outer faces
+before the frame is welded. It is the one dimension that, if wrong, makes the frame useless.
+The green plates measure 165 mm over the same way — that 6 mm step per side is the packer.
+
+**Corrected again on 2026-09-22**, when WALL-E was repointed at the newest pod revision:
+Rev 013 measured the built pods and the green plate turned out to be **inboard** of the
+carrier, not outboard. The mounting face moved from 172 to 177 mm over, the robot from 672
+to 677 mm wide, and the joint gained a packer. `pod_latest.sh` now keeps this pointed at the
+newest revision so it cannot silently go stale again.
 
 **These numbers were corrected on 2026-09-17.** This table previously said 168 mm, which came
 from a proposal to widen the carrier spacing that was then reverted — so 168 never existed in
@@ -104,7 +110,7 @@ follow from that:
 | L5 | No SLAM. GPS and compass if position is needed at all | Open desert has no landmarks and the crowd keeps moving |
 | L6 | **Body from 12 mm plywood.** REVISED 2026-09-17: was foam with a thin ply skin and fibreglass over it | Mass up high makes the tipping worse, and plywood turned out to be the LIGHTER answer: the foam build was a 25 kg guess, the plywood box computes to 13.6 kg from its own geometry. 11.5 kg off the robot, 15 mm off the centre of mass, 0.7 deg more forward tipping margin, and 445 dollars cheaper |
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
-| L8 | Frame mounting width **172 mm**, across the green plates' outer faces | Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to |
+| L8 | Frame mounting width **177 mm**, across the carriers' outer faces (green plates 6 mm inboard, packer fills it) | Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to |
 | L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
 | L10 | **The electronics run from their own 12 V battery.** REVISED 2026-09-19: they used to be fed from the larger pack through an isolated 48→12 V converter | See decision D8. It deletes the one power part that cannot be bought on AliExpress, takes the Jetson off a rail that also carries 40 A of motor current, and lets both traction packs be the same size. **The contactor coils do NOT move — they stay on pack A** |
 | L11 | Frame stays 550 mm long. **All electronics on a shelf inside the body** | The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16 |

@@ -15,7 +15,8 @@
 //
 // ============================================================================
 
-include <../archive/rev012-inline-batteries/apollo_track_pod_rev012.scad>
+// The newest pod revision on disk, whichever that is. pod_latest.sh writes it.
+include <pod_latest.scad>
 
 // pod_interface.scad prefixes everything with pod_, and rev012 does not, so
 // the two sets of names do not collide. Load ours second so ours win.
@@ -40,9 +41,13 @@ checks = [
   ["fork leg thickness",     pod_leg_t,    leg_t,                      0.01],
   ["carrier inner face",     pod_carr_zi,  cz,                         0.01],
   ["carrier thickness",      pod_carr_t,   carrier_t,                  0.01],
-  ["green plate inner face", pod_gp_zi,    cz + carrier_t,             0.01],
+  // gp_z0 is the plate INNER face in every revision that defines it. Rev 012
+  // put the plate OUTBOARD of the carrier (cz + carrier_t); Rev 013 measured
+  // the built pods and it is INBOARD (cz - gp_t). Read the model, never the
+  // old formula.
+  ["green plate inner face", pod_gp_zi,    gp_z0,                      0.01],
   ["green plate thickness",  pod_gp_t,     gp_t,                       0.01],
-  ["green plate outer face", pod_gp_zo,    cz + carrier_t + gp_t,      0.01],
+  ["green plate outer face", pod_gp_zo,    gp_z0 + gp_t,               0.01],
   ["hub axle height",        pod_hub_h,    hub_h,                      0.01],
   ["belt crown height",      pod_top,      pod_top_r12,                0.10],
   ["green band centre",      pod_gp_yc,    hub_h + gp_yc,              0.01],
@@ -63,11 +68,11 @@ checks = [
 echo("");
 echo("=== POD INTERFACE CHECK ==================================================");
 echo(str("    ours: WALL-E/pod_interface.scad"));
-echo(str("  theirs: archive/rev012-inline-batteries/apollo_track_pod_rev012.scad"));
+echo(str("  theirs: ", pod_latest_file, "   (newest revision on disk: ", pod_latest_rev, ")"));
 echo("");
 for (c = checks)
   echo(str(abs(c[1] - c[2]) <= c[3] ? "  OK       " : "  *** MISMATCH  ",
-           c[0], ": ours ", c[1], " vs rev012 ", c[2],
+           c[0], ": ours ", c[1], " vs ", pod_latest_rev, " ", c[2],
            abs(c[1] - c[2]) <= c[3] ? "" : str("   <<< DIFFERS BY ",
                                                round(abs(c[1]-c[2])*1000)/1000)));
 bad = len([for (c = checks) if (abs(c[1] - c[2]) > c[3]) 1]);

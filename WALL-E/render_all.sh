@@ -23,6 +23,9 @@ trap 'rm -f "$NUL"' EXIT
 
 mkdir -p blueprint
 
+echo "== 0. point at the newest pod revision on disk"
+./pod_latest.sh
+
 echo "== 1. does the pod interface still match the pod model?"
 if "$OSC" -o "$NUL" check_pod_interface.scad 2>&1 | grep -q 'MISMATCH'; then
   "$OSC" -o "$NUL" check_pod_interface.scad 2>&1 | grep -E 'MISMATCH|DIFFERS'
@@ -93,3 +96,7 @@ echo "   cad/walle_frame_plates.png"
   -D 'render_mode="plates"' cad/walle_frame.scad 2>/dev/null
 
 echo "== done. Sheets in blueprint/, views in cad/."
+
+echo ""
+echo "== guide book: one HTML page per domain, plus the index"
+python3 build_guides.py

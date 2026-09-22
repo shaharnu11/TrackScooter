@@ -9,3 +9,6 @@ __pycache__/
 *.stl
 *.dxf
 *.csg
+
+# macOS folder junk
+.DS_Store

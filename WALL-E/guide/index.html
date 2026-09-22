@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WALL-E build guide</title><style>
+:root{--bg:#f6f5f1;--fg:#23201b;--mut:#6a6357;--line:#ddd8cc;--card:#fffdf8;
+      --acc:#b8791f;--accbg:#fdf3e2;--code:#f0ece2;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 90px}
+a{color:var(--acc)}
+header.top{border-bottom:2px solid var(--line);margin-bottom:26px;padding-bottom:14px}
+header.top .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+h1{font-size:30px;line-height:1.25;margin:.25em 0 .2em}
+h2{font-size:23px;margin:1.9em 0 .5em;padding-top:.3em;border-top:1px solid var(--line)}
+h3{font-size:19px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.nav a{display:inline-block;padding:5px 11px;border:1px solid var(--line);
+       border-radius:999px;background:var(--card);text-decoration:none;font-size:13.5px}
+.nav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.card{display:block;background:var(--card);border:1px solid var(--line);
+      border-radius:10px;padding:14px 16px;margin:10px 0;text-decoration:none;color:inherit}
+.card:hover{border-color:var(--acc)}
+.card .n{display:inline-block;min-width:26px;height:26px;line-height:26px;
+         text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+         font-size:14px;margin-right:9px}
+.card .t{font-weight:600;font-size:17px}
+.card .w{color:var(--mut);font-size:14.5px;margin:.4em 0 0 35px}
+.src{color:var(--mut);font-size:13px;margin:.35em 0 0 35px}
+.lead{font-size:17px;color:var(--mut)}
+.note{background:var(--accbg);border:1px solid var(--line);border-left:3px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:12px 14px;margin:18px 0;font-size:15px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.toc div{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin-bottom:6px}
+.toc ul{margin:0;padding-left:18px} .toc li{margin:.15em 0;font-size:14.5px}
+.filehdr{margin-top:2.4em;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:4px}
+footer{margin-top:50px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#16150f;--fg:#ece7dc;--mut:#9c9384;--line:#35322a;--card:#1e1c16;
+        --acc:#d99c3c;--accbg:#2a2318;--code:#26241d;}
+}
+</style></head><body><div class="wrap"><nav class="nav"><a href="index.html" class="here">Start here</a><a href="plan.html">1. The plan</a><a href="buying.html">2. What to buy</a><a href="frame.html">3. Frame</a><a href="power.html">4. Power</a><a href="electronics.html">5. Boards</a><a href="safety.html">6. Safety</a><a href="glossary.html">7. Glossary</a></nav><header class="top"><div class="kicker">Track-pod robot · guide book</div><h1>WALL-E build guide</h1></header><p class="lead">Seven parts, in the order you need them. Each part is one page. If you only have five minutes, read part 1.</p><div class="note"><strong>The rule that comes before everything:</strong> the two track pods are already built. Nothing in this project changes them, and no new hole goes into one. Their numbers live in <code>pod_interface.scad</code>, checked against the newest pod revision on disk by <code>./pod_latest.sh</code> + <code>check_pod_interface.scad</code>. If that check ever says MISMATCH, stop — every dimension downstream is wrong.</div><a class="card" href="plan.html"><span class="n">1</span><span class="t">The plan and the shape of the robot</span><div class="w">Read first. What is being built, in what phases, and what has to be true before each phase can start.</div><div class="src">README.md · docs/00-plan.md · docs/01-architecture.md</div></a><a class="card" href="buying.html"><span class="n">2</span><span class="t">What to buy</span><div class="w">Read second, before you spend money. Every part, what it costs, and what it is for. Long lead items are marked.</div><div class="src">docs/05-bom.md</div></a><a class="card" href="frame.html"><span class="n">3</span><span class="t">Frame, pods and steel</span><div class="w">The mechanical build: the two track pods, the face they bolt to, the rails, the battery box. Do this before any wiring.</div><div class="src">FRAME_AND_PODS.md · BUILD.md</div></a><a class="card" href="power.html"><span class="n">4</span><span class="t">Power and wiring</span><div class="w">Batteries, contactors, fusing, and the 12 V side. Do it after the frame is standing and before the brain goes in.</div><div class="src">docs/04-power-and-wiring.md · docs/06-why-the-batteries-are-low.md</div></a><a class="card" href="electronics.html"><span class="n">5</span><span class="t">Boards and firmware</span><div class="w">The three boards — Spine, Face, Brain — what each one does, and how to flash them.</div><div class="src">firmware/README.md · brain/README.md</div></a><a class="card" href="safety.html"><span class="n">6</span><span class="t">Safety and testing</span><div class="w">The rules that do not bend, the test order, and the log of what has actually been tested. Read before the first powered move.</div><div class="src">docs/03-safety-log.md</div></a><a class="card" href="glossary.html"><span class="n">7</span><span class="t">Glossary</span><div class="w">Every term and abbreviation used anywhere in this project, in plain words. Look here first when a word is unfamiliar.</div><div class="src">docs/99-glossary.md</div></a><h2 id="doing">How to actually work in this repo</h2><ol><li>Change the model in <code>cad/walle_frame.scad</code>, or the pod numbers in <code>pod_interface.scad</code>.</li><li>Run <code>./render_all.sh</code>. It points at the newest pod revision, checks the interface, runs every guard, then redraws the sheets and views. It stops at the first thing that does not agree.</li><li>Run <code>python3 build_guides.py</code> if you edited any markdown, so these pages match.</li><li>Commit. The PNGs in <code>blueprint/</code> and <code>cad/</code> are outputs — never hand-edit them.</li></ol><footer>Generated from the markdown in this repo by <code>build_guides.py</code> on 2026-09-22. Do not edit these HTML files — edit the markdown and run the script again.</footer></div></body></html>
