@@ -49,10 +49,10 @@ uses it. They are vector drawings, so print them at any size and they stay sharp
 | | |
 |---|---|
 | Overall | 910 mm tall, 677 mm wide, 430 mm body length |
-| Weight | about 100 kg, and **that is a guess** — see step 0 |
+| Weight | about 89 kg, and **that is a guess** — see step 0 |
 | Lowest point | the plywood box floor, 150 mm above the ground |
-| Tips forward at | 17.7°, and the castor catches it at 12.3° |
-| Speakers | two 6.5 inch, 10.1 litres of sealed air behind each |
+| Tips forward at | 19.3°, and the castor catches it at 12.3° — 7.0° in hand |
+| Speakers | two 6.5 inch, 9.8 litres of sealed air behind each |
 
 ---
 
@@ -145,11 +145,11 @@ From sheet 2. All of it is 60x30x3 box tube except the castor legs.
 | Part | Count | Length |
 |---|---|---|
 | Rail | 2 | 550 mm |
-| Cross member | 2 | 240 mm |
+| Cross member | 2 | 263 mm |
 | Castor leg, 30x30 box | 2 | 87 mm |
 | Castor fore/aft tie | 2 | — |
 
-That is 1580 mm of 60x30 box in total.
+That is 1626 mm of 60x30 box in total.
 
 **Check:** both rails are the same length to within 1 mm. If they are not, the
 bay will not be square and the pods will toe in or out.
@@ -353,9 +353,9 @@ there should be 7 mm between them. Rotate them through their full travel.
 
 1. Put it on level ground. Both castors should be **35 mm clear**.
 2. Push down hard on the front. The castor must touch **before** the robot
-   starts to go over. It catches at 12.3° and the robot goes over at 17.7°, so
-   there is 5.4° in hand.
-3. Drive it slowly on sand. Ground pressure is 0.184 kg/cm², about a third of
+   starts to go over. It catches at 12.3° and the robot goes over at 19.3°, so
+   there is 7.0° in hand.
+3. Drive it slowly on sand. Ground pressure is 0.163 kg/cm², about a third of
    what a walking person puts down, so it should float.
 4. Watch the **box floor at 150 mm**, not the tracks. That is what grounds out.
 

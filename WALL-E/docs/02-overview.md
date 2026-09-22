@@ -73,12 +73,12 @@ that is what makes the silhouette read as WALL-E rather than as a box on wheels.
 | Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
 | Rails | 60×30×3 box, 550 long, 263 mm clear between them |
 | Lowest point of the robot | 150 mm above the ground |
-| Whole robot | 88.9 kg — **the pods, packs and electronics are still guesses** |
-| Centre of mass | 318.2 mm up, and 4.4 mm forward of centre — the chest speakers |
+| Whole robot | 88.8 kg — **the pods, packs and electronics are still guesses** |
+| Centre of mass | 318.3 mm up, and 4.4 mm forward of centre — the chest speakers |
 | Ground pressure | 0.163 kg/cm² over 546 cm² |
 | Tips forward at | 19.3° of pitch (backward 20.7°) |
 | Anti-tip castor catches at | 12.3° — so it catches 7.0° before the robot goes over |
-| Steel needed | 1580 mm of 60×30×3 box tube |
+| Steel needed | 1626 mm of 60×30×3 box tube |
 
 **The pod comes off with two bolts per side.** The frame reuses the four M12 holes that are
 already drilled in the green plates, so no new holes go into the built pods. The rail itself

@@ -92,7 +92,7 @@ follow from that:
 | The event is mostly at night | Vision alone is not enough. Lighting is required, not decorative |
 | Crowds of people, some not sober | The safety layer is the reason this plan is shaped this way |
 | Builder is new to electronics | Section 10 is a learning plan, on the schedule as real time |
-| Pods are already built | The 172 mm mounting width and the 231 mm footprint are now fixed inputs |
+| Pods are already built | The 177 mm mounting width and the 231 mm footprint are now fixed inputs |
 | One person, evenings and weekends | Section 8 assumes this. Extra hands change everything |
 
 ---
@@ -363,7 +363,7 @@ transmitter off, when you press the E-stop, and when you unplug the Teensy's ser
 | Task |
 |---|
 | Weld and assemble the frame |
-| Mount both pods on the 172 mm mounting width |
+| Mount both pods on the 177 mm mounting width |
 | Batteries in low, both scooter controllers, the Teensy, the contactor and the fusing |
 | Add mixing for two motors, and slew rate limiting |
 | Fit the anti-tip wheels |
