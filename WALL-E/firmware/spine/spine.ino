@@ -49,8 +49,10 @@
 
 struct RcState {
   uint16_t ch[14]  = {0};
-  uint32_t last_ms = 0;
-  bool     valid   = false;   // a good frame arrived inside RC_TIMEOUT_MS
+  uint32_t last_ms = 0;        // last frame that parsed
+  uint32_t last_change_ms = 0; // last frame whose CONTENTS differed
+  bool     valid   = false;    // a good frame arrived inside RC_TIMEOUT_MS
+  bool     frozen  = false;    // frames arriving, contents not changing
 } rc;
 
 struct BrainState {
@@ -111,12 +113,14 @@ bool output_ok = true;
 
 // Why we are not moving, for telemetry. Index into STOP_REASON[].
 enum StopReason : uint8_t {
-  RUNNING = 0, R_ESTOP, R_UNARMED, R_NO_RC, R_TRACK_DEAD, R_NO_SENSE,
-  R_PACK_LOW, R_PACK_HIGH, R_NO_BRAIN, R_BUMPER, R_MOTOR_HOT, R_DAC_FAIL
+  RUNNING = 0, R_ESTOP, R_UNARMED, R_NO_RC, R_RC_FROZEN, R_TRACK_DEAD,
+  R_NO_SENSE, R_PACK_LOW, R_PACK_HIGH, R_NO_BRAIN, R_BUMPER, R_MOTOR_HOT,
+  R_DAC_FAIL
 };
 const char* const STOP_REASON[] = {
-  "running", "estop", "unarmed", "no_rc", "track_dead", "no_sense",
-  "pack_low", "pack_high", "no_brain", "bumper", "motor_hot", "dac_fail"
+  "running", "estop", "unarmed", "no_rc", "rc_frozen", "track_dead",
+  "no_sense", "pack_low", "pack_high", "no_brain", "bumper", "motor_hot",
+  "dac_fail"
 };
 StopReason stop_reason = R_UNARMED;
 
@@ -232,7 +236,7 @@ void arbitrate(uint32_t now) {
 
   // --- Rule 2: the arm switch ---------------------------------------------
   // The robot must never move the moment the battery is connected.
-  bool armed = rc.valid && rc.ch[CH_ARM] > RC_SWITCH_ON;
+  bool armed = rc.valid && !rc.frozen && rc.ch[CH_ARM] > RC_SWITCH_ON;
   if (!armed) {
     stop_reason = R_UNARMED;
     hold_off();
@@ -243,8 +247,14 @@ void arbitrate(uint32_t now) {
   digitalWrite(PIN_ARM_OUT, HIGH);
 
   // --- Rule 3: is the radio alive? ----------------------------------------
+  // Two ways for it to be dead. The second one still sends frames.
   if (!rc.valid) {
     stop_reason = R_NO_RC;
+    ramp_to(0.0f, 0.0f);
+    return;
+  }
+  if (rc.frozen) {
+    stop_reason = R_RC_FROZEN;
     ramp_to(0.0f, 0.0f);
     return;
   }
@@ -566,7 +576,8 @@ float thermal_scale(float t) {
 //  FRESHNESS — the watchdogs
 // ===========================================================================
 void freshness_check(uint32_t now) {
-  rc.valid = (now - rc.last_ms) < RC_TIMEOUT_MS;
+  rc.valid  = (now - rc.last_ms) < RC_TIMEOUT_MS;
+  rc.frozen = rc.valid && (now - rc.last_change_ms) >= RC_FROZEN_MS;
 
   // Rule 4's test, once per pass, for each side: if it is being told to move
   // and the halls have been silent too long, that side is dead.
@@ -633,6 +644,10 @@ void rc_poll() {
     for (uint8_t i = 0; i < sizeof(used); i++)
       if (tmp[used[i]] < RC_SANE_MIN || tmp[used[i]] > RC_SANE_MAX) return;
 
+    // Identical contents mean the receiver is repeating itself. See
+    // RC_FROZEN_MS: on this receiver that is what a dead transmitter looks
+    // like, because the frames do not stop.
+    if (memcmp(rc.ch, tmp, sizeof(tmp)) != 0) rc.last_change_ms = millis();
     memcpy(rc.ch, tmp, sizeof(tmp));
     rc.last_ms = millis();
   }

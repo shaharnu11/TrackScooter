@@ -1,66 +1,57 @@
-# Frame and pods — the mechanical facts, in one place
+# Frame and pods — mechanical interface
 
-This is the page to read before you cut, drill, or weld anything. It answers
-one question: **where does the frame meet the pods, and what is allowed to
-change?** The step-by-step build order is in [BUILD.md](BUILD.md) — part 6 of the
-guide, or its own page next to this one.
+Scope: where the frame meets the pods, and what may change. Read before cutting, drilling or welding. Build order: [BUILD.md](BUILD.md).
 
 ---
 
-## 1. The rule that comes before everything
+## 1. Constraint
 
-The two track pods are **built**. Nothing in the WALL-E project changes them.
-**No new hole goes into a built pod.** The frame is designed around what the
-pods already are, never the other way round.
+- The two track pods are built.
+- This project does not modify them. **No new hole goes into a built pod.**
+- The frame is derived from the pods. Not the reverse.
 
-Because of that rule, the pod numbers are not typed into the frame model. They
-live in one file, `cad/pod_interface.scad`, and a checker compares that file against
-the real pod model:
+Pod numbers are not typed into the frame model. They exist in `cad/pod_interface.scad` and are checked against the pod model:
 
 ```
 cd WALL-E
-cad/pod_latest.sh                                      # point at the newest revision
+cad/pod_latest.sh                                      # select newest revision
 openscad -o chk.echo --export-format echo cad/check_pod_interface.scad
 ```
 
-`cad/pod_latest.sh` picks the **highest** `archive/revNNN-*/apollo_track_pod_revNNN.scad`
-on disk and writes `pod_latest.scad`. So WALL-E always follows the latest pod
-revision. Nothing is pinned to an old one by hand. `cad/render_all.sh` runs this
-first and **stops** if the check says MISMATCH, because every dimension
-downstream of a wrong pod number is also wrong.
+- `cad/pod_latest.sh` selects the highest `archive/revNNN-*/apollo_track_pod_revNNN.scad` and writes `pod_latest.scad`.
+- No revision is pinned by hand.
+- `cad/render_all.sh` runs the check first and exits on MISMATCH. A wrong pod number invalidates every dimension below it.
 
-Today the newest revision is **rev013-double-shear**, and all 23 numbers agree.
+State: newest revision `rev013-double-shear`, 23/23 numbers agree.
 
 ---
 
-## 2. The z stack — what the rail actually touches
+## 2. Z stack
 
-Measured on the built pods (2026-09-18), outward from one pod's centre plane:
+Measured on the built pods, 2026-09-18. Distance outward from one pod centre plane, mm:
 
-| From | To | What |
+| From | To | Part |
 |---|---|---|
 | 0 | 59 | belt, 118 wide |
-| 76.5 | 82.5 | **green plate**, 60×6 — the two M12 holes are in here |
+| 76.5 | 82.5 | **green plate**, 60×6. Contains the two M12 holes |
 | 82.5 | 88.5 | **carrier plate**, 40×6 |
-| 88.5 | 92.5 | scooter fork leg — **not fitted on WALL-E** |
+| 88.5 | 92.5 | scooter fork leg. **Not fitted on WALL-E** |
 
-**This order changed.** In rev012 the green plate was the outermost part and the
-rail bolted flat onto it. Rev013 measured the real pods: the plate is **inboard**
-of the carrier, so the carrier now stands **6 mm proud** of the plate.
+Change from rev012:
 
-Consequence, and it is the whole reason this page exists:
+- rev012: green plate outermost, rail bolted flat to it.
+- rev013 (measured): green plate is **inboard** of the carrier. Carrier stands **6 mm proud** of the plate.
 
-- The rail comes in from the middle of the robot and **lands on the carrier**,
-  at 88.5 from the pod centre. That is `pod_mount_z`.
+Consequences:
+
+- The rail approaches from the robot centre and lands on the **carrier**, at 88.5. This is `pod_mount_z`.
 - The M12 holes are 6 mm further out, in the green plate.
-- So the bolts cross a **6 mm air gap**, and that gap needs a **packer**.
-
-The carrier cannot be dodged: it is only 40 mm wide (±20 either side of the hub
-axle) but it runs the full height of the 197–257 mm rail band.
+- The bolts therefore cross a **6 mm gap**. The gap requires a **packer**.
+- The carrier cannot be avoided: 40 mm wide (±20 about the hub axle), full height of the 197–257 mm rail band.
 
 ---
 
-## 3. The joint, part by part
+## 3. Joint stack
 
 Per side, inboard to outboard:
 
@@ -69,69 +60,63 @@ M12 head  →  rail inner wall  →  Ø25/Ø13 sleeve in the rail  →  rail out
           →  PACKER 6 mm  →  green plate 6 mm  →  M12 nut welded on the far face
 ```
 
-- **Rail:** 60×30×3 box, outer face at 161.5 from the robot centre line.
-- **Sleeve:** Ø25 outside, Ø13 bore, 30 long, welded through both rail walls.
-  Without it an M12 at full torque crushes a 3 mm wall.
-- **Packer:** 60×6 offcut — the same stock as the green plates. One per side,
-  drilled Ø13 at both M12 centres. **Without the packer there is no clamp at
-  all**: the bolt would simply pull the rail wall into the gap.
-- **Bolts:** 2 × M12 10.9 per side. Four bolts and **a pod is off the robot**.
+| Part | Specification | Function |
+|---|---|---|
+| Rail | 60×30×3 box, outer face at 161.5 from robot centre | Structure |
+| Sleeve | Ø25 OD, Ø13 bore, 30 long, welded through both rail walls | Prevents M12 preload crushing the 3 mm wall |
+| Packer | 60×6, one per side, 2 × Ø13 at the M12 centres | Fills the carrier-to-plate step. Without it the bolt pulls the rail wall into the gap and clamp force is zero |
+| Bolts | 2 × M12 10.9 per side | 4 bolts total: pod removal |
 
-Resulting overall width: **677 mm** (pods 500 apart, centre to centre).
+Overall width: **677 mm** at pod centres 500 mm apart.
 
 ---
 
-## 4. Numbers you can check with a tape measure
+## 4. Verification by tape measure
 
-| Measure this on the real pod | Should be |
+| Measurement | Expected |
 |---|---|
-| Clear gap between the two carrier plates | 165 mm |
-| Over the two carrier plates, outer face to outer face | 177 mm |
+| Clear gap between carrier plates | 165 mm |
+| Over carrier plates, outer to outer | 177 mm |
 | Over the two green plates | 165 mm |
 | Green plate band, bottom edge above ground | 197 mm |
 | Green plate band, top edge above ground | 257 mm |
-| M12 hole centres, forward of the hub axle | 108 and 168 mm |
+| M12 hole centres, forward of hub axle | 108 and 168 mm |
 | Belt width | 118 mm |
 
-If any of these disagree with the pod, **the pod wins** — fix
-`cad/pod_interface.scad`, re-run the check, then re-run the guards. Do not adjust
-the frame numbers directly; they are all derived.
+On disagreement the pod is authoritative. Correct `cad/pod_interface.scad`, re-run the check, re-run the guards. Do not edit frame numbers directly — they are derived.
 
 ---
 
-## 5. Where the numbers come from, and what happens if you change one
+## 5. Dependency chain
 
 ```
-archive/rev013-*/apollo_track_pod_rev013.scad     the pods (never edited here)
+archive/rev013-*/apollo_track_pod_rev013.scad     the pods (not edited here)
         │
-        ├── cad/pod_latest.sh → cad/pod_latest.scad   "newest revision on disk"
+        ├── cad/pod_latest.sh → cad/pod_latest.scad   newest revision on disk
         │        │
         │        └── cad/check_pod_interface.scad     23 numbers, OK or MISMATCH
         │
-cad/pod_interface.scad                            the only copy of pod facts
+cad/pod_interface.scad                            only copy of pod facts
         │
-cad/walle_frame.scad                              everything else is derived
+cad/walle_frame.scad                              all else derived
         │
         └── guards: clearances, stresses, bolt edge distances (55 today)
 ```
 
-Change `pod_cl` (how far apart the pods sit) and the width, the bay, the battery
-box and the anti-tip arms all move with it. Change a pod number by hand without
-the checker agreeing, and the model lies to you quietly. That is exactly what
-happened once before: the stack was written as 84/88/94/100, the frame came out
-14 mm too wide per side, and only the checker caught it.
+- Changing `pod_cl` moves width, bay, battery box and anti-tip arms together.
+- Changing a pod number without the checker agreeing produces silent error.
+- Precedent: the stack was once written 84/88/94/100. Result: frame 14 mm per side too wide. Detected only by the checker.
 
 ---
 
-## 6. Steel list for the pod joint
+## 6. Steel for the joint
 
 | Qty | Part | Stock |
 |---|---|---|
 | 2 | Rail, 550 long | 60×30×3 box |
 | 4 | Sleeve, Ø25 × Ø13 × 30 | turned or bought |
-| 2 | Packer, 60 long, 2 × Ø13 holes | 60×6 flat |
-| 4 | Bolt M12 × 10.9, plus nyloc | — |
-| 4 | M12 nut, welded to the green plate's far face | — |
+| 2 | Packer, 60 long, 2 × Ø13 | 60×6 flat |
+| 4 | Bolt M12 × 10.9 + nyloc | — |
+| 4 | M12 nut, welded to green plate far face | — |
 
-The full list, with prices and lead times, is in part 2 of the guide
-(`docs/05-bom.md`).
+Prices and lead times: `docs/05-bom.md`.

@@ -38,6 +38,19 @@ const uint32_t LOOP_US          = 1000000UL / LOOP_HZ;
 const uint32_t RC_TIMEOUT_MS    = 100;   // radio. Do not raise this.
 const uint32_t BRAIN_TIMEOUT_MS = 100;   // Jetson heartbeat
 
+// FS-i6X + FS-iA6B: the receiver is reported to keep emitting iBus frames
+// containing the LAST STICK VALUES after the transmitter is switched off,
+// instead of applying its failsafe. A frame-arrival test cannot see that: the
+// frames keep arriving, on time, and the robot keeps driving.
+//
+// So a frame whose 14 channels are bit-identical to the previous frame for
+// this long is treated as a dead link. A live link jitters by at least one
+// count on some channel; a frozen one repeats exactly.
+//
+// Verify on blocks: drive, switch the transmitter off, confirm the tracks stop.
+// Safety log test 3.
+const uint32_t RC_FROZEN_MS     = 500;
+
 // After the Brain comes back, ignore it for this long. Stops a Jetson that is
 // crash-looping from producing repeated bursts of movement.
 const uint32_t BRAIN_REARM_MS   = 1000;
