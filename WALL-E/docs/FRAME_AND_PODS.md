@@ -14,7 +14,7 @@ The two track pods are **built**. Nothing in the WALL-E project changes them.
 pods already are, never the other way round.
 
 Because of that rule, the pod numbers are not typed into the frame model. They
-live in one file, `pod_interface.scad`, and a checker compares that file against
+live in one file, `cad/pod_interface.scad`, and a checker compares that file against
 the real pod model:
 
 ```
@@ -23,7 +23,7 @@ cd WALL-E
 openscad -o chk.echo --export-format echo check_pod_interface.scad
 ```
 
-`pod_latest.sh` picks the **highest** `archive/revNNN-*/apollo_track_pod_revNNN.scad`
+`cad/pod_latest.sh` picks the **highest** `archive/revNNN-*/apollo_track_pod_revNNN.scad`
 on disk and writes `pod_latest.scad`. So WALL-E always follows the latest pod
 revision. Nothing is pinned to an old one by hand. `render_all.sh` runs this
 first and **stops** if the check says MISMATCH, because every dimension
@@ -94,7 +94,7 @@ Resulting overall width: **677 mm** (pods 500 apart, centre to centre).
 | Belt width | 118 mm |
 
 If any of these disagree with the pod, **the pod wins** — fix
-`pod_interface.scad`, re-run the check, then re-run the guards. Do not adjust
+`cad/pod_interface.scad`, re-run the check, then re-run the guards. Do not adjust
 the frame numbers directly; they are all derived.
 
 ---

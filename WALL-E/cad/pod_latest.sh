@@ -11,7 +11,7 @@
 # ============================================================================
 set -euo pipefail
 cd "$(dirname "$0")"
-latest=$(ls -d ../archive/rev*/apollo_track_pod_rev*.scad 2>/dev/null | sort -V | tail -1)
+latest=$(ls -d ../../archive/rev*/apollo_track_pod_rev*.scad 2>/dev/null | sort -V | tail -1)
 [ -n "$latest" ] || { echo "!! no pod model found under ../archive"; exit 1; }
 rev=$(basename "$(dirname "$latest")")
 cat > pod_latest.scad <<EOF

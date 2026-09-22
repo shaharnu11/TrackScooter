@@ -12,3 +12,6 @@ __pycache__/
 
 # macOS folder junk
 .DS_Store
+
+# scratch renders: the guide embeds them, so they are never committed
+build/

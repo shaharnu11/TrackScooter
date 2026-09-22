@@ -49,7 +49,7 @@ view = "s1"; // [s1:Sheet 1 general arrangement, s2:Sheet 2 frame weldment, s3:S
 // Pull in the whole model for its numbers and its modules, but stop it from
 // drawing itself on top of our sheets.
 no_render = true;
-include <cad/walle_frame.scad>
+include <walle_frame.scad>
 
 // ============================================================================
 //  2. A DIMENSIONING LIBRARY

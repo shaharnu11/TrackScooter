@@ -61,12 +61,12 @@ The green plates measure 165 mm over the same way — that 6 mm step per side is
 **Corrected again on 2026-09-22**, when WALL-E was repointed at the newest pod revision:
 Rev 013 measured the built pods and the green plate turned out to be **inboard** of the
 carrier, not outboard. The mounting face moved from 172 to 177 mm over, the robot from 672
-to 677 mm wide, and the joint gained a packer. `pod_latest.sh` now keeps this pointed at the
+to 677 mm wide, and the joint gained a packer. `cad/pod_latest.sh` now keeps this pointed at the
 newest revision so it cannot silently go stale again.
 
 **These numbers were corrected on 2026-09-17.** This table previously said 168 mm, which came
 from a proposal to widen the carrier spacing that was then reverted — so 168 never existed in
-a built pod, and the WALL-E frame was 14 mm per side too wide. `check_pod_interface.scad`
+a built pod, and the WALL-E frame was 14 mm per side too wide. `cad/check_pod_interface.scad`
 caught it. Measure anyway; do not trust either number on faith.
 
 ### What this means for the plan

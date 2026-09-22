@@ -51,7 +51,7 @@ png_up          = false;    // true only for PNG renders — see the note at the
 //
 // It compares all 23 numbers and prints OK or MISMATCH for each. As of
 // 2026-09-16 all 23 agree.
-include <../pod_interface.scad>
+include <pod_interface.scad>
 
 // ============================================================================
 //  2. THE CHOICES — this is what this file actually decides

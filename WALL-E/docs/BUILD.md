@@ -1,9 +1,9 @@
 # Building WALL-E
 
 This is the order to build the robot in, with the check to do at the end of each
-step. Every number here comes out of `walle.scad`. None of it is typed in by
-hand, so if you change the model, run `./render_all.sh` and this file's drawings
-change with it.
+step. Every number here comes out of `cad/walle.scad`. None of it is typed in by
+hand, so if you change the model, run `cad/render_all.sh` and the drawings in this
+guide change with it.
 
 Front of the robot is **+x**. When a drawing says "front to the right", that is
 what it means.
@@ -12,33 +12,37 @@ what it means.
 
 | File | What it is |
 |---|---|
-| `walle.scad` | The global file. One entry point, every view and every sheet. |
-| `pod_interface.scad` | The 23 facts about the **built** pods. The only place they live. |
-| `check_pod_interface.scad` | Proves that file still matches the real pod model. |
-| `cad/walle_frame.scad` | Everything WALL-E decides, plus 46 guards. |
-| `render_all.sh` | Regenerates every sheet and every view. |
-| `blueprint/s1..s5.png` | The dimensioned drawings. |
+| `cad/walle.scad` | The global file. One entry point, every view and every sheet. |
+| `cad/pod_interface.scad` | The 23 facts about the **built** pods. The only place they live. |
+| `cad/check_pod_interface.scad` | Proves that file still matches the real pod model. |
+| `cad/walle_frame.scad` | Everything WALL-E decides, plus every guard. |
+| `cad/render_all.sh` | Redraws every sheet and every view, then rebuilds this guide. |
 
 To redraw everything:
 
 ```sh
 cd WALL-E
-./render_all.sh
+cad/render_all.sh
 ```
 
-It checks the pod numbers and the 46 guards first, and stops if the pod numbers
+It checks the pod numbers and every guard first, and stops if the pod numbers
 do not match. That is on purpose: if the pod interface is wrong, every dimension
 on every sheet below it is wrong too.
 
 ## The sheets
 
+Five dimensioned sheets. They are **inside this guide**, each one at the step that
+uses it. They are vector drawings, so print them at any size and they stay sharp.
+
 | Sheet | Title | Use it for |
 |---|---|---|
-| `blueprint/s1.png` | General arrangement | Overall sizes, and every important height |
-| `blueprint/s2.png` | Frame weldment | **Give this to the welder** |
-| `blueprint/s3.png` | Battery box, 6 panels | **Give this to whoever cuts the plywood** |
-| `blueprint/s4.png` | Chest panel / speaker baffle | Cutting the two speaker holes |
-| `blueprint/s5.png` | Electronics shelf | Placing the boxes and running the cable |
+| Sheet 1 | General arrangement | Overall sizes, and every important height |
+| Sheet 2 | Frame weldment | **Give this to the welder** — step 3 |
+| Sheet 3 | Battery box, 6 panels | **Give this to whoever cuts the plywood** — step 5 |
+| Sheet 4 | Chest panel / speaker baffle | Cutting the two speaker holes — step 6 |
+| Sheet 5 | Electronics shelf | Placing the boxes and running the cable — step 8 |
+
+![Sheet 1 — general arrangement. Overall sizes and every important height.](fig/s1.svg)
 
 ## The headline numbers
 
@@ -102,13 +106,13 @@ the moment the steel is already cut, so verify it yourself:
 | Green plate band, bottom and top above ground | 197 and 257 mm |
 | M12 hole centres, forward of the hub axle | 108 and 168 mm |
 
-If any of these differ, change them in `pod_interface.scad`, then run:
+If any of these differ, change them in `cad/pod_interface.scad`, then run:
 
 ```
 cd WALL-E
-./pod_latest.sh
-openscad -o chk.echo --export-format echo check_pod_interface.scad
-./render_all.sh
+cad/pod_latest.sh
+openscad -o chk.echo --export-format echo cad/check_pod_interface.scad
+cad/render_all.sh
 ```
 
 The checker tells you whether the numbers still match the pod model, and the
@@ -129,7 +133,7 @@ Put a pod on a bathroom scale. Weigh a battery pack. Then open
 numbers, and re-run. If the forward tipping angle drops below about 15°, stop
 and move weight backwards before you build the body.
 
-**Check:** `./render_all.sh` prints `all 46 guards pass` and
+**Check:** `cad/render_all.sh` prints `every guard passes` and
 `ALL 23 NUMBERS AGREE`.
 
 ---
@@ -179,6 +183,10 @@ anything else.
 
 # Step 3. Weld the frame
 
+![Sheet 2 — frame weldment. This is the drawing the welder works from.](fig/s2.svg)
+
+![The bare frame, three quarter view.](fig/walle_frame_3q.png)
+
 From sheet 2, plan view. Distances are from the rail's rear end.
 
 - Rail outer faces **323 mm apart**, so **263 mm clear** between them.
@@ -199,6 +207,8 @@ the clear bay is 268 mm at both ends, not just in the middle.
 
 # Step 4. Bolt the frame to the pods
 
+![The robot cut in half, so you can see how the rail meets the pod and where the battery box hangs.](fig/walle_frame_section.png)
+
 Four M12 10.9 bolts, two per side, through the rail into the nut on the green
 plate.
 
@@ -214,6 +224,8 @@ can still reach all four heads.
 ---
 
 # Step 5. The battery box
+
+![Sheet 3 — the battery box: six plywood panels, drawn flat for cutting.](fig/s3.svg)
 
 From sheet 3. Six panels of 12 mm plywood, cut from one sheet.
 
@@ -255,6 +267,8 @@ the whole robot.** Everything you drive over has to clear that, not the tracks.
 ---
 
 # Step 6. The body and the chest panel
+
+![Sheet 4 — chest panel and speaker baffle, with the two holes.](fig/s4.svg)
 
 The body floor sits at **335 mm**, which is 8 mm over the pod belt crown. The
 crown is higher than anything at frame level, so it is the crown that sets this
@@ -299,6 +313,8 @@ push back. If it moves freely, the box is leaking.
 ---
 
 # Step 8. The electronics shelf
+
+![Sheet 5 — the electronics shelf: what goes where, and where the cable runs.](fig/s5.svg)
 
 From sheet 5. The shelf is **356 x 546 at 347 mm**, four rows running fore and
 aft. The parts use 32% of the area and the tallest box is 76 mm.
@@ -349,10 +365,10 @@ there should be 7 mm between them. Rotate them through their full travel.
 
 ```sh
 cd WALL-E
-./render_all.sh
+cad/render_all.sh
 ```
 
-Read the output. `all 46 guards pass` and `ALL 23 NUMBERS AGREE` means the
+Read the output. `every guard passes` and `ALL 23 NUMBERS AGREE` means the
 change is consistent. A `WARN` line names the clearance that has gone negative
-and by how much. A `MISMATCH` means `pod_interface.scad` no longer agrees with
+and by how much. A `MISMATCH` means `cad/pod_interface.scad` no longer agrees with
 the pod model, and nothing below it can be trusted until that is fixed.
