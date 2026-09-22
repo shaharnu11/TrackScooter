@@ -65,7 +65,7 @@ driving — on a skid-steer machine that is a command to spin, not a command to 
 
 ## 2. How much current, really
 
-These are the numbers the wire sizes and fuses come from. The robot is 88.9 kg
+These are the numbers the wire sizes and fuses come from. The robot is 88.8 kg
 (`cad/walle_frame.scad`).
 
 ### Driving in a straight line on sand

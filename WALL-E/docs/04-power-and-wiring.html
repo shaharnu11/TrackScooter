@@ -148,7 +148,7 @@ PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY
 <p><strong>Two contactors, one coil circuit.</strong> Because the packs are separate, one contactor cannot cut both. Both coils are wired in parallel onto the same emergency stop chain, so any single break drops both sides together. Never wire a stop that can cut one track and leave the other driving — on a skid-steer machine that is a command to spin, not a command to stop.</p>
 <hr>
 <h3 id="2-how-much-current-really">2. How much current, really</h3>
-<p>These are the numbers the wire sizes and fuses come from. The robot is 88.9 kg (<code>cad/walle_frame.scad</code>).</p>
+<p>These are the numbers the wire sizes and fuses come from. The robot is 88.8 kg (<code>cad/walle_frame.scad</code>).</p>
 <h4 id="driving-in-a-straight-line-on-sand">Driving in a straight line on sand</h4>
 <div class="tw"><table><thead><tr><th>Step</th><th>Working</th><th>Result</th></tr></thead><tbody><tr><td>Rolling resistance, tracks on soft sand</td><td>coefficient about 0.15</td><td>—</td></tr><tr><td>Force to keep it moving</td><td>0.15 × 91 kg × 9.81</td><td>134 N</td></tr><tr><td>Mechanical power at walking pace</td><td>134 N × 1.0 m/s</td><td>134 W</td></tr><tr><td>Electrical power at 75 % efficiency</td><td>134 / 0.75</td><td>179 W</td></tr><tr><td>Current from 48 V, both sides</td><td>179 / 48</td><td><strong>3.7 A total, 1.9 A per side</strong></td></tr></tbody></table></div>
 <p>That is a small number, and it is why the runtime is measured in hours rather than minutes.</p>

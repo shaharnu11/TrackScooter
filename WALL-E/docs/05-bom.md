@@ -143,7 +143,7 @@ with no other use in the current design, so buy them alongside the VESCs if that
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-48V-32V-150W.html) |
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy and ESP32 only. No servos any more, so this is a much easier load. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-12V-5V-5A.html) |
 | — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and controller input protection. | [search](https://www.aliexpress.com/w/wholesale-capacitor-4700uF-25V.html) |
-| — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 240 cross members, 1580 mm of 60×30 in total. | owned |
+| — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 263 cross members, 1626 mm of 60×30 in total. | owned |
 | 2 | **Packer, 60×6 flat bar, 60 mm long, 2 holes Ø13** | 5 | Stock | One per side. Fills the 6 mm step between the carrier face the rail sits on and the green plate the M12s thread into. **Without it the bolts crush the rail wall into the gap and the joint has no clamp.** Offcut of the same 60×6 as the plates. | Offcut / steel stockist |
 | — | M12 10.9 bolts, and the Ø25/Ø13×30 sleeves to weld into the rails | 25 | Stock | The sleeve is what stops an M12 crushing a 3 mm box wall. Not optional. | [search](https://www.aliexpress.com/w/wholesale-M12-10.9-bolt.html) |
 | 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels) and electronics shelf. | timber yard |
@@ -209,8 +209,8 @@ version may appear.
 
 ### The speakers are not just an audio decision
 
-They are 7.4 kg, they sit 584 mm up, and both of them are forward of centre. That combination
-took **1.5° off the forward tipping margin** on its own, leaving 5.4° between going over and
+They are 7.3 kg, they sit 584 mm up, and both of them are forward of centre. That combination
+took **1.5° off the forward tipping margin** on its own, leaving 7.0° between going over and
 the anti-tip castor catching. See risk R10. Anything else you add high or forward spends the
 same number, so weigh the real parts before adding a third thing.
 

@@ -293,8 +293,8 @@ must not touch each other — there should be 90 mm between them.
 
 # Step 7. The speaker enclosures
 
-One sealed box per driver, **260 deep x 258 tall x 205 wide** in 12 mm ply. That
-gives **10.1 litres of air** behind each driver, which is in the middle of the
+One sealed box per driver, **260 deep x 251 tall x 205 wide** in 12 mm ply. That
+gives **9.8 litres of air** behind each driver, which is in the middle of the
 7 to 14 litre range a 6.5 inch driver wants.
 
 **Bolt them to the chest panel. Do not glue them in.** Each one sits over the

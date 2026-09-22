@@ -289,8 +289,8 @@ Even lying flat it is not free, and the model prices it:
 |---|---|---|
 | Sealed volume per driver (wants 7–14 litres) | 10.1 | **9.8** |
 | Shelf area used | 32 % | 40 % |
-| Whole robot | 86.5 kg | 88.9 kg |
-| Centre of mass | 315.6 mm | 318.2 mm |
+| Whole robot | 86.5 kg | 88.8 kg |
+| Centre of mass | 315.6 mm | 318.3 mm |
 | Tips forward at | 19.4° | 19.3° |
 
 The castor still catches the pitch at 12.3°, so the margin barely moves. The real price is
@@ -570,7 +570,7 @@ Ordered by how much damage each one does, not how likely it is.
 | R8b | Sand gets into the battery box | Grit between the cells and the box, chafed wiring, a short | L16: closed box, gasketed lid on 110 mm bolt pitch, silicone plugs in all four spanner holes. **Check the plugs are in every morning** — they are the weak point, and they point at the belts |
 | R8c | The sealed box breathes and pumps dust in through its worst leak | Slow, invisible version of R8b, and it defeats the gasket | Membrane vent in the lid, on the centreline over the gap between the packs, so the air has a clean path it does not have to find |
 | R8d | Charging in a sealed box has nowhere to put the heat | Packs age fast, or worse | About 12 W of loss at 5 A. Log the pack temperature through one full charge with the lid on, on the bench, before the event. If it climbs, charge with the body lid open or drop the current |
-| R10 | Forward tipping margin keeps getting eaten | The castor catches, the robot stops looking like it meant to | The speakers alone took 1.5°, leaving 5.4° over the castor. **Every new part forward of centre or high up spends this number.** Weigh the real pods, packs, body and speakers and put the measured figures in the model before adding anything else |
+| R10 | Forward tipping margin keeps getting eaten | The castor catches, the robot stops looking like it meant to | The speakers alone took 1.5°, leaving 7.0° over the castor. **Every new part forward of centre or high up spends this number.** Weigh the real pods, packs, body and speakers and put the measured figures in the model before adding anything else |
 | R11 | Speaker enclosures rattle or buzz at volume | Sounds broken, and it is the thing the crowd hears | Sealed boxes, braced, and the drivers bolted through with gasket tape. Test at full volume on the bench before the body goes on |
 | R9 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |
 | R10 | Scope grows, especially the body | Nothing is finished | Section 9 cut list, agreed in advance |
