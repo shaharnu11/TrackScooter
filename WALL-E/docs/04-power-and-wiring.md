@@ -94,14 +94,11 @@ happens.
 | Starting from rest, or climbing out of a rut | 25 A | seconds at a time |
 | Absolute limit | **40 A** | the number the wire and the fuse must survive |
 
-> ### This section assumed a VESC, and decision D7 changed that on 2026-09-17
+> ### The 40 A in that table is measured, not chosen
 >
-> With a VESC you **choose** the 40 A figure, set it in the configuration tool, and then size
-> the wire and the fuse to it. The number in the table is a decision.
->
-> A scooter controller does not work that way. **Its current limit is fixed in firmware and
-> you cannot change it.** So 40 A stops being a number you pick and becomes a number you have
-> to go and measure.
+> **The scooter controllers' current limit is fixed in their firmware and you cannot change
+> it.** So 40 A is not a number you pick and then size the wire to. It is a number you have to
+> go and measure.
 >
 > **Do this before finalising the wire gauge and the fuse rating:**
 >
@@ -117,10 +114,10 @@ happens.
 > The battery current limit, which is the one that actually protects the pack and the fuse,
 > is likewise fixed. The Teensy cannot command a current limit, so **the only current control
 > you have is backing off the throttle yourself** when the ACS758 sensor reads high. That is a
-> software limit on top of a hardware one, and it is slower and weaker than the VESC's.
+> software limit on top of a hardware one, and it is slow and weak.
 >
-> If this measurement comes back ugly, that is the 260 dollar contingency in `05-bom.md`
-> section 7 doing its job. Spend it.
+> If this measurement comes back ugly, the wire gauge and the fuses in section 7 have to be
+> resized around the real number. Do not design to the 40.
 
 ---
 
@@ -440,10 +437,9 @@ the Spine will act on. That is a worse failure than anything the fuse was protec
 
 ## 7. The throttle signal path
 
-**There is no CAN bus.** Decision D7 replaced the VESCs with the scooter controllers already
-owned, and those are analogue devices: they see a throttle voltage and they drive. This section
-used to specify a 500 kbit CAN bus. What it specifies now is the path that voltage travels,
-which is more fragile and needs more care, because it carries no error detection of any kind.
+**There is no data bus to the motors.** The scooter controllers are analogue devices: they see
+a throttle voltage and they drive. What this section specifies is the path that voltage travels,
+which is fragile and needs care, because it carries no error detection of any kind.
 
 ```
   TEENSY 4.0            LEVEL        MCP4725 DAC      OPTO           CONTROLLER
@@ -471,12 +467,6 @@ Four rules. The first one is the one that can hurt somebody.
 4. **Opto-isolate each throttle line.** The controller's throttle ground is the pack negative
    for that side. Tying the Teensy directly to it puts motor return current through the
    Teensy's ground reference.
-
-**If you move to VESCs you will also need two 3.3 V CAN transceivers.** They are no longer on
-the buying list — owner decision 2026-09-18, because nothing in the current design uses CAN and
-they are a $2 commodity part. Add them to the order on the day a controller judders at walking
-pace and you take the 260 dollar contingency in section 7 of the BOM. **3.3 V, not 5 V:** the
-Teensy is not 5 V tolerant.
 
 ---
 

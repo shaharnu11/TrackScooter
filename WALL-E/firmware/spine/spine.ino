@@ -17,14 +17,14 @@
 //     robot from stopping.
 //
 // ---------------------------------------------------------------------------
-//  REWRITTEN 2026-09-22 FOR DECISION D7 — there is no VESC and no CAN bus
+//  REWRITTEN 2026-09-22 FOR DECISION D7 — scooter controllers, no data bus
 // ---------------------------------------------------------------------------
 //  The motors are driven by the two scooter controllers already owned. They
 //  take a throttle VOLTAGE and tell you nothing back. So this file now:
 //
 //    * writes the throttle voltage with an MCP4725 DAC per side, and picks
 //      direction with a separate opto-isolated reverse line;
-//    * measures what the VESC used to broadcast — pack volts, motor
+//    * measures what the controllers do not report — pack volts, motor
 //      temperature, pack current — with its own sensors;
 //    * decides "is this track alive?" by counting the motor's hall edges;
 //    * KICKS A HARDWARE WATCHDOG, and deliberately stops kicking it when it
@@ -36,7 +36,7 @@
 //  shorting the throttle lines to ground. docs/01-architecture.md section 4.
 //
 // Build: Arduino IDE or PlatformIO with Teensyduino. Board = Teensy 4.0.
-// Libraries: Wire only. (FlexCAN_T4 is no longer used — there is no CAN.)
+// Libraries: Wire only.
 
 #include <Wire.h>
 #include "config.h"
@@ -262,7 +262,7 @@ void arbitrate(uint32_t now) {
   // --- Rule 4: is each track actually turning as commanded? ---------------
   // Both, not either. One dead track on a skid-steer robot does not stop it,
   // it makes it pivot. docs/01-architecture.md section 3b, trap 2.
-  // The VESC used to answer this on CAN. Now it is the hall edges.
+  // The controllers report nothing, so this is the hall edges.
   if (!side_l.alive || !side_r.alive) {
     stop_reason = R_TRACK_DEAD;
     ramp_to(0.0f, 0.0f);
@@ -334,7 +334,7 @@ void arbitrate(uint32_t now) {
   want_r *= veto;
 
   // --- Rule 9: motor temperature ------------------------------------------
-  // Now read from each hub motor's own thermistor rather than the VESC.
+  // Read from each hub motor's own thermistor.
   float heat = fminf(thermal_scale(side_l.temp_c), thermal_scale(side_r.temp_c));
   if (heat < 1.0f) stop_reason = R_MOTOR_HOT;
   want_l *= heat;
@@ -485,7 +485,7 @@ void wdt_kick(uint32_t now) {
 }
 
 // ===========================================================================
-//  THE SENSORS THAT REPLACED THE VESC TELEMETRY
+//  THE SENSORS THE CONTROLLERS DO NOT PROVIDE
 // ===========================================================================
 // Everything here is measured against the single bonded pack negative. If that
 // bond is missing these numbers are plausible and wrong, which is worse than

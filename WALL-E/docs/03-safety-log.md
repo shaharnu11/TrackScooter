@@ -71,21 +71,21 @@ track spins it on the spot. Both of these must produce a stop of **both** sides.
 
 ### Tests 8, 14, 15 and 16 were rewritten on 2026-09-17
 
-Decision D7 replaced the VESCs with the scooter controllers already owned. These four tests
-were written against VESC behaviour, and **three of them were checking for protection that no
-longer exists.** That is worse than having no test, because a test you expect to pass tells
+Decision D7 settled the drive electronics as the two scooter controllers already owned. These
+four tests had been written expecting a controller that protects itself, and **three of them
+were checking for protection that does not exist.** That is worse than having no test, because a test you expect to pass tells
 you the robot is safe when it is not.
 
 | Test | Was checking | Now checks |
 |---|---|---|
 | 8 | Unplugging a CAN wire | There is no CAN. It unplugs a **throttle line** instead, and the robot must notice the dead track through its speed sensor. |
 | 14 | That losing the ground bond dropped CAN and blocked arming | There is no CAN. The bond now matters **more**: the ACS758 current sensors and the pack voltage dividers all measure against pack negative, so a missing bond corrupts the Teensy's readings rather than announcing itself. |
-| 15 | Both VESCs hitting **their own command timeout** | **There is no command timeout.** A scooter controller driven by a DAC holds its last throttle voltage and keeps going. Only the hardware watchdog stops it. |
+| 15 | The controllers releasing the motors **on their own** | **There is no command timeout.** A scooter controller driven by a DAC holds its last throttle voltage and keeps going. Only the hardware watchdog stops it. |
 | 16 | — | New. See below. |
 
 **Test 15 is the one the whole electronics supply decision rests on.** Whenever the Spine loses
-power it cannot enforce any of the rules above. With VESCs, each one would have released its
-motor after about a second on its own. **Scooter controllers do not do this.** The DAC keeps
+power it cannot enforce any of the rules above. **The scooter controllers will not stop on
+their own.** The DAC keeps
 holding whatever voltage it was last told to hold, and the robot drives away with nothing in
 control of it.
 

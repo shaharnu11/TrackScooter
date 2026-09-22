@@ -149,7 +149,7 @@ plus keeping all the heavy things as low as possible. See decision D6.
 | **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime and fuse sizing. **No longer decides "which side gets the electronics"** — decision D8 took that load off the packs entirely, so now the two packs want to be the **same** capacity | Before Phase 1 buying |
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
 | **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
-| **D7** | Reuse the scooter controllers, or buy two VESCs? | Cost, and whether motor temperature can be read | **DECIDED 2026-09-17: reuse them.** They have a reverse line, and the motor's own thermistor gives the temperature. 260 dollars held as contingency |
+| **D7** | Can the two scooter controllers we already own drive the robot? | Cost, and whether motor temperature can be read | **DECIDED 2026-09-17: yes, use them.** They have a reverse line, and the motor's own thermistor gives the temperature |
 | **D8** | Run the electronics from pack A through a converter, or give them their own battery? | Which parts get bought, both pack capacities, and how clean the Jetson's supply is | **DECIDED 2026-09-19: their own 12 V battery.** See below |
 
 #### D6 — the tipping fix, since the belts are staying
@@ -173,7 +173,7 @@ work for free, and it costs nothing because the batteries have to go somewhere a
 
 #### D7 — the scooter controllers you already have
 
-**REVISED 2026-09-17. This decision used to recommend buying two VESCs. It no longer does.**
+**REVISED 2026-09-17: the two scooter controllers already owned are the drive electronics.**
 
 The controllers **have a reverse line**, confirmed by the owner. That was the one fact that
 could have ruled them out: skid steer needs each side to run forwards and backwards on its
@@ -204,16 +204,13 @@ through opto-isolators. `05-bom.md` section 1b is the parts list, about 76 dolla
   normally-closed contacts, held open by a heartbeat pulse, shorts the throttle to ground
   when the pulses stop. Nothing in software has to work for that to happen.
 - Check for **automatic cruise control**. Some scooter controllers engage it after a few
-  seconds of steady throttle. In a crowd that is dangerous. If it cannot be disabled, buy the
-  VESCs.
+  seconds of steady throttle. In a crowd that is dangerous. If it cannot be disabled, that
+  controller must not go on this robot.
 
-**Recommendation: use the controllers you own, and hold 260 dollars as a contingency.** This
-is a bet that six-step control is smooth enough at walking pace. You will not know until you
-drive it. If it judders, two VESCs drop straight in: the Teensy and the
-power wiring all stay, and you add two 3.3 V CAN transceivers, which are not on the list until
-then. What you throw away is the throttle interface — the two DACs, the level
-shifter and the opto-isolators, about 30 dollars — and you gain back the telemetry and the
-command timeout. The hardware watchdog stays either way; it is cheap insurance.
+**Recommendation: use the controllers you own.** This is a bet that six-step control is smooth
+enough at walking pace, and you will not know until you drive it — so bench-test one motor at
+crawling speed early, before the body is built. The hardware watchdog is mandatory either way;
+it is cheap insurance.
 
 #### D8 — the electronics get their own battery
 

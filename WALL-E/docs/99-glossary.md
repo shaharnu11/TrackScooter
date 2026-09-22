@@ -102,22 +102,6 @@ second.
 The box that does that switching. ESC means Electronic Speed Controller. It takes a command
 ("go 30%") and the battery power, and drives the motor.
 
-**VESC**
-A specific, open-source motor controller design, very popular for electric skateboards and
-scooters. You can command it over CAN from your own code, set safety limits inside it, and
-read the motor temperature back.
-
-**We are not using VESCs.** Decision D7, 2026-09-17: the two 48 V scooter controllers are
-already owned, and they have a reverse line, so they do the job for nothing. They only accept
-a throttle voltage and tell you nothing back. Everything the VESC would have reported — speed,
-pack voltage, current, motor temperature — is now a separate sensor on the list, and the
-command timeout it would have given for free is now the hardware watchdog. See `05-bom.md`
-section 1b for what that costs and `01-architecture.md` for why the watchdog is mandatory.
-
-VESC still matters as a word here, because moving to VESCs is the planned fallback if the
-controllers judder at walking pace. That swap also needs two 3.3 V CAN transceivers, which are
-not on the buying list — you buy them with the VESCs, not before.
-
 **DAC**
 Digital to Analogue Converter. The opposite of the ADC below. The Teensy sends a number over
 I2C and the MCP4725 turns it into a voltage between 0 and 3.3 V, which is what the scooter

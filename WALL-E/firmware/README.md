@@ -19,12 +19,9 @@ Build with the Arduino IDE (install Teensyduino first) or PlatformIO. Select
 Teensy 4.0 and upload. There is nothing to configure at build time — every
 tunable number is in `spine/config.h`.
 
-> **There is no CAN bus.** Decision D7 replaced the VESCs with the scooter
-> controllers already owned, and this firmware was rewritten for that on
-> 2026-09-22. `FlexCAN_T4` is gone. If you ever go back to VESCs, that rewrite
-> reverses: the DAC output and the sensors below go away, and the CAN layer
-> comes back, along with two 3.3 V CAN transceivers that are deliberately not
-> in the BOM.
+> **There is no data bus to the motors.** The scooter controllers are analogue:
+> they take a throttle voltage and report nothing at all. This firmware was
+> rewritten for that on 2026-09-22, and `FlexCAN_T4` is gone.
 
 ### What it does
 
@@ -68,8 +65,8 @@ So the Spine does all of this itself:
 
 ### The watchdog is the most important wire on the robot
 
-A VESC releases the motor if it stops being commanded. **A scooter controller
-never does**, and the DAC holds its last voltage forever. So if this board
+**A scooter controller never releases the motor on its own**, and the DAC holds
+its last voltage forever. So if this board
 crashes mid-drive, the robot keeps going at whatever throttle it had.
 
 The only thing that stops it is the hardware watchdog: pin 5 square-waves while

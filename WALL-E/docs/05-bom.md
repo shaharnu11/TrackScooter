@@ -35,12 +35,11 @@ Sections 1 and 1b together are about **422 dollars**, and this is the cheapest w
 electronics are going to be a problem. Everything here is useful on a bench with no frame and
 no body.
 
-**No VESCs in this list.** Decision D7 in `00-plan.md` used to recommend buying two, at 260
-dollars. You already own two 48 V scooter controllers, **and they have a reverse line**,
-which was the one thing that could have ruled them out — without reverse on each side
+**The drive electronics are the two 48 V scooter controllers you already own**, and **they
+have a reverse line**, which was the one thing that could have ruled them out — without reverse on each side
 independently the robot cannot turn on the spot, only in wide arcs. So the plan is now to
 drive the controllers you have from the Teensy, and to buy back the telemetry they do not
-give you with a handful of cheap sensors. That costs 76 dollars instead of 260. Section 1b is
+give you with a handful of cheap sensors. That costs 76 dollars. Section 1b is
 the parts list and the conditions that come with it.
 
 | Qty | Part | Est. | Lead | Notes | Buy from — **read §9 first** |
@@ -74,9 +73,9 @@ multimeter and match those numbers. Do not assume 0.8 and 4.2.
 | 1 | I2C level shifter, 4 channel (BSS138 or TXS0102) | 2 | Stock | The DAC has to run at 5 V to reach full throttle, and **the Teensy is not 5 V tolerant.** Without this you damage its pins. | [search](https://www.aliexpress.com/w/wholesale-BSS138-I2C-level-shifter.html) |
 | 4 | Opto-isolator, PC817, plus resistors | 3 | Stock | Two per controller: one pulls the **reverse** line, one pulls the **e-brake** line. Isolated, so a controller fault cannot travel back into the Teensy. | [search](https://www.aliexpress.com/w/wholesale-PC817-optocoupler.html) |
 | 2 | Watchdog: TLC555 or TPS3823, plus a signal relay with normally-closed contacts | 8 | Stock | **Not optional.** See the warning below. | [search](https://www.aliexpress.com/w/wholesale-TLC555-timer-IC.html) |
-| 2 | ACS758 100 A bidirectional hall current sensor | 18 | Stock | Puts back the current reading the VESC would have given you. One per pack lead. | [search](https://www.aliexpress.com/w/wholesale-ACS758-100A.html) |
+| 2 | ACS758 100 A bidirectional hall current sensor | 18 | Stock | Gives the Teensy a current reading the controllers do not report. One per pack lead. | [search](https://www.aliexpress.com/w/wholesale-ACS758-100A.html) |
 | — | Resistors for the motor thermistor divider | 2 | Stock | Reads the hub motor's **own** temperature sensor straight into the Teensy. This is the defence against risk R5, and it replaces arbitration rule 9's data source. | [search](https://www.aliexpress.com/w/wholesale-metal-film-resistor-kit.html) |
-| — | Resistors for two pack voltage dividers | 2 | Stock | Arbitration rules 5 and 11 used to read pack voltage off the VESC's CAN messages. There is no CAN now, so the Teensy has to measure it. Mind the ground reference. | [search](https://www.aliexpress.com/w/wholesale-metal-film-resistor-kit.html) |
+| — | Resistors for two pack voltage dividers | 2 | Stock | Arbitration rules 5 and 11 need pack voltage, and the controllers do not report it, so the Teensy measures it. Mind the ground reference. | [search](https://www.aliexpress.com/w/wholesale-metal-film-resistor-kit.html) |
 | — | Wiring to bring both motors' hall sensors to the Teensy | 6 | Stock | Arbitration rule 4 asked "is each track alive?" and got the answer from CAN. Now the Teensy counts hall edges instead: commanded to move, halls not changing, track is dead. | [search](https://www.aliexpress.com/w/wholesale-shielded-cable-4-core.html) |
 | — | Shielded 4-core signal cable and connectors | 15 | Stock | Throttle lines run beside motor phase wires. Shield them or the robot twitches. | [search](https://www.aliexpress.com/w/wholesale-shielded-cable-4-core.html) |
 
@@ -102,7 +101,7 @@ there for.
 
 ### What you still give up, and what it costs to get back
 
-| The VESC would give you | With scooter controllers |
+| Capability | With these scooter controllers |
 |---|---|
 | Motor temperature | **Bought back for 2 dollars.** The hub motor has its own thermistor in its cable. Read it directly. |
 | Motor current | **Bought back for 20 dollars** with the ACS758 sensors. |
@@ -112,13 +111,7 @@ there for.
 
 Also check for **cruise control**. Some scooter controllers engage it automatically after a
 few seconds of steady throttle. On a robot in a crowd that is dangerous. If yours does it and
-cannot be turned off, that alone is worth the 260 dollars.
-
-**The upgrade path stays open.** Two VESCs are 260 dollars whenever you decide the juddering
-at low speed is unacceptable. The Teensy, the wiring and the frame are all unchanged — you
-swap the controllers and drop the DACs. You would also need two 3.3 V CAN transceivers, which
-are **deliberately not on this list** (owner decision 2026-09-18): they are a $2 commodity part
-with no other use in the current design, so buy them alongside the VESCs if that day comes.
+cannot be turned off, that controller must not go on this robot.
 
 ---
 
@@ -351,11 +344,11 @@ sums to 459. The total was understated in one place and overstated in another.
 |---|---|
 | The body is plywood, not foam and fibreglass | **445** |
 | You already own the frame and head steel | **335** |
-| Use the scooter controllers instead of two VESCs | **180**, after 76 spent on the interface |
+| Using the two scooter controllers already owned | **180**, after 76 spent on the interface |
 | The head is rigid, so four servos are gone | **60**, less 15 for the camera mount |
 | Correcting section 4, which was understated | **−59** |
 | Checking real AliExpress prices, section 9 | **161** |
-| Dropping the two CAN transceivers nothing uses yet | **10**, less 6 for the real Teensy price |
+| Dropping two parts nothing in the design uses | **10**, less 6 for the real Teensy price |
 | The electronics battery, decision D8 | **−41**: 105 for the battery, its charger and its fuse, plus 6 for a third charge connector, less the 70 the isolated converter cost |
 | A real clamp-meter price instead of a guess | **35** |
 | A real bench-supply price instead of a guess | **21** |
@@ -373,9 +366,9 @@ the firmware, because looking left is now a drive command. Read
 [`01-architecture.md`](01-architecture.md), "Looking around now means driving", before you
 write any of the personality code.
 
-**The controller decision is still the one you may have to undo.** Hold its 260
-dollars as contingency. If six-step commutation judders at walking pace, two
-VESCs drop straight in.
+**The controller decision is the one to test early.** If six-step commutation
+judders at walking pace, the fix is different hardware — so find that out
+before the body is built, not after.
 
 The three places to cut, in order:
 

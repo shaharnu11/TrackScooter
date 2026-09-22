@@ -109,8 +109,8 @@ rule lower down.
 | 1 | Is the E-stop circuit closed? | Motors dead. Nothing can override. | This is physical, not software. The contactor is open, so there is no power to the motors at all. |
 | 2 | Is the arm switch on the remote ON? | Send zero. | The robot must never move the instant you connect the battery. The driver has to deliberately arm it. |
 | 3 | Has a radio frame arrived in the last 100 ms? | Ramp to zero. | Radio out of range or transmitter battery flat. Stop is the only safe answer. |
-| 4 | **Is each track actually turning as commanded?** | **Ramp BOTH to zero.** | See section 3b. One dead track does not stop a skid-steer robot, it makes it pivot. **This rule was written for VESCs reporting on CAN. Scooter controllers report nothing — see the note below.** |
-| 5 | **Are both pack voltages above the floor?** | **Ramp BOTH to zero.** | A BMS cutting out is the most likely way one side dies. **Also came off the VESC's CAN messages — see the note below.** |
+| 4 | **Is each track actually turning as commanded?** | **Ramp BOTH to zero.** | See section 3b. One dead track does not stop a skid-steer robot, it makes it pivot. **The scooter controllers report nothing, so this comes from the motors' own hall sensors — see the note below.** |
+| 5 | **Are both pack voltages above the floor?** | **Ramp BOTH to zero.** | A BMS cutting out is the most likely way one side dies. **Measured by a resistor divider on each pack — see the note below.** |
 | 6 | Which mode does the remote's mode switch say? | — | `MANUAL` uses the sticks. `ASSIST` uses the Brain. |
 | 7 | In `ASSIST` only: has a Brain heartbeat arrived in the last 100 ms? | Ramp to zero and fall back to `MANUAL`. | The Brain is frozen or rebooting. |
 | 8 | Do the bumper sensors see anything close in the direction of travel? | Scale the command down, or to zero. | The veto. It can only reduce, never add. |
@@ -119,18 +119,16 @@ rule lower down.
 
 > ### Rules 4, 5 and 11 lost their data source on 2026-09-17
 >
-> Decision D7 changed the motor controllers from VESCs to the scooter controllers already
-> owned. VESCs broadcast their status on CAN — motor current, input voltage, temperature,
-> fault codes — and three arbitration rules were built on that broadcast. **Scooter
-> controllers send nothing back at all.** There is no CAN bus to the motors any more.
+> Decision D7 settled the drive electronics: the two scooter controllers already owned.
+> **They send nothing back at all** — no current, no input voltage, no temperature, no fault
+> codes. Three arbitration rules had been written expecting exactly that kind of report, so
+> each one needed a new source. None is expensive, but none is automatic either:
 >
-> Each rule needs a new source. None is expensive, but none is automatic either:
->
-> | Rule | Was | Now needs |
-> |---|---|---|
-> | 4 — is each track alive? | VESC reporting on CAN | **A speed sensor per track.** The hub motor's hall wires already give one, and the Teensy can count their edges. If a track is commanded to move and its halls are not changing, that track is dead. |
-> | 5 and 11 — pack voltage | VESC input voltage over CAN | **A resistor divider per pack** into a Teensy analogue input. Two resistors and care with the ground reference. Cheap, but it must be on the list. |
-> | 9 — is either motor too hot? | VESC motor temperature | **The hub motor's own thermistor**, read directly. This one actually got simpler — see `05-bom.md` section 1b. |
+> | Rule | Where its answer comes from |
+> |---|---|
+> | 4 — is each track alive? | **A speed sensor per track.** The hub motor's hall wires already give one, and the Teensy counts their edges. If a track is commanded to move and its halls are not changing, that track is dead. |
+> | 5 and 11 — pack voltage | **A resistor divider per pack** into a Teensy analogue input. Two resistors and care with the ground reference. Cheap, but it must be on the list. |
+> | 9 — is either motor too hot? | **The hub motor's own thermistor**, read directly. See `05-bom.md` section 1b. |
 >
 > **Implemented 2026-09-22** in `firmware/spine/spine.ino` and `config.h`. The CAN layer is
 > deleted; the throttle is an MCP4725 DAC per side with an opto-isolated reverse line, rule 4
@@ -140,9 +138,9 @@ rule lower down.
 > fails (safety log test 16), and it **never flips a reverse line while the wheel is turning**
 > (test 17).
 >
-> **The bigger loss is the VESC command timeout.** A VESC releases the motor if no command
-> arrives for about a second, and section 4 below leans on that as the last line of defence
-> when the Spine dies. A scooter controller has no such behaviour: it holds whatever throttle
+> **The bigger gap is that nothing releases the motor on its own.** Section 4 below used to
+> lean on the controller doing that when the Spine dies. A scooter controller does not: it
+> holds whatever throttle
 > voltage is on its input, forever.
 >
 > That defence is now **entirely** the hardware watchdog in `05-bom.md` section 1b — a relay
@@ -190,10 +188,9 @@ earns its place, but it has less to correct now.
 voltage, aiming for the same volts at each motor rather than the same fraction. In code this is
 one multiplication per side, and it makes the problem disappear.
 
-**Where that voltage comes from changed.** It used to be read off the VESC's CAN messages for
-free. The scooter controllers report nothing, so each pack needs **a resistor divider into a
-Teensy analogue input** — two resistors per pack, and care with the ground reference. Cheap,
-but it is now a part you have to fit rather than a message you already have.
+**Where that voltage comes from.** The scooter controllers report nothing, so each pack needs
+**a resistor divider into a Teensy analogue input** — two resistors per pack, and care with the
+ground reference. Cheap, but it is a part you have to fit.
 
 ### Trap 2 — One dead side makes the robot pivot, not stop
 
@@ -222,9 +219,8 @@ the far pack — its voltage divider, its ACS758 current sensor, its throttle li
 is measured against pack negative. Without one common zero-volt reference, those two negatives
 float against each other and every reading from the far side is meaningless.
 
-**This trap got worse when the VESCs went, not better.** A floating CAN bus announces itself:
-the messages simply stop and rule 4 catches it. A floating analogue reference does not announce
-anything. It gives you a plausible-looking wrong number, and the Spine acts on it.
+**This trap is quiet, and that is what makes it dangerous.** A floating analogue reference does
+not announce anything. It gives you a plausible-looking wrong number, and the Spine acts on it.
 
 **The fix: bond the two pack negatives together at one single point, and keep the two positives
 separate.** Each pack then returns its own current through the shared negative, but there is no
@@ -325,11 +321,8 @@ losing its supply, and the rest of this section is about those.
 **This is the step that decision D7 made dangerous, and the rest of this section is the
 single most important part of this document.**
 
-With VESCs, the robot was relying on the **VESC's own command timeout**: no command for about
-a second and it released the motor. That behaviour is what stopped the robot pivoting on its
-surviving track, and it was free.
-
-**A scooter controller has no such timeout.** It is an analogue device. It sees a throttle
+**A scooter controller has no command timeout.** Nothing releases the motor when commands
+stop, so nothing stops the robot pivoting on a surviving track by itself. It is an analogue device. It sees a throttle
 voltage and it drives. Worse, the DAC that produces that voltage **keeps holding its last
 value** when the Teensy dies — it does not fall to zero. So the exact failure that used to
 produce a graceful coast now produces a robot driving away at whatever throttle it had, with
@@ -415,7 +408,7 @@ One loop at 1 kHz that does exactly what section 3 describes. Nothing else. No l
 card, no screens, no clever features. Every line of code added here is a line that can stop
 the robot from stopping.
 
-It also reads the sensors that replaced the VESC telemetry — the hub motors' thermistors, the
+It also reads the sensors the controllers do not provide — the hub motors' thermistors, the
 pack voltage dividers, the ACS758 current sensors and the hall-edge speed counts — and forwards
 motor temperature and battery voltage up to the Brain.
 

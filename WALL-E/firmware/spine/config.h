@@ -8,12 +8,12 @@
 // ---------------------------------------------------------------------------
 //  REWRITTEN 2026-09-22 FOR DECISION D7
 // ---------------------------------------------------------------------------
-//  There is no VESC and no CAN bus any more. The motors are driven by the two
+//  There is no data bus to the motors. They are driven by the two
 //  scooter controllers already owned, through a DAC per side that makes the
-//  throttle voltage. Everything a VESC used to broadcast is now a sensor this
+//  throttle voltage. Everything they do not report is now a sensor this
 //  board reads itself:
 //
-//    was (VESC on CAN)          now (this board)
+//    what it is                 how this board gets it
 //    -------------------------  ------------------------------------------
 //    duty command               MCP4725 DAC -> throttle wire, + reverse opto
 //    input voltage  (rules 5,11) resistor divider per pack, analogue in
@@ -62,7 +62,7 @@ const uint8_t PIN_LED_OK    = 13;  // on-board LED, heartbeat blink
 //
 // A scooter controller has no command timeout of its own, and the DAC holds
 // its last value forever, so this relay is the ENTIRE replacement for the
-// behaviour the VESC used to give free. docs/01-architecture.md section 4.
+// behaviour no scooter controller provides. docs/01-architecture.md section 4.
 const uint8_t PIN_WDT_KICK  = 5;
 
 // --- the two opto-isolated lines per controller ----------------------------
@@ -152,7 +152,7 @@ const float REVERSE_CEILING = 0.30f;
 // ===========================================================================
 //  DRIVE
 // ===========================================================================
-// "duty" here is a 0..1 fraction of the throttle range, not a VESC duty cycle.
+// "duty" here is a 0..1 fraction of the throttle range.
 const float DUTY_MAX        = 0.85f;  // never command full throttle
 const float DUTY_MAX_ASSIST = 0.25f;  // the Brain gets a much lower ceiling
 const float TURN_GAIN       = 0.7f;   // how much of a stick sweep is turn
@@ -166,7 +166,7 @@ const float SLEW_DOWN_PER_S = 2.0f;   // full to 0 in 0.5 s
 // ===========================================================================
 //  IS EACH TRACK ALIVE?  (arbitration rule 4)
 // ===========================================================================
-// Replaces the VESC's CAN status. One hall wire per motor, counted by an
+// The controllers report nothing, so this is measured. One hall wire per motor, counted by an
 // interrupt. If a side is commanded to move and its halls stay silent, that
 // side is dead — and on a skid-steer robot a dead side means it PIVOTS
 // instead of stopping. Both sides then ramp to zero. Safety log test 8.

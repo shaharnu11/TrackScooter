@@ -155,9 +155,8 @@ PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY
 <h4 id="turning-which-is-the-case-that-actually-sizes-the-wiring">Turning, which is the case that actually sizes the wiring</h4>
 <p>Skid steer turns by dragging both tracks sideways across the ground. There is no steering geometry helping; the friction has to be overcome by the motors. A pivot turn on sand costs roughly <strong>four times</strong> the straight-line power, and the two sides fight each other while it happens.</p>
 <div class="tw"><table><thead><tr><th>Case</th><th>Per side</th><th>Notes</th></tr></thead><tbody><tr><td>Straight, walking pace</td><td>2 A</td><td>the normal condition</td></tr><tr><td>Continuous pivot turning</td><td>8 A</td><td>budget for this, not for the straight line</td></tr><tr><td>Starting from rest, or climbing out of a rut</td><td>25 A</td><td>seconds at a time</td></tr><tr><td>Absolute limit</td><td><strong>40 A</strong></td><td>the number the wire and the fuse must survive</td></tr></tbody></table></div>
-<blockquote><h4 id="this-section-assumed-a-vesc-and-decision-d7-changed-that-on-2026-09-17">This section assumed a VESC, and decision D7 changed that on 2026-09-17</h4>
-<p>With a VESC you <strong>choose</strong> the 40 A figure, set it in the configuration tool, and then size the wire and the fuse to it. The number in the table is a decision.</p>
-<p>A scooter controller does not work that way. <strong>Its current limit is fixed in firmware and you cannot change it.</strong> So 40 A stops being a number you pick and becomes a number you have to go and measure.</p>
+<blockquote><h4 id="the-40-a-in-that-table-is-measured-not-chosen">The 40 A in that table is measured, not chosen</h4>
+<p><strong>The scooter controllers' current limit is fixed in their firmware and you cannot change it.</strong> So 40 A is not a number you pick and then size the wire to. It is a number you have to go and measure.</p>
 <p><strong>Do this before finalising the wire gauge and the fuse rating:</strong></p>
 <ol>
 <li>Find the controller's rated peak current. It is usually printed on the case or in the</li>
@@ -175,8 +174,8 @@ PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY
 <li>If it is <strong>well below 40 A</strong>, that is not free either: it caps how hard the robot can</li>
 </ol>
 <p>pivot and climb out of a rut, which is the case that matters on sand.</p>
-<p>The battery current limit, which is the one that actually protects the pack and the fuse, is likewise fixed. The Teensy cannot command a current limit, so <strong>the only current control you have is backing off the throttle yourself</strong> when the ACS758 sensor reads high. That is a software limit on top of a hardware one, and it is slower and weaker than the VESC's.</p>
-<p>If this measurement comes back ugly, that is the 260 dollar contingency in <code>05-bom.md</code> section 7 doing its job. Spend it.</p></blockquote>
+<p>The battery current limit, which is the one that actually protects the pack and the fuse, is likewise fixed. The Teensy cannot command a current limit, so <strong>the only current control you have is backing off the throttle yourself</strong> when the ACS758 sensor reads high. That is a software limit on top of a hardware one, and it is slow and weak.</p>
+<p>If this measurement comes back ugly, the wire gauge and the fuses in section 7 have to be resized around the real number. Do not design to the 40.</p></blockquote>
 <hr>
 <h3 id="3-the-12-v-rail">3. The 12 V rail</h3>
 <div class="tw"><table><thead><tr><th>Load</th><th>Continuous</th><th>Peak</th></tr></thead><tbody><tr><td>Jetson Orin Nano, with the camera and LiDAR on its USB</td><td>25 W</td><td>40 W</td></tr><tr><td>Cooling fans</td><td>5 W</td><td>5 W</td></tr><tr><td>12→5 V converter, feeding the Teensy and the ESP32</td><td>5 W</td><td>8 W</td></tr><tr><td><strong>Total</strong></td><td><strong>38 W</strong></td><td><strong>58 W</strong></td></tr></tbody></table></div>
@@ -283,7 +282,7 @@ PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY
 <p><strong>Do not put a fuse in it.</strong> If that fuse ever opened, every measurement the Teensy makes on the far pack — its voltage divider, its ACS758 current sensor, its throttle line reference — would lose its common zero while the robot was still driving. And unlike a CAN bus, which simply goes quiet, a floating analogue reference keeps returning plausible wrong numbers that the Spine will act on. That is a worse failure than anything the fuse was protecting against.</p>
 <hr>
 <h3 id="7-the-throttle-signal-path">7. The throttle signal path</h3>
-<p><strong>There is no CAN bus.</strong> Decision D7 replaced the VESCs with the scooter controllers already owned, and those are analogue devices: they see a throttle voltage and they drive. This section used to specify a 500 kbit CAN bus. What it specifies now is the path that voltage travels, which is more fragile and needs more care, because it carries no error detection of any kind.</p>
+<p><strong>There is no data bus to the motors.</strong> The scooter controllers are analogue devices: they see a throttle voltage and they drive. What this section specifies is the path that voltage travels, which is fragile and needs care, because it carries no error detection of any kind.</p>
 <pre><code>  TEENSY 4.0            LEVEL        MCP4725 DAC      OPTO           CONTROLLER
               3.3 V      SHIFT         x2                            throttle in
   ┌────────┐  I2C      ┌───────┐    ┌──────────┐   ┌──────┐        ┌────────────┐
@@ -299,7 +298,6 @@ PACK A (−) ═══ GROUND BOND ═══ PACK B (−) ═══ 12 V BATTERY
 <li><strong>Shielded cable for the throttle lines, routed away from the phase wires.</strong> These are slow analogue signals with no error checking at all, running beside 40 A of switching motor current. Noise on one does not produce an error — it produces throttle.</li>
 <li><strong>Opto-isolate each throttle line.</strong> The controller's throttle ground is the pack negative for that side. Tying the Teensy directly to it puts motor return current through the Teensy's ground reference.</li>
 </ol>
-<p><strong>If you move to VESCs you will also need two 3.3 V CAN transceivers.</strong> They are no longer on the buying list — owner decision 2026-09-18, because nothing in the current design uses CAN and they are a $2 commodity part. Add them to the order on the day a controller judders at walking pace and you take the 260 dollar contingency in section 7 of the BOM. <strong>3.3 V, not 5 V:</strong> the Teensy is not 5 V tolerant.</p>
 <hr>
 <h3 id="8-building-it-so-it-survives-midburn">8. Building it so it survives Midburn</h3>
 <p>Dust and vibration break more festival robots than electrical faults do.</p>
