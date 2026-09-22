@@ -2,8 +2,8 @@
 
 This is the page to read before you cut, drill, or weld anything. It answers
 one question: **where does the frame meet the pods, and what is allowed to
-change?** The step-by-step build order is in [BUILD.md](BUILD.md), further down
-this same guide page.
+change?** The step-by-step build order is in [BUILD.md](BUILD.md) — part 6 of the
+guide, or its own page next to this one.
 
 ---
 
