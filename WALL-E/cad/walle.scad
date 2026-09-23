@@ -18,7 +18,7 @@
 //
 //    pod_interface.scad     the 23 facts about the BUILT pods. Verified
 //                           against the pod model; run check_pod_interface.scad
-//    cad/walle_frame.scad   everything WALL-E actually decides, plus 46 guards
+//    cad/walle_frame.scad   everything WALL-E actually decides, plus the guards
 //
 //  HOW TO USE IT
 //
@@ -446,40 +446,54 @@ module sheet4(){
 module sheet5(){
   s = 1.2;
   o2() square([shelf_l, shelf_w]);
-  // the parts, in plan, with their names
-  for (row = shelf_rows)
-    for (i = [0 : len(row_parts(row)) - 1])
-      let(p = row_parts(row)[i], d = p[1],
-          zc = rows_dep/2 - row_z(row) - d[1],
+  // lower deck, four rows centred on the shelf
+  for (row = lower_rows)
+    for (i = [0 : len(low_parts(row)) - 1])
+      let(p  = low_parts(row)[i],
+          d  = p[1],
           px = shelf_l/2 - row_len(row)/2 + xrun(row, i),
-          pz = shelf_w/2 + zc){
+          pz = shelf_w/2 + rows_dep/2 - row_z(row) - d[1]){
         translate([px, pz]) o2(1.8) square([d[0], d[1]]);
         translate([px + d[0]/2, pz + d[1]/2])
-          text(p[0], size = txt*s*0.62, halign = "center", valign = "center");
+          text(p[0], size = txt*s*0.55, halign = "center", valign = "center");
       }
+  // upper tray, centred. Laptop and hub sit on this, not on the lower deck.
+  translate([shelf_l/2 - upper_l/2, shelf_w/2 - upper_w/2])
+    o2(2.4) square([upper_l, upper_w]);
+  for (p = upper_items)
+    let(d  = p[1],
+        px = shelf_l/2 - upper_l/2 + 10 + p[2][0],
+        pz = shelf_w/2 - upper_w/2 + 10 + p[2][1]){
+      translate([px, pz]) o2(1.8) square([d[0], d[1]]);
+      translate([px + d[0]/2, pz + d[1]/2])
+        text(p[0], size = txt*s*0.62, halign = "center", valign = "center");
+    }
   // where the speaker enclosures sit OVER the shelf
   for (sz = [1,-1]){
     x0 = shelf_l/2 + max(spk_box_x0, -shelf_l/2);
     y0 = shelf_w/2 + sz*spk_zc - spk_box_w/2;
     translate([x0, y0]) o2(1.2) square([spk_shadow_x, spk_box_w]);
-    // against the outer edge of the enclosure, where the parts are not
     translate([x0 + spk_shadow_x/2, y0 + (sz > 0 ? spk_box_w - 22 : 12)])
       text("SPEAKER BOX OVERHEAD", size = txt*s*0.62, halign = "center");
   }
-  dim_h(0, shelf_l, -70, str("SHELF ", round(shelf_l)), s);
+  dim_h(0, shelf_l, -70, str("LOWER SHELF ", round(shelf_l)), s);
   dim_v(0, shelf_w, shelf_l + 70, str(round(shelf_w)), s);
-  translate([shelf_l/2, shelf_w + 200])
-    text("PLAN, looking down.  Front of the robot is to the RIGHT.",
-         size = txt*s*0.95, halign = "center");
-  translate([shelf_l/2, shelf_w + 145])
+  dim_h(shelf_l/2 - upper_l/2, shelf_l/2 + upper_l/2, shelf_w + 40,
+        str("LAPTOP TRAY ", round(upper_l), " x ", round(upper_w)), s);
+  translate([shelf_l/2, shelf_w + 250])
+    text("PLAN, looking down.  Front of the robot is to the RIGHT.  TWO FLOORS.",
+         size = txt*s*0.90, halign = "center");
+  translate([shelf_l/2, shelf_w + 195])
+    text(str("Lower: four rows, ", round(shelf_fill),
+             "% of the shelf. Upper: XPS + USB hub on a lift-out tray. PD pack stays DOWN."),
+         size = txt*s*0.68, halign = "center");
+  translate([shelf_l/2, shelf_w + 150])
     text(str("The two enclosures cover ", round(100 - shelf_reach),
-             "% of the shelf. They BOLT on, so everything under them stays reachable."),
-         size = txt*s*0.72, halign = "center");
-  translate([shelf_l/2, shelf_w + 100])
-    text(str("Parts use ", round(shelf_fill), "% of the area · tallest is ",
-             round(part_h_max), " mm"), size = txt*s*0.72, halign = "center");
-  sheet_frame(-300, -400, 800, 880, s);
-  title_block(-240, -340, "SHEET 5", "ELECTRONICS SHELF — PLAN", s);
+             "% of the shelf. Unbolt them, then lift the tray. Stack ",
+             round(part_h_max), " mm."),
+         size = txt*s*0.68, halign = "center");
+  sheet_frame(-300, -400, 800, 960, s);
+  title_block(-240, -340, "SHEET 5", "ELECTRONICS — TWO FLOORS", s);
 }
 
 // ============================================================================
@@ -503,6 +517,8 @@ else if (view == "head")     head();
 else if (view == "chest")  { chest_panel(); speaker_boxes(); speakers(); }
 else if (view == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y, -shelf_w/2])
                                cube([shelf_l, shelf_t, shelf_w]);
+                             color(c_ply) translate([-upper_l/2, upper_y, -upper_w/2])
+                               cube([upper_l, upper_t, upper_w]);
                              shelf_layout(); }
 else if (view == "section")  difference(){ robot_full();
                                translate([-800,-50,0]) cube([1600,1400,800]); }

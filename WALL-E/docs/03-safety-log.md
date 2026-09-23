@@ -30,8 +30,8 @@ All four must hold:
 | 2 | Wireless E-stop | Press the keyfob from 20 m away | Same as test 1 | | | |
 | 3 | Transmitter off | Switch the radio transmitter off mid-drive | Ramp to zero within 0.1 s of the last frame. **On the FS-iA6B the frames may not stop** — the receiver can repeat the last stick values. The Spine must then report `rc_frozen` and ramp to zero within `RC_FROZEN_MS` (500 ms). Both paths must stop the robot | | | |
 | 4 | Out of radio range | Walk the robot away until the link drops | Same as test 3, and no restart when the link returns without re-arming | | | |
-| 5 | Brain USB unplugged | Pull the Jetson's serial cable in ASSIST mode | Watchdog fires, ramp to zero, fall back to MANUAL | | | |
-| 6 | Brain power lost | Cut power to the Jetson in ASSIST mode | Same as test 5 | | | |
+| 5 | Brain USB unplugged | Pull the XPS serial cable in ASSIST mode | Watchdog fires, ramp to zero, fall back to MANUAL | | | |
+| 6 | Brain power lost | Cut power to the XPS in ASSIST mode | Same as test 5 | | | |
 | 7 | Bumper triggered | Hold a board in front of a ToF sensor while driving forward | Forward motion vetoed. Reverse still works | | | |
 | 8 | Throttle signal wire disconnected | Unplug the throttle line between one DAC and one controller while driving | **Both** motors stop, not one. The Teensy sees that track's speed sensor stop changing while commanded, and ramps both down (rule 4) | | | |
 | 9 | Arm switch off | Flick the arm switch off while driving | Ramp to zero | | | |

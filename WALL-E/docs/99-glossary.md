@@ -30,9 +30,16 @@ data bus and SD-card logging were both out of the design and the 4.1 had nothing
 A cheap microcontroller with WiFi and Bluetooth built in, and enough speed to drive small
 screens. We use it for the Face. We will not use its WiFi.
 
-**Jetson Orin Nano**
-An SBC made by NVIDIA with a graphics chip built in. The graphics chip is what makes AI
-models run fast. We use it for the Brain.
+**Dell XPS 15 9510**
+The Brain. A 15 inch laptop the owner already has (i9, 32 GB RAM, RTX 3050 Ti 4 GB, 1 TB
+SSD). It sits closed on a lift-out tray (the upper electronics floor). The PD pack and the
+12 V battery stay on the floor below. It runs Python, talks USB to the Spine and the Face,
+and may run a small **local** language model. It is not on the robot 12 V rail.
+**There is no internet at the event.**
+
+**OAK-D Lite**
+A USB camera that finds people on its own chip and also measures depth. The XPS only reads
+the finished list. Buy from Luxonis, not AliExpress.
 
 **Firmware**
 The program that lives inside a microcontroller. Same idea as software, but the word
@@ -237,7 +244,7 @@ because there is no network in the desert.
 
 **LLM (Large Language Model)**
 The kind of AI that understands and writes language. ChatGPT is one. Small versions can run
-offline on the Jetson. It takes 1 to 3 seconds to answer.
+offline on the XPS. A 3B 4-bit model answers in about 1 to 3 seconds.
 
 **It must never control the motors.** It is far too slow, and it can give surprising
 answers. It is allowed to choose from a short fixed list of behaviours, and a simple
@@ -253,13 +260,14 @@ memory normally, but about 4 GB quantised, with only a small loss of quality. Th
 makes offline AI on a small board possible at all.
 
 **TOPS (Tera Operations Per Second)**
-A rough measure of how fast an AI chip is. Trillions of calculations per second. The Jetson
-Orin Nano does about 67.
+A rough measure of how fast an AI chip is. Trillions of calculations per second. The XPS
+RTX 3050 Ti is a laptop GPU, power-limited to about 35–45 W. It is enough for a 3B 4-bit
+language model. It is not a datacentre card.
 
 **NPU (Neural Processing Unit)**
 A chip built only for AI. Fast and power-efficient, but only for the kinds of models it was
 designed for. Some NPUs are great at vision and poor at language models, which is why the
-Jetson's general-purpose graphics chip is a safer choice for us.
+XPS GPU (and the OAK-D chip for people) is the split we use.
 
 **YOLO**
 A well-known family of fast models that find objects in a picture and draw boxes around
@@ -278,8 +286,8 @@ speech.
 ## Electrical words
 
 **DC-DC converter**
-A circuit that changes one DC voltage into another, for example the 48 V battery down to the
-5 V the Jetson needs.
+A circuit that changes one DC voltage into another, for example 12 V down to the
+5 V the Teensy and the Face need.
 
 **Isolated**
 A converter where the input and the output share no wires, only a magnetic link. This stops
@@ -288,8 +296,7 @@ noise and voltage dips on the motor side from reaching the computers.
 **Brownout**
 When the voltage dips too low for a moment and a computer resets. Motor current spikes cause
 this. It is why the computers get their **own 12 V battery** rather than a wire shared with
-the motors. They used to get an isolated converter off the motor battery instead, which
-solved the same problem in a harder way — see decision D8 in `00-plan.md`.
+the motors. See decision D8 in `00-plan.md`.
 
 **Supercapacitor**
 A component that stores a small amount of energy and can release it very fast. Used to hold

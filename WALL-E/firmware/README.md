@@ -7,7 +7,7 @@ Two boards, two jobs, and a hard line between them.
 | `spine/` | Teensy 4.0 | Motor commands, every safety rule, the watchdog | **Yes. Only this board.** |
 | `face/` | ESP32-S3 × 2 | Eye animation, head servos | No. It has no connection to the motors at all. |
 
-The Brain (the Jetson) lives in `../brain/` and is Python, not firmware.
+The Brain (the Dell XPS 15) lives in `../brain/` and is Python, not firmware.
 
 ---
 
@@ -175,7 +175,7 @@ Moods: `idle`, `curious`, `happy`, `sad`, `alarm`, `sleepy`.
 
 If the link goes quiet for 1.5 seconds the eyes fall back to an idle
 behaviour — drifting around, blinking now and then. That is on purpose: a
-crashed Jetson should leave a robot that looks bored, not one that looks
+crashed Brain should leave a robot that looks bored, not one that looks
 broken. Frozen eyes read as "switched off" to everyone watching.
 
 ---

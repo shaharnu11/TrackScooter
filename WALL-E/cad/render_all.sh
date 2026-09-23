@@ -73,7 +73,7 @@ solid walle_chest       -1250,-1100,1500,60,0,560 950,800   chest
 
 echo "   build/walle_shelf.png"
 "$OSC" -o "$OUT/walle_shelf.png" --imgsize=1100,900 \
-  --camera=0,0,0,0,0,0,0 --autocenter --viewall --projection=o \
+  --camera=1400,-1600,900,0,0,450 --projection=p \
   -D png_up=true -D shelf_labels=true -D show_ground=false \
   -D 'render_mode="shelf"' walle_frame.scad 2>/dev/null
 

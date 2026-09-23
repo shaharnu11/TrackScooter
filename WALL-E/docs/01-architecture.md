@@ -51,8 +51,8 @@ pause.
 ┌─────────┐  ┌──────────────────────┐   USB    ┌──────────────┐
 │ LiDAR   │  │                      │  serial  │  ESP32-S3    │
 │ OAK-D   ├─►│   BRAIN              ├─────────►│  2 LCD eyes  │
-│ GPS     │  │   Jetson Orin Nano   │          │  NO SERVOS   │
-│ mic     │  │   Linux              │          └──────────────┘
+│ GPS     │  │   Dell XPS 15 9510   │          │  NO SERVOS   │
+│ mic     │  │   local only, no net │          └──────────────┘
 └─────────┘  │                      │
              │  camera, AI, sound   │      Can freeze. That is allowed.
              └──────────┬───────────┘
@@ -88,8 +88,8 @@ pause.
 ### Two things in that diagram matter more than the rest
 
 **The radio receiver wires into the Spine, not into the Brain.** This means the driver keeps
-full control of the robot even if the Jetson is switched off, crashed, or still booting. If
-the radio went through the Brain, a Linux crash would take away the driver's steering at the
+full control of the robot even if the XPS is switched off, crashed, or still booting. If
+the radio went through the Brain, a laptop freeze would take away the driver's steering at the
 worst possible moment. Instead, a Brain crash costs you the eyes and the sounds, and the
 robot still drives normally.
 
@@ -243,12 +243,14 @@ Two details on that bond:
 
 ### The electronics supply: their own battery, so both packs can be equal
 
-**Owner decision D8, 2026-09-19. This section used to say the opposite, and the reasoning it
-used to carry is worth keeping, because it explains why the packs are now the size they are.**
+**Owner decision D8, 2026-09-19.** The traction packs used to be different Ah so an
+electronics load on the larger one would empty them together. That reasoning is kept
+below, because it explains why both traction packs are now the **same capacity**.
 
-**The electronics have their own 12 V 20 Ah battery** on the shelf. Neither traction pack
-feeds them. The isolated 48→12 V converter is deleted. `04-power-and-wiring.md` section 3 is
-the specification.
+**The electronics have their own 12 V 20 Ah battery** on the lower deck. Case size
+**181 × 167 × 77 mm**, lying on its side. That is not the 48 V pack case
+(**400 × 110 × 80 mm**, two of them in the frame box). Neither traction pack feeds
+the 12 V rail. `04-power-and-wiring.md` section 3 is the specification.
 
 #### What this section used to say, and why it was right at the time
 
@@ -278,7 +280,7 @@ rearranged, and about 3.1 A per side while crawling:
 |---|---|---|---|
 | Pack A: left motor only | 17.5 Ah | 3.1 A | 5.6 hours |
 | Pack B: right motor only | 17.5 Ah | 3.1 A | 5.6 hours |
-| Electronics battery: 240 Wh | — | 38 W | 6.3 hours |
+| Electronics battery: 240 Wh | — | 20 W | 12 hours |
 
 Three things come out of that table.
 
@@ -289,7 +291,7 @@ carrying a passenger any more.
 and through how healthy each one is. Rule 11's voltage scaling still earns its place, but it
 has less work to do and less to correct.
 
-**The electronics outlast the drive, on purpose.** 6.3 hours against 5.6 means that when the
+**The electronics outlast the drive, on purpose.** 12 hours against 5.6 means that when the
 motors stop, the Brain, the Spine and the face are still up. That is exactly when you want
 them: to show a message on the eyes, to finish the log, and to refuse to re-arm.
 
@@ -347,10 +349,10 @@ So this becomes the critical item in the whole build, not a configuration detail
   so a Teensy that is alive but has lost the I2C bus to the DACs will keep kicking while the
   throttle stays stuck. The firmware must check every DAC write and **stop kicking on purpose**
   when one fails.
-- Keep a buffer capacitor on the electronics rail anyway. It used to be the main defence
-  against risk R6, the motor current spikes. Decision D8 took that job off it — the rail is a
-  battery now, and the motors have no path to pull it down — but it still costs almost nothing
-  and it covers the inrush when the fans and the LiDAR start together.
+- Keep a buffer capacitor on the electronics rail anyway. Decision D8 took the motor-spike
+  job off it — the rail is a battery now, and the motors have no path to pull it down — but
+  it still costs almost nothing and it covers the inrush when the fans and the LiDAR start
+  together.
 
 ---
 
@@ -381,18 +383,22 @@ own authority.
 
 ## 5. What each board actually runs
 
-### Brain — Jetson Orin Nano, Linux, Python
+### Brain — Dell XPS 15 9510, local only, Python
 
-Four things, all independent, all allowed to be slow:
+Four things, all independent, all allowed to be slow. **No internet.** If the cell
+network is up it is still not used. Physically the closed laptop sits on a lift-out
+plywood tray above the rest of the electronics (plan L26). The PD pack stays on the
+lower floor so it does not steal speaker air.
 
 1. **Obstacle map.** Read the LiDAR, build an occupancy grid, work out which directions are
    blocked. This is not AI. It is geometry, and it is fully predictable.
-2. **People detection.** The OAK-D camera runs a YOLO model on its own chip, so the Jetson
-   gets a ready-made list of where people are without spending any effort. Output is simple:
+2. **People detection.** The OAK-D camera runs a YOLO model on its own chip, so the XPS
+   gets a ready-made list of where people are without spending GPU memory. Output is simple:
    "person at 20 degrees left, 3 metres away."
 3. **Personality.** A state machine picks a behaviour: idle, curious, greeting, shy,
-   retreating. It sends gaze targets to the Face and plays sound clips. Optionally an LLM
-   chooses the behaviour instead of fixed rules, but see the warning below.
+   retreating. It sends gaze targets to the Face and plays sound clips. A small **local**
+   language model (about 3B parameters, 4-bit) may choose the behaviour on the RTX 3050 Ti
+   instead of fixed rules. It only picks from the list below. Cloud models are not used.
 4. **Logging.** Record motor temperature, battery voltage, and any veto events to a file.
    You will need this after the first time something goes wrong in the field.
 

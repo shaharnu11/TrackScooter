@@ -86,7 +86,7 @@ follow from that:
 
 | Constraint | Consequence |
 |---|---|
-| No network at the event | Every model runs on the robot. No cloud, no phone tethering |
+| No network at the event | Every model runs on the XPS. No cloud, no phone tethering. A dead cell signal must leave eyes, beeps, and radio driving intact |
 | Negev heat, 40 °C and direct sun | Active cooling. No PLA anywhere structural. Heat test before you go |
 | Fine abrasive sand | Covers on every bearing and bushing. Daily cleaning. Spares |
 | The event is mostly at night | Vision alone is not enough. Lighting is required, not decorative |
@@ -112,21 +112,23 @@ follow from that:
 | L7 | Keep the fitted 18-link belts | Was decision D1. See below |
 | L8 | Frame mounting width **177 mm**, across the carriers' outer faces (green plates 6 mm inboard, packer fills it) | Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to |
 | L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
-| L10 | **The electronics run from their own 12 V battery.** REVISED 2026-09-19: they used to be fed from the larger pack through an isolated 48→12 V converter | See decision D8. It deletes the one power part that cannot be bought on AliExpress, takes the Jetson off a rail that also carries 40 A of motor current, and lets both traction packs be the same size. **The contactor coils do NOT move — they stay on pack A** |
-| L11 | Frame stays 550 mm long. **All electronics on a shelf inside the body** | The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16 |
+| L10 | **The electronics run from their own 12 V battery** | See decision D8. A different, smaller case than the 48 V packs: **181 × 167 × 77 mm** on the lower deck, against **400 × 110 × 80 mm** in the frame box. Takes the 12 V rail off copper that also carries 40 A of motor current, and lets both traction packs be the same size. **The contactor coils do NOT move — they stay on pack A.** The Brain (XPS) is **not** on this rail |
+| L11 | Frame stays 550 mm long. **All electronics on two floors inside the body** | The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16. Two floors added 2026-09-22 once the XPS would not share one deck. See L26 |
 | L12 | Body length follows the **pod** length, not the anti-tip castors | A body sized to cover the castors is 745 mm on 363 mm pods, and looks like a crate on toy wheels. The castor arms show as outriggers instead |
 | L13 | Two Face boards, one per eye | Two 480×480 QSPI panels on one ESP32-S3 is tight and would tear. 12 dollars removes the risk. `05-bom.md` §4 |
-| L14 | The amplifier gets its own 48→32 V converter | A TPA3255 maxes out at 53.5 V and a "48 V" pack is 54.6 V full. It also keeps the audio spikes off the Jetson's rail. `04-power-and-wiring.md` §4 |
+| L14 | The amplifier gets its own 48→32 V converter | A TPA3255 maxes out at 53.5 V and a "48 V" pack is 54.6 V full. It also keeps the audio spikes off the 12 V rail. `04-power-and-wiring.md` §4 |
 | L15 | **Batteries stay in the frame, not in the body** | Not for the tipping, which is affordable. They need a sealed case wherever they go, and once that is true the body is the hottest, most crowded and most dangerous place for them. `06-why-the-batteries-are-low.md` |
 | L16 | The battery box is a **closed, gasketed box** with a membrane vent in the lid | Owner, 2026-09-16: sand. It was a three-sided U hanging where the belts throw sand. Now six panels, plugged spanner holes, foam pad, lid vent |
-| L17 | Packs charge **in place** and never come out in the field | Every opening of a sealed box at a dusty event undoes the sealing. Charge lead out through a gland to a connector on the body, behind a dust cap |
+| L17 | **Every battery unplugs and lifts out.** Daily charging is still in place | Owner, 2026-09-23 (was “never come out”). Opening the sealed box every morning in sand undoes the gasket, so the festival charge path is still an XT60 on the body. That must not trap the pack. Traction packs: unbolt the body from the four risers, unbolt the box lid, unplug XT90-S and the charge pigtail, lift out. 12 V pack and PD pack: unbolt the speaker boxes, lift the laptop tray, unplug, lift out. The XPS comes out with the tray. No pack is glued, foamed in, or captured by a cable gland |
 | L18 | Box floor stays at 150 mm for now | Raising it to 173 — the limit, set by lid-bolt access under the body floor — would buy 23 mm of ground clearance for 0.1° of tipping. Owner: revisit after the first drive on sand |
-| L19 | **Two 6.5 inch drivers in the chest panel**, 280 mm apart, 584 mm up | Owner, 2026-09-16. Position is derived, not chosen: the enclosures have to clear the tallest shelf box and the body lid, and the driver centres on what is left |
-| L20 | Each driver gets its **own sealed 9.8 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector |
+| L19 | **Two 6.5 inch drivers in the chest panel**, 280 mm apart, 613 mm up | Owner, 2026-09-16. Position is derived, not chosen: the enclosures have to clear the two-floor stack and the body lid, and the driver centres on what is left |
+| L20 | Each driver gets its **own sealed 7.5 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector. Volume dropped from 9.8 L when the laptop went on a second floor (L26). Still inside the 7–14 L range a 6.5 inch driver wants |
 | L21 | The enclosures **bolt** to the chest panel and lift out | They shade 54 % of the shelf. Glued in, half the electronics is unreachable |
 | L22 | Metal grilles over both drivers | A crowd will push a finger through an open cone |
 | L24 | **The lower shock bolt problem is closed** | Owner, 2026-09-18: fixed on the real pods. This was decision D2 and risk R3, and `02-shock-bolt.md` held the analysis. All three are deleted. If the fix ever needs revisiting, the analysis is in git history |
 | L23 | **The head is rigid. No pan, no nod, no tilt, no servos** | Owner, 2026-09-17. To look left or right the whole robot turns. Removes four gear trains, a bearing, a slip ring and a cable twist limit from a machine that lives in blowing sand, and takes the head from a 5 kg guess to 2.1 kg computed, which drops the centre of mass 18 mm. The cost is in firmware, not hardware: a gaze is now a drive command, so it needs rules L1 to L3 in `01-architecture.md` |
+| L25 | **The Brain is the owner's Dell XPS 15 9510.** No Jetson. No internet at the event | Owner, 2026-09-22. The laptop sits closed on the **upper** electronics tray, on spacers, with a USB-C PD power bank of **65 W or more** on the **lower** deck. The OAK-D Lite finds people on its own chip. A small **local** language model (about 3B, 4-bit) may run on the RTX 3050 Ti and only picks from the fixed behaviour list. Cloud models are not used. `05-bom.md` §3 |
+| L26 | **Two electronics floors.** Laptop and USB hub on a lift-out plywood tray. Everything else on the lower shelf | Owner, 2026-09-22. The closed XPS is too wide to share one deck with the 12 V battery and the controllers. The PD pack stays down — 50 mm on the tray would steal speaker air. Cost: one extra 12 mm ply tray and 15 mm of air. Speaker boxes drop to 7.5 L. The 7 L guard still holds. Unbolt the speaker boxes, then lift the tray straight out |
 
 #### L7 — why we keep the short belts now
 
@@ -150,7 +152,7 @@ plus keeping all the heavy things as low as possible. See decision D6.
 | **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
 | **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
 | **D7** | Can the two scooter controllers we already own drive the robot? | Cost, and whether motor temperature can be read | **DECIDED 2026-09-17: yes, use them.** They have a reverse line, and the motor's own thermistor gives the temperature |
-| **D8** | Run the electronics from pack A through a converter, or give them their own battery? | Which parts get bought, both pack capacities, and how clean the Jetson's supply is | **DECIDED 2026-09-19: their own 12 V battery.** See below |
+| **D8** | Own 12 V battery for the electronics, or tap pack A? | Which parts get bought, both pack capacities, and how clean the 12 V rail is | **DECIDED 2026-09-19: their own 12 V battery.** Different case from the 48 V packs. See below. The XPS is not on that rail |
 
 #### D6 — the tipping fix, since the belts are staying
 
@@ -216,31 +218,30 @@ it is cheap insurance.
 
 The question that started this was whether there is room for a third battery. In the frame
 box there is not: the two traction packs leave 60 mm of spare width and 20 mm of spare
-length, and a third pack of the same size needs 104 mm. But a battery for the **electronics
-only** is a different part and a much smaller one, and it turns out to be worth fitting.
+length, and a third pack of the **same** size needs 104 mm.
 
-**The old arrangement.** Pack A fed a 100 W isolated 48→12 V converter, which fed the Jetson,
-the fans and the 12→5 V buck for the Teensy and the ESP32. Pack A also drove the left motor.
+The electronics battery is a **different part**. It is not a third 48 V pack.
 
-**The new one.** A 12 V 20 Ah LiFePO4 battery on the electronics shelf feeds the 12 V rail
-directly. The Jetson dev kit takes 9–19 V in, so nothing needs converting.
+| | 48 V traction, each | 12 V electronics |
+|---|---|---|
+| Case | **400 × 110 × 80 mm** | **181 × 167 × 77 mm** |
+| Where | Two of them, sealed box in the frame | Lower electronics deck, lying on its side |
+| Mass | ~8 kg (placeholder) | ~2.5 kg |
+| Feeds | One motor each | Teensy, Face, fans, USB hub. **Not the XPS** |
+
+A 12 V 20 Ah LiFePO4 on the shelf feeds that rail directly. The XPS runs from its own cells
+and a USB-C PD power bank (65 W or more).
 
 ##### What it buys
 
-**It deletes the part you cannot buy.** `05-bom.md` section 9 lists the isolated 48→12 V
-converter as one of the few things that must come from a distributor, because every module
-sold on AliExpress under that search is non-isolated. That was 70 dollars and a sourcing
-problem. Now there is no 48 V to step down, so the part is gone.
-
-**The Jetson stops sharing copper with the motors.** Risk R6 is motor current spikes dragging
-the rail down and rebooting the Brain mid-show. The defence used to be an isolated converter
-plus a 4700 µF capacitor. On its own battery there is nothing for the motors to pull on. Keep
-the capacitor, but it stops carrying the load alone.
+**The 12 V rail does not share copper with the motors.** Risk R6 is motor current spikes
+dragging the rail down and rebooting boards mid-show. On its own battery there is nothing for
+the motors to pull on. Keep the buffer capacitor for fan and LiDAR inrush. The XPS is on a
+third supply, so a 12 V brownout does not kill the Brain.
 
 **Both traction packs can now be the same size.** The 20 Ah / 15 Ah split in
-`01-architecture.md` section 3b was never a preference — it existed so the electronics load on
-the larger pack would drag both packs towards empty at the same moment. With that load gone,
-the right answer is two equal packs, and the runtime improves for free:
+`01-architecture.md` section 3b existed so an electronics load on the larger pack would drag
+both packs towards empty at the same moment. With that load gone, two equal packs run longer:
 
 | | Pack A | Pack B | Robot runs for |
 |---|---|---|---|
@@ -248,11 +249,10 @@ the right answer is two equal packs, and the runtime improves for free:
 | After: 17.5 Ah each, motors only | 3.1 A, 5.6 h | 3.1 A, 5.6 h | **5.6 h** |
 
 That is the same number of cells rearranged, and it is about 19 % more driving. The
-electronics battery holds 240 Wh against a 38 W rail, so it runs 6.3 hours and outlasts the
-drive — the face and the logs stay up after the motors stop, which is what you want when
-something has gone wrong.
+electronics battery holds 240 Wh against a 20 W rail, so it runs 12 hours and outlasts the
+drive — the face and the logs stay up after the motors stop.
 
-##### The two things that must not change
+##### The three things that must not change
 
 **The contactor coils stay on pack A.** They are 48 V and they do not follow the electronics.
 That tap is the whole reason pack A dying opens *both* contactors, so the robot coasts instead
@@ -275,23 +275,10 @@ triple the size that battery has to be.
 
 ##### What it costs
 
-The battery **lies on its side**. Standing up it is 167 mm tall, and the tallest box on the
-shelf sets the floor of the speaker enclosures, so an upright pack takes air away from the
-drivers. Flat it is 77 mm, against a limit of 139 mm that `cad/walle_frame.scad` now computes
-and guards.
-
-Even lying flat it is not free, and the model prices it:
-
-| | Before | After |
-|---|---|---|
-| Sealed volume per driver (wants 7–14 litres) | 10.1 | **9.8** |
-| Shelf area used | 32 % | 40 % |
-| Whole robot | 86.5 kg | 88.8 kg |
-| Centre of mass | 315.6 mm | 318.3 mm |
-| Tips forward at | 19.4° | 19.3° |
-
-The castor still catches the pitch at 12.3°, so the margin barely moves. The real price is
-0.3 litres of bass and a third thing to charge.
+The 12 V pack **lies on its side**. Standing up it is 167 mm tall, which lifts the laptop tray
+and takes air from the speaker boxes. Flat it is 77 mm, against an 88 mm limit that
+`cad/walle_frame.scad` guards. It is a third thing to charge. Speaker volume is 7.5 L with the
+two-floor stack; that is the 12 V pack plus the laptop tray, not the pack alone.
 
 ---
 
@@ -307,7 +294,7 @@ Four streams. Two of them start today and do not wait for each other.
      test motors → throttle by hand → Teensy + DAC → watchdog → radio → E-stop → 2 motors → install
 
                     W3 SENSE, BRAIN AND FACE ──────────────────────►
-                       Jetson → LiDAR → camera → personality → eyes → head
+                       Brain → LiDAR → camera → personality → eyes → head
 
                               W4 BODY ─────────────────────────────►
                                  shell → paint → lighting
@@ -396,7 +383,7 @@ runaway. Record the date and result for each one in `03-safety-log.md`.
 | Task |
 |---|
 | LiDAR fitted, obstacle map built, bumper veto wired into the Spine |
-| Jetson installed on its isolated power rail, temperature logging running |
+| XPS installed on its own battery and PD pack, temperature logging running |
 | Camera fitted, face detection running, gaze targets sent to the Face |
 | Eye screens working from the ESP32 |
 | Head built: rigid post, two ply barrels, camera under the brow |
@@ -443,16 +430,16 @@ material, shocks, bearings, axles, belts and sprockets are already paid for and 
 | Anti-tip wheels | 2 castors and their mounts | 40 – 80 |
 | Drive electronics | throttle interface, contactor, fuses, heavy cable, lugs (controllers already owned) | 270 – 380 |
 | Radio control | Transmitter, receiver, wireless E-stop keyfob | 150 – 250 |
-| Compute | Jetson Orin Nano 8GB, storage, cooling | 300 – 350 |
+| Compute | Dell XPS 15 (owned), USB-C PD pack 65 W+, powered hub | 40 – 80 |
 | Spine and Face boards | Teensy 4.0, ESP32-S3, 2 round LCDs | 80 – 120 |
 | Sensors | LiDAR, OAK-D camera, 6 × ToF, GPS, compass | 300 – 400 |
-| Power conditioning | Isolated DC-DC converters, buffer, distribution | 100 – 150 |
+| Power conditioning | 48→32 V amp converter, 12→5 V buck, buffer, distribution | 50 – 90 |
 | Audio | Class-D amplifier, wiring | 60 – 100 |
 | Body and head | 12 mm plywood, glue, hinges, gas strut, sealer. Steel already owned | 280 - 360 |
 | Lighting | LED strips, drivers, the eye illumination | 100 – 150 |
 | Tools and consumables | Soldering, crimping, multimeter, drill bits | 200 – 400 |
 | Spares kit | Section 6, Phase 6 | 250 – 350 |
-| **Total still to spend** | | **≈ 2,370 – 2,920** |
+| **Total still to spend** | | **≈ 2,060 – 2,590** |
 
 If the donor battery packs cannot be reused, add 600 to 1,200.
 
@@ -462,8 +449,8 @@ If the donor battery packs cannot be reused, add 600 to 1,200.
    dollars, and it is the cheapest way to find out whether the drive electronics are going to
    be a problem.
 2. **Phase 1:** the frame steel, the contactor, the fusing, heavy cable.
-3. **Phase 2:** the Jetson and the sensors. Do not buy these early. They sit in a drawer
-   losing value while you do metalwork, and a newer version may appear.
+3. **Phase 2:** the OAK-D, the LiDAR, and the other sensors. Do not buy these early. They sit in a drawer
+   losing value while you do metalwork. The Brain is the XPS you already own.
 4. **Phase 4:** the screens and the amplifier. No servos — the head is rigid.
 5. **Phase 5:** the body materials, bought against a finished robot you can measure.
 
@@ -559,15 +546,16 @@ Ordered by how much damage each one does, not how likely it is.
 | R2 | It tips forward | Broken robot, possibly a broken person | Anti-tip wheels (D6). All mass low. Ballast test in Phase 2 |
 | R4 | One pack's BMS cuts out while driving | The surviving track spins the robot on the spot instead of stopping | Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12 |
 | R5 | Hub motors overheat crawling | Dead robot mid-event | Read the motor's OWN thermistor into the Teensy and log it from the first bench test. The scooter controllers cannot limit current for us, so the Teensy has to back the throttle off itself. Keep it light |
-| R6 | Motor current spikes reboot the Brain | Eyes and sounds die in front of an audience | Isolated DC-DC rail, own fuse, buffer capacitor |
+| R6 | Motor current spikes reboot the 12 V rail | Face and hub drop | Own 12 V battery (D8), own fuse, buffer capacitor. XPS is on a third supply |
 | R6b | The electronics pack's BMS cuts out, so the Spine dies too | No board left to enforce any stop rule | The scooter controllers have NO command timeout of their own, so this defence is now entirely the hardware watchdog: heartbeat stops, relay falls closed, throttle shorted to ground. Prove it by safety log test 15 |
 | R6c | The motor controllers cook inside the body | One track dies, and the robot pivots | Direct consequence of L11: on a plywood shelf they have no steel to dump heat into. Each gets an aluminium plate bolted through to a body panel, and one filtered air path pushes air IN so the body runs at positive pressure |
+| R6d | XPS cooks or eats sand | Eyes and sounds die | Spacers under the laptop on the upper tray, filtered intake, PD pack 65 W+ on the lower deck. Clean the filter every morning. The laptop is a daily driver in a dusty box — unbolt the speaker boxes and pull the tray between events |
 | R7 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
 | R8 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
 | R8b | Sand gets into the battery box | Grit between the cells and the box, chafed wiring, a short | L16: closed box, gasketed lid on 110 mm bolt pitch, silicone plugs in all four spanner holes. **Check the plugs are in every morning** — they are the weak point, and they point at the belts |
 | R8c | The sealed box breathes and pumps dust in through its worst leak | Slow, invisible version of R8b, and it defeats the gasket | Membrane vent in the lid, on the centreline over the gap between the packs, so the air has a clean path it does not have to find |
-| R8d | Charging in a sealed box has nowhere to put the heat | Packs age fast, or worse | About 12 W of loss at 5 A. Log the pack temperature through one full charge with the lid on, on the bench, before the event. If it climbs, charge with the body lid open or drop the current |
-| R10 | Forward tipping margin keeps getting eaten | The castor catches, the robot stops looking like it meant to | The speakers alone took 1.5°, leaving 7.0° over the castor. **Every new part forward of centre or high up spends this number.** Weigh the real pods, packs, body and speakers and put the measured figures in the model before adding anything else |
+| R8d | Charging in a sealed box has nowhere to put the heat | Packs age fast, or worse | About 12 W of loss at 5 A. Log the pack temperature through one full charge with the lid on, on the bench, before the event. If it climbs, charge with the body off, or lift the pack out (L17), or drop the current |
+| R10 | Forward tipping margin keeps getting eaten | The castor catches, the robot stops looking like it meant to | The speakers plus the two-floor stack leave **6.8°** over the castor. **Every new part forward of centre or high up spends this number.** Weigh the real pods, packs, body and speakers and put the measured figures in the model before adding anything else |
 | R11 | Speaker enclosures rattle or buzz at volume | Sounds broken, and it is the thing the crowd hears | Sealed boxes, braced, and the drivers bolted through with gasket tape. Test at full volume on the bench before the body goes on |
 | R9 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |
 | R10 | Scope grows, especially the body | Nothing is finished | Section 9 cut list, agreed in advance |

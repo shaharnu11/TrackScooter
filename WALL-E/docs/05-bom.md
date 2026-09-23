@@ -5,7 +5,7 @@ What to buy, in the order to buy it, with the traps attached to each part.
 **About the prices.** Most are still estimates in US dollars and not quotes. The eight in
 section 9's table were checked against real AliExpress listings on 2026-09-17 and were all
 **over**-estimated; nothing came back cheaper than listed, so assume the unchecked rows are
-a little high too. Check every one before ordering. Prices for the Jetson and the cameras in particular move a
+a little high too. Check every one before ordering. Prices for the OAK-D camera in particular move a
 lot. Treat the totals as a planning figure, not a budget you can commit to.
 
 **About the currency.** The Est. column is **US dollars**, but you are buying in **shekels**.
@@ -121,7 +121,7 @@ cannot be turned off, that controller must not go on this robot.
 |---|---|---|---|---|---|
 | 2 | DC contactor, **48 V coil** (confirmed 2026-09-17), 80 A+ **DC rated** | 80 | Long | Albright SW-series or Gigavac. **An AC-rated relay will weld shut.** `04-power-and-wiring.md` section 5. | **§9 — not here** |
 | 2 | Fuse, 60 A, and holders | 25 | Stock | Class T or ANL. One per pack. | **§9 — not here** |
-| 3 | Fuse, 10 A, and holders | 15 | Stock | 12 V converter, amplifier supply, spare. | **§9 — not here** |
+| 3 | Fuse, 10 A, and holders | 15 | Stock | Amplifier 48→32 V supply, plus two spares. | **§9 — not here** |
 | 3 | Fuse, 5 A **slow-blow**, and holders | 6 | Stock | The contactor coil circuit. Slow-blow because it is sized for the coil inrush, not the 0.3 A holding current. See §9. | **§9 — not here** |
 | 10 m | 10 AWG silicone wire, red and black | 40 | Stock | Silicone, not PVC. It has to stay flexible when hot. | [search](https://www.aliexpress.com/w/wholesale-10AWG-silicone-wire.html) |
 | 10 m | 12 AWG silicone wire | 30 | Stock | Motor phases. | [search](https://www.aliexpress.com/w/wholesale-12AWG-silicone-wire.html) |
@@ -129,17 +129,16 @@ cannot be turned off, that controller must not go on this robot.
 | 4 | **XT90-S anti-spark** connector pairs | 20 | Stock | The main disconnect on each pack, plus two spares. **Was Anderson SB50.** The "-S" is not optional: it is the built-in resistor that pre-charges the controller capacitors, so the contacts stop sparking every time you plug in. **Put the SOCKET half on the battery** — the disconnect sits ahead of the fuses, so exposed pins on the pack side would be an unfused short waiting for a dropped spanner. See `04-power-and-wiring.md` §5. | [search](https://www.aliexpress.com/w/wholesale-XT90-S-anti-spark-connector.html) |
 | 8 | Silicone caps for the XT90 halves | 6 | Stock | Dust cover and idiot guard in one. Anderson housings were genderless and recessed; XT is not, so this replaces a safety property we gave up. | [search](https://www.aliexpress.com/w/wholesale-XT90-connector-silicone-cap.html) |
 | 1 | Latching mushroom emergency stop, red, IP65 | 25 | Stock | Normally-closed contact. | **§9 — not here** |
-| 1 | **12 V 20 Ah LiFePO4 battery** — the electronics supply | 75 | Stock | **Replaces the isolated 48→12 V converter**, owner decision D8. 240 Wh against a 38 W rail is 6.3 hours. The Jetson takes 9–19 V in, so it runs off this directly. **Fit it LYING ON ITS SIDE**: upright it is 167 mm tall and it takes the air out of the speaker enclosures — `cad/walle_frame.scad` guards this. | [search](https://www.aliexpress.com/w/wholesale-12V-20Ah-LiFePO4-battery.html) |
+| 1 | **12 V 20 Ah LiFePO4 battery** — the electronics supply | 75 | Stock | Owner decision D8. **Different case from the 48 V packs:** this one is **181 × 167 × 77 mm**, those are **400 × 110 × 80 mm** and live in the frame box. 240 Wh against a 20 W rail is 12 hours. This rail is the Teensy, the Face, the fans, and the powered USB hub. **The XPS is not on it.** **Fit LYING ON ITS SIDE on the lower deck**, on a strap, not glue. Upright it is 167 mm tall and it lifts the laptop tray — `cad/walle_frame.scad` guards this. Unplug the XT60 and lift it out after the laptop tray comes off (L17). | [search](https://www.aliexpress.com/w/wholesale-12V-20Ah-LiFePO4-battery.html) |
 | 1 | LiFePO4 charger, 14.6 V 5 A | 25 | Stock | For the battery above. **A lead-acid charger is not a LiFePO4 charger** — the float voltage is wrong and it will sit there cooking the pack. | [search](https://www.aliexpress.com/w/wholesale-14.6V-5A-LiFePO4-charger.html) |
 | 1 | Fuse, 15 A, and holder, at the battery terminal | 5 | Stock | A 20 Ah LiFePO4 will push hundreds of amps into a short and its BMS is not a fuse. Mount it **at the terminal**, not at the far end of the run. | **§9 — not here** |
-| — | ~~Isolated DC-DC, 48→12 V, 100 W (Mean Well SD-100C-12)~~ | — | — | **Deleted 2026-09-19 by decision D8.** Saves 70 dollars and, more usefully, deletes the one power part that could not be bought on AliExpress — see §9. There is no 48 V on the electronics rail any more. | deleted |
 | 1 | Buck converter, 48→32 V, 150 W, non-isolated | 25 | Stock | The amplifier's supply only. `04-power-and-wiring.md` section 4. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-48V-32V-150W.html) |
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy and ESP32 only. No servos any more, so this is a much easier load. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-12V-5V-5A.html) |
 | — | Capacitors, 4700 µF 25 V, and TVS diodes | 20 | Stock | Rail buffer and controller input protection. | [search](https://www.aliexpress.com/w/wholesale-capacitor-4700uF-25V.html) |
 | — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 263 cross members, 1626 mm of 60×30 in total. | owned |
 | 2 | **Packer, 60×6 flat bar, 60 mm long, 2 holes Ø13** | 5 | Stock | One per side. Fills the 6 mm step between the carrier face the rail sits on and the green plate the M12s thread into. **Without it the bolts crush the rail wall into the gap and the joint has no clamp.** Offcut of the same 60×6 as the plates. | Offcut / steel stockist |
 | — | M12 10.9 bolts, and the Ø25/Ø13×30 sleeves to weld into the rails | 25 | Stock | The sleeve is what stops an M12 crushing a 3 mm box wall. Not optional. | [search](https://www.aliexpress.com/w/wholesale-M12-10.9-bolt.html) |
-| 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels) and electronics shelf. | timber yard |
+| 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels), electronics shelf, and the lift-out laptop tray (315 × 360). | timber yard |
 | 2 | Castor wheels, Ø75 | 35 | Stock | Anti-tip. `cad/walle_frame.scad`. Mounting steel you already have. | [search](https://www.aliexpress.com/w/wholesale-caster-wheel-75mm.html) |
 
 ### Sealing the battery box — small money, and it decides whether the packs survive
@@ -153,9 +152,11 @@ has the reasoning. Cheap parts, so buy spares of all of them.
 | 1 sheet | Closed-cell foam, 8 mm | 10 | Stock | The pad on top of the packs. Clamps them down and takes the vibration. | [search](https://www.aliexpress.com/w/wholesale-closed-cell-foam-sheet-8mm.html) |
 | 8 | Silicone blanking plug, Ø30 | 10 | Stock | 4 needed, 4 spare. **These plug the M12 spanner holes.** Without them the rest of the sealing is pointless. Check them every morning. | [search](https://www.aliexpress.com/w/wholesale-silicone-blanking-plug-30mm.html) |
 | 2 | Screw-in membrane vent, M12, IP67 (Gore type or equivalent) | 16 | Stock | 1 needed, 1 spare. Goes in the **lid**. A sealed box breathes with the day/night temperature swing; this is the clean path so it does not pull dust through a leak. | [search](https://www.aliexpress.com/w/wholesale-M12-waterproof-breather-vent.html) |
-| 4 | Cable gland, M16, IP68 | 10 | Stock | Charge leads and pack sense wiring out of the box. Not a drilled hole. | [search](https://www.aliexpress.com/w/wholesale-cable-gland-M16-IP68.html) |
+| 4 | Cable gland, M16, IP68 | 10 | Stock | Charge leads and pack sense wiring out of the box. Not a drilled hole. **The gland holds a jumper, not the pack.** Each traction pack unplugs inside the box (XT90-S plus a charge pigtail) so the pack lifts out. | [search](https://www.aliexpress.com/w/wholesale-cable-gland-M16-IP68.html) |
 | 16 | M5 bolts, nuts and washers, 25 mm | 8 | Stock | 12 for the lid at 110 mm pitch, plus spares. A gasket only seals where it is squeezed. | [search](https://www.aliexpress.com/w/wholesale-M5-bolt-nut-washer-set.html) |
-| 3 | **XT60** charge connector with a dust cap, body-mounted | 18 | Stock | One per traction pack, plus one for the electronics battery. Everything charges **in place** and nothing comes out in the field. XT60 is right here and wrong for the main disconnect: charging is a few amps, it is plugged in rarely, and there is no capacitor bank to spark into. **Label all three.** Two are 48 V and one is 12 V, and the connectors are identical. | [search](https://www.aliexpress.com/w/wholesale-XT60-panel-mount-connector.html) |
+| 3 | **XT60** charge connector with a dust cap, body-mounted | 18 | Stock | One per traction pack, plus one for the electronics battery. **Daily charge is in place.** Each pack also has the mating half on the pack itself, so you can unplug and charge it on a bench. XT60 is right here and wrong for the main disconnect. **Label all three.** Two are 48 V and one is 12 V, and the connectors are identical. | [search](https://www.aliexpress.com/w/wholesale-XT60-panel-mount-connector.html) |
+| 4 | M8 bolts, body floor into the risers | 8 | Stock | The body lifts off so the 48 V box lid can open. Do not weld the body to the risers. | [search](https://www.aliexpress.com/w/wholesale-M8-bolt.html) |
+| 3 | Webbing strap or Velcro, 25 mm | 8 | Stock | One each for the 12 V pack, the PD pack, and a spare. Clamps them to the lower deck. Not glue. | [search](https://www.aliexpress.com/w/wholesale-25mm-webbing-strap.html) |
 
 ### The contactor is the long pole
 
@@ -166,15 +167,23 @@ arrive late. Order them in phase 0 even though they are not needed until phase 2
 
 ## 3. Compute and sensors — phase 2, and not before
 
-Do not buy these early. They sit in a drawer losing value while you do metalwork, and a newer
-version may appear.
+Do not buy these early. They sit in a drawer losing value while you do metalwork.
+
+**The Brain is the owner's Dell XPS 15 9510.** Owner decision L25, 2026-09-22. Do not buy a
+Jetson, an NVMe SSD, or a Jetson cooler. The laptop sits closed on a **lift-out tray** (the
+upper electronics floor), on spacers, with a **USB-C PD power bank of 65 W or more** on the
+**lower** deck (a 20 000 mAh 22.5 W pack will not hold this machine). There is **no internet**
+at the event. Person detection runs on the OAK-D. A small local language model may run on the
+RTX 3050 Ti. Two-floor layout is L26.
 
 | Qty | Part | Est. | Lead | Notes | Buy from — **read §9 first** |
 |---|---|---|---|---|---|
-| 1 | Jetson Orin Nano 8 GB developer kit | 250 | Stock | Takes 9–19 V DC in, so it runs off the 12 V rail directly. | **§9 — not here** |
-| 1 | NVMe SSD, 500 GB | 40 | Stock | Do not run it from an SD card. They wear out and then corrupt, in the field. | [search](https://www.aliexpress.com/w/wholesale-NVMe-SSD-500GB.html) |
-| 1 | Active cooler and a filtered intake fan | 30 | Stock | It throttles without one, and Midburn is hot. | [search](https://www.aliexpress.com/w/wholesale-Jetson-Orin-Nano-cooling-fan.html) |
-| 1 | OAK-D Lite depth camera | 150 | Stock | Runs the person-detection model on its own chip, so the Jetson gets a ready-made list. | **§9 — not here** |
+| — | ~~Jetson Orin Nano 8 GB developer kit~~ | — | — | **Deleted 2026-09-22 by L25.** The XPS is the Brain. | deleted |
+| — | ~~NVMe SSD, 500 GB~~ | — | — | **Deleted 2026-09-22.** The XPS already has a 1 TB NVMe. | deleted |
+| 1 | Filtered intake fan for the body | 15 | Stock | Pushes air **in** so the body stays at slight positive pressure. Foam plus a finer cloth on the inlet. Exhaust is a simple outlet, not a tight filter. Midburn is hot and the XPS will cook without a path. | [search](https://www.aliexpress.com/w/wholesale-120mm-12V-fan-filter.html) |
+| 1 | Powered USB-C hub, USB 3 | 25 | Stock | The XPS has USB-C only. OAK-D needs USB 3. Teensy, both Face boards, LiDAR and mic share this hub. **Power the hub from the 12 V rail**, not from the laptop. | [search](https://www.aliexpress.com/w/wholesale-powered-USB-C-hub-USB3.html) |
+| 1 | USB-C PD power bank, 20 000 mAh, **65 W or more** | 40 | Stock | Feeds the XPS. Check the label says 65 W PD, not 22.5 W. Strap it on the **lower** deck, not on the laptop tray. Keep it off the laptop vents. Pull it if it gets hot. | local / [search](https://www.aliexpress.com/w/wholesale-20000mAh-65W-PD-power-bank.html) |
+| 1 | OAK-D Lite depth camera | 150 | Stock | Runs the person-detection model on its own chip, so the XPS GPU is free for a small local language model. **Fixed-focus** — vibration. | **§9 — not here** |
 | 1 | RPLIDAR A1M8, 12 m 2D scanner | 100 | Stock | Enough for obstacle detection. The A2 is 2.5× the price for range you do not need. | [search](https://www.aliexpress.com/w/wholesale-RPLIDAR-A1M8.html) |
 | 6 | VL53L1X time-of-flight distance sensor | 24 | Stock | The bumper ring. These wire to the **Spine**, not the Brain. | [search](https://www.aliexpress.com/w/wholesale-VL53L1X-module.html) |
 | 1 | I2C multiplexer (TCA9548A) | 3 | Stock | Six VL53L1X boards share one I2C address. You need this or you need to sequence their XSHUT pins. | [search](https://www.aliexpress.com/w/wholesale-TCA9548A-I2C-multiplexer.html) |
@@ -202,10 +211,10 @@ version may appear.
 
 ### The speakers are not just an audio decision
 
-They are 7.3 kg, they sit 584 mm up, and both of them are forward of centre. That combination
-took **1.5° off the forward tipping margin** on its own, leaving 7.0° between going over and
-the anti-tip castor catching. See risk R10. Anything else you add high or forward spends the
-same number, so weigh the real parts before adding a third thing.
+They are 6.8 kg, they sit 613 mm up, and both of them are forward of centre. The two-floor
+stack pushed the boxes up and shortened them. Castor margin is now **6.8°**. See risk R10.
+Anything else you add high or forward spends the same number, so weigh the real parts before
+adding a third thing.
 
 The other thing worth knowing before you buy: **sensitivity matters more than power out here.**
 Outdoors there are no walls to reflect sound, so bass is largely hopeless whatever you do. A
@@ -326,12 +335,12 @@ cannot be the same failure.
 | 1 — de-risking | now | 252 |
 | 1b — throttle interface for the scooter controllers | now | 60 |
 | 2 — frame and drive, including sealing the box and the electronics battery | 1 | 681 |
-| 3 — compute and sensors | 2 | 697 |
+| 3 — compute and sensors | 2 | 457 |
 | 4 — face and sound | 4 | 384 |
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 2,939** |
+| **Total** | | **≈ 2,699** |
 
 Every figure above is now **summed from its own table** rather than typed in.
 Doing that turned up three that had drifted: section 1 said 350 when it summed
@@ -349,11 +358,11 @@ sums to 459. The total was understated in one place and overstated in another.
 | Correcting section 4, which was understated | **−59** |
 | Checking real AliExpress prices, section 9 | **161** |
 | Dropping two parts nothing in the design uses | **10**, less 6 for the real Teensy price |
-| The electronics battery, decision D8 | **−41**: 105 for the battery, its charger and its fuse, plus 6 for a third charge connector, less the 70 the isolated converter cost |
 | A real clamp-meter price instead of a guess | **35** |
 | A real bench-supply price instead of a guess | **21** |
 | The shock bolt retrofit, fixed by the owner | **50** |
 | Correcting the I2C multiplexer, which I had mis-set to 24 | **21** |
+| Brain is the owned XPS, not a Jetson (L25) | **240**: drop the kit, SSD and cooler, add a 65 W PD pack, a USB 3 hub and a body intake fan |
 
 The two big ones cost nothing in capability. **The plywood body actively made
 the robot better**: 11.5 kg lighter, centre of mass 15 mm lower, and 0.7° more
@@ -429,22 +438,12 @@ about that trap for the bigger 3.4 and 4 inch panels; it applies just as much
 here. **Check the interface in the listing, not the diagonal.** If it says RGB,
 MIPI, or 40-pin, it will not work with the Face board.
 
-**2. There is no isolated 48→12 V converter on AliExpress — and this trap is what
-killed the part.** Every result for that search is a **non-isolated** buck module,
-from $1.09 to $36.84. Section 3 of `04-power-and-wiring.md` required isolation,
-because a non-isolated converter shares its negative with the pack, which puts
-motor return current through the Jetson's ground reference. The symptoms are USB
-devices dropping out, the camera disconnecting, and random reboots under
-acceleration — all horrible to diagnose. The only real answer was a Mean Well
-SD-100C-12 from a distributor, at 70 dollars.
+**2. Do not feed the electronics from the 48 V packs.** They have their own 12 V battery, a
+different and smaller case (181 × 167 × 77 mm, not 400 × 110 × 80 mm). A cheap 48→12 buck
+off pack A shares the motor ground and will reboot the Teensy under load. Do not reverse
+decision D8 with a $1 module.
 
-**Resolved 2026-09-19 by decision D8: the converter is deleted.** The electronics
-run from their own 12 V battery, so there is no 48 V left to step down and no
-isolation to get wrong. This entry stays here as the reason, not as a warning you
-still have to act on. If you ever reverse D8, reverse this too — **do not** put a
-$1.09 non-isolated module on the Jetson's rail.
-
-### The five parts to buy from a real distributor
+### The parts to buy from a real distributor
 
 For these, a counterfeit does not waste a few dollars, it costs the robot or
 starts a fire. They are marked **§9 — not here** in the tables above.
@@ -454,27 +453,17 @@ starts a fire. They are marked **§9 — not here** in the tables above.
 | 60 A, 15 A and 10 A fuses | Fake current ratings are common. A fuse that does not open is not a fuse, and it is the only thing between a shorted battery and the wiring. The 15 A one guards the electronics battery, which will push hundreds of amps into a short just like the traction packs will. |
 | DC contactor | It is part of the emergency stop chain. One listing checked at $10.99 has a buyer review reporting **coil inrush of 167 W against a 4.4 W specification** — see the warning below, because that number matters beyond the price. |
 | Latching mushroom E-stop | Same chain, same reasoning. |
-| ~~Isolated 48→12 V converter~~ | **Deleted by D8.** The 15 A fuse at the electronics battery takes its place on this list, for the same reason as the other fuses. |
-| Jetson Orin Nano | Relabelled and grey-market modules, often a different memory size than advertised. |
 | OAK-D Lite | Depth cameras there are usually grey imports with no warranty and no firmware support. Buy from Luxonis. |
 
 ### A contactor warning that is not about money
 
 The buyer review on the cheap contactor reports **167 W of coil inrush where the
-datasheet claims 4.4 W**. Check this on whatever contactor you buy, because two
-numbers in this project depend on it:
+datasheet claims 4.4 W**. Check this on whatever contactor you buy.
 
-1. `04-power-and-wiring.md` section 3 budgets **6 W for both coils** on the 12 V
-   rail, continuous and peak. If the real inrush is anywhere near what that
-   review describes, the 100 W converter is sized for the wrong load and will
-   brown out the Jetson every time a contactor pulls in.
-2. That same table listed the coils on the **12 V rail**, while section 2 here specified a
-   **48 V coil**. **RESOLVED 2026-09-17: the coil is 48 V and runs off pack A**, through its
-   own 5 A slow-blow fuse and the E-stop chain. The coils are gone from the 12 V rail budget,
-   which dropped from 44 W to 38 W continuous. Two good consequences: the inrush now comes
-   out of a 20 Ah battery instead of browning out the Jetson, and pack A dying drops **both**
-   contactors, so the robot cannot pivot on its surviving track. See
-   `04-power-and-wiring.md` section 3.
+**The coil is 48 V and runs off pack A**, through its own 5 A slow-blow fuse and the E-stop
+chain. The inrush comes out of pack A, not the electronics battery. Pack A dying drops
+**both** contactors, so the robot cannot pivot on its surviving track. See
+`04-power-and-wiring.md` section 3.
 
 Measure the inrush with the bench supply's current limit before it is wired into
 anything.
@@ -499,6 +488,7 @@ those break.
 | 1 | 12→5 V converter | Loses the Spine and the Face together. |
 | 1 | ESP32-S3 board | An eye. |
 | — | Every fuse value, several of each | Obvious, and always forgotten. |
+| 2 m | Closed-cell foam tape, 3 mm | Reseal the 48 V box lid after a pack comes out. |
 | — | Crimp lugs, heatshrink, wire, the crimp tool | You will be making cables at night. |
 | 1 | Ø53 round LCD panel | The eyes are the whole face now, and there is no servo to blame. |
 | — | Compressed air, brushes, filter material | The actual most useful items in the box. |

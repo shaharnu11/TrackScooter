@@ -49,10 +49,10 @@ uses it. They are vector drawings, so print them at any size and they stay sharp
 | | |
 |---|---|
 | Overall | 910 mm tall, 677 mm wide, 430 mm body length |
-| Weight | about 89 kg, and **that is a guess** — see step 0 |
+| Weight | about 91 kg, and **that is a guess** — see step 0 |
 | Lowest point | the plywood box floor, 150 mm above the ground |
-| Tips forward at | 19.3°, and the castor catches it at 12.3° — 7.0° in hand |
-| Speakers | two 6.5 inch, 9.8 litres of sealed air behind each |
+| Tips forward at | 19.0°, and the castor catches it at 12.3° — 6.8° in hand |
+| Speakers | two 6.5 inch, 7.5 litres of sealed air behind each |
 
 ---
 
@@ -255,11 +255,18 @@ Assembly order:
 The plugs go in **after** the pod bolts are torqued. If you seal them first you
 will be cutting them out again.
 
-### Charge the packs where they are
+### Charge in place every day. Lift a pack out when you need to
 
-The box is sealed and there is no field-serviceable way into it. Run the charge
-leads out through a gland and charge in place. Do not plan on lifting packs out
-in sand.
+Daily charge: run the leads out through a gland to an XT60 on the body, behind a
+dust cap. Do not open the box every morning in sand.
+
+Service: the body unbolts from the four risers. Then the lid unbolts (12 x M5).
+Each pack unplugs — XT90-S and its charge pigtail — and lifts out. The foam pad
+is a pad, not glue. The gland holds a jumper, not the pack. Put the gasket back
+when you close it.
+
+The 12 V pack and the PD pack come out through the body lid: speaker boxes off,
+laptop tray off, unplug, lift. The XPS comes out with the tray.
 
 **Check:** the box floor is **150 mm above the ground and is the lowest part of
 the whole robot.** Everything you drive over has to clear that, not the tracks.
@@ -293,14 +300,16 @@ must not touch each other — there should be 90 mm between them.
 
 # Step 7. The speaker enclosures
 
-One sealed box per driver, **260 deep x 251 tall x 205 wide** in 12 mm ply. That
-gives **9.8 litres of air** behind each driver, which is in the middle of the
-7 to 14 litre range a 6.5 inch driver wants.
+One sealed box per driver, **260 deep x 200 tall x 205 wide** in 12 mm ply. That
+gives **7.5 litres of air** behind each driver, which is at the bottom of the
+7 to 14 litre range a 6.5 inch driver wants. The two-floor electronics stack
+took the rest of the height.
 
 **Bolt them to the chest panel. Do not glue them in.** Each one sits over the
 electronics shelf with 20 mm of headroom and covers 54% of it. With both boxes
 in place only **46% of the shelf is reachable**, so if they are glued you cannot
-service the electronics without destroying something.
+service the electronics without destroying something. You also cannot lift the
+laptop tray until both boxes are off.
 
 Seal every joint. A sealed box that leaks is an unsealed box, and it will chuff
 and rattle at volume.
@@ -316,11 +325,29 @@ push back. If it moves freely, the box is leaking.
 
 ![Sheet 5 — the electronics shelf: what goes where, and where the cable runs.](fig/s5.svg)
 
-From sheet 5. The shelf is **356 x 546 at 347 mm**, four rows running fore and
-aft. The parts use 32% of the area and the tallest box is 76 mm.
+From sheet 5. **Two floors.** The lower shelf is **356 x 546 at 347 mm**. Four
+rows sit on it: both motor controllers, the contactor, the fuse block, the
+Teensy, the 12 V battery lying flat, the 65 W PD pack, the amp supply and the
+amp. Lower-deck fill is 40%.
 
-Mount everything **before** the speaker enclosures go in, and leave the cable
-long enough that a box can be lifted out without unplugging the whole robot.
+The upper floor is a **315 x 360 mm lift-out plywood tray at 451 mm**, with
+15 mm of air under it. The closed XPS 15 (230 × 340 mm on spacers) and the
+powered USB 3 hub sit on this tray. Power the hub from the 12 V rail, not from
+the XPS. The PD pack stays on the lower deck — 50 mm tall on the tray would
+steal air from the speakers.
+
+Fit the lower deck first, **on straps, not glue**. Then drop the tray in. Then
+bolt the speaker enclosures. Leave the cables long enough that the tray lifts
+out without unplugging the whole robot. The 12 V pack and the PD pack must
+unplug and lift out after the tray comes off (L17).
+
+See `docs/04-power-and-wiring.md` for the wiring. The one thing worth repeating
+here: the **amplifier gets its own 48 V to 32 V supply**, separate from the
+logic supply. Sharing it puts motor noise straight into the speakers.
+
+**Check:** with both enclosures bolted in, can you still reach every connector
+you might need on a bad day at the festival? If not, move it now. And can the
+12 V pack and the PD pack come out once the tray is off?
 
 See `docs/04-power-and-wiring.md` for the wiring. The one thing worth repeating
 here: the **amplifier gets its own 48 V to 32 V supply**, separate from the
@@ -353,8 +380,8 @@ there should be 7 mm between them. Rotate them through their full travel.
 
 1. Put it on level ground. Both castors should be **35 mm clear**.
 2. Push down hard on the front. The castor must touch **before** the robot
-   starts to go over. It catches at 12.3° and the robot goes over at 19.3°, so
-   there is 7.0° in hand.
+   starts to go over. It catches at 12.3° and the robot goes over at 19.0°, so
+   there is 6.9° in hand.
 3. Drive it slowly on sand. Ground pressure is 0.163 kg/cm², about a third of
    what a walking person puts down, so it should float.
 4. Watch the **box floor at 150 mm**, not the tracks. That is what grounds out.

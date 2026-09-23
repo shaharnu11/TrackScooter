@@ -64,30 +64,40 @@ There is a second reason the vent goes in the lid. There is barely any wall
 above the packs to put it in — the model's guards catch this, and the first
 attempt put it 2 mm *below* the pack tops.
 
-### Charge the packs in place. Do not take them out
+### Charge in place every day. Lift a pack out when you need to
 
-Once the box is sealed, **every time you open it you undo the sealing.** At a
-dusty event, opening the pack box daily is worse than never sealing it.
+Opening the sealed box every morning in sand undoes the gasket. So the **daily**
+charge path is still a connector on the body, behind a dust cap, without opening
+anything. That is how you charge at the festival.
 
-So the packs are not removable in the field. Run the charge leads out of the box
-through a cable gland, to a connector on the outside of the body behind a dust
-cap, and charge the robot without opening anything. This is how every e-bike and
-scooter with an integrated pack works.
+That must not trap the packs. **Every battery unplugs and lifts out** for a failed
+BMS, a damaged case, or a charger that is not next to the robot. Owner, 2026-09-23.
 
-**There are three charge connectors now, not two.** Decision D8 added a 12 V
-battery for the electronics, and it lives on the shelf inside the body rather
-than in this box. It charges the same way and for the same reason — through its
-own connector on the body, without opening anything — but it takes a **LiFePO4
-charger at 14.6 V**, which is not the same charger as the packs use. Label the
-three connectors so that nobody puts 54.6 V into the 12 V one.
+**48 V traction packs.** The body floor sits 43 mm above the box lid, so packs do
+not come out through the body. Unbolt the body from the four risers, unbolt the
+twelve M5 lid bolts, unplug each pack's XT90-S and its charge pigtail, lift out.
+The foam pad is a pad, not glue. The charge lead through the gland ends on a
+connector on the pack — it is not soldered into the cells. After the pack goes
+back in, replace the lid gasket if it tore, torque the M5s, check the four
+spanner-hole plugs.
 
-The box opens for maintenance only, which means lifting the body off first. That
-is a workshop job, not a field job, and that is the right trade.
+**12 V electronics pack and the PD pack.** Unbolt the speaker boxes, lift the
+laptop tray, unplug, lift out. Both sit on straps, not on glue. The 12 V pack
+has its own XT60; the PD pack unplugs USB-C.
+
+**XPS.** The laptop (and its own cells) comes out with the tray.
+
+**There are three body charge connectors**, plus the PD pack's USB-C. Decision D8
+added the 12 V electronics battery. It lives on the shelf, not in this box. It
+charges the same way — through its own connector on the body — but it takes a
+**LiFePO4 charger at 14.6 V**, which is not the same charger as the 48 V packs
+use. Label the three XT60s so that nobody puts 54.6 V into the 12 V one.
 
 > One thing to check on the bench: charging inside a sealed box has nowhere to
 > put the heat. At 5 A a 48 V pack loses roughly 12 W as heat. Measure the pack
 > temperature through a full charge with the lid on before trusting it, and if it
-> climbs, charge with the body lid open or drop the charge current.
+> climbs, charge with the body off or drop the charge current. Taking a pack out
+> to charge it is always allowed.
 
 ---
 
@@ -106,8 +116,8 @@ section 1 happens either way.
 Once that is true, the location is decided by everything else, and low wins on
 all of it:
 
-**The body is the hottest place on the robot.** Inside it there is a Jetson
-putting out 25 W, both motor controllers and the amplifier, in a sealed foam-lined box, in
+**The body is the hottest place on the robot.** Inside it there is a closed 15 inch laptop
+putting out tens of watts, both motor controllers and the amplifier, in a plywood box, in
 the Negev. Lithium cells lose life quickly above 45 °C, and that is normal
 ageing, not a fault. Under the frame the packs sit in open air in the draught of
 driving — the best-cooled spot on the machine, free.
@@ -116,7 +126,7 @@ driving — the best-cooled spot on the machine, free.
 only 356 mm deep, so they could not even lie fore-aft. Lying across the robot the
 two of them use 50 % of the shelf area on top of the 40 % the electronics already
 need. That is 90 % of the shelf, and what is left has to hold a clear air path
-past the Jetson and both motor controllers. It will not.
+past the XPS and both motor controllers. It will not.
 
 That figure has got worse twice since it was first written. The two speaker
 enclosures sit over 54 % of the shelf. And decision D8 put the electronics
@@ -124,10 +134,10 @@ battery up there, which is what took the electronics from 32 % to 40 %. The shel
 is the scarcest area on the robot, and the traction packs are the last thing that
 should compete for it.
 
-**The electronics battery is not an argument against this.** It is 2.5 kg and
-240 Wh, against 8 kg and roughly 850 Wh for one traction pack. Putting a small
-battery where the heat and the crowding are is a different proposition from
-putting two big ones there.
+**The electronics battery is not an argument against this.** It is a different case:
+**181 × 167 × 77 mm** and 2.5 kg, against **400 × 110 × 80 mm** and about 8 kg for one
+traction pack. Putting a small 12 V pack on the shelf is not the same as putting two
+48 V packs there.
 
 **It is the worst place for a cell to fail.** A box under the frame vents
 downwards and away from everything. The same event on the electronics shelf
@@ -150,9 +160,10 @@ with the packs in the body, against a guard minimum of 4°.
 
 When this document was first written, that was not a veto on its own and it was
 worth saying so. It still is not a veto by itself — but the slack keeps getting
-spent by other things. The chest speakers took 1.5° on their own, with 7.4 kg at
-584 mm and both of them forward of centre. Every heavy thing that moves into the
-body comes out of the same 7°.
+spent by other things. The chest speakers plus the two-floor laptop stack now
+leave **6.8°** over the castor, with 6.8 kg of speakers at 613 mm, both forward
+of centre. Every heavy thing that moves into the body comes out of the same
+margin.
 
 So tipping has gone from "not the reason" to "one of the reasons". The four points
 above are still the stronger ones.
@@ -204,8 +215,9 @@ or lie the packs flat to get 30 mm back off the box height.
 ## Summary
 
 The box was open, which was a real fault, and it is now a closed box with a
-gasket, plugged spanner holes, a foam pad and a membrane vent in the lid. Charge
-through a sealed connector and do not open it in the field.
+gasket, plugged spanner holes, a foam pad and a membrane vent in the lid. Daily
+charge is through a sealed connector on the body. Every pack still unplugs and
+lifts out when you need it (L17).
 
 Keep the packs low. Mostly because they need a sealed case wherever they go, and
 once that is true the body is the hottest, most crowded and most dangerous place

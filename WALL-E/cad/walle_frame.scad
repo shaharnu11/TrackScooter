@@ -73,6 +73,9 @@ rail_x0     = -275;  // rail REAR end. Front is +x on this robot — the chest
 rail_len    = 550;   // -> FRONT end at +275, symmetric about the ground contact
 
 // -- the battery box: plywood, slung between the rails ------------------------
+// The lid is the pack hatch (L17). Daily charge is in place. To lift a pack
+// out: unbolt the body from the four risers, unbolt the lid, unplug XT90-S
+// and the charge pigtail. Nothing in this box is glued or captured by a gland.
 tray_t      = 12;    // plywood
 tray_y0     = 150;   // box UNDERSIDE above ground = the robot's lowest point
 batt_l      = 400;   // pack, measured
@@ -124,22 +127,27 @@ shelf_marg  = 25;    // keep-out round the shelf edge, for cable runs
 
 // real part sizes [length x, width z, height y], mm
 vesc_d      = [85, 65, 30];    // Flipsky 75100 class, one per pod
-jet_d       = [103, 90, 50];   // Jetson Orin Nano dev kit + cooler
+// Owner 2026-09-22: the Brain is the Dell XPS 15 9510, not a Jetson.
+// Closed lid, 230 mm fore-aft so the USB-C plugs have room (the 345 mm
+// way along the body depth leaves 12 mm and the cables do not fit).
+// 18 mm thick plus 12 mm spacers so the bottom vents are not on the plywood.
+xps_d       = [230, 340, 30];
+xps_kg      = 2.0;             // OLED i9 3050 Ti, weighed later, replace
+pbank_d     = [70, 120, 50];   // 20 Ah class USB-C PD pack, 65 W or more
+pbank_kg    = 0.4;
+hub_d       = [55, 110, 30];   // powered USB-C hub. XPS has no USB-A
 teensy_d    = [60, 40, 25];    // Teensy 4.0 in a small sealed box
 cont_d      = [60, 50, 70];    // main contactor
-// The isolated 48->12 V brick used to be here, at 159 x 97 x 38 — a Mean Well
-// SD-100C-12, because a real 100 W isolated brick is much bigger than it feels
-// like it should be. Owner decision 2026-09-19 deleted it: the electronics run
-// from their own 12 V battery now, so there is no 48 V left to step down.
-// docs/04-power-and-wiring.md section 3.
-//
-// The battery LIES ON ITS SIDE. Standing up it is 167 tall, and the tallest
-// thing on the shelf sets the speaker enclosure floor, so an upright pack robs
-// the drivers of the air they need. The ebatt guard below holds that down.
+// 12 V electronics pack. NOT the same case as the 48 V traction packs
+// (batt_l/w/h = 400 x 110 x 80, two of them in the frame box). This one
+// lives on the lower deck. It LIES ON ITS SIDE: standing up it is 167 tall,
+// which lifts the laptop tray and robs the speakers of air. The ebatt guard
+// holds that down.
 ebatt_d     = [181, 167, 77];  // 12 V 20 Ah LiFePO4, on its side
 ebatt_wh    = 240;             // 12 V x 20 Ah
 ebatt_kg    = 2.5;             // LiFePO4. The same case in lead-acid is 5.5
-rail12_w    = 38;              // 12 V rail, continuous W. docs/04 section 3
+rail12_w    = 20;              // 12 V rail, continuous W. docs/04 section 3
+                               //   XPS is NOT on this rail. Own battery + PD pack.
 amp_ps_d    = [120, 70, 35];   // 48 V -> 32 V buck, amplifier only. See
                                //   docs/04-power-and-wiring.md section 4: the
                                //   amp CANNOT run off a full 54.6 V pack.
@@ -263,7 +271,8 @@ pod_kg      = 15;    // GUESS per pod: hub motor + belt + steel + idlers
 pod_com_y   = 190;   // GUESS: pod centre of mass height. Low, it is mostly
                      //   belt and hub motor
 batt_kg     = 8;     // GUESS per 48 V pack
-elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, Jetson, wiring, contactor
+elec_kg     = 6;     // GUESS: 2 VESCs, Teensy, wiring, contactor, hub
+                     //   XPS and the PD pack are separate mass items below
 body_extra  = 3;     // internal framing, hinges, catches, gas strut, paint.
                      //   Sits low, so it gets its own centre of mass below.
 spk_drv_kg  = 1.6;   // GUESS: one 6.5 inch driver, magnet and all
@@ -413,43 +422,62 @@ cam_see_full = width_over / (2*tan(cam_fov_h/2));
 cam_blind   = 180 - cam_fov_h;
 
 // -- electronics shelf layout ------------------------------------------------
-// Several short rows, not two long ones: the body is only 430 deep, so a row
-// runs fore-aft and can only be about 356 long, and the nine boxes do not fit
-// in two rows of that length. The rows then stack across the width, where
-// there is 546 to play with, so rows are cheap and row LENGTH is not.
+// TWO FLOORS. Owner 2026-09-22, after L25: the XPS is too wide to share one
+// deck with the 12 V battery and the controllers. Lower deck is the original
+// four-row packer. Upper deck is a lift-out plywood tray for the closed laptop
+// and the USB hub. The PD pack stays DOWN — it is 50 mm tall and would steal
+// speaker air if it sat on the tray.
+//
+// Cost: one extra 12 mm ply tray and 15 mm of air between the decks. That air
+// comes straight off the speaker boxes. The 7 litre guard holds the line.
 shelf_l     = body_l - 2*body_wall - 2*shelf_marg;
 shelf_w     = body_w - 2*body_wall - 2*shelf_marg;
-// [name, size, row]
-shelf_parts = [
-  ["VESC L",   vesc_d,   0],   // the two motor controllers share a row so the
-  ["VESC R",   vesc_d,   0],   //   pack and phase cables stay short
-  ["Jetson",   jet_d,    0],
+deck_gap    = 15;    // air between the tallest lower box and the laptop tray
+upper_t     = 12;    // plywood laptop tray, same sheet as the body
+
+// Lower deck: [name, size, row]. Rows run fore-aft, stacked across the width.
+lower_parts = [
+  ["VESC L",   vesc_d,   0],
+  ["VESC R",   vesc_d,   0],
   ["Contactor",cont_d,   1],
   ["Fuse blk", fuse_d,   1],
   ["Teensy",   teensy_d, 1],
   ["12V batt", ebatt_d,  2],
+  ["Pwr bank", pbank_d,  2],
   ["Amp PSU",  amp_ps_d, 3],
   ["Amp",      amp_d,    3],
 ];
-shelf_rows  = [0, 1, 2, 3];
-shelf_area  = shelf_l * shelf_w;
-function add_area(i) = i < 0 ? 0
-                     : shelf_parts[i][1][0]*shelf_parts[i][1][1] + add_area(i-1);
-parts_area  = add_area(len(shelf_parts) - 1);
-shelf_fill  = 100*parts_area/shelf_area;
-// tallest part decides the headroom the shelf needs
-part_h_max  = max([for (p = shelf_parts) p[1][2]]) + vesc_hs_t;
-
-// pack each row end to end along x, with a 10 mm gap between boxes
-function row_parts(r) = [for (p = shelf_parts) if (p[2] == r) p];
-function xrun(r, i)   = i == 0 ? 0 : xrun(r, i-1) + row_parts(r)[i-1][1][0] + 10;
-function row_len(r)   = xrun(r, len(row_parts(r)) - 1)
-                      + row_parts(r)[len(row_parts(r)) - 1][1][0];
-function row_dep(r)   = max([for (p = row_parts(r)) p[1][1]]);
-// where each row starts in z, measured from the shelf's front edge
+lower_rows  = [0, 1, 2, 3];
+function low_parts(r) = [for (p = lower_parts) if (p[2] == r) p];
+function xrun(r, i)   = i == 0 ? 0 : xrun(r, i-1) + low_parts(r)[i-1][1][0] + 10;
+function row_len(r)   = xrun(r, len(low_parts(r)) - 1)
+                      + low_parts(r)[len(low_parts(r)) - 1][1][0];
+function row_dep(r)   = max([for (p = low_parts(r)) p[1][1]]);
 function row_z(r)     = r == 0 ? 0 : row_z(r-1) + row_dep(r-1) + 15;
-row_max_len = max([for (r = shelf_rows) row_len(r)]);
-rows_dep    = row_z(len(shelf_rows)-1) + row_dep(len(shelf_rows)-1);
+function lower_h(p)   = p[1][2] + (p[0][0] == "V" ? vesc_hs_t : 0);
+row_max_len = max([for (r = lower_rows) row_len(r)]);
+rows_dep    = row_z(len(lower_rows)-1) + row_dep(len(lower_rows)-1);
+lower_h_max = max([for (p = lower_parts) lower_h(p)]);
+
+// Upper tray: laptop and the USB hub. Positions from the tray's front-left.
+// Tray is only as big as these two, so it lifts out without dragging the
+// lower deck with it.
+upper_items = [
+  ["XPS 15",  xps_d, [0,   0]],
+  ["USB hub", hub_d, [240, 0]],
+];
+upper_l     = max([for (p = upper_items) p[2][0] + p[1][0]]) + 20;
+upper_w     = max([for (p = upper_items) p[2][1] + p[1][1]]) + 20;
+upper_h_max = max([for (p = upper_items) p[1][2]]);
+upper_y     = shelf_y + shelf_t + lower_h_max + deck_gap;
+
+shelf_area  = shelf_l * shelf_w;
+function add_low(i) = i < 0 ? 0
+                    : lower_parts[i][1][0]*lower_parts[i][1][1] + add_low(i-1);
+parts_area  = add_low(len(lower_parts) - 1);
+shelf_fill  = 100*parts_area/shelf_area;
+// total stack above the lower shelf top — this is what the speakers see
+part_h_max  = lower_h_max + deck_gap + upper_t + upper_h_max;
 
 // -- speakers in the chest ---------------------------------------------------
 // The chest panel: a real plate, set back chest_d from the outer face. This is
@@ -477,16 +505,17 @@ spk_vol     = (spk_box_d - spk_box_t)*(spk_box_h - 2*spk_box_t)
 spk_com_x   = (spk_box_x0 + spk_box_x1)/2;      // the pair sits FORWARD of centre
 
 // The shelf and the speakers are coupled, and it is not obvious which way.
-// The tallest box on the shelf sets the enclosure FLOOR, the body lid sets its
-// ceiling, so every millimetre the shelf grows comes straight off the air
-// behind the drivers. Reverse-solve the minimum sealed volume back into a part
-// height, so the model can say "the battery is too tall" instead of leaving it
-// to surface as a mysterious speaker failure.
+// The two-floor stack sets the enclosure FLOOR, the body lid sets its ceiling,
+// so every millimetre the decks grow comes straight off the air behind the
+// drivers. Reverse-solve the minimum sealed volume back into a part height, so
+// the model can say "the battery is too tall" instead of leaving it to surface
+// as a mysterious speaker failure.
 spk_vol_min = 7;                                // 6.5 inch driver, litres
 spk_h_min   = (spk_vol_min + spk_disp)*1e6
               /((spk_box_d - spk_box_t)*(spk_box_w - 2*spk_box_t)) + 2*spk_box_t;
 part_h_lim  = spk_box_y1 - spk_clr - spk_h_min - (shelf_y + shelf_t);
-ebatt_h_lim = part_h_lim - vesc_hs_t;           // part_h_max adds the heatsink
+// Lower-floor parts must fit under the laptop tray, not the speaker floor.
+ebatt_h_lim = part_h_lim - deck_gap - upper_t - upper_h_max;
 
 // How much of the shelf the two enclosures sit OVER. They do not touch the
 // electronics — there is spk_clr of headroom — but they are above it, so the
@@ -526,7 +555,10 @@ mass_items = [
   [2*pod_kg,  0,               pod_com_y  ],
   [m_frame,   (rail_x0 + rail_x1)/2, (fr_bot + fr_top)/2 ],
   [2*batt_kg, 0,               batt_com_y ],
-  [elec_kg,   0,               shelf_y + shelf_t + part_h_max/2],
+  [elec_kg,   0,               shelf_y + shelf_t + lower_h_max/2],
+  [xps_kg,    0,               upper_y + upper_t + xps_d[2]/2],
+  [pbank_kg,  0,               shelf_y + shelf_t + pbank_d[2]/2],
+  [upper_l*upper_w*upper_t*1e-9*ply_rho, 0, upper_y + upper_t/2],
   // the electronics battery is the one thing this design moved UP, so give it
   // its own mass item rather than burying it in elec_kg. It is small enough
   // that it barely shows in the tipping — check the echo, do not assume.
@@ -771,6 +803,8 @@ module body_ghost(){
 }
 
 // ---- risers: rail top up to the body floor, over the pod belt crown --------
+// Bolted to the body floor, not welded. The body lifts off so the 48 V box
+// lid can open (L17). Four M8 through the floor into these posts.
 module risers(){
   for (sx = [-1,1]) for (sz = [-1,1])
     color(c_steel)
@@ -794,9 +828,11 @@ module body_shell(){
       cube([chest_d + 1, chest_y1 - chest_y0, 2*chest_z]);
   }
   chest_panel();
-  // the electronics shelf
+  // the electronics shelf — two floors
   color(c_ply)
     translate([-shelf_l/2, shelf_y, -shelf_w/2]) cube([shelf_l, shelf_t, shelf_w]);
+  color(c_ply)
+    translate([-upper_l/2, upper_y, -upper_w/2]) cube([upper_l, upper_t, upper_w]);
 }
 
 // ---- the chest panel, which is also the speaker baffle ---------------------
@@ -848,35 +884,41 @@ module speakers(){
 }
 
 // ---- electronics on the shelf ---------------------------------------------
-// Each row runs FORE AND AFT, and the rows stack ACROSS the robot's width, so
-// every box can be reached from above with a hand either side of it.
+// Lower deck: four rows, centred. Upper tray: laptop + hub, centred on the
+// body so it lifts straight out through the lid after the speaker boxes
+// come off.
 module shelf_layout(){
-  for (row = shelf_rows)
-    for (i = [0 : len(row_parts(row)) - 1])
-      // each row is centred on the shelf in x, and the block of rows is
-      // centred in z, so the load sits over the middle of the frame
-      let(p  = row_parts(row)[i],
+  for (row = lower_rows)
+    for (i = [0 : len(low_parts(row)) - 1])
+      let(p  = low_parts(row)[i],
           d  = p[1],
           vesc = p[0][0] == "V",
           zc = rows_dep/2 - row_z(row) - d[1])
       translate([-row_len(row)/2 + xrun(row, i), shelf_y + shelf_t, zc]){
-        // a VESC gets an aluminium heatsink plate under it, because on this
-        // shelf it has no steel to dump heat into
         if (vesc) color([0.75,0.78,0.80])
           translate([-8, 0, -8]) cube([d[0] + 16, vesc_hs_t, d[1] + 16]);
-        // NOTE the reorder: the part arrays are [length x, width z, height y]
-        // to match how datasheets quote them, but cube() wants [x, y, z].
         color(vesc ? [0.25,0.30,0.38] : [0.20,0.22,0.25])
           translate([0, vesc ? vesc_hs_t : 0, 0]) cube([d[0], d[2], d[1]]);
-        // labels lie flat on top of each box, the right way up for the
-        // top-down shelf render
         if (shelf_labels)
           color([0.05,0.05,0.05])
-            translate([d[0]/2, d[2] + vesc_hs_t + 1, d[1]/2])
+            translate([d[0]/2, d[2] + (vesc ? vesc_hs_t : 0) + 1, d[1]/2])
               rotate([-90,0,0])
                 linear_extrude(1) text(p[0], size = 9, halign = "center",
                                        valign = "center");
       }
+  for (p = upper_items)
+    let(d = p[1])
+    translate([-upper_l/2 + 10 + p[2][0], upper_y + upper_t,
+               -upper_w/2 + 10 + p[2][1]]){
+      color(p[0][0] == "X" ? [0.15,0.16,0.18] : [0.20,0.22,0.25])
+        cube([d[0], d[2], d[1]]);
+      if (shelf_labels)
+        color([0.05,0.05,0.05])
+          translate([d[0]/2, d[2] + 1, d[1]/2])
+            rotate([-90,0,0])
+              linear_extrude(1) text(p[0], size = 9, halign = "center",
+                                     valign = "center");
+    }
 }
 
 // ---- neck and head --------------------------------------------------------
@@ -972,6 +1014,8 @@ else if (render_mode == "robot")    robot_full();
 else if (render_mode == "head")     head();
 else if (render_mode == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y, -shelf_w/2])
                                       cube([shelf_l, shelf_t, shelf_w]);
+                                    color(c_ply) translate([-upper_l/2, upper_y, -upper_w/2])
+                                      cube([upper_l, upper_t, upper_w]);
                                     shelf_layout(); }
 else if (render_mode == "chest")  { chest_panel(); speaker_boxes(); speakers(); }
 else if (render_mode == "section")  difference(){ robot_full(); translate([-800,-50,0]) cube([1600,1400,800]); }
@@ -1008,10 +1052,13 @@ echo(str("LAYOUT:   pods ", pod_cl, " apart centre to centre -> ", width_over,
 echo(str("FRAME:    rails ", fr_h, "x", fr_w, "x", fr_t, " box, ", rail_len,
          " long, outer faces ", 2*rail_zo, " apart, ", bay_w, " clear inside · ",
          "rails ", fr_bot, "..", fr_top, " above ground, flush with the green plate band"));
-echo(str("BATTERY:  pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
+echo(str("BATTERY:  48 V pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
          batt_upright ? "UPRIGHT (80 wide, 110 tall)" : "FLAT (110 wide, 80 tall)",
          " · box floor ", tray_floor, ", pack top ", batt_y1,
-         " · LOWEST POINT OF THE ROBOT ", tray_y0, " above ground"));
+         " · LOWEST POINT OF THE ROBOT ", tray_y0, " above ground · ",
+         "12 V electronics pack ", ebatt_d[0], "x", ebatt_d[1], "x", ebatt_d[2],
+         " on the lower deck, NOT the same case · L17: every pack unplugs — ",
+         "48 V after the body comes off the risers, 12 V and PD after the laptop tray"));
 echo(str("DECK:     frame-level stack tops out at ", deck_y,
          " · but the pod BELT CROWN is higher, at ", pod_crown,
          ", so the body floor has to clear THAT"));
@@ -1039,17 +1086,19 @@ echo(str("LOOKING:  HEAD IS RIGID, NO SERVOS. Field of view ", cam_fov_h,
          " It only sees the full width of its own path from ",
          round(cam_see_full), " mm ahead, so anything closer than that at the",
          " track edges is unseen — that is what the ToF bumper ring is for."));
-echo(str("SHELF:    ", round(shelf_l), " x ", round(shelf_w), " at ", shelf_y,
-         ", tallest box ", part_h_max, " tall · ", len(shelf_rows),
-         " rows, longest ", round(row_max_len), ", ", round(rows_dep),
-         " deep in total · ", round(shelf_fill),
-         "% of the shelf area used"));
-echo(str("POWER:    electronics on their OWN ", ebatt_wh, " Wh 12 V battery · ",
+echo(str("SHELF:    TWO FLOORS. Lower ", round(shelf_l), " x ", round(shelf_w),
+         " at ", shelf_y, ", tallest lower box ", lower_h_max,
+         " · laptop tray ", round(upper_l), " x ", round(upper_w),
+         " at ", round(upper_y), ", ", deck_gap, " mm air under it",
+         " · stack ", part_h_max, " tall · lower fill ", round(shelf_fill),
+         "% · Brain is XPS 15 closed ", xps_d[0], " x ", xps_d[1],
+         " x ", xps_d[2]));
+echo(str("POWER:    12 V rail on its OWN ", ebatt_wh, " Wh battery · ",
          "the 12 V rail draws ", rail12_w, " W continuous -> ",
-         round(10*ebatt_wh/rail12_w)/10, " h · the isolated 48->12 V brick is ",
-         "DELETED · pack tap is now MOTORS ONLY, but the CONTACTOR COILS STAY ",
-         "ON PACK A — that is what drops both contactors when pack A dies. ",
-         "Battery lies FLAT (", ebatt_d[2], " tall, limit ", round(ebatt_h_lim),
+         round(10*ebatt_wh/rail12_w)/10, " h · XPS is NOT on this rail ",
+         "(own battery + USB-C PD pack, 65 W or more) · pack tap is MOTORS ONLY, ",
+         "but the CONTACTOR COILS STAY ON PACK A. 12 V pack lies FLAT (",
+         ebatt_d[2], " tall, limit ", round(ebatt_h_lim),
          ") or the speakers lose their air"));
 
 echo("");
@@ -1058,7 +1107,7 @@ echo(str("MASS:     steel ", round(m_steel*10)/10, " kg · plywood box ",
          " kg  ·  WHOLE ROBOT ", round(m_total*10)/10,
          " kg (pods ", 2*pod_kg, " · batteries ", 2*batt_kg, " · 12V batt ",
          ebatt_kg, " · electronics ",
-         elec_kg, " · body ", round(body_kg*10)/10, " · speakers ", round(2*spk_kg*10)/10,
+         elec_kg, " · XPS ", xps_kg, " · PD pack ", pbank_kg, " · body ", round(body_kg*10)/10, " · speakers ", round(2*spk_kg*10)/10,
          " · head ", round(head_kg*10)/10, ") — pods, batteries and electronics are GUESSES; body, head, speakers and frame are COMPUTED"));
 echo(str("CoM:      x ", round(com_x*10)/10, " (0 = over the middle of the tracks)",
          "  ·  y ", round(com_y*10)/10, " above ground"));
@@ -1098,7 +1147,8 @@ echo(str("  amplifier: one channel each, 4 Ω. The amp is on the shelf below —
 echo(str("  SERVICE:   each enclosure sits OVER the shelf with ", spk_clr,
          " mm of headroom, shading ", round(100 - shelf_reach),
          "% of it. BOLT them to the chest panel, do not glue them in — only ",
-         round(shelf_reach), "% of the shelf is reachable with them in place"));
+         round(shelf_reach), "% of the shelf is reachable with them in place.",
+         " Unbolt the boxes, then lift the laptop tray straight out."));
 
 echo("");
 echo("--- BATTERY PLACEMENT: why they are LOW and not in the body ---------------");
@@ -1161,8 +1211,12 @@ guards = [
   // outriggers, not a trip hazard reaching half a metre into the crowd.
   ["castor arms not sticking out too far",             120 - at_proud, 0],
   ["head narrower than the body (WALL-E proportion)",  body_w - head_w, 200],
-  ["longest electronics row fits the shelf",           shelf_l - row_max_len, 40],
-  ["all electronics rows fit the shelf depth",         shelf_w - rows_dep, 60],
+  ["longest lower-deck row fits the shelf",            shelf_l - row_max_len, 10],
+  ["all lower-deck rows fit the shelf width",          shelf_w - rows_dep, 10],
+  ["laptop tray fits on the lower shelf, length",      shelf_l - upper_l, 0],
+  ["laptop tray fits on the lower shelf, width",       shelf_w - upper_w, 0],
+  ["air under the laptop tray",                        deck_gap, 10],
+  ["two-floor stack still leaves speaker air (mm of stack spare)", part_h_lim - part_h_max, 0],
   ["headroom over the tallest box, under the body top", body_y1 - (shelf_y + shelf_t + part_h_max), 100],
   // This one fails LONG before the headroom guard does. Headroom is measured to
   // the body lid; the speakers run out of air far lower down.
@@ -1232,7 +1286,12 @@ echo(str("  ", tray_t, " mm plywood  box END walls    2 x ", tray_clear + 2*tray
          " x ", box_wall_h, "   <- these are what close the box"));
 echo(str("  ", tray_lid_t, " mm plywood  box LID       1 x ", tray_len, " x ",
          tray_clear + 2*tray_t, ", ", 2*(n_lid_x + 1) + 2,
-         " x M5 round the edge at ", lid_bolt_p, " pitch"));
+         " x M5 round the edge at ", lid_bolt_p, " pitch",
+         "  <- this is the pack hatch, not a welded cover"));
+echo(str("  ", shelf_t, " mm plywood  electronics shelf 1 x ", round(shelf_l),
+         " x ", round(shelf_w)));
+echo(str("  ", upper_t, " mm plywood  laptop tray        1 x ", round(upper_l),
+         " x ", round(upper_w), "  <- lifts out after the speaker boxes"));
 echo(str("  sealing:  ", gasket_t, " mm closed-cell foam tape under the lid · ",
          batt_pad, " mm foam pad on top of the packs · 4 x Ø", bolt_access_d,
          " silicone blanking plugs · 1 x M", vent_d,
@@ -1245,6 +1304,8 @@ echo(str("  ", eye_ring_t, " mm plywood  EYE RINGS   ", 2*eye_rings, " x \u00d8"
      " (cables). Glue each stack of ", eye_rings, ", then sand the OUTSIDE round"));
 echo(str("  M12 10.9 bolts 4 off, through the rail into the nut welded on the ",
          "green plate — THE POD COMES OFF WITH 2 BOLTS PER SIDE"));
+echo(str("  M8  4 off, body floor into the risers — THE BODY COMES OFF SO THE ",
+         "48 V PACKS CAN LIFT OUT"));
 
 echo("");
 echo("--- STILL GUESSES: replace with real numbers ------------------------------");

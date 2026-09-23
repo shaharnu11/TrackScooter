@@ -27,11 +27,11 @@ Constraint: the three jobs have incompatible timing requirements. Combining them
 
 | Name | Board | Job | Timing requirement |
 |---|---|---|---|
-| **Brain** | Jetson Orin Nano | Camera, AI, sounds, decisions | 0.1–3 s is acceptable |
+| **Brain** | Dell XPS 15 9510 (owned) | Camera list, local LLM, sounds, decisions | 0.1–3 s is acceptable |
 | **Spine** | Teensy 4.0 | Radio input, motor commands, safety rules | 1 kHz, deterministic |
 | **Face** | ESP32-S3 | Two eye screens. No servos | 30 Hz, steady |
 
-- Brain runs Linux: good at large jobs, no timing guarantee. A 2 s stall is acceptable for a camera, not for motors.
+- Brain runs Windows or Linux: good at large jobs, no timing guarantee. A 2 s stall is acceptable for a camera, not for motors. There is **no internet** at the event. Every model runs on the laptop.
 - Spine runs no OS. One loop. Cannot stall. Holds the stop rules. Stops the motors if the Brain goes silent.
 - Radio receiver and E-stop wire into the **Spine**, not the Brain. A Brain crash costs eyes and sound only; the driver keeps full control.
 - Face is separate so eye motion stays smooth while the Brain is loaded. A stuttering eye reads as broken.
@@ -49,26 +49,26 @@ Body is narrower than the track span by design: the pods stay proud at the sides
 | Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
 | Rails | 60×30×3 box, 550 long, 263 mm clear between |
 | Lowest point | 150 mm above ground |
-| Mass, whole robot | 88.8 kg — **pods, packs and electronics are estimates** |
-| Centre of mass | 318.3 mm up, 4.4 mm forward of centre (chest speakers) |
-| Ground pressure | 0.163 kg/cm² over 546 cm² |
-| Tips forward at | 19.3° pitch (backward 20.7°) |
-| Anti-tip castor catches at | 12.3°, i.e. 7.0° of margin |
+| Mass, whole robot | 91.6 kg — **pods, packs and electronics are estimates** |
+| Centre of mass | 323.5 mm up, 3.9 mm forward of centre (chest speakers) |
+| Ground pressure | 0.168 kg/cm² over 546 cm² |
+| Tips forward at | 19.0° pitch (backward 20.3°) |
+| Anti-tip castor catches at | 12.3°, i.e. 6.8° of margin |
 | Steel | 1626 mm of 60×30×3 box tube |
 
 Pod removal: 2 bolts per side, 4 total. The frame reuses the M12 holes already drilled in the green plates. The rail lands on the carrier, which stands 6 mm proud of the plate, so each side takes a 6 mm packer under the bolts. Stack detail: part 5.
 
-Tipping figures depend on mass estimates. Weigh a pod and a pack and enter real values before relying on 19.3°.
+Tipping figures depend on mass estimates. Weigh a pod and a pack and enter real values before relying on 19.0°.
 
 ## Four results from the model
 
-**1. No electronics fit in the frame.** Interior clearances: 8 mm above the packs, 24 mm between them, 13 mm to the cross members. All electronics moved to a shelf in the body: four rows, 40 % of shelf area used, remainder for speakers and airflow.
+**1. No electronics fit in the frame.** Interior clearances: 8 mm above the packs, 24 mm between them, 13 mm to the cross members. All electronics moved to **two floors** in the body. The 12 V electronics pack is a different case from the 48 V traction packs: **181 × 167 × 77 mm** on the lower deck, against **400 × 110 × 80 mm** in the frame box. Lower deck also holds the controllers, PD pack and amp. Upper deck: a 315 × 360 mm lift-out tray for the closed XPS and the USB hub. Unbolt the speaker boxes, then lift the tray.
 
 ![The electronics shelf, labelled](fig/walle_shelf.png)
 
 **2. The body floor must clear the belt crown, not the frame.** Belt crown 327 mm, frame top 257 mm. Body sits on four 78 mm risers. Without them the shell contacts a moving belt.
 
-**3. The battery box must be closed.** Previous design: three-sided U, open at top and both ends, positioned where the belts throw sand. Current design: six panels, gasketed lid, plugs in the spanner holes, membrane vent. A sealed box breathes with the day/night temperature cycle and would otherwise draw dust through its worst leak. Packs charge in place through an external connector and do not come out in the field.
+**3. The battery box must be closed.** Previous design: three-sided U, open at top and both ends, positioned where the belts throw sand. Current design: six panels, gasketed lid, plugs in the spanner holes, membrane vent. A sealed box breathes with the day/night temperature cycle and would otherwise draw dust through its worst leak. Daily charging is in place through an external connector. Every pack still unplugs and lifts out: traction packs after the body comes off the risers, 12 V and PD pack after the laptop tray lifts.
 
 ![The plywood cutting layout](fig/walle_frame_plates.png)
 
@@ -76,16 +76,16 @@ Tipping figures depend on mass estimates. Weigh a pod and a pack and enter real 
 
 ## Speakers
 
-- 2 × 6.5 inch drivers in the chest panel, 280 mm apart, 584 mm above ground.
-- Each driver in its own sealed plywood enclosure, 9.8 litres.
+- 2 × 6.5 inch drivers in the chest panel, 280 mm apart, 613 mm above ground.
+- Each driver in its own sealed plywood enclosure, 7.5 litres (two electronics floors took height from the boxes).
 - Sealed, not firing into the body: the body is not airtight (filtered intake, removable lid, cable entries), so an open back loses bass, and 100 W of internal pressure loosens shelf connectors.
 
 ![The chest panel and the two sealed enclosures, from behind](fig/walle_chest.png)
 
 Two consequences:
 
-- The enclosures shade 54 % of the electronics shelf, clearing it by 20 mm. They **bolt** to the chest panel. Glued, half the electronics becomes unreachable.
-- They cost ~1.5° of forward tipping margin: 7.3 kg at 584 mm, both forward of centre, moving the centre of mass 4.4 mm forward. Result 19.3° with 7.0° of castor margin. Weigh real parts before adding further high or forward mass.
+- The enclosures shade 54 % of the electronics shelf, clearing it by 20 mm. They **bolt** to the chest panel. Glued, half the electronics becomes unreachable, and the laptop tray cannot lift out.
+- They sit 6.8 kg at 613 mm, both forward of centre. Whole robot tips at 19.0° with 6.8° of castor margin. Weigh real parts before adding further high or forward mass.
 
 ## Head
 

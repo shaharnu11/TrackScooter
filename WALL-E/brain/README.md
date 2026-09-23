@@ -1,11 +1,19 @@
 # Brain
 
-The Jetson Orin Nano. Python. Runs the camera, the personality and the sounds.
+The owner's Dell XPS 15 9510. Python. Runs the camera list, a small local
+language model, the personality and the sounds. **No internet.**
 
 **This is the part that is allowed to be slow, and allowed to crash.** If it
 dies, the driver keeps full control of the robot, because the radio receiver
 wires into the Spine and not into here. A Brain crash costs you the eyes and
 the sounds. `../docs/01-architecture.md` section 2.
+
+The laptop sits closed on a lift-out tray (the upper floor), on spacers. The
+USB-C PD power bank of 65 W or more stays on the **lower** deck with the 12 V
+battery and the motor controllers. A powered USB 3 hub (fed from the robot
+12 V rail) sits on the tray next to the laptop and carries the OAK-D, the
+LiDAR, the Teensy and the Face boards. Unbolt the speaker boxes, then lift the
+tray out.
 
 ---
 
@@ -27,6 +35,8 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 python3 main.py --spine /dev/ttyACM0 --face /dev/ttyUSB0 /dev/ttyUSB1
 ```
+
+On Windows the port names are `COM` numbers, not `/dev/tty*`.
 
 Only `pyserial` is needed to run the loop. The sensor libraries are commented
 out in `requirements.txt` until the hardware exists.
@@ -65,9 +75,12 @@ idle · look_at · greet · retreat · nudge_forward · play_sound
 ```
 
 A dull table lookup in `motion_for()` turns the name into a speed and a turn.
-The chooser can be a state machine today and a language model tomorrow, and it
-makes no difference to the safety argument — because there is no way to say
-"0.8 duty for four seconds" in that vocabulary.
+The chooser can be a state machine today and a 3B local language model
+tomorrow, and it makes no difference to the safety argument — because there is
+no way to say "0.8 duty for four seconds" in that vocabulary.
+
+The language model, if used, runs **on the laptop, offline**. Cloud APIs are
+not used. Recorded WALL-E sounds beat spoken sentences for this character.
 
 `test_safety.py` enforces this. It checks that every action, including any
 added later, stays inside 30 % and that no action is missing from the table.
@@ -100,9 +113,8 @@ All three sensor loops in `perception.py` are empty. In rough order of value:
    forward at 19.4° and the anti-tip castor catches it at 9.9°.
 2. **The camera.** The OAK-D Lite runs the detection model on its own chip, so
    this thread only converts finished boxes into angles and distances.
-3. **The LiDAR.** Lowest value, and `../docs/05-bom.md` section 7 lists it as
-   the second thing to cut. The ToF ring on the Spine already covers the
-   safety case.
+3. **The LiDAR.** Occupancy for later slow self-drive. The ToF ring on the
+   Spine already covers the close-range safety case.
 
 Sounds are not implemented at all. `Intent.sound` is carried through the
 personality and then ignored.

@@ -33,7 +33,7 @@ WALL-E/
   docs/              X.md is source, X.html is generated
   cad/               model, pod interface, render script
   firmware/          Spine (Teensy 4.0), Face (ESP32-S3)
-  brain/             Brain (Jetson), Python
+  brain/             Brain (Dell XPS 15), Python
   build/             scratch drawings. Not committed. Deletable
 ```
 

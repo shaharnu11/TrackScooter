@@ -65,7 +65,7 @@ driving — on a skid-steer machine that is a command to spin, not a command to 
 
 ## 2. How much current, really
 
-These are the numbers the wire sizes and fuses come from. The robot is 88.8 kg
+These are the numbers the wire sizes and fuses come from. The robot is 91.6 kg
 (`cad/walle_frame.scad`).
 
 ### Driving in a straight line on sand
@@ -125,32 +125,35 @@ happens.
 
 | Load | Continuous | Peak |
 |---|---|---|
-| Jetson Orin Nano, with the camera and LiDAR on its USB | 25 W | 40 W |
+| Powered USB hub (OAK-D, LiDAR, serial adapters) | 10 W | 15 W |
 | Cooling fans | 5 W | 5 W |
 | 12→5 V converter, feeding the Teensy and the ESP32 | 5 W | 8 W |
-| **Total** | **38 W** | **58 W** |
+| **Total** | **20 W** | **28 W** |
 
-### This rail has its own battery. There is no converter any more
+The XPS is **not** on this rail. It runs from its own battery and a USB-C PD pack of 65 W or
+more.
 
-**Owner decision D8, 2026-09-19.** This rail used to come from pack A through a 100 W isolated
-48→12 V converter. It now comes from a **12 V 20 Ah LiFePO4 battery on the electronics shelf**,
-and the converter is deleted. The Jetson dev kit takes 9–19 V in, so a 12 V battery feeds it
-with nothing in between.
+### This rail has its own 12 V battery
+
+**Owner decision D8, 2026-09-19.** A **12 V 20 Ah LiFePO4** on the lower electronics deck
+feeds this rail. Case size **181 × 167 × 77 mm**, lying on its side. That is **not** the 48 V
+traction pack case (**400 × 110 × 80 mm**, two of them in the frame box). The Teensy, the
+Face, the fans and the USB hub sit on it.
+
+**Owner decision L25, 2026-09-22.** The Brain is the Dell XPS 15. It does not take 12 V in. Do
+not try to feed it from this pack with a cheap boost module. Use USB-C PD.
 
 Three reasons, in the order they matter:
 
-1. **It deletes the one power part you cannot buy.** `05-bom.md` section 9 found that every
-   48→12 V module sold on AliExpress is **non-isolated**, so the isolated brick had to come
-   from a distributor at 70 dollars. There is no 48 V on this rail now, so the problem is gone
-   rather than solved.
-2. **The Jetson stops sharing copper with 40 A of motor current.** That is risk R6, and it
-   used to be held off by the isolation plus a capacitor. Now there is simply nothing for the
-   motors to pull down.
-3. **It frees both packs to be the same capacity.** See `01-architecture.md` section 3b: the
-   20 Ah / 15 Ah split only existed to make the electronics load even out two mismatched
+1. **The 12 V rail does not share copper with 40 A of motor current.** That is risk R6. There
+   is nothing for the motors to pull down.
+2. **Both traction packs can be the same capacity.** See `01-architecture.md` section 3b: the
+   20 Ah / 15 Ah split only existed to make an electronics load even out two mismatched
    packs. Two equal packs run 5.6 hours instead of 4.7.
+3. **Do not add a 48→12 module off pack A to "save" this battery.** A cheap buck shares the
+   motor ground and will reboot the Teensy under load.
 
-**Sizing.** 240 Wh against a 38 W continuous rail is 6.3 hours, so the electronics outlast the
+**Sizing.** 240 Wh against a 20 W continuous rail is 12 hours, so the electronics outlast the
 drive. That is the right way round: when the motors stop, the face and the logs are still up
 to tell you why.
 
@@ -159,8 +162,8 @@ LiFePO4 will happily push hundreds of amps into a short, and its BMS is not a fu
 
 **Do not charge it from the packs.** No DC-DC from 48 V to trickle it, because that rebuilds
 the exact shared-ground path this decision removed. It gets its own charger and its own
-connector on the body, alongside the two pack charge leads (`06-why-the-batteries-are-low.md`
-on charging in place).
+connector on the body, alongside the two pack charge leads. Daily charge is in place; the
+pack still unplugs and lifts out (`06-why-the-batteries-are-low.md`, L17).
 
 ### The contactor coils are NOT on this rail
 
@@ -172,7 +175,7 @@ contradiction: this table had them on the 12 V rail while `05-bom.md` section 2 
 Keeping them off the 12 V rail matters for a reason that is not tidiness. A buyer review on
 one cheap contactor reports **coil inrush of 167 W against a 4.4 W specification**
 (`05-bom.md` section 9). If that is anywhere near right and the coils were on the 12 V rail,
-every contactor pull-in would brown out the Jetson's supply. On the pack they are pulling
+every contactor pull-in would brown out the 12 V supply. On the pack they are pulling
 inrush from a 48 V traction battery instead, which does not care.
 
 **This got more important with decision D8, not less.** The 12 V rail is now a battery, and a
@@ -222,11 +225,10 @@ keeps driving and the robot pivots. Only arbitration rule 4 — the Teensy count
 and seeing a dead track — stops that one. So safety log tests 11 and 12 are not the same
 test, even though they read like it. Test 11 proves the wiring; test 12 proves the firmware.
 
-### The ground bond is now the only thing tying the electronics to the packs
+### The ground bond is the only thing tying the electronics to the packs
 
-The isolated converter used to be what kept motor return current out of the Jetson's ground
-reference. A separate battery does that better — there is no shared copper at all — but it
-creates a new question: what is the electronics ground referenced to?
+A separate battery keeps motor return current off the 12 V rail — there is no shared copper
+at all — but it creates a new question: what is the electronics ground referenced to?
 
 It cannot float. The Teensy measures the pack voltage dividers, the two ACS758 current sensors
 and the throttle line references **against pack negative**. Floating them is trap 3 in
@@ -234,15 +236,13 @@ and the throttle line references **against pack negative**. Floating them is tra
 a floating analogue reference returns plausible wrong numbers and the Spine acts on them.
 
 **So bond the electronics battery negative to the same single point as the two packs.** One
-point, one bond, as in the tree in section 1. What you have built is the same topology as the
-isolated converter's output bonded at one point — except with no switching converter in it.
+point, one bond, as in the tree in section 1.
 
 The throttle lines stay opto-isolated regardless (section 7). That isolation was never about
 the supply; it is about the controller's throttle ground being its own pack negative.
 
 **Keep the buffer capacitor anyway.** Something in the region of 4700 µF across the 12 V rail.
-A battery holds its voltage far better than a converter did, so this is no longer the main
-defence, but it costs almost nothing and it covers the inrush when the Jetson's fans and the
+A battery holds its voltage well; the capacitor covers the inrush when the fans and the
 LiDAR all start together.
 
 ---
@@ -250,7 +250,7 @@ LiDAR all start together.
 ## 4. The amplifier gets its own supply, and NOT the pack directly
 
 Audio is the peakiest load on the robot. A bass note is a 100 W spike. Those spikes must stay
-off the rail the Jetson sits on, or the camera drops out every time the robot speaks. So the
+off the 12 V rail, or the USB devices drop out every time the robot speaks. So the
 amplifier does not share the 12 V rail.
 
 The obvious move is to run it straight off the pack, because a class-D amplifier of the
@@ -273,8 +273,8 @@ charged pack, and then it is gone.
 - 32 V is comfortably inside the chip's range with room for supply ripple, and still gives
   roughly 2 × 80 W into 4 Ω, which is far more than loud enough.
 - This one does **not** need to be isolated. The amplifier's ground can sit on the pack
-  ground; it is the Jetson that needs isolating, not the speakers.
-- Keep it physically and electrically separate from the 12 V converter. The whole point is
+  ground; it is the Brain and the Spine that need a clean rail, not the speakers.
+- Keep it physically and electrically separate from the 12 V battery rail. The whole point is
   that the two loads do not share a rail.
 
 The cost is one extra converter and one extra fuse on the pack.
@@ -414,7 +414,7 @@ take them from a free-air table and go thinner.
 | Pack to contactor to controller | 40 A peak | **10 AWG** | Silicone insulated. It has to stay flexible when hot. |
 | Controller to hub motor, 3 phases | 40 A peak | **12 AWG** | Or match whatever the motor's own leads are, whichever is thicker. |
 | Pack negative to pack negative bond | see below | **10 AWG** | Short and direct. |
-| Electronics battery to the 12 V rail | 3.2 A | **14 AWG** | Sized for the 15 A fuse, not the 38 W load. |
+| Electronics battery to the 12 V rail | 3.2 A | **14 AWG** | Sized for the 15 A fuse, not the 20 W load. |
 | Pack to the amplifier's 32 V converter | 3 A | **16 AWG** | Sized for the 10 A fuse, not the load. |
 | 32 V converter to the amplifier | 5 A | **16 AWG** | |
 | 12 V rail distribution | 6 A | **16 AWG** | |
@@ -507,8 +507,7 @@ a current limit of 2 A — a current limit turns a wiring mistake into a beep in
 | 8 | Add the second motor. | It steers correctly in the air. |
 | 9 | Swap the bench supply for the real packs. | Nothing changes. |
 
-Step 4's bonding check is worth doing carefully, and it is the opposite of the check that used
-to be here. With the isolated converter you wanted **no** continuity between 12 V negative and
-pack negative. With a separate battery you want **exactly one** path, through the ground bond.
-Zero paths means every analogue reading on the packs is floating, which is trap 3. Two or more
-means you have built a ground loop, and the motor current will find it.
+Step 4's bonding check is worth doing carefully. You want **exactly one** path from 12 V
+negative to pack negative, through the ground bond. Zero paths means every analogue reading
+on the packs is floating, which is trap 3. Two or more means you have built a ground loop,
+and the motor current will find it.

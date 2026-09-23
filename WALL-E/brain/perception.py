@@ -98,7 +98,7 @@ class Perception:
         TODO: connect with depthai. The detection model runs on the camera's
         own chip, so this thread only has to read a finished list of boxes and
         convert them to angles and distances. That is the whole reason for
-        choosing this camera: the Jetson spends almost nothing on it.
+        choosing this camera: the XPS GPU stays free for a small local language model.
         """
         while not self._stop.wait(0.1):
             pass
