@@ -29,7 +29,7 @@ Windows: `COM` ports. Sensor libs commented until hardware exists.
 ## Load-bearing
 
 1. **Heartbeat is the command**, from the control loop, not a side thread. Loop stall → beat stall. Zero command is still a beat.
-2. **AI never emits a motor number.** Actions: `idle` · `look_at` · `greet` · `retreat` · `nudge_forward` · `play_sound`. `motion_for()` maps them. Cap 30 % (`test_safety.py`).
+2. **AI never emits a motor number.** Actions: `idle` · `look_at` · `greet` · `retreat` · `nudge_forward` · `follow` · `play_sound`. `motion_for()` maps them. Cap 30 % (`test_safety.py`).
 3. **Stale ≠ clear.** Every reading has a time. Missing IMU blocks motion. Missing bumper halves speed.
 
 Sensor threads write one slot. No queues.

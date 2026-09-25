@@ -43720,7 +43720,7 @@ python3 test_safety.py</code></pre>
 <h3 id="p8-load-bearing">Load-bearing</h3>
 <ol>
 <li><strong>Heartbeat is the command</strong>, from the control loop, not a side thread. Loop stall → beat stall. Zero command is still a beat.</li>
-<li><strong>AI never emits a motor number.</strong> Actions: <code>idle</code> · <code>look_at</code> · <code>greet</code> · <code>retreat</code> · <code>nudge_forward</code> · <code>play_sound</code>. <code>motion_for()</code> maps them. Cap 30 % (<code>test_safety.py</code>).</li>
+<li><strong>AI never emits a motor number.</strong> Actions: <code>idle</code> · <code>look_at</code> · <code>greet</code> · <code>retreat</code> · <code>nudge_forward</code> · <code>follow</code> · <code>play_sound</code>. <code>motion_for()</code> maps them. Cap 30 % (<code>test_safety.py</code>).</li>
 <li><strong>Stale ≠ clear.</strong> Every reading has a time. Missing IMU blocks motion. Missing bumper halves speed.</li>
 </ol>
 <p>Sensor threads write one slot. No queues.</p>

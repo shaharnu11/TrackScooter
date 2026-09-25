@@ -3,8 +3,9 @@
 
     python3 talk_hebrew.py --auto
 
-Camera window: green box is the talker. He records only while that mouth
-moves. Music with no talking face is ignored. q quits the window.
+Camera window: green box is the talker. A locked face plus loud mic
+starts a recording (mouth motion on this camera is too weak to wait on).
+A face with no sound is ignored. q quits the window.
 
     python3 talk_hebrew.py --auto --no-camera
     python3 talk_hebrew.py --type
@@ -313,11 +314,6 @@ def loop(
             if not wait_for_mouth(cam):
                 return
         elif not auto and not typed:
-            try:
-                input()
-            except EOFError:
-                return
-        elif typed:
             try:
                 input()
             except EOFError:

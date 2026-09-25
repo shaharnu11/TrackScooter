@@ -116,7 +116,7 @@ footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
 PYTHONUNBUFFERED=1 ./.venv/bin/python -u talk_hebrew.py --auto</code></pre>
 <ul>
 <li>Window title: <strong>WALL-E speaker lock</strong>. Green <strong>YOU</strong> box = talker. <code>q</code> quits.</li>
-<li>No Enter. Face lock + loud mic (<code>rms &gt; 0.025</code>) starts a recording.</li>
+<li>No Enter. Face lock + loud mic (<code>rms &gt; 0.025</code>) starts a recording. Mouth motion stays near 0 on this camera, so sound is the gate on purpose. Music with a visible face can still trigger a listen.</li>
 <li>Pipeline: ivrit Whisper Large v3 (CPU int8) → DictaLM 1.7B MLX 8-bit → BlueTTS.</li>
 <li>Models live in <code>brain/models/</code> and are <strong>not in git</strong>. Download: <code>python3 download_hebrew_voice.py</code>.</li>
 <li>Venv: <code>WALL-E/brain/.venv</code> (Python 3.14). Homebrew <code>python3</code> has no <code>cv2</code>.</li>
