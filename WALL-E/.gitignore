@@ -5,6 +5,19 @@ __pycache__/
 # Virtual environment for the brain
 .venv/
 
+# Downloaded speech models (hundreds of MB to GB). Keep the README.
+models/*
+!models/README.md
+brain/models/**
+!brain/models/**/
+!brain/models/**/README.md
+!brain/models/**/README.html
+!brain/models/**/.gitattributes
+hebrew_try.wav
+hebrew_talk.wav
+brain/hebrew_try.wav
+brain/hebrew_talk.wav
+
 # OpenSCAD exports. The PNG renders ARE committed; meshes are not.
 *.stl
 *.dxf

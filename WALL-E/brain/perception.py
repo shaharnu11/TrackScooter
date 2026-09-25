@@ -23,6 +23,8 @@ import threading
 import time
 from dataclasses import dataclass, field
 
+from speaker_lock import SpeakerLock
+
 log = logging.getLogger(__name__)
 
 STALE_AFTER_S = 1.0
@@ -36,6 +38,8 @@ class Person:
     el_deg: float
     distance_m: float
     confidence: float
+    track_id: int = 0
+    speaking: bool = False
 
     @property
     def interesting(self) -> bool:
@@ -56,6 +60,7 @@ class Snapshot:
     heading_deg: float = 0.0
     pitch_deg: float = 0.0
     imu_at: float = 0.0
+    speaker_id: int | None = None
 
     def fresh(self, when: float) -> bool:
         return when > 0.0 and (time.monotonic() - when) < STALE_AFTER_S
@@ -67,6 +72,17 @@ class Snapshot:
             return None
         return min(good, key=lambda p: p.distance_m)
 
+    @property
+    def focus_person(self) -> Person | None:
+        """The locked speaker if we have one, else the nearest person."""
+        if not self.fresh(self.people_at):
+            return None
+        if self.speaker_id is not None:
+            for p in self.people:
+                if p.track_id == self.speaker_id and p.interesting:
+                    return p
+        return self.nearest_person
+
 
 class Perception:
     def __init__(self) -> None:
@@ -74,6 +90,7 @@ class Perception:
         self._lock = threading.Lock()
         self._stop = threading.Event()
         self._threads: list[threading.Thread] = []
+        self._speakers = SpeakerLock()
 
     @property
     def snapshot(self) -> Snapshot:
@@ -93,15 +110,51 @@ class Perception:
 
     # -- sensor threads -----------------------------------------------------
     def _camera_loop(self) -> None:
-        """OAK-D Lite.
+        """ELP USB camera. Faces and mouth motion on the Brain CPU.
 
-        TODO: connect with depthai. The detection model runs on the camera's
-        own chip, so this thread only has to read a finished list of boxes and
-        convert them to angles and distances. That is the whole reason for
-        choosing this camera: the XPS GPU stays free for a small local language model.
+        Depth is not required. The ToF ring covers close-range safety. Face
+        size is enough to guess distance for gaze. GPU stays free for the
+        language model.
         """
-        while not self._stop.wait(0.1):
-            pass
+        try:
+            from usb_camera import UsbCamera
+        except ImportError:
+            log.warning("usb_camera import failed")
+            while not self._stop.wait(0.1):
+                pass
+            return
+
+        cam = UsbCamera()
+        if not cam.open():
+            while not self._stop.wait(0.1):
+                pass
+            return
+        try:
+            while not self._stop.is_set():
+                obs, frame = cam.read()
+                if frame is None:
+                    if self._stop.wait(0.05):
+                        break
+                    continue
+                people = [
+                    Person(
+                        az_deg=o.az_deg,
+                        el_deg=o.el_deg,
+                        distance_m=o.distance_m,
+                        confidence=o.confidence,
+                        track_id=o.track_id,
+                        speaking=o.speaking,
+                    )
+                    for o in obs
+                ]
+                now = time.monotonic()
+                speaker_id = self._speakers.update(people, now)
+                with self._lock:
+                    self._snap.people = people
+                    self._snap.people_at = now
+                    self._snap.speaker_id = speaker_id
+        finally:
+            cam.close()
 
     def _lidar_loop(self) -> None:
         """RPLIDAR A1.
@@ -137,6 +190,8 @@ class Perception:
             if "people" in kw:
                 self._snap.people = kw["people"]
                 self._snap.people_at = now
+            if "speaker_id" in kw:
+                self._snap.speaker_id = kw["speaker_id"]
             if "sectors_m" in kw:
                 self._snap.sectors_m = kw["sectors_m"]
                 self._snap.sectors_at = now

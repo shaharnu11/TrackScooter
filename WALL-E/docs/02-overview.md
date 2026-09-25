@@ -1,126 +1,97 @@
 # 02 — What this robot is
 
-Two-track robot built from the two track pods in `../archive/`. Target: Midburn, Negev desert. The pods are built. This project does not modify them.
+Two-track robot on the pods in `../archive/`. Midburn, Negev. Pods are built. This project does not modify them.
 
-- Pods mounted **side by side**, not one behind the other. No steering fork.
-- Turning: left track speed ≠ right track speed. Skid steer, as on a digger or a tank.
-- On top of the pods: a box holding batteries, three computers, two speakers.
-- On the box: a rigid head with two screens as eyes.
+- Pods **side by side**. Skid steer. No steering fork.
+- Box on top: batteries, three computers, two speakers.
+- Rigid head. Two screens as eyes.
 
 ![The robot, three quarter view](fig/walle_robot_3q.png)
 
 ## Control
 
-- Driven by a person with a radio remote. Teleoperation. **Not self-driving.**
-- Two autonomous layers run on top:
-
-| Layer | Function |
-|---|---|
-| Safety | Sensors detect obstacles. The robot refuses to drive into one, including against driver input. |
-| Personality | Camera finds faces. Eyes track them. Whole robot turns to face them, because the head is rigid. Sounds play. |
-
-Rationale: full autonomy in a night-time crowd is higher risk and higher effort, and the crowd does not perceive navigation quality. It does perceive eyes that follow it.
+- A person drives with a radio. **Not self-driving.**
+- Safety: sensors veto obstacles, including against the stick.
+- Personality: camera finds faces, eyes follow, body turns (head is rigid), sounds play.
 
 ## Three computers
 
-Constraint: the three jobs have incompatible timing requirements. Combining them on one board makes the robot unsafe.
-
-| Name | Board | Job | Timing requirement |
+| Name | Board | Job | Timing |
 |---|---|---|---|
-| **Brain** | Dell XPS 15 9510 (owned) | Camera list, local LLM, sounds, decisions | 0.1–3 s is acceptable |
-| **Spine** | Teensy 4.0 | Radio input, motor commands, safety rules | 1 kHz, deterministic |
-| **Face** | ESP32-S3 | Two eye screens. No servos | 30 Hz, steady |
+| Brain | XPS 15 9510 (owned) | Camera, local LLM, sounds | 0.1–3 s OK |
+| Spine | Teensy 4.0 | Radio, motors, stop rules | 1 kHz |
+| Face | ESP32-S3 × 2 | Two eye screens. No servos | 30 Hz |
 
-- Brain runs Windows or Linux: good at large jobs, no timing guarantee. A 2 s stall is acceptable for a camera, not for motors. There is **no internet** at the event. Every model runs on the laptop.
-- Spine runs no OS. One loop. Cannot stall. Holds the stop rules. Stops the motors if the Brain goes silent.
-- Radio receiver and E-stop wire into the **Spine**, not the Brain. A Brain crash costs eyes and sound only; the driver keeps full control.
-- Face is separate so eye motion stays smooth while the Brain is loaded. A stuttering eye reads as broken.
+- No internet. Radio and E-stop into the Spine.
+- Brain crash: eyes and sound die. Driver keeps control.
 
-## Headline numbers
+## Numbers
 
-Body is narrower than the track span by design: the pods stay proud at the sides, which is what makes the silhouette read as WALL-E.
+Body narrower than the tracks on purpose.
 
 ![From the front](fig/walle_robot_front.png)
 
-| Quantity | Value |
+| | |
 |---|---|
-| Overall width | 677 mm (pod centres 500 apart) |
-| Overall height | 910 mm to the top of the eye barrels |
-| Body | 430 long × 620 wide × 400 tall, floor at 335 mm |
-| Rails | 60×30×3 box, 550 long, 263 mm clear between |
-| Lowest point | 150 mm above ground |
-| Mass, whole robot | 91.6 kg — **pods, packs and electronics are estimates** |
-| Centre of mass | 323.5 mm up, 3.9 mm forward of centre (chest speakers) |
-| Ground pressure | 0.168 kg/cm² over 546 cm² |
-| Tips forward at | 19.0° pitch (backward 20.3°) |
-| Anti-tip castor catches at | 12.3°, i.e. 6.8° of margin |
-| Steel | 1626 mm of 60×30×3 box tube |
+| Width | 677 mm (pod centres 500) |
+| Height | 910 mm to barrel tops |
+| Body | 430 × 640 × 400, floor 335 mm |
+| Rails | 60×30×3, 550 long, 263 mm clear |
+| Lowest point | 150 mm (box floor) |
+| Mass | 91.6 kg — pods/packs/electronics still guesses |
+| CoM | 323.5 mm up, 3.9 mm forward |
+| Tips forward | 19.0° (back 20.3°) |
+| Castor catches | 12.3° — **6.8°** margin |
+| Ground pressure | 0.168 kg/cm² |
 
-Pod removal: 2 bolts per side, 4 total. The frame reuses the M12 holes already drilled in the green plates. The rail lands on the carrier, which stands 6 mm proud of the plate, so each side takes a 6 mm packer under the bolts. Stack detail: part 5.
+Pod off: 2 × M12 per side. Rail on the carrier. 6 mm packer. Weigh a pod and a pack before trusting 19.0°.
 
-Tipping figures depend on mass estimates. Weigh a pod and a pack and enter real values before relying on 19.0°.
+## Model results
 
-## Four results from the model
-
-**1. No electronics fit in the frame.** Interior clearances: 8 mm above the packs, 24 mm between them, 13 mm to the cross members. All electronics moved to **two floors** in the body. The 12 V electronics pack is a different case from the 48 V traction packs: **181 × 167 × 77 mm** on the lower deck, against **400 × 110 × 80 mm** in the frame box. Lower deck also holds the controllers, PD pack and amp. Upper deck: a 315 × 360 mm lift-out tray for the closed XPS and the USB hub. Unbolt the speaker boxes, then lift the tray.
+1. **No electronics in the frame.** 8 mm above packs, 24 mm between. Two floors in the body. 12 V pack 181 × 167 × 77 mm on the lower deck (not the 400 × 110 × 80 mm traction case). Upper: 315 × 360 mm tray for closed XPS + USB hub. Speaker boxes off, then tray out.
 
 ![The electronics shelf, labelled](fig/walle_shelf.png)
 
-**2. The body floor must clear the belt crown, not the frame.** Belt crown 327 mm, frame top 257 mm. Body sits on four 78 mm risers. Without them the shell contacts a moving belt.
+2. **Body floor clears the belt crown** (327 mm), not the frame (257 mm). Four 78 mm risers.
 
-**3. The battery box must be closed.** Previous design: three-sided U, open at top and both ends, positioned where the belts throw sand. Current design: six panels, gasketed lid, plugs in the spanner holes, membrane vent. A sealed box breathes with the day/night temperature cycle and would otherwise draw dust through its worst leak. Daily charging is in place through an external connector. Every pack still unplugs and lifts out: traction packs after the body comes off the risers, 12 V and PD pack after the laptop tray lifts.
+3. **Battery box closed.** Six panels, gasket, plugs, vent. Daily charge in place. Packs still lift out (L17).
 
 ![The plywood cutting layout](fig/walle_frame_plates.png)
 
-**4. The chest panel was an opening, not a panel.** `chest_d` recessed the chest 20 mm into a 12 mm wall, removing the front wall entirely and exposing the electronics. Now a 12 mm plate set back 20 mm, which is also the speaker mounting surface.
+4. **Chest is a 12 mm plate**, set back 20 mm. Speaker baffle.
 
 ## Speakers
 
-- 2 × 6.5 inch drivers in the chest panel, 280 mm apart, 613 mm above ground.
-- Each driver in its own sealed plywood enclosure, 7.5 litres (two electronics floors took height from the boxes).
-- Sealed, not firing into the body: the body is not airtight (filtered intake, removable lid, cable entries), so an open back loses bass, and 100 W of internal pressure loosens shelf connectors.
+- 2 × 6.5 inch, 330 mm apart, 613 mm up. On the chest edges. 140 mm between rims.
+- 7 inch LCD, 107 × 183 mm, **portrait**, between them. HDMI from the XPS. Glass window 90 × 160. Bezel on the chest, not through the speaker boxes.
+- 7.5 L sealed box each. Bolt on. Shade 54 % of the shelf.
+- 6.8 kg, both forward. Same 6.8° castor margin. Weigh before adding high/forward mass.
 
 ![The chest panel and the two sealed enclosures, from behind](fig/walle_chest.png)
 
-Two consequences:
-
-- The enclosures shade 54 % of the electronics shelf, clearing it by 20 mm. They **bolt** to the chest panel. Glued, half the electronics becomes unreachable, and the laptop tray cannot lift out.
-- They sit 6.8 kg at 613 mm, both forward of centre. Whole robot tips at 19.0° with 6.8° of castor margin. Weigh real parts before adding further high or forward mass.
-
 ## Head
 
-- 2 barrels, 105 mm, 128 mm apart, toed in 6°.
-- Each holds a 2.1 inch round screen, recessed 60 mm behind a clear dome.
+- Barrels Ø105, 128 mm apart, toe 6°.
+- 2.1 inch screens, 60 mm recess, clear dome. Shade above 49° sun. Midday 75–80°.
 
 ![The head, with the two eye barrels](fig/walle_head.png)
 
-The recess is a sun shade, not styling: a screen 60 mm behind a 53 mm aperture is shaded for sun elevation above 49°. Negev midday sun is 75–80°. The dome seals the barrel against dust.
+Camera under the brow: ELP cube 42 × 42 × 36 mm, 86°.
 
-## Current state
+## Built pods (rev013)
 
-- Both pods built. Belts fitted. Both hub motors in hand, with their scooter controllers.
-- No electronics built. Frame not welded — first job.
-
-Measured on the built pods, carried by revision rev013:
-
-| Quantity | Value |
+| | |
 |---|---|
-| **Carrier outer faces — frame mounting width** | **177 mm** (green plates 165 mm; the 6 mm step is the packer) |
-| Ground contact, one pod | 231 mm long × 118 mm wide |
-| Pod size | 363 long × 327 tall × 177 wide over the carriers |
-| Pod-to-frame band | plate 60 mm tall, 197–257 mm above ground |
-| Suspension travel | +30.7 mm, −29.2 mm |
-| Ground pressure at 100 kg | 0.18 kg/cm² |
-| Belt travel per motor turn | 660 mm |
+| Mounting width | **177 mm** over carriers (plates 165 mm) |
+| Contact | 231 × 118 mm |
+| Pod | 363 × 327 × 177 mm |
+| Band | 60 mm, 197–257 mm up |
+| Travel | +30.7 / −29.2 mm |
 
-Source: `../archive/rev013-double-shear/`. Confirm the mounting width with a tape measure before welding.
+`../archive/rev013-double-shear/`. Tape-measure before welding.
 
-Ground pressure reference: a human foot is ~0.5 kg/cm². This robot at 100 kg loads the sand at under a third of that. That is the engineering reason for tracks.
+## Open
 
-## Open questions
-
-Full list with deadlines: part 2, section 4. Three highest priority:
-
-1. **Pack capacities in Ah, and BMS health of both.** Sets runtime and fuse sizing. Since D8 gave the electronics their own battery, the two traction packs should be equal capacity. See D4.
-2. **Does the robot carry a person?** If yes: heavier frame, and registration as a mutant vehicle with Midburn. Check current Midburn rules before welding.
-3. **Forward tipping.** Track ground contact is 231 mm, which is the entire front-to-back footprint. Longer belts are no longer possible with the pods assembled. Mitigation: anti-tip wheels, and all heavy mass kept low.
+1. D4 — pack Ah and BMS. Equal traction packs.
+2. D3 — carry a person? Midburn rules before weld.
+3. D6 — anti-tip. 231 mm is the whole footprint.

@@ -37,17 +37,7 @@ Measured on the built pods, 2026-09-18. Distance outward from one pod centre pla
 | 82.5 | 88.5 | **carrier plate**, 40×6 |
 | 88.5 | 92.5 | scooter fork leg. **Not fitted on WALL-E** |
 
-Change from rev012:
-
-- rev012: green plate outermost, rail bolted flat to it.
-- rev013 (measured): green plate is **inboard** of the carrier. Carrier stands **6 mm proud** of the plate.
-
-Consequences:
-
-- The rail approaches from the robot centre and lands on the **carrier**, at 88.5. This is `pod_mount_z`.
-- The M12 holes are 6 mm further out, in the green plate.
-- The bolts therefore cross a **6 mm gap**. The gap requires a **packer**.
-- The carrier cannot be avoided: 40 mm wide (±20 about the hub axle), full height of the 197–257 mm rail band.
+Change from rev012: green plate is **inboard**. Carrier 6 mm proud. Rail on carrier at 88.5. Packer required.
 
 ---
 
@@ -103,9 +93,8 @@ cad/walle_frame.scad                              all else derived
         └── guards: clearances, stresses, bolt edge distances (55 today)
 ```
 
-- Changing `pod_cl` moves width, bay, battery box and anti-tip arms together.
-- Changing a pod number without the checker agreeing produces silent error.
-- Precedent: the stack was once written 84/88/94/100. Result: frame 14 mm per side too wide. Detected only by the checker.
+- Changing `pod_cl` moves width, bay, box, and anti-tip together.
+- Edit `pod_interface.scad` only. Never invent frame numbers.
 
 ---
 

@@ -1,582 +1,200 @@
-# 00 — Master plan
+# 00 — Plan
 
-The whole project: where it stands, what must happen in what order, what it costs, and what
-can go wrong. Read this before buying anything or cutting any steel.
+Read `99-glossary.md` for words. Read `01-architecture.md` for the boards.
 
-Read `99-glossary.md` alongside it if a word is unfamiliar, and `01-architecture.md` for the
-detail of how the electronics fit together.
+## 1. Done looks like
 
----
+- Tracked robot, 677 mm wide, about 1 m tall. Reads as WALL-E.
+- A person drives it with a radio. Not self-driving (L2). No passengers unless D3 says yes.
+- Eyes find faces and follow them. Speaker-lock stays on the talker.
+- WALL-E sounds. Hebrew talk is optional, offline, on the XPS.
+- Full evening on Negev sand, in a crowd, without hurting anyone.
 
-## 1. What "done" looks like
-
-A tracked robot, about 677 mm wide and roughly a metre tall, that clearly reads as WALL-E to
-anybody who has seen the film. It is driven by a person with a radio remote. Its eyes find
-faces and follow them. It makes WALL-E's noises. It runs for a full evening on the sand of
-the Negev, in a crowd, without hurting anybody and without breaking down.
-
-Three things are deliberately **not** goals:
-
-- It does not drive itself. See section 4, L2.
-- It does not carry passengers, unless decision D3 changes that.
-- It does not talk in full sentences. Short recorded sounds beat synthesised speech for this
-  character, and cost almost nothing.
-
----
-
-## 2. Where the project stands today
-
-**Both pods are built, to Rev 012.** This is a much stronger starting position than a design
-on paper, and it moves the hard part of the project from metalwork to electronics.
+## 2. Status
 
 | Item | Status |
 |---|---|
-| Pod design (Rev 013) | Complete, all clearance checks pass |
-| Both pods | **Built**, 165 mm clear between the carrier plates (MEASURED 2026-09-18), shocks **inboard** at \|z\|=58.5 |
-| Belts | **Fitted** — 1080 mm, 18 links, 231 mm on the ground per pod |
-| Hub motors | **Both in hand** |
-| Original scooter controllers | **Both in hand** — see decision D7 |
-| Frame for the side-by-side layout | Not designed. This project designs it |
-| Electronics | Nothing bought, nothing built |
-| Body | Nothing |
+| Pods | Built, Rev 013. Belts on. Do not drill new holes |
+| Hub motors + scooter controllers | In hand. Controllers have reverse |
+| Frame | Not welded |
+| Electronics / body | Nothing built |
 
-### What "built to Rev 013" gives us
+**Measure before welding:** 177 mm over the carrier outer faces (green plates 6 mm inboard; packer fills it). `cad/pod_latest.sh` + `cad/check_pod_interface.scad`.
 
-These are now real, measurable numbers rather than design intent:
-
-| Thing | Value |
+| Fact | Value |
 |---|---|
-| Carrier plate spacing | 165 mm clear inside, **177 mm over the outer faces. The frame bolts to those carrier faces** — the green plates are 6 mm further in, so the bolts get a 6 mm packer |
-| Ground contact, one pod | 231 mm long × 118 mm wide |
-| Pod size | 363 long × 327 tall × 177 wide over the carriers. Since Rev 013 the shocks run **inboard**, at \|z\|=58.5, so the carriers are the widest point — measure it |
-| Pod mounting band | A plate 60 mm tall, 197–257 mm above the ground, at the hub |
-| Suspension travel | +30.7 mm up, −29.2 mm down |
-| Ground pressure at 100 kg | 0.18 kg/cm², about a third of a walking person's foot |
-| Belt movement per motor turn | 660 mm |
+| Mounting width | 177 mm over carriers |
+| Ground contact, one pod | 231 × 118 mm |
+| Pod | 363 L × 327 H × 177 W |
+| Mount band | 60 mm tall, 197–257 mm above ground |
+| Travel | +30.7 / −29.2 mm |
 
-Confirm the **177 mm mounting width** with a tape measure across the carriers' outer faces
-before the frame is welded. It is the one dimension that, if wrong, makes the frame useless.
-The green plates measure 165 mm over the same way — that 6 mm step per side is the packer.
+## 3. Constraints
 
-**Corrected again on 2026-09-22**, when WALL-E was repointed at the newest pod revision:
-Rev 013 measured the built pods and the green plate turned out to be **inboard** of the
-carrier, not outboard. The mounting face moved from 172 to 177 mm over, the robot from 672
-to 677 mm wide, and the joint gained a packer. `cad/pod_latest.sh` now keeps this pointed at the
-newest revision so it cannot silently go stale again.
+- No internet at the event. Every model on the XPS.
+- 40 °C sun, fine sand, mostly night. Cooling, covers, lighting.
+- Crowds. Safety layer is not optional.
+- One person, evenings. Cut scope (section 9) before compressing phases.
 
-**These numbers were corrected on 2026-09-17.** This table previously said 168 mm, which came
-from a proposal to widen the carrier spacing that was then reverted — so 168 never existed in
-a built pod, and the WALL-E frame was 14 mm per side too wide. `cad/check_pod_interface.scad`
-caught it. Measure anyway; do not trust either number on faith.
+## 4. Locked
 
-### What this means for the plan
-
-With the pods built, the critical path is now the **frame and the electronics**. Two things
-follow from that:
-
-1. The frame can be designed this week, because every dimension it has to match already
-   exists on a finished pod and can be measured.
-2. You own two hub motors, so the entire drive electronics chain can be built and tested on
-   a workbench immediately, in parallel with the frame. That removes the scariest unknown
-   early.
-
----
-
-## 3. Hard constraints
-
-| Constraint | Consequence |
+| # | Decision |
 |---|---|
-| No network at the event | Every model runs on the XPS. No cloud, no phone tethering. A dead cell signal must leave eyes, beeps, and radio driving intact |
-| Negev heat, 40 °C and direct sun | Active cooling. No PLA anywhere structural. Heat test before you go |
-| Fine abrasive sand | Covers on every bearing and bushing. Daily cleaning. Spares |
-| The event is mostly at night | Vision alone is not enough. Lighting is required, not decorative |
-| Crowds of people, some not sober | The safety layer is the reason this plan is shaped this way |
-| Builder is new to electronics | Section 10 is a learning plan, on the schedule as real time |
-| Pods are already built | The 177 mm mounting width and the 231 mm footprint are now fixed inputs |
-| One person, evenings and weekends | Section 8 assumes this. Extra hands change everything |
+| L1 | Pods side by side, skid steer |
+| L2 | Radio drive. Not self-driving |
+| L3 | Brain (XPS) / Spine (Teensy 4.0) / Face (ESP32-S3 × 2) |
+| L4 | Radio and E-stop wire into the Spine |
+| L5 | No SLAM. GPS/compass only if needed |
+| L6 | Body: 12 mm plywood |
+| L7 | Keep the fitted 18-link belts (231 mm contact). Anti-tip + mass low instead of longer belts |
+| L8 | Frame mounts 177 mm over the carriers |
+| L9 | One 48 V pack per pod. Positives never meet. Negatives bonded at one point |
+| L10 | Electronics on their own 12 V pack (181 × 167 × 77 mm, on its side). XPS not on that rail. **Contactor coils stay on pack A** |
+| L11 | Frame 550 mm. All electronics on two floors in the body |
+| L12 | Body length follows the pod, not the castors |
+| L13 | Two Face boards, one per eye |
+| L14 | Amp on its own 48→32 V converter |
+| L15 | Traction packs stay in the frame box, not the body |
+| L16 | Battery box closed, gasketed, vent in the lid |
+| L17 | Every battery unplugs and lifts out. Daily charge still in place (XT60 on the body) |
+| L18 | Box floor 150 mm for now. Raise toward 173 mm only after the first sand drive |
+| L19 | Two 6.5 inch drivers in the chest, 330 mm apart, 613 mm up. On the chest edges. 140 mm between rims |
+| L20 | Each driver: sealed 7.5 L box. Does not fire into the body |
+| L21 | Speaker boxes bolt on and lift off |
+| L22 | Metal grilles |
+| L23 | Head rigid. No pan/nod/tilt. Gaze = pupils. Look left = body turn |
+| L24 | Lower shock bolt: closed on the real pods |
+| L25 | Brain = owned XPS 15 9510. No Jetson. No cloud |
+| L26 | Two floors: XPS + USB hub on a lift-out tray. Rest below. PD pack 65 W+ stays down |
+| L27 | Camera = ELP-USB1080P03-KLC1100 (86°, 42 × 42 × 36 mm). No OAK-D. Speaker-lock on CPU |
+| L28 | Chest LCD: 7 inch 800×480, 107 × 183 mm, portrait, between the speakers. HDMI from XPS |
+| D7 | Use the two scooter controllers already owned |
+| D8 | Own 12 V battery for electronics |
 
----
+## 5. Still open
 
-## 4. Decisions
-
-### Locked — do not revisit without a reason
-
-| # | Decision | Why |
+| # | Question | Decide by |
 |---|---|---|
-| L1 | Pods side by side, skid steer | Deletes the undesigned steering link, and it is how WALL-E works |
-| L2 | Teleoperated, not self-driving | Safer in a crowd, far less work, and the crowd cannot tell |
-| L3 | Three boards: Brain, Spine, Face | Timing requirements differ by 1000×. `01-architecture.md` §1 |
-| L4 | Radio receiver and E-stop wire into the Spine | The driver keeps control when the Brain crashes |
-| L5 | No SLAM. GPS and compass if position is needed at all | Open desert has no landmarks and the crowd keeps moving |
-| L6 | **Body from 12 mm plywood.** REVISED 2026-09-17: was foam with a thin ply skin and fibreglass over it | Mass up high makes the tipping worse, and plywood turned out to be the LIGHTER answer: the foam build was a 25 kg guess, the plywood box computes to 13.6 kg from its own geometry. 11.5 kg off the robot, 15 mm off the centre of mass, 0.7 deg more forward tipping margin, and 445 dollars cheaper |
-| L7 | Keep the fitted 18-link belts | Was decision D1. See below |
-| L8 | Frame mounting width **177 mm**, across the carriers' outer faces (green plates 6 mm inboard, packer fills it) | Set by the built pods. Not a choice any more. Was written as 168 mm until 2026-09-17, which was a reverted proposal that no pod was ever built to |
-| L9 | One 48 V pack per pod, positives separate, negatives bonded at one point | Was D4. Avoids paralleling two packs entirely. `01-architecture.md` §3b |
-| L10 | **The electronics run from their own 12 V battery** | See decision D8. A different, smaller case than the 48 V packs: **181 × 167 × 77 mm** on the lower deck, against **400 × 110 × 80 mm** in the frame box. Takes the 12 V rail off copper that also carries 40 A of motor current, and lets both traction packs be the same size. **The contactor coils do NOT move — they stay on pack A.** The Brain (XPS) is **not** on this rail |
-| L11 | Frame stays 550 mm long. **All electronics on two floors inside the body** | The frame interior is entirely battery — 8 mm above the packs, 24 between them. Nothing fits. Owner decision, 2026-09-16. Two floors added 2026-09-22 once the XPS would not share one deck. See L26 |
-| L12 | Body length follows the **pod** length, not the anti-tip castors | A body sized to cover the castors is 745 mm on 363 mm pods, and looks like a crate on toy wheels. The castor arms show as outriggers instead |
-| L13 | Two Face boards, one per eye | Two 480×480 QSPI panels on one ESP32-S3 is tight and would tear. 12 dollars removes the risk. `05-bom.md` §4 |
-| L14 | The amplifier gets its own 48→32 V converter | A TPA3255 maxes out at 53.5 V and a "48 V" pack is 54.6 V full. It also keeps the audio spikes off the 12 V rail. `04-power-and-wiring.md` §4 |
-| L15 | **Batteries stay in the frame, not in the body** | Not for the tipping, which is affordable. They need a sealed case wherever they go, and once that is true the body is the hottest, most crowded and most dangerous place for them. `06-why-the-batteries-are-low.md` |
-| L16 | The battery box is a **closed, gasketed box** with a membrane vent in the lid | Owner, 2026-09-16: sand. It was a three-sided U hanging where the belts throw sand. Now six panels, plugged spanner holes, foam pad, lid vent |
-| L17 | **Every battery unplugs and lifts out.** Daily charging is still in place | Owner, 2026-09-23 (was “never come out”). Opening the sealed box every morning in sand undoes the gasket, so the festival charge path is still an XT60 on the body. That must not trap the pack. Traction packs: unbolt the body from the four risers, unbolt the box lid, unplug XT90-S and the charge pigtail, lift out. 12 V pack and PD pack: unbolt the speaker boxes, lift the laptop tray, unplug, lift out. The XPS comes out with the tray. No pack is glued, foamed in, or captured by a cable gland |
-| L18 | Box floor stays at 150 mm for now | Raising it to 173 — the limit, set by lid-bolt access under the body floor — would buy 23 mm of ground clearance for 0.1° of tipping. Owner: revisit after the first drive on sand |
-| L19 | **Two 6.5 inch drivers in the chest panel**, 280 mm apart, 613 mm up | Owner, 2026-09-16. Position is derived, not chosen: the enclosures have to clear the two-floor stack and the body lid, and the driver centres on what is left |
-| L20 | Each driver gets its **own sealed 7.5 litre enclosure**. They do not fire into the body | The body is not airtight — filtered intake, removable lid, cable entries — so an open back would chuff and lose its bass. And 100 W of pressure in the electronics bay shakes every connector. Volume dropped from 9.8 L when the laptop went on a second floor (L26). Still inside the 7–14 L range a 6.5 inch driver wants |
-| L21 | The enclosures **bolt** to the chest panel and lift out | They shade 54 % of the shelf. Glued in, half the electronics is unreachable |
-| L22 | Metal grilles over both drivers | A crowd will push a finger through an open cone |
-| L24 | **The lower shock bolt problem is closed** | Owner, 2026-09-18: fixed on the real pods. This was decision D2 and risk R3, and `02-shock-bolt.md` held the analysis. All three are deleted. If the fix ever needs revisiting, the analysis is in git history |
-| L23 | **The head is rigid. No pan, no nod, no tilt, no servos** | Owner, 2026-09-17. To look left or right the whole robot turns. Removes four gear trains, a bearing, a slip ring and a cable twist limit from a machine that lives in blowing sand, and takes the head from a 5 kg guess to 2.1 kg computed, which drops the centre of mass 18 mm. The cost is in firmware, not hardware: a gaze is now a drive command, so it needs rules L1 to L3 in `01-architecture.md` |
-| L25 | **The Brain is the owner's Dell XPS 15 9510.** No Jetson. No internet at the event | Owner, 2026-09-22. The laptop sits closed on the **upper** electronics tray, on spacers, with a USB-C PD power bank of **65 W or more** on the **lower** deck. The OAK-D Lite finds people on its own chip. A small **local** language model (about 3B, 4-bit) may run on the RTX 3050 Ti and only picks from the fixed behaviour list. Cloud models are not used. `05-bom.md` §3 |
-| L26 | **Two electronics floors.** Laptop and USB hub on a lift-out plywood tray. Everything else on the lower shelf | Owner, 2026-09-22. The closed XPS is too wide to share one deck with the 12 V battery and the controllers. The PD pack stays down — 50 mm on the tray would steal speaker air. Cost: one extra 12 mm ply tray and 15 mm of air. Speaker boxes drop to 7.5 L. The 7 L guard still holds. Unbolt the speaker boxes, then lift the tray straight out |
+| D3 | Carry a person? | Before Phase 2 |
+| D4 | Both pack Ah, both BMS healthy? Traction packs should be **equal** | Before Phase 1 buy |
+| D5 | Midburn date and mutant-vehicle rules | This week |
+| D6 | Anti-tip: how many, where, 30–40 mm off the ground | Phase 1 |
 
-#### L7 — why we keep the short belts now
+D6: castors 30–40 mm up so they never load in normal driving. They only catch a pitch. Packs stay low (~190 mm).
 
-Longer belts would give about 400 mm of ground contact instead of 231 mm, and would make the
-robot much harder to tip forward. While the arms were uncut, that was cheap and was the
-recommendation.
-
-It is no longer cheap. Changing the belt length changes the arm lengths, so it means
-stripping both finished pods, re-cutting the arms, re-solving the shock geometry, and
-rebuilding. That is weeks of work undoing work that is already done.
-
-**So we keep the 231 mm footprint and solve the tipping a different way:** anti-tip wheels,
-plus keeping all the heavy things as low as possible. See decision D6.
-
-### Open — each one has a deadline, because something waits on it
-
-| # | Question | Blocks | Decide by |
-|---|---|---|---|
-| **D3** | Does WALL-E carry a person? | Frame strength, tipping, Midburn registration | Before Phase 2 |
-| **D4** | Both pack capacities in Ah, and are both BMS units healthy? | Runtime and fuse sizing. **No longer decides "which side gets the electronics"** — decision D8 took that load off the packs entirely, so now the two packs want to be the **same** capacity | Before Phase 1 buying |
-| **D5** | Confirmed Midburn date and mutant vehicle rules | The entire schedule | This week |
-| **D6** | Anti-tip wheels: how many, where, how high off the ground? | Frame design | Phase 1 |
-| **D7** | Can the two scooter controllers we already own drive the robot? | Cost, and whether motor temperature can be read | **DECIDED 2026-09-17: yes, use them.** They have a reverse line, and the motor's own thermistor gives the temperature |
-| **D8** | Own 12 V battery for the electronics, or tap pack A? | Which parts get bought, both pack capacities, and how clean the 12 V rail is | **DECIDED 2026-09-19: their own 12 V battery.** Different case from the 48 V packs. See below. The XPS is not on that rail |
-
-#### D6 — the tipping fix, since the belts are staying
-
-The robot's whole front-to-back footprint is 231 mm, so ±115 mm from the centre. With all the
-mass low, it starts to go over at about 16 degrees of pitch. Braking hard, or driving off a
-small step, can reach that.
-
-The fix used on wheelchairs and forklifts is an **anti-tip wheel**: a small castor mounted
-front and back, set deliberately **30 to 40 mm above the ground**. In normal driving it never
-touches anything, so it does not carry load and does not interfere with the suspension. It
-only touches when the robot has already started to pitch, and then it stops the pitch before
-it becomes a fall.
-
-This is much better than a tail skid that always touches, because a permanent third contact
-point fights against the pods' ±30 mm of suspension travel in a way that is hard to predict.
-
-Alongside it: put both battery packs **below** the pod mounting beam, down near the 145 mm
-floor line. Roughly 24 kg of ballast at 190 mm above the ground does most of the stability
-work for free, and it costs nothing because the batteries have to go somewhere anyway.
-
-#### D7 — the scooter controllers you already have
-
-**REVISED 2026-09-17: the two scooter controllers already owned are the drive electronics.**
-
-The controllers **have a reverse line**, confirmed by the owner. That was the one fact that
-could have ruled them out: skid steer needs each side to run forwards and backwards on its
-own, and without reverse the robot could only make wide arcs, never turn on the spot.
-
-**Use them now, for free, to prove the motors work.** Bench-test both hub motors with their
-original controllers and a physical throttle before you buy anything. No code. If a motor is
-dead, you want to know today.
-
-**Then drive them from the Teensy.** They accept a throttle voltage and nothing else, so a
-digital-to-analogue converter fakes it. The reverse and e-brake lines are switched to ground
-through opto-isolators. `05-bom.md` section 1b is the parts list, about 76 dollars.
-
-**Two of the three old objections have been answered:**
-
-1. *They report no motor temperature.* The hub motor has **its own thermistor** in its cable.
-   Read it straight into the Teensy for the price of two resistors. Risk R5 keeps its
-   defence.
-2. *They report no current.* An ACS758 hall sensor on each pack lead, 20 dollars the pair.
-3. *Their current limits, ramp and cut-off are fixed in firmware and cannot be tuned for a
-   slow heavy robot.* **Still true, and not fixable.** So is the six-step commutation, which
-   judders at walking pace — exactly where a skid-steer robot spends its life.
-
-**Two new conditions come with this decision:**
-
-- A **hardware watchdog** is now mandatory. A throttle springs back to zero; a DAC holds its
-  last value forever, so a Teensy crash mid-drive leaves the robot driving. A relay with
-  normally-closed contacts, held open by a heartbeat pulse, shorts the throttle to ground
-  when the pulses stop. Nothing in software has to work for that to happen.
-- Check for **automatic cruise control**. Some scooter controllers engage it after a few
-  seconds of steady throttle. In a crowd that is dangerous. If it cannot be disabled, that
-  controller must not go on this robot.
-
-**Recommendation: use the controllers you own.** This is a bet that six-step control is smooth
-enough at walking pace, and you will not know until you drive it — so bench-test one motor at
-crawling speed early, before the body is built. The hardware watchdog is mandatory either way;
-it is cheap insurance.
-
-#### D8 — the electronics get their own battery
-
-The question that started this was whether there is room for a third battery. In the frame
-box there is not: the two traction packs leave 60 mm of spare width and 20 mm of spare
-length, and a third pack of the **same** size needs 104 mm.
-
-The electronics battery is a **different part**. It is not a third 48 V pack.
-
-| | 48 V traction, each | 12 V electronics |
-|---|---|---|
-| Case | **400 × 110 × 80 mm** | **181 × 167 × 77 mm** |
-| Where | Two of them, sealed box in the frame | Lower electronics deck, lying on its side |
-| Mass | ~8 kg (placeholder) | ~2.5 kg |
-| Feeds | One motor each | Teensy, Face, fans, USB hub. **Not the XPS** |
-
-A 12 V 20 Ah LiFePO4 on the shelf feeds that rail directly. The XPS runs from its own cells
-and a USB-C PD power bank (65 W or more).
-
-##### What it buys
-
-**The 12 V rail does not share copper with the motors.** Risk R6 is motor current spikes
-dragging the rail down and rebooting boards mid-show. On its own battery there is nothing for
-the motors to pull on. Keep the buffer capacitor for fan and LiDAR inrush. The XPS is on a
-third supply, so a 12 V brownout does not kill the Brain.
-
-**Both traction packs can now be the same size.** The 20 Ah / 15 Ah split in
-`01-architecture.md` section 3b existed so an electronics load on the larger pack would drag
-both packs towards empty at the same moment. With that load gone, two equal packs run longer:
-
-| | Pack A | Pack B | Robot runs for |
-|---|---|---|---|
-| Before: 20 Ah + 15 Ah, electronics on A | 4.25 A, 4.7 h | 3.1 A, 4.8 h | **4.7 h** |
-| After: 17.5 Ah each, motors only | 3.1 A, 5.6 h | 3.1 A, 5.6 h | **5.6 h** |
-
-That is the same number of cells rearranged, and it is about 19 % more driving. The
-electronics battery holds 240 Wh against a 20 W rail, so it runs 12 hours and outlasts the
-drive — the face and the logs stay up after the motors stop.
-
-##### The three things that must not change
-
-**The contactor coils stay on pack A.** They are 48 V and they do not follow the electronics.
-That tap is the whole reason pack A dying opens *both* contactors, so the robot coasts instead
-of pivoting on pack B's healthy track. Move the coils onto the electronics battery and you
-delete a safety property that currently costs nothing.
-
-Done this way both failure directions still stop the robot. Pack A dies, the coils lose power,
-both contactors open. The electronics battery dies, the Teensy dies with it, and the Teensy's
-arm MOSFET in the coil chain opens. Either way it coasts.
-
-**Its negative bonds to the same single point as the other two.** The ACS758 sensors and the
-pack voltage dividers all measure against pack negative. A floating third battery is exactly
-trap 3 in `01-architecture.md` section 3b, and that trap does not announce itself — it returns
-plausible wrong numbers that the Spine acts on.
-
-**The amplifier does not move either.** It keeps its own 48→32 V buck off pack A. Audio is the
-biggest and peakiest load on the robot, it does not need clean power, and from 12 V you would
-need a boost converter to reach 32 V. Putting it on the electronics battery would roughly
-triple the size that battery has to be.
-
-##### What it costs
-
-The 12 V pack **lies on its side**. Standing up it is 167 mm tall, which lifts the laptop tray
-and takes air from the speaker boxes. Flat it is 77 mm, against an 88 mm limit that
-`cad/walle_frame.scad` guards. It is a third thing to charge. Speaker volume is 7.5 L with the
-two-floor stack; that is the 12 V pack plus the laptop tray, not the pack alone.
-
----
-
-## 5. Workstreams and the critical path
-
-Four streams. Two of them start today and do not wait for each other.
+## 6. Streams
 
 ```
-  W1 FRAME ─── the critical path ────────────────────────────────►
-     measure pods → design in SCAD → build → mount pods
-
-  W2 DRIVE ELECTRONICS ── starts on a bench, no frame needed ────►
-     test motors → throttle by hand → Teensy + DAC → watchdog → radio → E-stop → 2 motors → install
-
-                    W3 SENSE, BRAIN AND FACE ──────────────────────►
-                       Brain → LiDAR → camera → personality → eyes → head
-
-                              W4 BODY ─────────────────────────────►
-                                 shell → paint → lighting
+W1 FRAME     measure → SCAD → weld → mount pods
+W2 DRIVE     bench motors → DAC → watchdog → radio → E-stop → two motors
+W3 SENSE     XPS → camera → personality → eyes. LiDAR later
+W4 BODY      last
 ```
 
-W1 and W2 start on day one. W3 needs no frame either, but attention is the real scarce
-resource, so it starts once W2 works on the bench. W4 starts last, because the body must fit
-around finished hardware and because it is the stream most likely to eat all remaining time.
+Start W1 and W2 on day one. Do not start with AI.
 
-**The biggest scheduling mistake available to you** is to start with W3, the AI, because it is
-the most interesting. Then the frame arrives late, there is no time to integrate, and you
-bring a very clever box that cannot move.
+## 7. Phases
 
----
+A phase ends when its **exit test** passes.
 
-## 6. Phases, with exit tests
+**Phase 0 — week 1.** Measure pods. Spin both motors on their own controllers. Confirm D4, D5. Order Teensy, DACs, watchdog, radio, clamp meter.
 
-A phase is not finished because the work is done. It is finished when its exit test passes.
+Exit: both motors spin. Pod numbers match the model.
 
-### Phase 0 — Measure, decide, order (week 1)
+**Phase 1 — weeks 2–7.** Frame in SCAD. Anti-tip mounts. Bench: Teensy + DAC + watchdog + radio + E-stop. Log motor temperature from the first run.
 
-| Task | Stream |
-|---|---|
-| Measure the real pods: carrier spacing, mounting band height, overall width | W1 |
-| Bench-test both hub motors with the original scooter controllers | W2 |
-| Confirm the donor battery voltage and capacity (D4) | W2 |
-| Confirm the Midburn date and vehicle rules (D5) | — |
-| Order a Teensy 4.0, two MCP4725 DACs, a level shifter, the watchdog parts, the radio set, a multimeter | W2 |
+Exit W1: model, zero warnings. Exit W2: stick drives one motor; stop on TX off, E-stop, and unplugged Teensy.
 
-**Exit test:** both motors spin under their own power, and the measured pod dimensions are
-written down and match the model within a millimetre or two.
+**Phase 2 — weeks 6–12.** Weld. Mount pods at 177 mm. Mixing, slew, anti-tip. Ballast to body weight.
 
-### Phase 1 — Frame design, and prove the drive on a bench (weeks 2 – 7)
+Exit: drive, reverse, turn, spin on sand. Tethered E-stop. Anti-tip catches a pitch.
 
-| W1 frame | W2 bench electronics |
-|---|---|
-| Model the side-by-side frame in OpenSCAD | Spin a hub motor from its own scooter controller and a hand throttle |
-| Batteries low, below the mounting beam | Get the Teensy to drive the throttle through the DAC, with the watchdog wired |
-| Anti-tip wheel mounts, 30–40 mm clear (D6) | Add the radio receiver, drive the motor from the stick |
-| Order the steel | Add the E-stop and the arm switch, with the watchdog |
-| Order the steel | Log motor temperature from the very first run |
+**Phase 3 — weeks 12–13.** Cause every failure in `01-architecture.md` §3 while driving. Log in `03-safety-log.md`.
 
-**Exit test, W1:** the frame model runs with zero warnings, and the retrofit is fitted to both
-pods.
-**Exit test, W2:** the stick drives one motor, and the motor stops when you switch the
-transmitter off, when you press the E-stop, and when you unplug the Teensy's serial cable.
+Exit: all stops are controlled. No lurch, no turn, no runaway.
 
-### Phase 2 — Build the frame and drive it (weeks 6 – 12)
+Until Phase 3 passes, stay 10 m from people.
 
-| Task |
-|---|
-| Weld and assemble the frame |
-| Mount both pods on the 177 mm mounting width |
-| Batteries in low, both scooter controllers, the Teensy, the contactor and the fusing |
-| Add mixing for two motors, and slew rate limiting |
-| Fit the anti-tip wheels |
+**Phase 4 — weeks 10–18.** XPS + PD pack. ELP camera + speaker-lock. Eyes. Rigid head, camera under the brow. Look-turn on RC ch 6. Amp + clips. Chest 7 inch LCD portrait.
 
-**Exit test:** it drives forward, backward, turns both ways, and spins in place, on sand, with
-a tethered E-stop in a walking person's hand. Add ballast to match the planned body weight and
-confirm it does not pitch alarmingly under braking, and that the anti-tip wheels catch it.
+Exit: refuses a cardboard box. Pupils follow a person. Head does not move. Out of the 86° view, the body turns slowly and the stick cancels it.
 
-### Phase 3 — The safety gate (weeks 12 – 13)
+**Phase 5 — weeks 14–24.** Plywood shell, paint, lighting. Eye barrels = 12 × 12 mm rings.
 
-Not a build phase. A test phase, and the most important one in the project.
+Exit: someone says “WALL-E” without being asked.
 
-Work down the arbitration list in `01-architecture.md` §3 and **deliberately cause every
-failure** while the robot is driving:
+**Phase 6 — weeks 24–28.** Covers, heat test, night test, endurance, spares.
 
-1. Press the physical E-stop
-2. Trigger the wireless keyfob E-stop
-3. Switch the transmitter off
-4. Walk the robot out of radio range
-5. Unplug the Brain's USB cable
-6. Pull the power to the Brain
-7. Short a bumper sensor
-8. Disconnect one throttle line
+Exit: one full evening on sand with only the spares kit.
 
-**Exit test:** all eight produce a controlled stop, and none produces a lurch, a turn, or a
-runaway. Record the date and result for each one in `03-safety-log.md`.
+## 8. Budget (USD, still to buy)
 
-> Until Phase 3 passes, the robot does not operate within ten metres of another person.
-> There is no schedule pressure that justifies skipping this.
+Pods already paid. Total about **$2,060 – $2,590**. Donor packs unusable: add $600–$1,200. Line items: `05-bom.md`.
 
-### Phase 4 — Senses, face, and personality (weeks 10 – 18)
+Buy order:
 
-| Task |
-|---|
-| LiDAR fitted, obstacle map built, bumper veto wired into the Spine |
-| XPS installed on its own battery and PD pack, temperature logging running |
-| Camera fitted, face detection running, gaze targets sent to the Face |
-| Eye screens working from the ESP32 |
-| Head built: rigid post, two ply barrels, camera under the brow |
-| Look-turn enable on RC channel 6, capped and cancelled by the stick |
-| Amplifier and sound clips into the two 3.22 litre speaker wells |
+1. Now: Teensy, 1b parts, radio, meter (~$250).
+2. Phase 1: steel, contactor, fuses, cable.
+3. Phase 2: LiDAR and sensors. Camera already ordered.
+4. Phase 4: screens, amp, chest LCD. No servos.
+5. Phase 5: body materials against a finished robot.
 
-**Exit test:** the robot refuses to drive into a cardboard box even when you push the stick at
-it, and its pupils follow a person walking across a room. The head itself does not move — if
-the person walks out of the camera's 69 degree view, the robot turns its body to keep them,
-slowly, and stops the moment you touch the stick.
+Israel VAT ~$75 per import. Several small AliExpress orders can beat one big one.
 
-### Phase 5 — Body, paint, lighting (weeks 14 – 24)
+## 9. If time is short, cut in this order
 
-Shell from 12 mm plywood, arms fitted, sealed or varnished against the day-to-night humidity swing, night lighting. The eye barrels are stacks of 12 plywood rings, glued up and sanded round.
+Must have: drives on sand, Phase 3 stops, looks like WALL-E, eyes follow, sounds.
 
-**Exit test:** somebody who has seen the film says "WALL-E" without being prompted.
+Cut first:
 
-### Phase 6 — Field readiness (weeks 24 – 28)
-
-The phase everybody skips and then regrets.
-
-| Task |
-|---|
-| Dust covers on every bearing, bushing, and the LiDAR window |
-| Heat test: run it in full midday sun until something complains |
-| Endurance test: a full evening on sand, on one charge |
-| Night test: can the driver see it, can it see, are the eyes visible |
-| Spares kit: printed sprocket, belt links, fuses, a spare 48 V controller, spare DACs, a spare eye panel |
-| Field repair kit and a printed copy of the wiring diagram |
-
-**Exit test:** a full evening of driving on sand with no intervention that is not in the
-spares kit.
-
----
-
-## 7. Budget
-
-Approximate, in US dollars, for what is **still to buy**. The pods are built, so all pod
-material, shocks, bearings, axles, belts and sprockets are already paid for and not counted.
-
-| Group | Items | Cost |
-|---|---|---|
-| Frame | Steel tube, plate, plywood, welding consumables | 250 – 400 |
-| Anti-tip wheels | 2 castors and their mounts | 40 – 80 |
-| Drive electronics | throttle interface, contactor, fuses, heavy cable, lugs (controllers already owned) | 270 – 380 |
-| Radio control | Transmitter, receiver, wireless E-stop keyfob | 150 – 250 |
-| Compute | Dell XPS 15 (owned), USB-C PD pack 65 W+, powered hub | 40 – 80 |
-| Spine and Face boards | Teensy 4.0, ESP32-S3, 2 round LCDs | 80 – 120 |
-| Sensors | LiDAR, OAK-D camera, 6 × ToF, GPS, compass | 300 – 400 |
-| Power conditioning | 48→32 V amp converter, 12→5 V buck, buffer, distribution | 50 – 90 |
-| Audio | Class-D amplifier, wiring | 60 – 100 |
-| Body and head | 12 mm plywood, glue, hinges, gas strut, sealer. Steel already owned | 280 - 360 |
-| Lighting | LED strips, drivers, the eye illumination | 100 – 150 |
-| Tools and consumables | Soldering, crimping, multimeter, drill bits | 200 – 400 |
-| Spares kit | Section 6, Phase 6 | 250 – 350 |
-| **Total still to spend** | | **≈ 2,060 – 2,590** |
-
-If the donor battery packs cannot be reused, add 600 to 1,200.
-
-### Buy in this order, not all at once
-
-1. **Now:** a Teensy, the throttle interface parts, the radio set, a multimeter. About 250
-   dollars, and it is the cheapest way to find out whether the drive electronics are going to
-   be a problem.
-2. **Phase 1:** the frame steel, the contactor, the fusing, heavy cable.
-3. **Phase 2:** the OAK-D, the LiDAR, and the other sensors. Do not buy these early. They sit in a drawer
-   losing value while you do metalwork. The Brain is the XPS you already own.
-4. **Phase 4:** the screens and the amplifier. No servos — the head is rigid.
-5. **Phase 5:** the body materials, bought against a finished robot you can measure.
-
----
-
-## 8. Schedule
-
-Weeks from the start, because the target date needs confirming first (D5). Assumes one person
-working evenings and weekends, learning as they go.
-
-| Weeks | Phase | Streams |
-|---|---|---|
-| 1 | 0 — measure, decide, order | W1 + W2 |
-| 2 – 7 | 1 — frame design / bench electronics | W1 + W2 in parallel |
-| 6 – 12 | 2 — build the frame and drive it | W1 → W2 |
-| 12 – 13 | 3 — safety gate | — |
-| 10 – 18 | 4 — senses, face, personality | W3 |
-| 14 – 24 | 5 — body and paint | W4 |
-| 24 – 28 | 6 — field readiness | all |
-
-**About six months of part-time work.** Having the pods built saves roughly six weeks off the
-critical path compared with building them from the cut list.
-
-The ranges overlap on purpose, because metalwork has waiting time — paint drying, parts in the
-post — and that waiting time is where the electronics get built.
-
-Count backwards from the event date and add **six weeks of slack**. If that does not fit, do
-not compress the phases. Use section 9 and cut scope instead.
-
----
-
-## 9. If time runs short, cut in this order
-
-Decide this now, while calm, rather than in a panic three weeks before the event.
-
-**Must have. Without these there is no robot:**
-
-1. It drives and steers on sand
-2. Every failure in the Phase 3 list produces a stop
-3. It looks like WALL-E
-4. The eyes move and follow people
-5. It makes WALL-E's sounds
-
-**Cut first, in this order, and lose almost nothing:**
-
-1. The language model and any speech recognition
-2. `ASSIST` mode — manual driving only
+1. Language model and Hebrew speech
+2. ASSIST (keep MANUAL)
 3. GPS and compass
-4. The LiDAR, keeping only the ToF bumper ring
-5. Moving arms — static arms look fine
-6. The neck mechanism — a fixed neck with a moving head still reads correctly
+4. LiDAR (keep ToF ring)
+5. Moving arms
+6. Neck motion (already rigid)
 
-Note what is at the top of the cut list: the AI. That is deliberate. A crowd reacts to the
-eyes, the sounds, and the movement. Nobody will ask what model is running.
+## 10. Learn while parts ship
 
----
+1. Meter: voltage, continuity, current.
+2. Crimp and solder. Pull-test the joint.
+3. Blink an LED.
+4. Print a pot over serial.
+5. Pot → MCP4725 → meter (0–3.3 V).
+6. Motor + scooter controller + hand throttle. No code.
+7. Teensy writes the DAC.
+8. Read the radio.
+9. Stick drives the motor.
+10. Watchdog + arm switch. Pull a cable, motor stops.
 
-## 10. Learning plan
+Camera: window → one photo → live video → robot.
 
-You have not worked with microcontrollers, motor controllers, or AI models before. That is on
-the schedule as real time rather than pretended away. Each step is an evening or two, and each
-one produces something that works.
+## 11. Risks
 
-| Step | What you learn | You know it worked when |
+| # | Risk | Defence |
 |---|---|---|
-| 1 | Multimeter: voltage, continuity, current | You can measure a battery and find a broken wire |
-| 2 | Soldering and crimping | A joint you made survives being pulled hard |
-| 3 | Arduino: blink an LED | The LED blinks at a rate you chose |
-| 4 | Arduino: read a potentiometer, print it over serial | Numbers change on screen as you turn the knob |
-| 5 | Arduino: turn the potentiometer into a voltage on the MCP4725 DAC, and read it back with the multimeter | 0 to 3.3 V follows the knob. This replaces the old "drive a servo" exercise, which taught PWM the robot no longer uses anywhere — and it is the real throttle task in miniature |
-| 6 | Spin a motor from its scooter controller and a hand throttle, no code | The hub motor turns, and you know it is healthy |
-| 7 | Teensy: one value written to the DAC | The motor moves because of a number in your code |
-| 8 | Read the radio receiver on the Teensy | Stick numbers print on your screen |
-| 9 | Put steps 7 and 8 together | The stick drives the motor |
-| 10 | Add the watchdog and the arm switch | Pulling a cable stops the motor |
+| R1 | Someone hurt | Phase 3. E-stop. Keyfob minder. MANUAL in crowds |
+| R2 | Tips forward | Anti-tip (D6). Mass low. Ballast test |
+| R4 | One BMS cuts out, robot pivots | Rules 4 and 5 stop **both** tracks |
+| R5 | Hubs overheat crawling | Read motor thermistors. Teensy backs off throttle |
+| R6 | Motor spikes reboot 12 V | Own 12 V pack (D8). XPS on a third supply |
+| R6b | Electronics pack dies | Hardware watchdog shorts throttle |
+| R6c | Controllers cook in the body | Al plate + filtered air in |
+| R6d | XPS cooks or eats sand | Spacers, filter, pull the tray |
+| R7 | Frame late | Frame week 2. Electronics on the bench |
+| R8 | Sand in bearings / box | Covers. Closed box, plugs, vent (L16) |
+| R8d | Charge heat in a sealed box | Log one full charge with the lid on |
+| R9 | PLA sprocket in the sun | Check filament. Spare in ASA/nylon |
+| R10 | Forward margin eaten | Speakers + two floors leave **6.8°**. Weigh real parts before adding mass |
+| R11 | Speakers rattle | Sealed, braced, grille. Bench at full volume |
+| R12 | Stuck on electronics | Section 10. Bench early |
 
-Steps 1 to 5 use about 30 dollars of parts and no project hardware. Do them while waiting for
-deliveries. **Step 10 is the whole Spine**, in concept — everything after that is detail.
+## 12. Next
 
-For the Brain, the same principle: get a camera window to appear on a screen before you try to
-run a model. Then run a model on one saved photograph. Then on live video. Then connect it to
-the robot. Four separate evenings, each one testable.
-
----
-
-## 11. Risk register
-
-Ordered by how much damage each one does, not how likely it is.
-
-| # | Risk | Effect | What we do about it |
-|---|---|---|---|
-| R1 | Somebody gets hurt | Ends the project, and much worse | Phase 3 gate. Physical E-stop. Human minder with a keyfob. Manual mode in crowds |
-| R2 | It tips forward | Broken robot, possibly a broken person | Anti-tip wheels (D6). All mass low. Ballast test in Phase 2 |
-| R4 | One pack's BMS cuts out while driving | The surviving track spins the robot on the spot instead of stopping | Arbitration rules 4 and 5: either side missing stops both. Safety log tests 11 and 12 |
-| R5 | Hub motors overheat crawling | Dead robot mid-event | Read the motor's OWN thermistor into the Teensy and log it from the first bench test. The scooter controllers cannot limit current for us, so the Teensy has to back the throttle off itself. Keep it light |
-| R6 | Motor current spikes reboot the 12 V rail | Face and hub drop | Own 12 V battery (D8), own fuse, buffer capacitor. XPS is on a third supply |
-| R6b | The electronics pack's BMS cuts out, so the Spine dies too | No board left to enforce any stop rule | The scooter controllers have NO command timeout of their own, so this defence is now entirely the hardware watchdog: heartbeat stops, relay falls closed, throttle shorted to ground. Prove it by safety log test 15 |
-| R6c | The motor controllers cook inside the body | One track dies, and the robot pivots | Direct consequence of L11: on a plywood shelf they have no steel to dump heat into. Each gets an aluminium plate bolted through to a body panel, and one filtered air path pushes air IN so the body runs at positive pressure |
-| R6d | XPS cooks or eats sand | Eyes and sounds die | Spacers under the laptop on the upper tray, filtered intake, PD pack 65 W+ on the lower deck. Clean the filter every morning. The laptop is a daily driver in a dusty box — unbolt the speaker boxes and pull the tray between events |
-| R7 | Frame arrives late, no time to integrate | A clever box that cannot move | Frame design starts week 2. Electronics run in parallel on a bench |
-| R8 | Sand destroys bushings and bearings | Progressive seizure over the event | Covers. Daily cleaning. Spares in the kit |
-| R8b | Sand gets into the battery box | Grit between the cells and the box, chafed wiring, a short | L16: closed box, gasketed lid on 110 mm bolt pitch, silicone plugs in all four spanner holes. **Check the plugs are in every morning** — they are the weak point, and they point at the belts |
-| R8c | The sealed box breathes and pumps dust in through its worst leak | Slow, invisible version of R8b, and it defeats the gasket | Membrane vent in the lid, on the centreline over the gap between the packs, so the air has a clean path it does not have to find |
-| R8d | Charging in a sealed box has nowhere to put the heat | Packs age fast, or worse | About 12 W of loss at 5 A. Log the pack temperature through one full charge with the lid on, on the bench, before the event. If it climbs, charge with the body off, or lift the pack out (L17), or drop the current |
-| R10 | Forward tipping margin keeps getting eaten | The castor catches, the robot stops looking like it meant to | The speakers plus the two-floor stack leave **6.8°** over the castor. **Every new part forward of centre or high up spends this number.** Weigh the real pods, packs, body and speakers and put the measured figures in the model before adding anything else |
-| R11 | Speaker enclosures rattle or buzz at volume | Sounds broken, and it is the thing the crowd hears | Sealed boxes, braced, and the drivers bolted through with gasket tape. Test at full volume on the bench before the body goes on |
-| R9 | Printed sprocket softens in the sun | Drive failure | Check what the fitted ones are printed in. If PLA, reprint in ASA or nylon. Carry a spare |
-| R10 | Scope grows, especially the body | Nothing is finished | Section 9 cut list, agreed in advance |
-| R11 | Midburn vehicle rules not met | Cannot operate at the event | D5 this week, before the frame is welded |
-| R12 | Builder gets stuck on the electronics | Project stalls silently | Section 10 learning plan. Bench work early, so problems appear when there is time |
-
-R9 is worth checking early: the sprockets are already printed and fitted, so find out what
-filament was used. PLA softens at around 60 °C, and a black plastic part in direct Negev sun
-will reach that.
-
----
-
-## 12. What happens next
-
-In order. Nothing later on this list should start before the things above it.
-
-1. Confirm the Midburn date and vehicle rules (D5)
-2. Measure the built pods and write the numbers down
-3. Bench-test both hub motors with the original scooter controllers — free, and it de-risks
-   the whole project
-4. Confirm both pack capacities in Ah and that both BMS units are healthy (D4)
-5. Order a Teensy, the throttle interface parts, and the radio set
-7. Start learning plan steps 1 to 5 while the parcels are in the post
-8. Design the frame in OpenSCAD
+1. D5: date and rules.
+2. Measure the pods.
+3. Spin both motors on their own controllers.
+4. D4: pack Ah and BMS.
+5. Order Teensy, 1b, radio.
+6. Learn steps 1–5 while parcels ship.
+7. Frame in OpenSCAD.

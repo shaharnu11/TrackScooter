@@ -5,7 +5,7 @@ Two boards, two jobs, and a hard line between them.
 | Folder | Board | Job | May it move the robot? |
 |---|---|---|---|
 | `spine/` | Teensy 4.0 | Motor commands, every safety rule, the watchdog | **Yes. Only this board.** |
-| `face/` | ESP32-S3 × 2 | Eye animation, head servos | No. It has no connection to the motors at all. |
+| `face/` | ESP32-S3 × 2 | Eye animation. No servos | No |
 
 The Brain (the Dell XPS 15) lives in `../brain/` and is Python, not firmware.
 
@@ -19,9 +19,7 @@ Build with the Arduino IDE (install Teensyduino first) or PlatformIO. Select
 Teensy 4.0 and upload. There is nothing to configure at build time — every
 tunable number is in `spine/config.h`.
 
-> **There is no data bus to the motors.** The scooter controllers are analogue:
-> they take a throttle voltage and report nothing at all. This firmware was
-> rewritten for that on 2026-09-22, and `FlexCAN_T4` is gone.
+> No data bus. Analogue throttle. `FlexCAN_T4` is gone.
 
 ### What it does
 

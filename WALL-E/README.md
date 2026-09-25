@@ -2,6 +2,8 @@
 
 Two-track robot built on the two track pods in `../archive/`. Target: Midburn, Negev desert.
 
+**Where we stopped:** [`PROGRESS.md`](PROGRESS.md) — read that before changing Brain, talk, or power.
+
 - Pods: already built. This project does not modify them.
 - Drive: skid steer. No steering fork.
 - Control: radio remote. Autonomous safety layer on top.

@@ -474,7 +474,7 @@ def all_markdown():
     """Every .md in the project, guide order first, then whatever is left."""
     found = []
     for root, dirs, files in os.walk(HERE):
-        dirs[:] = [d for d in dirs if d not in ("build", ".git", "__pycache__")]
+        dirs[:] = [d for d in dirs if d not in ("build", ".git", "__pycache__", ".venv")]
         for f in files:
             if f.endswith(".md"):
                 found.append(os.path.relpath(os.path.join(root, f), HERE))

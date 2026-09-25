@@ -52,6 +52,43 @@ def test_forward_motion_is_slower_than_reverse_is_not_assumed():
     assert motion_for_action(Action.RETREAT).speed < 0
 
 
+def test_follow_turn_stays_inside_the_ceiling():
+    from personality import Intent
+    wild = Intent(Action.FOLLOW, gaze_az=180.0)
+    m = motion_for(wild)
+    assert abs(m.speed) <= BRAIN_MOTION_CEILING
+    assert abs(m.turn) <= BRAIN_MOTION_CEILING
+    assert m.speed > 0
+
+
+def test_follow_requires_may_move():
+    p = Personality()
+    snap = Snapshot()
+    snap.people = [Person(az_deg=10.0, el_deg=0.0, distance_m=2.5,
+                          confidence=0.9)]
+    snap.people_at = time.monotonic()
+    for _ in range(40):
+        intent = p.update(snap, may_move=False)
+        assert intent.action != Action.FOLLOW
+        m = motion_for(intent)
+        assert m.speed == 0.0 and m.turn == 0.0
+        p._until = 0.0
+
+
+def test_close_person_never_nudges_forward():
+    """Garden wander must not walk into a face that is already too close."""
+    p = Personality()
+    snap = Snapshot()
+    snap.people = [Person(az_deg=0.0, el_deg=0.0, distance_m=0.8,
+                          confidence=0.9)]
+    snap.people_at = time.monotonic()
+    for _ in range(40):
+        intent = p.update(snap, may_move=True)
+        assert intent.action != Action.NUDGE_FORWARD
+        assert intent.action != Action.FOLLOW
+        p._until = 0.0
+
+
 def test_personality_requests_nothing_when_movement_is_blocked():
     """With may_move False, the chooser must not pick a moving action."""
     p = Personality()

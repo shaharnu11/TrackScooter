@@ -1,0 +1,18 @@
+# Voice try-out only. The robot control loop still needs only pyserial.
+# Install into the brain venv:
+#   python3 -m venv .venv && . .venv/bin/activate
+#   pip install -r requirements-voice.txt
+
+huggingface_hub>=0.24
+faster-whisper>=1.1
+blue-onnx>=2.5
+# PyPI 0.2.x is the old API. Install current BlueTTS 2.5 from GitHub:
+#   pip install --ignore-requires-python "blue-onnx @ git+https://github.com/maxmelichov/BlueTTS.git"
+renikud-plus>=0.5
+soundfile>=0.12
+numpy>=1.26
+sounddevice>=0.5
+opencv-python>=4.8
+# Apple Silicon only. The XPS later uses CUDA, not mlx.
+mlx>=0.32
+mlx-lm>=0.31

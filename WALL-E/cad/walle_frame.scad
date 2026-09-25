@@ -162,7 +162,7 @@ vesc_hs_t   = 6;     // aluminium heatsink plate under each VESC
 //    sized to cover the anti-tip castors (665 long) looks like a packing crate
 //    on toy wheels, so body_l is driven by the POD length instead and the
 //    castor arms are left showing as little outriggers.
-body_w      = 620;
+body_w      = 640;   // +20 for the chest LCD slot. Pods still proud of the body.
 body_l      = 430;   // pod is 363 long — this overhangs it by 33 each end
 body_h      = 400;
 body_wall   = 12;    // SOLID plywood, not a skin over foam. Owner 2026-09-17.
@@ -185,10 +185,23 @@ spk_disp    = 0.4;   // litres the driver body itself takes out of the box
 spk_edge    = 8;     // cutout edge -> inside face of the enclosure
 spk_box_t   = 12;    // enclosure plywood
 spk_box_d   = 260;   // how far each enclosure reaches back into the body
-spk_zc      = 140;   // driver centres, left and right of the centreline. 155
-                     //   left only 5 mm of chest border outboard of the rim
+// Drivers sit on the chest EDGES so the middle is free (LCD slot).
+// 5 mm of plywood stays outboard of each Ø190 rim so the flange and grille
+// still land on wood. 0 mm would give a 130 mm gap and a hanging rim.
+spk_outboard = 5;
+spk_zc      = body_w/2 - chest_marg - spk_rim_d/2 - spk_outboard;
+                     // edges of the chest. Rim-to-rim grows with body_w.
 spk_clr     = 20;    // clearance from the enclosure floor to the tallest box
 spk_grille  = true;  // draw the grilles. Not optional in a crowd
+// 7 inch HDMI, portrait, between the speakers. Listing 183 × 107 mm.
+// Portrait: 107 wide. Rim gap is 2*spk_zc - 190. Body 640 → 140 mm gap,
+// 16.5 mm each side of the bezel. 183 tall in the 290 mm chest.
+lcd_w       = 107;
+lcd_h       = 183;
+lcd_d       = 12;    // panel in the 20 mm recess
+lcd_cut_w   = 90;    // glass window. Do not cut the full 107
+lcd_cut_h   = 160;
+lcd_kg      = 0.35;
 // Each driver gets its OWN SEALED enclosure. It does not fire into the body.
 // Two reasons, and both of them bite. The body is not airtight — it has a
 // filtered air intake, a removable lid and cable entries — so an open back
@@ -241,25 +254,27 @@ dome_t      = 3;     // clear acrylic dome over the barrel mouth. Two jobs:
                      //   it seals the barrel against dust, and the highlight
                      //   on it reads as a big glassy eye.
 
-// -- the depth camera --------------------------------------------------------
-// Owner decision 2026-09-17: the camera goes in the HEAD. It had no place in
-// this model at all before, which was a gap — it was in the buying list and the
-// architecture, but nothing checked that it physically fits or can see out.
+// -- the USB camera ----------------------------------------------------------
+// Owner decision 2026-09-17: the camera goes in the HEAD. Ordered 2026-09-23:
+// ELP-USB1080P03-KLC1100, metal cube, LC1100 no-distortion lens, 86° HFOV.
+// Drawing (mm): 42 × 42 face, 36 deep. Front lens bore Ø18. Four corner
+// screws. USB gland 23 × 16 on the back, two Ø5 holes 20 apart. The LC1100
+// glass sticks out of the Ø18 bore into the hood; it is not in the 36 mm body.
 //
 // It CANNOT go between the barrels. They are eye_cl apart with eye_d bodies, so
-// the gap between them is only 128 - 105 = 23 mm, and the OAK-D Lite is 91 wide.
+// the gap between them is only 128 - 105 = 23 mm, and the cube is 42 mm.
 // Widening eye_cl enough to fit it would take the head to 311 mm across, and
 // WALL-E's eyes are close together — it would stop looking like him.
 //
 // So it mounts UNDER the barrel pair, on the front of the yoke, looking forward.
 // That is better anyway: the barrels above it act as a brow, and a lens pointed
 // at the Negev sky needs shade exactly as much as the screens do.
-cam_w       = 91;    // OAK-D Lite body. CHECK against the one you buy
-cam_h       = 28;
-cam_d       = 17.5;
+cam_w       = 42;    // drawing: 42.00 face, left-right
+cam_h       = 42;    // drawing: 42.00 face, up-down
+cam_d       = 36;    // drawing: 36.00 body depth. USB gland is extra behind.
 cam_hood    = 30;    // plywood lip over the lens. This is the SUN SHADE — see
                      //   the CAM SUN guard. Same problem as the eyes.
-cam_fov_h   = 69;    // degrees horizontal, OAK-D Lite colour sensor
+cam_fov_h   = 86;    // ELP LC1100, no-distortion. Listing says HOV 86 degree.
 // With a FIXED head this is the whole field of view. Off to one side of that,
 // the robot is blind until it turns. There is a guard on what that means.
 
@@ -487,6 +502,7 @@ chest_x0    = chest_x1 - chest_t;               // 183 — baffle back face
 chest_y0    = body_y0 + chest_marg;             // recess bottom edge
 chest_y1    = body_y1 - chest_marg;             // recess top edge
 chest_z     = body_w/2 - chest_marg;            // recess half width
+lcd_yc      = (chest_y0 + chest_y1)/2;          // 7 inch, portrait, centred
 
 // The drivers are NOT placed by eye. Each enclosure has to sit clear above the
 // electronics and under the body lid, and the driver centres on what is left.
@@ -569,6 +585,7 @@ mass_items = [
   // centreline fore/aft. Both of them are in the chest, so they pull com_x
   // forward, which is the direction the robot already tips.
   [2*spk_kg,  spk_com_x,       spk_yc     ],
+  [lcd_kg,    chest_x1,        lcd_yc     ],
 ];
 // Summed by recursion, not by hand. The hand-written version had to be edited
 // every time an item was added, and that is how a mass gets silently dropped.
@@ -844,7 +861,18 @@ module chest_panel(){
     for (sz = [1,-1])
       translate([chest_x0 - 1, spk_yc, sz*spk_zc])
         rotate([0,90,0]) cylinder(h = chest_t + 2, d = spk_cut_d);
+    translate([chest_x0 - 1, lcd_yc - lcd_cut_h/2, -lcd_cut_w/2])
+      cube([chest_t + 2, lcd_cut_h, lcd_cut_w]);
   }
+}
+
+module chest_lcd(){
+  color([0.12,0.12,0.14])
+    translate([chest_x1, lcd_yc - lcd_h/2, -lcd_w/2])
+      cube([lcd_d, lcd_h, lcd_w]);
+  color([0.15,0.45,0.85])
+    translate([chest_x1 + lcd_d - 1, lcd_yc - lcd_cut_h/2, -lcd_cut_w/2])
+      cube([1.2, lcd_cut_h, lcd_cut_w]);
 }
 
 // ---- speakers --------------------------------------------------------------
@@ -957,7 +985,7 @@ module head(){
   // yoke joining the two barrels
   color([0.60,0.52,0.28])
     translate([-25, head_yc - 20, -eye_cl/2]) cube([50, 40, eye_cl]);
-  // the depth camera, under the barrels, looking forward. The hood over it is
+  // the ELP USB camera, under the barrels, looking forward. The hood over it is
   // the sun shade, and the barrels above read as a brow.
   color(c_ply)
     translate([cam_xf - cam_d, cam_yc + cam_h/2, -cam_w/2 - 6])
@@ -1003,7 +1031,7 @@ module robot_full(){
   risers();
   body_shell();
   shelf_layout();
-  if (show_speakers) { speaker_boxes(); speakers(); }
+  if (show_speakers) { speaker_boxes(); speakers(); chest_lcd(); }
   head();
 }
 
@@ -1017,7 +1045,7 @@ else if (render_mode == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y,
                                     color(c_ply) translate([-upper_l/2, upper_y, -upper_w/2])
                                       cube([upper_l, upper_t, upper_w]);
                                     shelf_layout(); }
-else if (render_mode == "chest")  { chest_panel(); speaker_boxes(); speakers(); }
+else if (render_mode == "chest")  { chest_panel(); speaker_boxes(); speakers(); chest_lcd(); }
 else if (render_mode == "section")  difference(){ robot_full(); translate([-800,-50,0]) cube([1600,1400,800]); }
 else if (render_mode == "plates"){
   // every plywood panel of the closed battery box, laid flat for cutting
@@ -1075,7 +1103,7 @@ echo(str("EYES:     ", scr_d, " mm screen in a ", eye_d,
          " mm PLY RINGS glued up and sanded round",
          " · sunk ", scr_recess, " deep, so SUN ABOVE ", round(sun_block),
          " deg ELEVATION IS SHADED (Negev midday is 75-80 deg, so it is shaded)"));
-echo(str("CAMERA:   OAK-D ", cam_w, "x", cam_h, "x", cam_d,
+echo(str("CAMERA:   ELP-USB1080P03-KLC1100 ", cam_w, "x", cam_h, "x", cam_d,
          " UNDER the barrels at ", round(cam_yc), " mm, lens ", round(cam_xf),
          " fwd of the head centre. It does NOT fit between them: they are ",
          eye_cl - eye_d, " mm apart and it is ", cam_w, " wide.",
@@ -1149,6 +1177,10 @@ echo(str("  SERVICE:   each enclosure sits OVER the shelf with ", spk_clr,
          "% of it. BOLT them to the chest panel, do not glue them in — only ",
          round(shelf_reach), "% of the shelf is reachable with them in place.",
          " Unbolt the boxes, then lift the laptop tray straight out."));
+echo(str("  CHEST LCD: ", lcd_w, " x ", lcd_h, " mm portrait (7 inch 800x480)",
+         " between the rims · ", round((2*spk_zc - spk_rim_d - lcd_w)/2),
+         " mm spare each side of the bezel · glass window ", lcd_cut_w, " x ",
+         lcd_cut_h, " · HDMI from the XPS, 12 V rail, not the Spine"));
 
 echo("");
 echo("--- BATTERY PLACEMENT: why they are LOW and not in the body ---------------");
@@ -1204,7 +1236,7 @@ guards = [
   // wrong and the shell grinds on a moving belt.
   ["body floor clears the pod belt crown",             body_y0 - pod_crown, 6],
   ["body floor clears the battery pack tops",          body_y0 - batt_y1, 5],
-  ["body narrower than the track span, pods stay proud", width_over - body_w, 40],
+  ["body narrower than the track span, pods stay proud", width_over - body_w, 30],
   ["body WIDER than it is deep (WALL-E proportion)",   body_w - body_l, 100],
   ["body covers the pod length",                       body_l - 2*pod_halfl, 30],
   // the castor arms now stick out past the body on purpose. Check they are
@@ -1225,8 +1257,12 @@ guards = [
   // than body_wall, so the recess cut the front wall clean away.
   ["chest panel is a real plate, not a hole",         chest_t, 6],
   ["speaker rim fits the chest recess, top and bottom", (chest_y1 - chest_y0)/2 - spk_rim_d/2, 20],
-  ["speaker rim fits the chest recess, left and right", chest_z - (spk_zc + spk_rim_d/2), 20],
+  ["speaker rim fits the chest recess, left and right", chest_z - (spk_zc + spk_rim_d/2), 5],
   ["gap between the two speaker rims",                2*spk_zc - spk_rim_d, 30],
+  ["7 inch portrait fits between the rims",           2*spk_zc - spk_rim_d - lcd_w, 5],
+  ["7 inch portrait fits the chest height",           (chest_y1 - chest_y0) - lcd_h, 20],
+  ["LCD glass window stays between the speaker boxes", 2*spk_zc - spk_box_w - lcd_cut_w, 10],
+  ["LCD stays inside the chest recess",               chest_d - lcd_d, 0],
   ["speaker cutout fits the enclosure face",          spk_box_h/2 - spk_cut_d/2, 10],
   ["speaker enclosures clear each other",             2*spk_zc - spk_box_w, 20],
   ["enclosures stay inside the body sides",           body_w/2 - body_wall - (spk_zc + spk_box_w/2), 10],

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ONNX export — text2latent_v2_ru @ step 748000 — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · brain/models/tts-blue/README.md</div><h1>ONNX export — text2latent_v2_ru @ step 748000</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../../../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-26 from <code>brain/models/tts-blue/README.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../../../README.html">WALL-E</a><a href="../../../docs/02-overview.html">02 — What this robot is</a><a href="../../../docs/00-plan.html">00 — Plan</a><a href="../../../docs/01-architecture.html">01 — Architecture</a><a href="../../../docs/05-bom.html">05 — Bill of materials</a><a href="../../../docs/FRAME_AND_PODS.html">Frame and pods — mechanical interface</a><a href="../../../docs/BUILD.html">Building WALL-E</a><a href="../../../docs/04-power-and-wiring.html">04 — Power and wiring</a><a href="../../../docs/06-why-the-batteries-are-low.html">06 — Batteries low, box sealed</a><a href="../../../firmware/README.html">Firmware</a><a href="../../README.html">Brain</a><a href="../../../docs/03-safety-log.html">03 — Safety log</a><a href="../../../docs/99-glossary.html">Glossary</a><a href="../../../PROGRESS.html">WALL-E — where we stopped</a><a href="../README.html">Hebrew speech models (offline)</a><a href="../chat/README.html">README.md</a><a href="README.html" class="here">ONNX export — text2latent_v2_ru @ step 748000</a><a href="../whisper-he/README.html">README.md</a></nav><p>Multilingual 44.1 kHz TTS exported from <code>checkpoints/text2latent_v2_ru/ckpt_step_748000.pt</code>. Languages in the training mix: <strong>he, en, de, it, es, ru, yi</strong>.</p>
+<p>Every checkpoint hash this was built from is recorded in <code>manifest.json</code>. A text2latent checkpoint is only valid against the stats file it was normalized with, so <code>stats.npz</code> here (from <code>stats_yiddish.pt</code>) is part of the export, not an interchangeable artifact.</p>
+<h3 id="contents">Contents</h3>
+<div class="tw"><table><thead><tr><th>file</th><th>what</th></tr></thead><tbody><tr><td><code>reference_encoder.onnx</code></td><td>reference latents → 50 style tokens</td></tr><tr><td><code>text_encoder.onnx</code></td><td>phoneme ids + style → text embedding</td></tr><tr><td><code>vector_estimator.onnx</code></td><td>flow-matching velocity net (the sampler's inner loop)</td></tr><tr><td><code>vocoder.onnx</code></td><td>latents → waveform</td></tr><tr><td><code>duration_predictor.onnx</code></td><td>total duration, from reference latents</td></tr><tr><td><code>duration_predictor_style.onnx</code></td><td>total duration, from precomputed style tokens</td></tr><tr><td><code>stats.npz</code></td><td><code>mean</code>, <code>std</code>, <code>normalizer_scale</code> for latent normalization</td></tr><tr><td><code>uncond.npz</code></td><td><code>u_text</code>, <code>u_ref</code> — the CFG unconditional embeddings</td></tr><tr><td><code>vocab.json</code></td><td>IPA symbol → id (256-token universal vocab, PAD=0/BOS=1/EOS=2)</td></tr><tr><td><code>tts.json</code></td><td>copy of <code>configs/tts.json</code>, the architecture source of truth</td></tr><tr><td><code>manifest.json</code></td><td>source checkpoints + sha256 of every file here</td></tr><tr><td><code>voices/*.json</code></td><td>precomputed speaker styles (see below)</td></tr></tbody></table></div>
+<h3 id="graph-signatures">Graph signatures</h3>
+<p>Batch is fixed at <strong>1</strong>; only the time axes are dynamic.</p>
+<pre><code>reference_encoder       z_ref[1,144,T_ref] mask[1,1,T_ref]              -&gt; ref_values[1,50,256]
+text_encoder            text_ids[1,T_txt] style_ttl[1,50,256]
+                        text_mask[1,1,T_txt]                            -&gt; text_emb[1,256,T_txt]
+vector_estimator        noisy_latent[1,144,T_lat] text_emb[1,256,T_txt]
+                        style_ttl[1,50,256] latent_mask[1,1,T_lat]
+                        text_mask[1,1,T_txt] current_step[1]
+                        total_step[1]                                   -&gt; denoised_latent[1,144,T_lat]
+vocoder                 latent[1,24,T_dec]                              -&gt; waveform[1,T_wav]
+duration_predictor      text_ids[1,T_txt] z_ref[1,144,T_ref]
+                        text_mask[1,1,T_txt] ref_mask[1,1,T_ref]        -&gt; duration[1]  (linear seconds)
+duration_predictor_sty  text_ids[1,T_txt] style_dp[1,8,16]
+                        text_mask[1,1,T_txt]                            -&gt; duration[1]  (linear seconds)</code></pre>
+<p>Two things that are easy to get wrong:</p>
+<ul>
+<li><strong><code>vector_estimator</code> bakes in the Euler step.</strong> It returns <code>x + (1/total_step) <em> v</code>, not the velocity. Classifier-free guidance has to blend velocities, so recover <code>v = (out - noisy_latent) </em> total_step</code> before mixing cond/uncond.</li>
+<li><strong>The latent axes are the compressed ones.</strong> The VF and DP work on <code>[1, 144, T]</code> at 14.35 Hz; the vocoder wants <code>[1, 24, 6T]</code>. Fold with <code>z.reshape(1,24,6,T).transpose(0,1,3,2).reshape(1,24,6T)</code>, and denormalize first: <code>z = (x / normalizer_scale) * std + mean</code>.</li>
+</ul>
+<h3 id="voices">Voices</h3>
+<p>Precomputed styles, so synthesis never needs a reference wav or the AE encoder. Schema matches what the repo already reads (<code>inference_tts.py --style_json</code>, <code>benchmark_trt.load_style_json</code>, <code>inference_helper.load_voice_style</code>): <code>style_ttl [1,50,256]</code> for the acoustic model, <code>style_dp [1,8,16]</code> for <code>duration_predictor_style.onnx</code>.</p>
+<div class="tw"><table><thead><tr><th>voice</th><th>reader</th><th>F0</th><th>source</th></tr></thead><tbody><tr><td><code>libri_male_6209</code></td><td>6209 deckerteach</td><td>128 Hz</td><td>LibriTTS-R train-clean-100</td></tr><tr><td><code>libri_male_8088</code></td><td>8088 Jason Bolestridge</td><td>112 Hz</td><td>LibriTTS-R train-clean-100</td></tr><tr><td><code>libri_female_6147</code></td><td>6147 Liberty Stump</td><td>211 Hz</td><td>LibriTTS-R train-clean-100</td></tr><tr><td><code>libri_female_1088</code></td><td>1088 Christabel</td><td>204 Hz</td><td>LibriTTS-R train-clean-100</td></tr><tr><td><code>female</code></td><td>—</td><td>180 Hz</td><td>in-house <code>female1_hebrew_slow</code> — <strong>check rights before shipping</strong></td></tr></tbody></table></div>
+<p>LibriTTS-R is CC BY 4.0 (Google LLC). Those references are 24 kHz upsampled to 44.1 kHz, so they carry no content above 12 kHz — the same form the model saw in training.</p>
+<p>Add one with:</p>
+<pre><code>python scripts/make_onnx_voice.py --onnx_dir onnx_models_ru_748000 \
+    --name &lt;name&gt; --ref_wav &lt;wav&gt;</code></pre>
+<h3 id="running">Running</h3>
+<pre><code>python scripts/run_onnx_inference.py --onnx_dir onnx_models_ru_748000 \
+    --voice libri_male_6209 --ipa_json &lt;ipa.json&gt; --steps 16 --cfg 3.0</code></pre>
+<p>Input is <strong>IPA</strong>, not raw text — phonemization stays outside the export, because each language has its own front end (Phonikud for he, nikud + <code>yiddish_g2p</code> for yi, RUAccent + RUPhon for ru, espeak for the rest). <code>--ref_wav</code> is also accepted, but encoding a wav to latents needs the PyTorch AE encoder: <code>export_onnx.py</code> exports the decoder only.</p>
+<p>Verified against the PyTorch path from identical initial noise: waveform cos-similarity ≥ 0.9995 in all 7 languages, duration agreeing to ~1e-6 s.</p>
+<h3 id="russian-front-end-g2prussian-g2ppy">Russian front end (<code>g2p/russian_g2p.py</code>)</h3>
+<p>Bundled here because it is the front end this checkpoint was trained with — feed it anything else and the stress/reduction pattern will not match what the model saw.</p>
+<pre><code>Cyrillic --RUAccent--&gt; &#x27;+&#x27;-accented --RUPhon--&gt; IPA --remap--&gt; vocab.json symbols</code></pre>
+<ol>
+<li><strong>RUAccent</strong> resolves lexical stress from sentence context and restores omitted ё (~34% of <code>russian_librispeech</code> rows need it; ё is always stressed).</li>
+<li><strong>RUPhon</strong> applies stress-conditioned vowel reduction — the thing that makes Russian sound Russian: <code>зам+ок → zɐmˈok</code> vs <code>з+амок → zˈamək</code>.</li>
+<li><strong><code>remap_ruphon_ipa</code></strong> folds RUPhon's tilde tie-bars (<code>t~s</code>, <code>t~ɕ</code>, …) onto the single ligatures in <code>vocab.json</code> (<code>ʦ</code>, <code>ʧ</code>, <code>ʣ</code>, <code>ʤ</code>) and converts the ASCII stress mark <code>'</code> to IPA <code>ˈ</code> (U+02C8). Without this last step stress silently trains into the <em>apostrophe</em> embedding — in-vocab, so it never raises an OOV.</li>
+</ol>
+<pre><code>from g2p.russian_g2p import phonemize_russian, remap_ruphon_ipa
+
+phonemize_russian(&quot;на горе стоит замок&quot;)   # raw Cyrillic -&gt; vocab-ready IPA
+remap_ruphon_ipa(&quot;zɐm&#x27;ok t~sar&quot;)           # -&gt; &quot;zɐmˈok ʦar&quot;  (stage 3 alone)</code></pre>
+<p><code>phonemize_russian</code> / <code>accent_russian</code> need <code>pip install ruaccent ruphon 'transformers&lt;5'</code>. That pin is why the two stages are kept out of the training env — phonemize offline into an <code>ipa</code> column. <code>remap_ruphon_ipa</code>, <code>mark_yo_stress</code> and <code>apply_word_overrides</code> are pure string work and safe to import anywhere.</p>
+<p>Two deliberate quirks: <code>ч /tɕ/</code> and <code>тш /tʂ/</code> both map to <code>ʧ</code>, sharing an embedding with the English/Yiddish affricate rather than getting a symbol of their own; and <code>всё</code> carries a hard IPA override, because RUPhon reads it as <code>fsʲe</code> — which is the <em>correct</em> reading of <code>все</code> ("all"), so no respelling can fix it and the substitution has to know the source word.</p>
+<p><strong>Not espeak-ng:</strong> its <code>ru</code> voice is context-invariant (<code>висит замок</code> and <code>стоит замок</code> phonemize identically), cannot restore written-out ё, and emits <code>ы</code> as <code>/y/</code>, colliding with the German ü already in this vocab.</p>
+<h3 id="known-issues">Known issues</h3>
+<ul>
+<li><strong>Output can exceed ±1.0</strong> (up to 1.5 measured on loud references) — anything writing PCM_16 must peak-limit or it clips silently. <code>run_onnx_inference.py</code> limits to 0.95.</li>
+<li><strong>Italian under-predicts duration by ~36%</strong>, well outside the 0.74–1.02 band of the other languages, so it sounds rushed. <code>--speed 0.7</code> compensates.</li>
+<li><strong>Duration saturates near ~16.5 s.</strong> Longer text has to be synthesized per sentence and joined; see the <code>--chunk</code> note in <code>scripts/run_ipa_inference.py</code>.</li>
+<li><strong>Unknown IPA symbols map to PAD and vanish</strong> without raising. Check coverage against <code>vocab.json</code> when adding a language.</li>
+</ul><footer>Generated by <code>build_guide.py</code> from <code>brain/models/tts-blue/README.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

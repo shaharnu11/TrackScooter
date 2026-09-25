@@ -1,320 +1,95 @@
 # Glossary
 
-Every technical word used in this project, explained in plain words. Read this first.
-Words are grouped by subject, not alphabetically, because related words are easier to learn
-together.
+## Boards
 
----
+**Teensy 4.0** — Spine. 600 MHz, no OS. **Not 5 V tolerant.**
 
-## Boards and computers
+**ESP32-S3** — Face, one per eye. No WiFi used.
 
-**Microcontroller**
-A very small computer on a single chip. It has no screen, no operating system, and no hard
-disk. It runs exactly one program, forever, in a loop. Because there is no operating system,
-nothing can interrupt it. That makes it slow at big jobs but perfectly reliable at timing.
-An Arduino is a microcontroller.
+**Dell XPS 15 9510** — Brain. Owned laptop. Closed on the upper tray. No internet. Not on the 12 V rail.
 
-**SBC (Single Board Computer)**
-A full computer on one small board. It runs Linux, has USB ports, and can run heavy
-software like AI models. A Raspberry Pi is an SBC. It is powerful but its timing is not
-guaranteed, because Linux decides when your program gets to run.
+**ELP-USB1080P03-KLC1100** — 1080p USB eye. Metal cube 42 × 42 × 36 mm. LC1100, **86°**. Ordered 2026-09-23.
 
-**Teensy 4.0**
-The microcontroller we use for the Spine. It is like an Arduino but much faster (600 MHz).
-We chose it for its analogue inputs, its pin count and how well supported it is. It was a
-Teensy 4.1 until 2026-09-18; we dropped to the 4.0, which is the same chip, once the motor
-data bus and SD-card logging were both out of the design and the 4.1 had nothing left to offer.
-**It is not 5 V tolerant** — 5 V on a pin damages it.
+**Chest LCD** — 7 inch HDMI, 800×480, 107 × 183 mm portrait between the speakers. Brain, not Spine.
 
-**ESP32-S3**
-A cheap microcontroller with WiFi and Bluetooth built in, and enough speed to drive small
-screens. We use it for the Face. We will not use its WiFi.
+**Firmware** — Program on a microcontroller.
 
-**Dell XPS 15 9510**
-The Brain. A 15 inch laptop the owner already has (i9, 32 GB RAM, RTX 3050 Ti 4 GB, 1 TB
-SSD). It sits closed on a lift-out tray (the upper electronics floor). The PD pack and the
-12 V battery stay on the floor below. It runs Python, talks USB to the Spine and the Face,
-and may run a small **local** language model. It is not on the robot 12 V rail.
-**There is no internet at the event.**
+**Flashing** — Copying that program over USB.
 
-**OAK-D Lite**
-A USB camera that finds people on its own chip and also measures depth. The XPS only reads
-the finished list. Buy from Luxonis, not AliExpress.
+## Links
 
-**Firmware**
-The program that lives inside a microcontroller. Same idea as software, but the word
-"firmware" is used because it is burned into the chip and does not change often.
+**Serial (UART)** — Two wires, agreed baud. Brain↔Spine, Brain↔Face.
 
-**Flashing / uploading**
-Copying your program into a microcontroller over a USB cable. You do this every time you
-change the code.
+**I2C** — Short sensor bus. Spine → two DACs, ToF mux. Each device a different address.
 
----
+**PWM** — Fast on/off. Not used for throttle here. Throttle is a DAC voltage.
 
-## Talking between boards
+## Drive
 
-**Serial (UART)**
-The simplest way for two boards to talk. Two wires: one for sending, one for receiving.
-Both sides must agree on the speed, called the **baud rate** (for example 115200). Easy to
-set up, but only connects two devices.
+**Hub motor** — Direct-drive BLDC in the wheel. Slow + hard = heat. Read the motor thermistor.
 
-**CAN bus (Controller Area Network)**
-A tougher way for *many* devices to share two wires, invented for cars, so it survives
-electrical noise and vibration.
+**Motor controller** — Scooter ESC. Throttle voltage in. **Nothing back.** No command timeout.
 
-**This robot does not use it.** The scooter controllers are analogue: they take a throttle
-voltage and report nothing back. The Spine's link to them is a DC voltage on a shielded wire
-with no error detection of any kind, which is why `04-power-and-wiring.md` section 7 treats
-that wire so carefully.
+**DAC (MCP4725)** — Number → 0–3.3 V throttle. **Holds last value** if the Teensy dies. That is why the hardware watchdog exists.
 
-**I2C**
-A two-wire system for connecting small sensors over short distances. Fragile over long runs,
-but almost every cheap sensor uses it, and it is how the Spine reaches the two throttle DACs.
-Each device on the wire needs a different address.
+**Hardware watchdog** — Timer chip + NC relay. Kicks stop → shorts both throttles to ground.
 
-**PWM (Pulse Width Modulation)**
-Switching a voltage on and off very fast. If it is on half the time, the device behaves as
-if it got half the voltage. This is how motor speed and servo position are controlled. The
-fraction of on-time is called the **duty cycle**.
+**Skid steer** — Turn by left ≠ right. Spin = one forward, one reverse. Always scrubs.
 
----
+**Mixing** — Stick → left/right commands.
 
-## Motors and driving
+**Slew limit** — No instant throttle jumps. Stops tips and belt snap.
 
-**Hub motor**
-A motor built inside a wheel. The pods use the scooter's hub motors. It is a
-**direct drive** motor, meaning there are no gears between the motor and the load.
+## Safety
 
-**Why direct drive matters here:** with no gears, making the robot go slowly means turning
-the motor slowly. A motor turning slowly still has to push hard, so it draws a lot of
-electrical current. Current makes heat, and a slowly turning motor has no airflow to cool
-itself. So a slow, heavy robot can overheat its motors. This is a real risk in a 40 °C
-desert and we design around it.
+**E-stop** — Physical. Opens contactor coils. Motors dead. Electronics stay up. Not an isolator.
 
-**BLDC (Brushless DC motor)**
-The type of motor in the pods. It cannot be driven by simply connecting a battery. It needs
-an electronic controller that switches three wires in the right order, hundreds of times per
-second.
+**Contactor** — DC-rated switch carrying pack current. Coil on pack A.
 
-**Motor controller / ESC**
-The box that does that switching. ESC means Electronic Speed Controller. It takes a command
-("go 30%") and the battery power, and drives the motor.
+**Heartbeat** — Brain → Spine every 50 ms. Missing 100 ms → ignore Brain (MANUAL still drives).
 
-**DAC**
-Digital to Analogue Converter. The opposite of the ADC below. The Teensy sends a number over
-I2C and the MCP4725 turns it into a voltage between 0 and 3.3 V, which is what the scooter
-controller wants to see instead of a twist grip. **A DAC holds its last value when the board
-driving it dies** — it does not fall to zero. That single fact is why the robot needs a
-hardware watchdog.
+**Failsafe** — Break → stop, not keep going.
 
-**Hardware watchdog**
-A separate timer chip that the main board must "kick" regularly. If the kicks stop, the chip
-acts on its own — here, it opens a relay in both throttle lines. It is deliberately dumb and
-deliberately not running your code, so that it still works when your code is what failed.
+**Arbitration** — Fixed rule order on the Spine. Higher wins.
 
-**Torque**
-Turning force. Not the same as speed. A motor can push very hard while barely turning.
-
-**Current control vs duty control vs RPM control**
-Three different ways to command a motor controller.
-- **Duty** means "apply 30% of the battery voltage". Behaves most like a throttle pedal. Easy
-  to understand and predictable. This is what we start with.
-- **Current** means "push with this much force". The motor then goes whatever speed the world
-  allows. Good for rough ground.
-- **RPM** means "turn at exactly this speed", and the controller fights to hold it. This
-  fights against track slip on sand, so we avoid it.
-
-**Skid steer (also called differential drive or tank steer)**
-Turning by driving the left and right sides at different speeds. There is no steering joint
-at all. To turn left, slow the left track. To spin in place, drive one track forward and the
-other backward.
-
-**Scrub**
-When a track slides sideways across the ground during a turn instead of rolling. Skid steer
-always scrubs. Scrub wears out the track and needs extra motor force. On sand it is mild,
-because the sand moves instead of the rubber. On tarmac it is harsh.
-
-**Mixing**
-Turning a joystick position into two motor commands. The stick gives you forward/back and
-left/right. Mixing converts those into a left motor value and a right motor value. For
-example: `left = forward + turn`, `right = forward − turn`.
-
-**Slew rate limiting**
-Refusing to change a motor command instantly. If the driver slams the stick from zero to
-full, slew limiting ramps it up over half a second instead. This stops violent jerks, saves
-the tracks, and stops the robot from tipping.
-
----
-
-## Safety words
-
-**E-stop (emergency stop)**
-A big red mushroom button that cuts power. Real ones are **physical**: pressing them opens
-an actual electrical contact. They do not ask software for permission, because software can
-be broken. Ours also has a wireless version on a keyfob, held by a person watching the
-robot.
-
-**Contactor**
-A large electrically operated switch that can carry the full battery current. The E-stop
-does not break the motor current itself; it breaks the small coil current that holds the
-contactor closed, and the contactor then opens the main power.
-
-**Watchdog**
-A timer that resets a system if it stops being told "I am alive". Our Spine has one: the
-Brain must send a **heartbeat** message every 50 ms. If two heartbeats in a row go missing,
-the Spine assumes the Brain is dead and stops the motors.
-
-**This is the single most important safety feature in the project.** Without it, if the
-Brain freezes while the robot is moving, the last command keeps running and a heavy machine
-drives into a crowd.
-
-**Failsafe**
-Designing so that a failure results in a safe state, not a dangerous one. "Lost radio
-signal means stop" is failsafe. "Lost radio signal means keep going" is not.
-
-**Arbitration**
-Choosing between several sources that all want to control something. Our Spine listens to
-the radio, the Brain, and the bumper sensors, and has a fixed order of priority for deciding
-who wins.
-
-**Veto**
-When one system is allowed to cancel another system's command but never to give its own.
-The bumper sensors have a veto: they can say "no, do not drive forward", but they can never
-say "drive left".
-
----
+**Veto** — Bumper may only reduce a command.
 
 ## Sensors
 
-**LiDAR**
-A spinning laser that measures distance in every direction, giving a flat map of what is
-around the robot. Works in total darkness, which matters because Midburn happens at night.
-Bright sun and thick dust can confuse cheap ones.
+**LiDAR** — Spinning laser map. Night OK. Sun/dust can confuse cheap ones.
 
-**Stereo camera**
-Two cameras side by side. By comparing the two pictures, the distance to things can be
-calculated, the same way two eyes give you depth. Needs light, so it fails at night unless
-you add your own.
+**ToF** — Short bumper range. Spine, not Brain.
 
-**Depth camera / RGB-D**
-Any camera that gives distance as well as colour. A stereo camera is one kind.
+**Occupancy grid** — Squares: free / blocked / unknown.
 
-**ToF sensor (Time of Flight)**
-A small cheap sensor that fires an invisible light pulse and times the echo. Measures
-distance in one narrow direction only, up to a few metres. We use several as a bumper.
+**SLAM** — Not used. Desert + crowd has no fixed landmarks.
 
-**Occupancy grid**
-A simple map made of squares, where each square is marked "free", "blocked", or "unknown".
-This is how obstacle sensor data gets turned into something a program can decide with.
+**GPS** — Metres. Fine for “stay in this area”.
 
-**SLAM (Simultaneous Localisation and Mapping)**
-Software that builds a map while also working out where you are in it, using a camera or
-LiDAR. Impressive, but it needs fixed landmarks and a still scene. **We are not using it.**
-Open desert has no landmarks and the crowd keeps moving, which breaks it. Plain GPS works
-better in exactly this situation.
+**Compass** — Heading. Keep it far from motors.
 
-**GPS**
-Position from satellites. Normally accurate to 2 to 3 metres. That is plenty for "stay
-inside this area" and "head back to camp" in an open desert.
+## AI (offline)
 
-**RTK GPS**
-A more accurate version using a second fixed receiver, good to a few centimetres. A possible
-upgrade later. Not needed at the start.
+**Inference** — Run a trained model. We do not train on the robot.
 
-**Magnetometer / compass**
-Measures the direction of the earth's magnetic field, so the robot knows which way it is
-pointing. Must be mounted far from the motors and the battery cables, or their magnetic
-fields will ruin the reading.
+**LLM** — Optional. Picks from `idle` · `look_at` · `greet` · `retreat` · `play_sound` · `nudge_forward`. Never a motor number.
 
----
+**YuNet** — Face boxes on the XPS CPU.
 
-## AI words
+**Whisper (ivrit Large v3)** — Hebrew speech → text.
 
-**Model**
-A trained AI program. Different models do completely different jobs. This project uses three
-separate ones and they have nothing in common.
+**TTS (BlueTTS)** — Text → speech. Recorded WALL-E clips still win for character.
 
-**Inference**
-Running a trained model to get an answer. As opposed to **training**, which is creating the
-model in the first place. We only do inference, and we do it on the robot.
+## Electrical
 
-**Offline / local / on-device**
-Running on the robot itself, with no internet. Everything in this project is offline,
-because there is no network in the desert.
+**DC-DC** — One DC voltage to another. Amp is 48→32. Logic is 12→5.
 
-**LLM (Large Language Model)**
-The kind of AI that understands and writes language. ChatGPT is one. Small versions can run
-offline on the XPS. A 3B 4-bit model answers in about 1 to 3 seconds.
+**Brownout** — Voltage dip resets a board. Why electronics have their own 12 V pack (D8).
 
-**It must never control the motors.** It is far too slow, and it can give surprising
-answers. It is allowed to choose from a short fixed list of behaviours, and a simple
-reliable program carries the choice out.
+**Fuse** — Weak point that must open. Not AliExpress for 60/15/10 A.
 
-**Parameters, and "7B"**
-The size of an AI model, counted in billions of adjustable numbers. "7B" means 7 billion.
-Bigger is smarter and slower, and needs more memory.
+**AWG** — Smaller number = thicker wire. 10 AWG power, 22 AWG signal.
 
-**Quantisation**
-Shrinking a model by storing its numbers less precisely. A 7B model might need 14 GB of
-memory normally, but about 4 GB quantised, with only a small loss of quality. This is what
-makes offline AI on a small board possible at all.
+**Ground** — Shared zero. One bond point. Do not fuse it.
 
-**TOPS (Tera Operations Per Second)**
-A rough measure of how fast an AI chip is. Trillions of calculations per second. The XPS
-RTX 3050 Ti is a laptop GPU, power-limited to about 35–45 W. It is enough for a 3B 4-bit
-language model. It is not a datacentre card.
-
-**NPU (Neural Processing Unit)**
-A chip built only for AI. Fast and power-efficient, but only for the kinds of models it was
-designed for. Some NPUs are great at vision and poor at language models, which is why the
-XPS GPU (and the OAK-D chip for people) is the split we use.
-
-**YOLO**
-A well-known family of fast models that find objects in a picture and draw boxes around
-them. We use one to find people and faces, 15 to 30 times a second.
-
-**Whisper**
-An offline model that turns speech into text. Made by OpenAI, free to run yourself.
-
-**TTS (Text To Speech)**
-Turning text into spoken audio. **Piper** is a good offline one. For WALL-E, short recorded
-sound clips will probably beat TTS, since his voice is famous sound design rather than
-speech.
-
----
-
-## Electrical words
-
-**DC-DC converter**
-A circuit that changes one DC voltage into another, for example 12 V down to the
-5 V the Teensy and the Face need.
-
-**Isolated**
-A converter where the input and the output share no wires, only a magnetic link. This stops
-noise and voltage dips on the motor side from reaching the computers.
-
-**Brownout**
-When the voltage dips too low for a moment and a computer resets. Motor current spikes cause
-this. It is why the computers get their **own 12 V battery** rather than a wire shared with
-the motors. See decision D8 in `00-plan.md`.
-
-**Supercapacitor**
-A component that stores a small amount of energy and can release it very fast. Used to hold
-a voltage steady through a brief dip.
-
-**Fuse**
-A deliberate weak point that melts and breaks the circuit if too much current flows. Every
-branch of the wiring gets one, sized for that branch.
-
-**AWG (American Wire Gauge)**
-A wire thickness number. **Confusingly, a smaller number means a thicker wire.** 10 AWG is
-thick and carries a lot of current; 22 AWG is thin and is for signals.
-
-**Ground / common**
-The shared zero-volt reference. Two boards that talk to each other must share a ground wire,
-or the signals mean nothing. A very common cause of "it does not work".
-
-**Ground loop**
-When ground is connected by two different paths, so current flows through the ground wire
-itself and corrupts signals. Avoided by having one single point where everything's ground
-joins.
+**Ground loop** — Two ground paths. Motor current in the signal zero.

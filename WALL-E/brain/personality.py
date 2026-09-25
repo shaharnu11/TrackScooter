@@ -11,7 +11,7 @@ a state machine, or later a language model, and it makes no difference to the
 safety argument, because the chooser cannot express anything except one of
 these names.
 
-    idle · look_at · greet · retreat · nudge_forward · play_sound
+    idle · look_at · greet · retreat · nudge_forward · follow · play_sound
 
 An LLM asked "what should WALL-E do?" can answer "greet". It cannot answer
 "0.8 duty for 4 seconds", because there is no way to say that in this
@@ -40,6 +40,7 @@ class Action(str, Enum):
     GREET = "greet"
     RETREAT = "retreat"
     NUDGE_FORWARD = "nudge_forward"
+    FOLLOW = "follow"
     PLAY_SOUND = "play_sound"
 
 
@@ -75,17 +76,26 @@ _MOTION: dict[Action, Motion] = {
     Action.GREET:         Motion(0.00,  0.00),   # sound and eyes, no movement
     Action.RETREAT:       Motion(-0.30, 0.00),   # back away, slowly
     Action.NUDGE_FORWARD: Motion(0.25,  0.00),
+    Action.FOLLOW:        Motion(0.20,  0.00),  # turn comes from gaze, clamped below
     Action.PLAY_SOUND:    Motion(0.00,  0.00),
 }
 
+_FOLLOW_SPEED = 0.20
+_FOLLOW_TURN = 0.20
+_FOLLOW_AZ = 45.0  # degrees of error that asks for full _FOLLOW_TURN
+
 
 def motion_for(intent: Intent) -> Motion:
-    """Turn an Intent into a Motion. This function is deliberately dull.
+    """Turn an Intent into a Motion.
 
-    It is a table lookup with no arithmetic and no conditionals. If you ever
-    find yourself wanting to add a calculation here, that is a sign the
-    calculation belongs in the chooser as a different action instead.
+    All actions except follow are a table lookup. Follow is the same slow
+    forward speed, plus a turn toward the person, clamped so it cannot
+    exceed the Brain ceiling.
     """
+    if intent.action is Action.FOLLOW:
+        turn = intent.gaze_az / _FOLLOW_AZ * _FOLLOW_TURN
+        turn = max(-_FOLLOW_TURN, min(_FOLLOW_TURN, turn))
+        return Motion(_FOLLOW_SPEED, turn)
     return _MOTION.get(intent.action, Motion())
 
 
@@ -100,6 +110,7 @@ class Personality:
         Action.GREET: 3.0,
         Action.RETREAT: 1.5,
         Action.NUDGE_FORWARD: 1.0,
+        Action.FOLLOW: 0.4,
         Action.PLAY_SOUND: 2.0,
     }
 
@@ -130,16 +141,29 @@ class Personality:
         return self._intent
 
     # -- the chooser. This is the part an LLM could replace. ---------------
+    # Garden ASSIST only. Radio ON. Sticks centred. Spine still owns stop.
+    # He never picks a motor number — only these names. Nudge is 1 s at 25%.
+    _CLOSE_M = 1.2
+    _FOLLOW_MIN_M = 1.5
+    _FOLLOW_MAX_M = 4.0
+    _NUDGE_P = 0.25
+    _CHIRP_P = 0.15
+
     def _choose(self, snap: Snapshot, now: float, *, may_move: bool) -> Action:
-        person = snap.nearest_person
+        close = snap.nearest_person
+        person = snap.focus_person
+
+        if close is not None and close.distance_m < self._CLOSE_M:
+            return Action.RETREAT if may_move else Action.GREET
 
         if person is None:
-            # Nobody about. Look around, occasionally make a noise.
-            return Action.PLAY_SOUND if random.random() < 0.15 else Action.IDLE
+            if may_move and random.random() < self._NUDGE_P:
+                return Action.NUDGE_FORWARD
+            return Action.PLAY_SOUND if random.random() < self._CHIRP_P else Action.IDLE
 
-        # Somebody is very close. Back off if allowed, otherwise just react.
-        if person.distance_m < 1.2:
-            return Action.RETREAT if may_move else Action.GREET
+        if (may_move
+                and self._FOLLOW_MIN_M <= person.distance_m <= self._FOLLOW_MAX_M):
+            return Action.FOLLOW
 
         # Greeting is rate limited, or he does it to the same person forever.
         if person.distance_m < 3.0 and (now - self._last_greet) > 12.0:
@@ -149,7 +173,10 @@ class Personality:
         return Action.LOOK_AT
 
     def _build(self, action: Action, snap: Snapshot, now: float) -> Intent:
-        person = snap.nearest_person
+        if action is Action.RETREAT:
+            person = snap.nearest_person
+        else:
+            person = snap.focus_person
         az = person.az_deg if person else 0.0
         el = person.el_deg if person else 0.0
 
@@ -163,6 +190,8 @@ class Personality:
             return Intent(action, az, el, mood="idle", sound="chirp")
         if action is Action.NUDGE_FORWARD:
             return Intent(action, az, el, mood="curious")
+        if action is Action.FOLLOW:
+            return Intent(action, az, el, mood="curious")
         return Intent(Action.IDLE, 0.0, 0.0, mood="idle")
 
     def _refresh_gaze(self, intent: Intent, snap: Snapshot) -> Intent:
@@ -171,7 +200,10 @@ class Personality:
         The eyes update at the full loop rate even though the action is held,
         so he follows you continuously instead of snapping every 1.2 seconds.
         """
-        person = snap.nearest_person
+        if intent.action is Action.RETREAT:
+            person = snap.nearest_person
+        else:
+            person = snap.focus_person
         if person is None:
             return intent
         return Intent(intent.action, person.az_deg, person.el_deg,

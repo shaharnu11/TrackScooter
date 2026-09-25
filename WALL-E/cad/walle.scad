@@ -200,7 +200,7 @@ module robot_nog(){
   frame_steel(); pod_bolts(); battery_box();
   if (show_batteries) batteries();
   anti_tip(); risers(); body_shell(); shelf_layout();
-  if (show_speakers) { speaker_boxes(); speakers(); }
+  if (show_speakers) { speaker_boxes(); speakers(); chest_lcd(); }
   head();
 }
 module steel_only(){ frame_steel(); anti_tip(); risers(); }
@@ -416,7 +416,11 @@ module sheet4(){
     square([cw, ch]);
     for (sz = [1,-1])
       translate([cw/2 + sz*spk_zc, spk_yc - chest_y0]) circle(d = spk_cut_d, $fn = 96);
+    translate([cw/2 - lcd_cut_w/2, lcd_yc - chest_y0 - lcd_cut_h/2])
+      square([lcd_cut_w, lcd_cut_h]);
   }
+  translate([cw/2 - lcd_w/2, lcd_yc - chest_y0 - lcd_h/2])
+    o2(0.6) square([lcd_w, lcd_h]);
   dim_h(0, cw, -80, str("PANEL ", cw), s);
   dim_v(0, ch, cw + 80, str(ch), s);
   dim_h(cw/2 - spk_zc, cw/2 + spk_zc, ch + 90, str("CENTRES ", 2*spk_zc), s);
@@ -428,6 +432,8 @@ module sheet4(){
        [cw + 120, ch*0.78], str("2 x Ø", spk_cut_d, " CUTOUT"), s);
   note([cw/2 - spk_zc - spk_cut_d/2, spk_yc - chest_y0],
        [-200, ch*0.80], str("Ø", spk_rim_d, " rim lands on this face"), s, "right");
+  note([cw/2 + lcd_w/2, lcd_yc - chest_y0],
+       [cw + 120, ch*0.35], str(lcd_w, " x ", lcd_h, " LCD portrait"), s);
   translate([cw/2, -215])
     text(str(chest_t, " mm ply · set back ", chest_d, " from the body's front face"),
          size = txt*s*0.9, halign = "center");
@@ -514,7 +520,7 @@ else if (view == "s5") sheet5();
 else if (view == "robot")    robot_full();
 else if (view == "frame")  { frame_steel(); pod_bolts(); anti_tip(); risers(); }
 else if (view == "head")     head();
-else if (view == "chest")  { chest_panel(); speaker_boxes(); speakers(); }
+else if (view == "chest")  { chest_panel(); speaker_boxes(); speakers(); chest_lcd(); }
 else if (view == "shelf")  { color(c_ply) translate([-shelf_l/2, shelf_y, -shelf_w/2])
                                cube([shelf_l, shelf_t, shelf_w]);
                              color(c_ply) translate([-upper_l/2, upper_y, -upper_w/2])

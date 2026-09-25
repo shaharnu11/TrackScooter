@@ -10,13 +10,18 @@
 # want the NVIDIA build rather than the one from PyPI.
 
 pyserial>=3.5
+opencv-python>=4.8
 
 # --- sensors, once the hardware exists ---
-# depthai>=2.24          # OAK-D Lite camera
+# depthai>=2.24          # optional, only if you later get an OAK-D
 # rplidar-roboticia>=0.9 # RPLIDAR A1
 # adafruit-circuitpython-bno08x  # IMU, heading and pitch
 # pyserial-asyncio       # only if the GPS parser needs it
 
-# --- voice, phase 4 ---
-# piper-tts              # text to speech, runs offline
-# faster-whisper         # speech to text, runs offline
+# --- voice, try-out (offline Hebrew) ---
+# pip install -r requirements-voice.txt
+# python3 download_hebrew_voice.py
+# python3 try_hebrew_voice.py
+# python3 talk_hebrew.py
+# piper-tts              # English Piper. Hebrew uses phonikud-tts instead.
+# faster-whisper         # speech to text. Hebrew model is ivrit-ai turbo.

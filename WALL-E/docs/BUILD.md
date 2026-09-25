@@ -1,401 +1,188 @@
 # Building WALL-E
 
-This is the order to build the robot in, with the check to do at the end of each
-step. Every number here comes out of `cad/walle.scad`. None of it is typed in by
-hand, so if you change the model, run `cad/render_all.sh` and the drawings in this
-guide change with it.
+Order of work. Numbers from `cad/walle.scad`. Front = **+x**.
 
-Front of the robot is **+x**. When a drawing says "front to the right", that is
-what it means.
-
-## The files
-
-| File | What it is |
+| File | |
 |---|---|
-| `cad/walle.scad` | The global file. One entry point, every view and every sheet. |
-| `cad/pod_interface.scad` | The 23 facts about the **built** pods. The only place they live. |
-| `cad/check_pod_interface.scad` | Proves that file still matches the real pod model. |
-| `cad/walle_frame.scad` | Everything WALL-E decides, plus every guard. |
-| `cad/render_all.sh` | Redraws every sheet and every view, then rebuilds this guide. |
-
-To redraw everything:
+| `cad/walle.scad` | Entry |
+| `cad/pod_interface.scad` | 23 facts about the **built** pods |
+| `cad/check_pod_interface.scad` | Must match the pod model |
+| `cad/walle_frame.scad` | Everything else + guards |
+| `cad/render_all.sh` | Check, redraw, rebuild guide |
 
 ```sh
-cd WALL-E
-cad/render_all.sh
+cd WALL-E && cad/render_all.sh
 ```
 
-It checks the pod numbers and every guard first, and stops if the pod numbers
-do not match. That is on purpose: if the pod interface is wrong, every dimension
-on every sheet below it is wrong too.
+Stops on pod mismatch. On purpose.
 
-## The sheets
-
-Five dimensioned sheets. They are **inside this guide**, each one at the step that
-uses it. They are vector drawings, so print them at any size and they stay sharp.
-
-| Sheet | Title | Use it for |
-|---|---|---|
-| Sheet 1 | General arrangement | Overall sizes, and every important height |
-| Sheet 2 | Frame weldment | **Give this to the welder** — step 3 |
-| Sheet 3 | Battery box, 6 panels | **Give this to whoever cuts the plywood** — step 5 |
-| Sheet 4 | Chest panel / speaker baffle | Cutting the two speaker holes — step 6 |
-| Sheet 5 | Electronics shelf | Placing the boxes and running the cable — step 8 |
+| Sheet | Use |
+|---|---|
+| 1 General | Heights |
+| 2 Frame weldment | Give to the welder — step 3 |
+| 3 Battery box | Plywood cut — step 5 |
+| 4 Chest / speakers | Step 6 |
+| 5 Shelf | Step 8 |
 
 ![Sheet 1 — general arrangement. Overall sizes and every important height.](fig/s1.svg)
 
-## The headline numbers
-
 | | |
 |---|---|
-| Overall | 910 mm tall, 677 mm wide, 430 mm body length |
-| Weight | about 91 kg, and **that is a guess** — see step 0 |
-| Lowest point | the plywood box floor, 150 mm above the ground |
-| Tips forward at | 19.0°, and the castor catches it at 12.3° — 6.8° in hand |
-| Speakers | two 6.5 inch, 7.5 litres of sealed air behind each |
+| Overall | 910 H, 677 W, 430 body L |
+| Mass | ~91 kg, **guess** — step 0 |
+| Lowest | box floor 150 mm |
+| Tips | 19.0°. Castor 12.3°. **6.8°** in hand |
+| Speakers | 2 × 6.5 inch, 7.5 L each |
 
 ---
 
-# Step 0. Before you cut anything
+# Step 0. Before cutting
 
-The part weights are still assumptions, and the pod joint is worth a tape
-measure. Both are cheap to check now and expensive to discover later.
+### 0a. Joint (rev013, measured)
 
-### 0a. Which face does the rail bolt to? (answered — but look anyway)
+- Green plate inboard. Carrier 6 mm proud.
+- Rail lands on the **carrier**. Packer 6 mm fills the step. Skip it and the bolt has no clamp.
+- Scooter fork legs come **off**.
+- Full stack: [FRAME_AND_PODS.md](FRAME_AND_PODS.md).
 
-This used to be an open question. Rev 013 measured the built pods on
-2026-09-18 and closed it:
-
-- The green plates **are** fitted, but they sit **inboard** of the carriers, at
-  76.5 to 82.5 mm from the pod centre.
-- The carrier is next, 82.5 to 88.5, so it stands **6 mm proud** of the plate.
-- The rail therefore **lands on the carrier**, at 88.5. The robot is 677 mm
-  wide overall.
-- The two M12 holes are in the **green plate**, 6 mm behind that face. Each
-  side gets a **6 mm packer** (a 60×6 offcut, 2 holes Ø13) filling the gap.
-
-Without the packer the bolts pull the rail wall into the air gap and the joint
-has no clamp at all. Do not skip it.
-
-Go and look at the physical pods anyway, and check the table in step 0a2. The
-scooter's fork legs, if they are still bolted on at 88.5 to 92.5, come **off**
-for WALL-E — they belong to the scooter.
-
-Full stack, part by part: [FRAME_AND_PODS.md](FRAME_AND_PODS.md).
-
-### 0a2. Measure the gap between the fork legs before you cut anything
-
-**Do this one with a tape measure, not by trusting this document.**
-
-On 2026-09-17 the checker found that the WALL-E frame had been built on
-`fork_gap = 168` when the real Rev 012 value is **140**. The 168 came from a
-proposal to widen the carrier spacing that was then reverted, so it had never
-been true. The frame was **14 mm per side too wide**, and the drawings said
-700 mm overall when the answer is 672.
-
-It is fixed now. But it is exactly the kind of error that survives right up to
-the moment the steel is already cut, so verify it yourself:
+### 0a2. Tape measure (do not trust this file)
 
 | Measure | Should be |
 |---|---|
-| Clear gap between the two carrier plates | 165 mm |
-| Over the carriers, outer face to outer face | 177 mm |
-| Over the two green plates | 165 mm |
-| Carrier plate thickness | 6 mm |
-| Green plate thickness | 6 mm |
-| Green plate band, bottom and top above ground | 197 and 257 mm |
-| M12 hole centres, forward of the hub axle | 108 and 168 mm |
+| Clear between carriers | 165 mm |
+| Over carriers | **177 mm** |
+| Over green plates | 165 mm |
+| Plate thickness | 6 mm each |
+| Band above ground | 197–257 mm |
+| M12 centres, forward of hub | 108 and 168 mm |
 
-If any of these differ, change them in `cad/pod_interface.scad`, then run:
+If any differ: edit `cad/pod_interface.scad`, then `cad/pod_latest.sh`, checker, `cad/render_all.sh`. Never patch `walle_frame.scad` around a pod number.
 
-```
-cd WALL-E
-cad/pod_latest.sh
-openscad -o chk.echo --export-format echo cad/check_pod_interface.scad
-cad/render_all.sh
-```
+### 0b. Weigh
 
-The checker tells you whether the numbers still match the pod model, and the
-render script re-cuts every drawing. Never edit a dimension in `walle_frame.scad`
-to work around a pod measurement.
+Guesses in `cad/walle_frame.scad` (`STILL GUESSES`). Weigh a pod and a pack. If forward tip < ~15°, move mass back before the body.
 
-### 0b. Weigh things
-
-The tipping angles are the only thing keeping the robot off its face, and they
-are computed from these guesses:
-
-```
-pod 15 kg each · battery 8 kg each · electronics 6 kg · body 25 kg · head 5 kg
-```
-
-Put a pod on a bathroom scale. Weigh a battery pack. Then open
-`cad/walle_frame.scad`, find the block marked `STILL GUESSES`, replace the
-numbers, and re-run. If the forward tipping angle drops below about 15°, stop
-and move weight backwards before you build the body.
-
-**Check:** `cad/render_all.sh` prints `every guard passes` and
-`ALL 23 NUMBERS AGREE`.
+**Check:** `every guard passes` and `ALL 23 NUMBERS AGREE`.
 
 ---
 
-# Step 1. Cut the steel
+# Step 1. Cut steel
 
-From sheet 2. All of it is 60x30x3 box tube except the castor legs.
+Sheet 2. 60×30×3 except castor legs.
 
 | Part | Count | Length |
 |---|---|---|
 | Rail | 2 | 550 mm |
 | Cross member | 2 | 263 mm |
-| Castor leg, 30x30 box | 2 | 87 mm |
-| Castor fore/aft tie | 2 | — |
+| Castor leg, 30×30 | 2 | 87 mm |
+| Castor tie | 2 | — |
 
-That is 1626 mm of 60x30 box in total.
-
-**Check:** both rails are the same length to within 1 mm. If they are not, the
-bay will not be square and the pods will toe in or out.
+1626 mm of 60×30. Rails same length ±1 mm.
 
 ---
 
-# Step 2. Drill the rails
+# Step 2. Drill rails
 
-This is the step to get right, because the holes in the pods already exist and
-cannot move.
+Each rail: **2 × Ø25** through both walls.
 
-Each rail gets **2 holes Ø25, straight through both walls**:
+- **107 mm and 167 mm from the REAR (−x) end**
+- **30 mm up from the bottom**
 
-- at **107 mm and 167 mm from the rail's REAR end**
-- **30 mm up from the rail's bottom edge**
-
-Then **weld a Ø25 / Ø13 x 30 mm sleeve into each hole.** The sleeve is what
-carries the load across both walls of the box section. Without it you are
-crushing a 3 mm wall with an M12 bolt.
-
-> The rear end is the **−x** end. This file used to say "front end" and the
-> distances were being measured from the rear, which would have put both holes
-> 336 mm out of place. Measure from the rear.
-
-**Check:** hold a rail against a pod, flat on the **carrier** face, with the
-6 mm packer between the rail and the green plate. The two sleeves should line up
-with the two drilled holes in the plate with no forcing. Do this before you weld
-anything else.
+Weld Ø25/Ø13 × 30 sleeve in each. Hold rail on the **carrier** with the packer; sleeves must line up with the plate holes.
 
 ---
 
-# Step 3. Weld the frame
+# Step 3. Weld
 
 ![Sheet 2 — frame weldment. This is the drawing the welder works from.](fig/s2.svg)
 
 ![The bare frame, three quarter view.](fig/walle_frame_3q.png)
 
-From sheet 2, plan view. Distances are from the rail's rear end.
+- Rail outer faces 323 mm apart. **263 mm clear.**
+- Rear cross 25 mm. Front 525 mm. From rail rear. Crosses between the rails: 263 mm.
+- Rails 197–257 mm above ground.
+- Anti-tip: 87 mm uprights, Ø75, 280 mm out, **35 mm** off the ground.
 
-- Rail outer faces **323 mm apart**, so **263 mm clear** between them.
-- Rear cross member at **25 mm**.
-- Front cross member at **525 mm**.
-- Both cross members sit **between** the rails, so cut them to the bay: **263 mm**.
-
-The rails end up sitting **197 to 257 mm above the ground**, which is flush with
-the green plates.
-
-Then the anti-tip legs: two 87 mm uprights with Ø75 castors, 280 mm out from the
-centre, set so the castor wheel is **35 mm clear of the ground**.
-
-**Check:** measure both diagonals across the bay. They must match. Then check
-the clear bay is 263 mm at both ends, not just in the middle.
+**Check:** diagonals match. Clear 263 mm at both ends.
 
 ---
 
-# Step 4. Bolt the frame to the pods
+# Step 4. Bolt to pods
 
 ![The robot cut in half, so you can see how the rail meets the pod and where the battery box hangs.](fig/walle_frame_section.png)
 
-Four M12 10.9 bolts, two per side, through the rail into the nut on the green
-plate.
-
-Tighten to a normal M12 10.9 torque. Each bolt only sees about 1.2 kN of the
-50 kN of preload available, so the joint is nowhere near its limit — the margin
-is in the plates, not the bolts.
-
-**Check:** stand back and look at it from the front. Both pods should be
-vertical and the frame level. Then push the robot. **The whole pod comes off
-with two bolts per side** — that is the point of this joint, so make sure you
-can still reach all four heads.
+4 × M12 10.9. Two per side. Pods vertical, frame level. Two bolts per side still reach.
 
 ---
 
-# Step 5. The battery box
+# Step 5. Battery box
 
 ![Sheet 3 — the battery box: six plywood panels, drawn flat for cutting.](fig/s3.svg)
 
-From sheet 3. Six panels of 12 mm plywood, cut from one sheet.
-
 | Panel | Count | Size |
 |---|---|---|
-| Floor | 1 | 444 x 240 |
-| Side wall | 2 | 444 x 142 |
-| End wall | 2 | 240 x 142 |
-| Lid | 1 | 444 x 240 |
+| Floor, lid | 1 each | 444 × 240 |
+| Side | 2 | 444 × 142 |
+| End | 2 | 240 × 142 |
 
-The side walls are **handed**. Each one gets two **Ø30 holes at 54 mm and
-114 mm from the rear edge, 77 mm up**. Those are spanner access for the M12 pod
-bolts, not ventilation.
+Sides handed: Ø30 at 54 and 114 mm from rear, 77 mm up (spanner, not vents). Lid: 12 × M5 at 110 mm, Ø12 vent centre.
 
-The lid gets **12 x M5 round the edge at 110 mm pitch**, and **one Ø12 screw-in
-membrane vent in the centre**, sitting over the gap between the two packs.
+1. Floor + walls. 2. 3 mm gasket. 3. Packs in. 4. 8 mm pad. 5. Lid. 6. Ø30 plugs **after** pod bolts.
 
-Assembly order:
-
-1. Floor and four walls. The end walls are what actually close the box.
-2. **3 mm closed-cell foam tape on every face the lid touches.**
-3. Batteries in, standing upright: 80 mm wide, 110 mm tall.
-4. **8 mm foam pad on top of the packs**, so the lid holds them down.
-5. Lid on, 12 x M5.
-6. **4 x Ø30 silicone blanking plugs** into the spanner holes.
-
-The plugs go in **after** the pod bolts are torqued. If you seal them first you
-will be cutting them out again.
-
-### Charge in place every day. Lift a pack out when you need to
-
-Daily charge: run the leads out through a gland to an XT60 on the body, behind a
-dust cap. Do not open the box every morning in sand.
-
-Service: the body unbolts from the four risers. Then the lid unbolts (12 x M5).
-Each pack unplugs — XT90-S and its charge pigtail — and lifts out. The foam pad
-is a pad, not glue. The gland holds a jumper, not the pack. Put the gasket back
-when you close it.
-
-The 12 V pack and the PD pack come out through the body lid: speaker boxes off,
-laptop tray off, unplug, lift. The XPS comes out with the tray.
-
-**Check:** the box floor is **150 mm above the ground and is the lowest part of
-the whole robot.** Everything you drive over has to clear that, not the tracks.
+Daily charge: XT60 on the body. Lift-out: L17. Floor is **150 mm** and the lowest point.
 
 ---
 
-# Step 6. The body and the chest panel
+# Step 6. Body and chest
 
 ![Sheet 4 — chest panel and speaker baffle, with the two holes.](fig/s4.svg)
 
-The body floor sits at **335 mm**, which is 8 mm over the pod belt crown. The
-crown is higher than anything at frame level, so it is the crown that sets this
-height, not the frame.
+Floor 335 mm (8 mm over belt crown). Body 430 × 640 × 400 on 78 mm risers.
 
-Body is **430 long x 620 wide x 400 tall**, on 78 mm risers off the rail tops.
-
-The chest panel, from sheet 4:
-
-- 12 mm plywood, **510 x 290**
-- **set back 20 mm** from the body's front face
-- **two Ø165 holes**, centres **280 mm apart**, **194 mm up from the panel's
-  bottom edge**
-
-The Ø190 driver rim lands on the panel face around each hole, with 20 mm of
-margin left and right and 50 mm top and bottom.
-
-**Check:** dry-fit a driver in each hole before you glue the panel in. The rims
-must not touch each other — there should be 90 mm between them.
+Chest: 530 × 290, set back 20 mm. Two Ø165, 330 mm apart, 194 mm up from panel bottom. Dry-fit drivers. 140 mm between rims. Each rim has 5 mm of plywood outboard. 7 inch LCD portrait 107 × 183 between them. Window 90 × 160. Bezel on the face.
 
 ---
 
-# Step 7. The speaker enclosures
+# Step 7. Speaker boxes
 
-One sealed box per driver, **260 deep x 200 tall x 205 wide** in 12 mm ply. That
-gives **7.5 litres of air** behind each driver, which is at the bottom of the
-7 to 14 litre range a 6.5 inch driver wants. The two-floor electronics stack
-took the rest of the height.
-
-**Bolt them to the chest panel. Do not glue them in.** Each one sits over the
-electronics shelf with 20 mm of headroom and covers 54% of it. With both boxes
-in place only **46% of the shelf is reachable**, so if they are glued you cannot
-service the electronics without destroying something. You also cannot lift the
-laptop tray until both boxes are off.
-
-Seal every joint. A sealed box that leaks is an unsealed box, and it will chuff
-and rattle at volume.
-
-Fit the metal grilles.
-
-**Check:** press a cone in gently with your palm. It should feel springy and
-push back. If it moves freely, the box is leaking.
+260 × 200 × 205, 12 mm ply. **7.5 L.** Bolt on. Do not glue. Seal joints. Metal grilles. Cone should feel springy.
 
 ---
 
-# Step 8. The electronics shelf
+# Step 8. Shelf
 
 ![Sheet 5 — the electronics shelf: what goes where, and where the cable runs.](fig/s5.svg)
 
-From sheet 5. **Two floors.** The lower shelf is **356 x 546 at 347 mm**. Four
-rows sit on it: both motor controllers, the contactor, the fuse block, the
-Teensy, the 12 V battery lying flat, the 65 W PD pack, the amp supply and the
-amp. Lower-deck fill is 40%.
+Two floors. Lower 356 × 546 at 347 mm: controllers, contactor, fuses, Teensy, 12 V pack **flat**, PD 65 W+, amp. Upper 315 × 360 tray at 451 mm: XPS + USB hub. Hub from 12 V rail. Amp has its own 48→32 V.
 
-The upper floor is a **315 x 360 mm lift-out plywood tray at 451 mm**, with
-15 mm of air under it. The closed XPS 15 (230 × 340 mm on spacers) and the
-powered USB 3 hub sit on this tray. Power the hub from the 12 V rail, not from
-the XPS. The PD pack stays on the lower deck — 50 mm tall on the tray would
-steal air from the speakers.
+Straps, not glue. Cables long enough for the tray. After boxes on: can you still reach connectors? Can 12 V and PD come out?
 
-Fit the lower deck first, **on straps, not glue**. Then drop the tray in. Then
-bolt the speaker enclosures. Leave the cables long enough that the tray lifts
-out without unplugging the whole robot. The 12 V pack and the PD pack must
-unplug and lift out after the tray comes off (L17).
-
-See `docs/04-power-and-wiring.md` for the wiring. The one thing worth repeating
-here: the **amplifier gets its own 48 V to 32 V supply**, separate from the
-logic supply. Sharing it puts motor noise straight into the speakers.
-
-**Check:** with both enclosures bolted in, can you still reach every connector
-you might need on a bad day at the festival? If not, move it now. And can the
-12 V pack and the PD pack come out once the tray is off?
-
-See `docs/04-power-and-wiring.md` for the wiring. The one thing worth repeating
-here: the **amplifier gets its own 48 V to 32 V supply**, separate from the
-logic supply. Sharing it puts motor noise straight into the speakers.
-
-**Check:** with both enclosures bolted in, can you still reach every connector
-you might need on a bad day at the festival? If not, move it now.
+Wiring: `04-power-and-wiring.md`.
 
 ---
 
-# Step 9. The head
+# Step 9. Head
 
-**The neck is a rigid welded post. It is not a joint.** No bearing, no slip ring,
-nothing to rotate and nothing to seal. The head does not pan, nod, or tilt.
-To look left or right, the whole robot turns.
+Rigid post. No pan/nod/tilt. Look = body turn.
 
-Neck 70 mm tall off the body top at 735 mm. Head centre at 858 mm, 233 mm wide,
-two Ø105 barrels 128 mm apart. **Robot height 910 mm.**
+Neck 70 mm off body top at 735 mm. Head centre 858 mm, 233 mm wide. Barrels Ø105, 128 mm apart. Height **910 mm**. Screen 53 mm, recess 60 mm. Shade above 49°. Mouths: 7 mm clear. Toe in.
 
-Each eye is a 53 mm screen sunk **60 mm** into its barrel. That fills 50% of the
-barrel and shades the screen from any sun above **49° elevation**. Negev midday
-sun is 75 to 80°, so the screens are shaded when it matters.
-
-**Check:** the barrels toe inwards. Check the two mouths clear each other —
-there should be 7 mm between them. Rotate them through their full travel.
+Camera under the brow: ELP 42 × 42 × 36 mm.
 
 ---
 
-# Step 10. Before you drive it
+# Step 10. Before driving
 
-1. Put it on level ground. Both castors should be **35 mm clear**.
-2. Push down hard on the front. The castor must touch **before** the robot
-   starts to go over. It catches at 12.3° and the robot goes over at 19.0°, so
-   there is 6.9° in hand.
-3. Drive it slowly on sand. Ground pressure is 0.163 kg/cm², about a third of
-   what a walking person puts down, so it should float.
-4. Watch the **box floor at 150 mm**, not the tracks. That is what grounds out.
+1. Level ground. Castors **35 mm** clear.
+2. Push the front. Castor touches **before** it goes over (12.3° vs 19.0°).
+3. Slow on sand. Watch the **150 mm** box floor, not the tracks.
 
 ---
 
-# When you change something
+# After a change
 
 ```sh
-cd WALL-E
-cad/render_all.sh
+cd WALL-E && cad/render_all.sh
 ```
 
-Read the output. `every guard passes` and `ALL 23 NUMBERS AGREE` means the
-change is consistent. A `WARN` line names the clearance that has gone negative
-and by how much. A `MISMATCH` means `cad/pod_interface.scad` no longer agrees with
-the pod model, and nothing below it can be trusted until that is fixed.
+Need `every guard passes` and `ALL 23 NUMBERS AGREE`.
