@@ -19,6 +19,12 @@ brain/hebrew_try.wav
 brain/hebrew_talk.wav
 brain/english_talk.wav
 
+# WALL-E's songs: yours, not the repo's. Keep the README.
+brain/music/*
+!brain/music/README.md
+# Spotify login token and your song list: private.
+brain/spotify/
+
 # OpenSCAD exports. The PNG renders ARE committed; meshes are not.
 *.stl
 *.dxf

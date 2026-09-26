@@ -68,7 +68,7 @@ BRAINS = {
         "Qwen/Qwen3-VL-4B-Instruct-GGUF",
         "Qwen3VL-4B-Instruct-Q4_K_M.gguf",
         "cuda", "99",
-        "Qwen3-VL-4B Q4_K_M + vision, all on GPU, Whisper on GPU",
+        "Qwen3-VL-4B Q4_K_M on GPU, vision on CPU, Whisper on GPU",
         mmproj="mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf",
     ),
 }
@@ -87,9 +87,67 @@ def whisper_device(want: str) -> tuple[str, str]:
     return "cpu", "int8"
 
 
+def chirp() -> None:
+    """A short two-note robot chirp, the instant a question is heard.
+
+    Whisper and the brain still take ~1.5 s; the chirp says "got it" at once,
+    so the wait feels like thinking, not like not hearing. Does not block.
+    """
+    import numpy as np
+    import sounddevice as sd
+
+    sr = 24000
+
+    def sweep(f0: float, f1: float, dur: float):
+        t = np.linspace(0, dur, int(sr * dur), False)
+        phase = 2 * np.pi * np.cumsum(np.linspace(f0, f1, t.size)) / sr
+        return 0.15 * np.sin(np.pi * t / dur) * np.sin(phase)  # soft in and out
+
+    gap = np.zeros(int(sr * 0.03))
+    sd.play(np.concatenate([sweep(900, 1500, 0.07), gap, sweep(1200, 2100, 0.09)]).astype(np.float32), sr)
+
+
+def wake_sound() -> None:
+    """Three rising notes: "booting up". Does not block."""
+    import numpy as np
+    import sounddevice as sd
+
+    sr = 24000
+    notes = []
+    for f in (600, 900, 1350):
+        t = np.linspace(0, 0.09, int(sr * 0.09), False)
+        notes += [0.13 * np.sin(np.pi * t / 0.09) * np.sin(2 * np.pi * f * t), np.zeros(int(sr * 0.03))]
+    sd.play(np.concatenate(notes).astype(np.float32), sr)
+
+
+def _ears(conn, want: str) -> None:
+    """Whisper in its own process, so sleep can end it.
+
+    Deleting the model inside WALL-E's process left a 73 MiB CUDA context,
+    and the NVIDIA chip stayed powered (D0) for as long as WALL-E ran; it
+    only switched off (D3) once the process holding CUDA was gone.
+    """
+    from faster_whisper import WhisperModel
+
+    device, compute = whisper_device(want)
+    model = WhisperModel(str(STT_DIR), device=device, compute_type=compute)
+    conn.send((device, compute))
+    while (audio := conn.recv()) is not None:
+        # VAD drops silence, and segments Whisper rates as not-speech are
+        # thrown away ("Thank you." on noise), as on the Hebrew side.
+        segments, _info = model.transcribe(
+            audio,
+            language="en",
+            beam_size=1,  # one guess, not five: ~0.1-0.2 s faster on short questions
+            vad_filter=True,
+            vad_parameters={"min_silence_duration_ms": 500},
+            condition_on_previous_text=False,
+        )
+        conn.send(" ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.6).strip())
+
+
 class EnglishVoice:
     def __init__(self, whisper: str = "cuda") -> None:
-        from faster_whisper import WhisperModel
         from kokoro_onnx import Kokoro
 
         need(STT_DIR / "model.bin", "Whisper small.en")
@@ -97,9 +155,43 @@ class EnglishVoice:
             need(KOKORO_DIR / name, "Kokoro")
         print("Loading voice…")
         self.tts = Kokoro(str(KOKORO_DIR / KOKORO_FILES[0]), str(KOKORO_DIR / KOKORO_FILES[1]))
-        device, compute = whisper_device(whisper)
-        print(f"Whisper small.en on {device} ({compute})")
-        self.whisper = WhisperModel(str(STT_DIR), device=device, compute_type=compute)
+        self._want = whisper
+        self._proc = None
+        self._conn = None
+        self.wake_ears()
+        self.wait_ears()
+
+    def wake_ears(self) -> None:
+        """Start the Whisper process (returns at once; wait_ears() waits)."""
+        if self._proc is not None and self._proc.is_alive():
+            return
+        import multiprocessing as mp
+
+        ctx = mp.get_context("spawn")
+        self._conn, child = ctx.Pipe()
+        self._proc = ctx.Process(target=_ears, args=(child, self._want), daemon=True)
+        self._proc.start()
+        self._ready = False
+
+    def wait_ears(self) -> None:
+        if not self._ready:
+            device, compute = self._conn.recv()
+            self._ready = True
+            print(f"Whisper small.en on {device} ({compute})")
+
+    def sleep_ears(self) -> None:
+        """End the Whisper process: no CUDA left, the chip can power off."""
+        if self._proc is None:
+            return
+        try:
+            self._conn.send(None)
+        except OSError:
+            pass
+        self._proc.join(timeout=5)
+        if self._proc.is_alive():
+            self._proc.terminate()
+        self._proc = self._conn = None
+        self._ready = False
 
     def speak(self, text: str) -> None:
         import soundfile as sf
@@ -113,21 +205,56 @@ class EnglishVoice:
         sf.write(str(TALK_WAV), samples, sample_rate)
         play(TALK_WAV)
 
+    def speak_stream(self, sentences, t_stop: float | None = None) -> None:
+        """Speak sentences as they arrive from the brain.
+
+        speak() rendered the whole reply first: 1.5-2.3 s of silence for a
+        two-sentence answer. Here a thread renders sentence n+1 while
+        sentence n plays, so the wait is the first sentence only.
+        t_stop: when the person stopped talking, for the response-time log.
+        """
+        import queue
+        import threading
+
+        import sounddevice as sd
+
+        ready: queue.Queue = queue.Queue()
+        failed: list[BaseException] = []
+
+        def render() -> None:
+            try:
+                for text in sentences:
+                    t0 = time.monotonic()
+                    samples, sr = self.tts.create(text, voice=KOKORO_VOICE, lang="en-us")
+                    print(f"(voice {time.monotonic() - t0:.1f} s for {len(samples) / sr:.1f} s)")
+                    ready.put((text, samples, sr))
+            except BaseException as exc:  # noqa: BLE001 — re-raised below
+                failed.append(exc)
+            finally:
+                ready.put(None)
+
+        threading.Thread(target=render, daemon=True).start()
+        first = True
+        while (item := ready.get()) is not None:
+            text, samples, sr = item
+            if first and t_stop is not None:
+                print(f"(answer started {time.monotonic() - t_stop:.1f} s after you stopped)")
+            first = False
+            print(f"WALL-E: {text}")
+            sd.play(samples, sr)
+            sd.wait()
+        if failed:
+            raise failed[0]
+
     def transcribe_samples(self, samples, sample_rate: int) -> str:
         import numpy as np
 
         audio = np.asarray(samples, dtype=np.float32).reshape(-1)
         if sample_rate != 16000:
             sys.exit("Whisper wants 16 kHz audio.")
-        # Same guards as the Hebrew side: VAD drops silence, and segments
-        # Whisper rates as not-speech are thrown away ("Thank you." on noise).
-        segments, _info = self.whisper.transcribe(
-            audio,
-            language="en",
-            vad_filter=True,
-            vad_parameters={"min_silence_duration_ms": 500},
-            condition_on_previous_text=False,
-        )
-        text = " ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.6).strip()
+        self.wake_ears()
+        self.wait_ears()
+        self._conn.send(audio)
+        text = self._conn.recv()
         print(f"STT  out: {text}")
         return text

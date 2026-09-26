@@ -1,4 +1,4 @@
-# Voice try-out only. The robot control loop still needs only pyserial.
+﻿# Voice try-out only. The robot control loop still needs only pyserial.
 # Install into the brain venv:
 #   python3 -m venv .venv && . .venv/bin/activate
 #   pip install -r requirements-voice.txt
@@ -12,6 +12,8 @@ renikud-plus>=0.5
 soundfile>=0.12
 # English mode (talk_english.py): Kokoro TTS, CPU.
 kokoro-onnx>=0.6
+# Spotify ducking: lower Spotify in the Windows mixer while WALL-E talks.
+pycaw>=20240316; sys_platform == "win32"
 numpy>=1.26
 sounddevice>=0.5
 opencv-python>=4.8

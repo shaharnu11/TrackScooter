@@ -269,6 +269,13 @@ class UsbCamera:
         roi = gray[y1:y2, x1:x2]
         if roi.size < 20:
             return False
+        # Known and left as is (2026-09-26): the face box moves a pixel or two
+        # every frame, so the crop rarely matches the last one's shape and
+        # this mostly returns False with mouth_ema 0.0. Resizing the crop to
+        # a fixed size made it measure, but silent vs talking came out the
+        # same (median 3.84 vs 3.83, two runs): camera noise and head motion
+        # swamp the lips, and every face then read as "speaking". Lip
+        # landmarks would be needed to do this properly.
         prev = self._prev_mouth.get(obs.track_id)
         self._prev_mouth[obs.track_id] = roi.copy()
         if prev is None or prev.shape != roi.shape:

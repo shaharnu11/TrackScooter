@@ -300,6 +300,11 @@ class TalkCam:
         with self._mu:
             return self.mouth and self.speaker_id is not None
 
+    def mouth_level(self) -> float | None:
+        """Mouth-area motion of the locked face (usb_camera mouth_ema), or None."""
+        with self._mu:
+            return getattr(self, "mouth_ema", 0.0) if self.speaker_id is not None else None
+
     def snapshot(self):
         """The latest raw camera frame (no boxes drawn), or None."""
         with self._mu:
@@ -403,14 +408,17 @@ class TalkCam:
             # (open but still mouth never trips SPEAKER, so he never answers).
             sid = None
             mouth = False
+            mouth_ema = 0.0
             if obs:
                 sid = obs[0].track_id
                 mouth = bool(obs[0].speaking)
+                mouth_ema = float(obs[0].mouth_ema)
             with self._mu:
                 self.frame = frame
                 self.obs = obs
                 self.speaker_id = sid
                 self.mouth = mouth
+                self.mouth_ema = mouth_ema
 
 
 def wait_for_mouth(cam: TalkCam | None) -> bool:

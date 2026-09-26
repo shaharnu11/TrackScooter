@@ -20,10 +20,13 @@ import json
 import re
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
+from collections.abc import Iterator
+from contextlib import closing
 
-from english_voice import BRAINS, GGUF_DIR, Brain, EnglishVoice
+from english_voice import BRAINS, GGUF_DIR, Brain, EnglishVoice, chirp, wake_sound
 from talk_hebrew import (
     LLAMA_PORT,
     TalkCam,
@@ -33,7 +36,8 @@ from talk_hebrew import (
     record_utterance,
     start_llama,
 )
-from vad_listen import BLOCK, StreamVAD, listen_vad
+from music import MusicPlayer
+from vad_listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
 
 FALLBACK = "Sorry, I missed that. Say it again?"
 MIN_CLIP_SPEECH = 0.5
@@ -47,6 +51,13 @@ _PERSONA = (
     # "what's up?" with "you're making noise, can you repeat that?".
     "Answer what people say. Only if a sentence is clearly cut off or makes "
     "no sense, ask them to say it again. "
+    # He claimed "I can play music. Here's a jazzy number!" and played
+    # nothing. Music commands are handled in code (music.py) before he sees
+    # them; he only needs to know not to pretend.
+    "You can play songs from your music folder, but that happens by itself "
+    "when someone asks: never say you are playing, stopping or choosing a "
+    "song. You cannot search the internet, set timers or control anything "
+    "else; if asked, say so kindly. "
 )
 
 SYSTEM = _PERSONA + (
@@ -77,6 +88,10 @@ LOOK = re.compile(
     r"this place|surround\w*)\b",
     re.IGNORECASE,
 )
+
+# A sentence is done at . ! ? once the next word starts. Not at "…", so
+# "One… two… three." stays one sentence.
+SENTENCE_END = re.compile(r"[.!?](?=\s)")
 
 EMOJI = re.compile(r"[\U0001f000-\U0001faff\U00002600-\U000027bf\U0000fe0f]")
 # Qwen slips into Chinese now and then ("Five十六"). Kokoro cannot say it.
@@ -120,8 +135,25 @@ class EnglishChat:
         if self.vision:
             # 384 image tokens: saw "a white earbud in their right ear" where
             # 256 saw "earbuds"; no more memory once the KV cache is 8-bit.
-            extra += ["--mmproj", str(GGUF_DIR / brain.mmproj), "--image-max-tokens", "384"]
+            # The eye model stays in RAM and runs on the CPU: 780 MiB less on
+            # the card (3.85 -> ~3.06 GB with Whisper), and looks are rare.
+            # Measured: first look 6.3 s vs 4.4 s on the GPU, then 2.4 s both.
+            extra += [
+                "--mmproj", str(GGUF_DIR / brain.mmproj),
+                "--image-max-tokens", "384",
+                "--no-mmproj-offload",
+            ]
+        self._model, self._extra = model, extra
         self._server: subprocess.Popen | None = start_llama(model, extra)
+
+    def sleep(self) -> None:
+        """Take the brain off the GPU. The conversation starts fresh after."""
+        self.close()
+        self.history.clear()
+
+    def wake(self) -> None:
+        if self._server is None or self._server.poll() is not None:
+            self._server = start_llama(self._model, self._extra)
 
     def close(self) -> None:
         if self._server is not None and self._server.poll() is None:
@@ -155,7 +187,49 @@ class EnglishChat:
         print(f"(chat {time.monotonic() - t0:.1f} s, {used} tokens, {tps:.0f} tok/s)")
         return data["choices"][0]["message"].get("content") or ""
 
-    def reply(self, user_text: str, jpeg: bytes | None = None) -> str:
+    def _stream(self, messages: list[dict], temperature: float) -> Iterator[str]:
+        """The reply sentence by sentence, as llama-server writes it."""
+        body = json.dumps(
+            {
+                "messages": messages,
+                "max_tokens": 100,
+                "temperature": temperature,
+                "repeat_penalty": 1.1,
+                "chat_template_kwargs": {"enable_thinking": False},
+                "stream": True,
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{LLAMA_PORT}/v1/chat/completions",
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
+        t0 = time.monotonic()
+        first = True
+        buf = ""
+        with urllib.request.urlopen(req, timeout=120) as r:
+            for raw in r:
+                line = raw.decode("utf-8").strip()
+                if not line.startswith("data:"):
+                    continue
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                choices = json.loads(data).get("choices") or []
+                if choices:
+                    buf += choices[0].get("delta", {}).get("content") or ""
+                while (m := SENTENCE_END.search(buf)) is not None:
+                    sentence, buf = buf[: m.end()].strip(), buf[m.end():]
+                    if first:
+                        print(f"(chat first sentence {time.monotonic() - t0:.1f} s)")
+                        first = False
+                    yield sentence
+        if buf.strip():
+            if first:
+                print(f"(chat {time.monotonic() - t0:.1f} s)")
+            yield buf.strip()
+
+    def _messages(self, user_text: str, jpeg: bytes | None) -> list[dict]:
         self.history.append({"role": "user", "content": user_text})
         messages: list[dict] = [{"role": "system", "content": self.system}, *self.history[-8:]]
         if jpeg is not None:
@@ -168,6 +242,41 @@ class EnglishChat:
                     {"type": "text", "text": user_text},
                 ],
             }
+        return messages
+
+    def reply_stream(self, user_text: str, jpeg: bytes | None = None) -> Iterator[str]:
+        """The answer one clean sentence at a time, two at most.
+
+        WALL-E starts speaking the first while the brain writes the second.
+        No stale-answer retry here (that needs the whole answer first); the
+        repeat penalty covers Qwen, which repeated far less than DictaLM.
+        """
+        messages = self._messages(user_text, jpeg)
+        said: list[str] = []
+        with closing(self._stream(messages, 0.7)) as parts:
+            for part in parts:
+                part = EMOJI.sub("", part.replace("*", "").replace("#", "")).strip()
+                if not part:
+                    continue
+                if CJK.search(part):
+                    if not said:
+                        # Nothing spoken yet: one cooler, whole-answer retry.
+                        retry = EMOJI.sub("", clean_reply(self._raw_reply(messages, 0.3))).strip()
+                        if retry and not CJK.search(retry):
+                            said.append(retry)
+                            yield retry
+                    break
+                said.append(part)
+                yield part
+                if len(said) == 2:
+                    break
+        if not said:
+            said.append(FALLBACK)
+            yield FALLBACK
+        self.history.append({"role": "assistant", "content": " ".join(said)})
+
+    def reply(self, user_text: str, jpeg: bytes | None = None) -> str:
+        messages = self._messages(user_text, jpeg)
         text = EMOJI.sub("", clean_reply(self._raw_reply(messages, 0.7))).strip()
         recent = [m["content"] for m in self.history[-7:] if m["role"] == "assistant"]
         if _stale(text, recent):
@@ -180,6 +289,71 @@ class EnglishChat:
         text = text or FALLBACK
         self.history.append({"role": "assistant", "content": text})
         return text
+
+
+class Sleeper:
+    """Take the GPU models off the card when nobody is around.
+
+    On battery the laptop drew 38.8 W with WALL-E idle, 10.4 W of it the GPU
+    just holding the brain and Whisper. With nothing loaded Windows can
+    switch the NVIDIA chip off. Camera, face lock and music keep running on
+    the CPU; a locked face starts the reload (~6-7 s), usually while the
+    person is still walking up.
+    """
+
+    def __init__(self, voice: EnglishVoice, chat: EnglishChat, idle_s: float) -> None:
+        self.voice, self.chat, self.idle_s = voice, chat, idle_s
+        self.awake = True
+        self.last = time.monotonic()  # last talk or face
+        self._busy: threading.Thread | None = None
+
+    def touch(self) -> None:
+        self.last = time.monotonic()
+
+    def tick(self, face: bool) -> None:
+        if self.idle_s <= 0:
+            return
+        if face:
+            self.last = time.monotonic()
+        if self._busy is not None and self._busy.is_alive():
+            return
+        if self.awake and time.monotonic() - self.last > self.idle_s:
+            self._run(self._sleep)
+        elif not self.awake and face:
+            self._run(self._wake)
+
+    def kick(self) -> None:
+        """Someone started talking: start waking now, if asleep."""
+        if not self.awake and (self._busy is None or not self._busy.is_alive()):
+            self._run(self._wake)
+
+    def ready(self) -> None:
+        """Block until the models are loaded (before Whisper or the brain)."""
+        if self._busy is not None:
+            self._busy.join()
+        if not self.awake:
+            self._wake()
+
+    def _run(self, job) -> None:
+        self._busy = threading.Thread(target=job, daemon=True)
+        self._busy.start()
+
+    def _sleep(self) -> None:
+        print(f"(nobody for {self.idle_s:.0f} s: sleeping, models off the GPU)")
+        self.chat.sleep()
+        self.voice.sleep_ears()
+        self.awake = False
+
+    def _wake(self) -> None:
+        t0 = time.monotonic()
+        print("(face! waking up…)")
+        wake_sound()
+        self.voice.wake_ears()  # Whisper's process loads while the brain does
+        self.chat.wake()
+        self.voice.wait_ears()
+        self.awake = True
+        self.touch()
+        print(f"(awake in {time.monotonic() - t0:.1f} s)")
 
 
 def look(cam: TalkCam | None) -> bytes | None:
@@ -207,9 +381,13 @@ def loop(
     typed: bool,
     auto: bool,
     cam: TalkCam | None,
+    music: MusicPlayer,
+    sleeper: Sleeper,
     trigger: str = "speech",
+    use_gate: bool = True,
 ) -> None:
     voice.speak("Hi. I'm WALL-E. Talk to me.")
+    print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
     print()
     if cam is not None:
         print("Green SPEAKER = he will listen. Ctrl+C or q to quit.")
@@ -218,7 +396,8 @@ def loop(
     else:
         print("Enter to talk. Ctrl+C to quit.")
     vad = None if typed else StreamVAD()
-    print(f"Listening trigger: {trigger}")
+    gate = Gate()
+    print(f"Listening trigger: {trigger}" + ("" if use_gate else " (no mouth/loudness check)"))
     while True:
         if cam is None and not auto and not typed:
             try:
@@ -227,10 +406,19 @@ def loop(
                 return
         if typed:
             user = input("You:    ").strip()
+            t_stop = time.monotonic()
+            sleeper.ready()
         else:
             if trigger == "speech":
                 # Speech-triggered, not loudness-triggered: music and fans pass.
-                rec = listen_vad(cam, vad)
+                # The music ducks the moment a voice starts, not after; a
+                # sleeping WALL-E starts loading the same moment.
+                rec = listen_vad(
+                    cam,
+                    vad,
+                    on_start=lambda: (music.duck(True), sleeper.kick()),
+                    on_tick=sleeper.tick,
+                )
             elif cam is not None:
                 rec = listen(cam)  # the old loudness / mouth-motion trigger
             else:
@@ -238,9 +426,11 @@ def loop(
             if rec is False:
                 return
             if rec is None:
+                music.duck(False)
                 print("(too little speech, ignored)")
                 continue
-            samples, sr = rec
+            heard = rec if isinstance(rec, Heard) else None
+            samples, sr = (heard.samples, heard.sr) if heard else rec
             # Silero's verdict on the whole clip. At home real speech scored
             # 0.96-0.99 and the one empty clip 0.24: below 0.5, skip Whisper
             # (it invents "Thanks for watching!" on noise).
@@ -249,20 +439,56 @@ def loop(
             peak = max((vad(b) for b in clip), default=0.0)
             print(f"(clip {len(samples) / sr:.1f} s, speech score peak {peak:.2f})")
             if peak < MIN_CLIP_SPEECH:
+                music.duck(False)
                 print("(no speech in clip, ignored)")
                 continue
+            if heard is not None:
+                # A voice while your face is locked is not always yours: a
+                # video nearby got answered. Mouth and loudness say whose.
+                print(f"(who: {gate.describe(heard)})")
+                why = gate.reasons(heard) if use_gate else []
+                if why:
+                    music.duck(False)
+                    print(f"(someone else talking? {'; '.join(why)}. Ignored)")
+                    continue
+            # The recording ended one end-of-speech pause after the voice did.
+            t_stop = time.monotonic() - (END_S if trigger == "speech" else 0.8)
+            chirp()
+            sleeper.ready()  # asleep: this is where the ~6 s reload is waited out
             t0 = time.monotonic()
             user = voice.transcribe_samples(samples, sr)
             print(f"(stt {time.monotonic() - t0:.1f} s)")
         if not user:
+            music.duck(False)
             print("Heard nothing. Try again.")
             continue
+        if not typed and heard is not None:
+            gate.accept(heard)  # learn how loud the person in front sounds
         if re.search(r"\b(bye|goodbye|see you)\b", user.lower()):
             voice.speak("Bye! That was nice.")
             return
-        jpeg = look(cam) if chat.vision and LOOK.search(user) else None
-        answer = chat.reply(user, jpeg)
-        voice.speak(answer)
+        music.duck(True)
+        print()
+        cmd = music.command(user)
+        if cmd is not None:
+            # Handled in code, not by the brain; the brain still gets the
+            # exchange in its history so "did you like that song?" makes sense.
+            print("(music command)")
+            if cmd.first is not None:
+                cmd.line = cmd.first()  # Spotify: start it, check it plays, then name it
+                music.duck(True)  # the new song starts at full volume
+            voice.speak_stream(iter([cmd.line]), t_stop)
+            if cmd.after is not None:
+                cmd.after()
+            chat.history += [
+                {"role": "user", "content": user},
+                {"role": "assistant", "content": cmd.line},
+            ]
+        else:
+            jpeg = look(cam) if chat.vision and LOOK.search(user) else None
+            voice.speak_stream(chat.reply_stream(user, jpeg), t_stop)
+        music.duck(False)
+        sleeper.touch()
         if cam is None and not auto:
             print("Enter to talk again.")
         else:
@@ -291,6 +517,17 @@ def main() -> None:
         default="speech",
         help="Start recording on detected speech (default) or on loudness",
     )
+    parser.add_argument(
+        "--sleep-after",
+        type=float,
+        default=180,
+        help="Seconds with no talk and no face before the models leave the GPU (0 = never)",
+    )
+    parser.add_argument(
+        "--no-gate",
+        action="store_true",
+        help="Answer every voice, even with a still mouth or from far away",
+    )
     args = parser.parse_args()
     if args.type and args.auto:
         parser.error("use --type or --auto, not both")
@@ -308,12 +545,19 @@ def main() -> None:
             if not args.auto:
                 print("Press Enter to talk, or rerun with --auto.")
     auto = args.auto or cam is not None
+    music = MusicPlayer()
+    sleeper = Sleeper(voice, chat, args.sleep_after)
     try:
-        loop(voice, chat, typed=args.type, auto=auto, cam=cam, trigger=args.trigger)
+        loop(
+            voice, chat, typed=args.type, auto=auto, cam=cam,
+            music=music, sleeper=sleeper, trigger=args.trigger, use_gate=not args.no_gate,
+        )
     except KeyboardInterrupt:
         print("\nBye.")
     finally:
+        music.close()
         chat.close()
+        voice.sleep_ears()
         if cam is not None:
             cam.stop()
 
