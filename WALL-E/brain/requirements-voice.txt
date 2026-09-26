@@ -10,9 +10,15 @@ blue-onnx>=2.5
 #   pip install --ignore-requires-python "blue-onnx @ git+https://github.com/maxmelichov/BlueTTS.git"
 renikud-plus>=0.5
 soundfile>=0.12
+# English mode (talk_english.py): Kokoro TTS, CPU.
+kokoro-onnx>=0.6
 numpy>=1.26
 sounddevice>=0.5
 opencv-python>=4.8
-# Apple Silicon only. The XPS later uses CUDA, not mlx.
-mlx>=0.32
-mlx-lm>=0.31
+# Apple Silicon only: chat on MLX.
+mlx>=0.32; sys_platform == "darwin"
+mlx-lm>=0.31; sys_platform == "darwin"
+# XPS / NVIDIA: cuBLAS + cuDNN 9 for Whisper on CUDA (CTranslate2).
+# The chat runs in llama.cpp's own CUDA build, fetched by download_hebrew_voice.py.
+nvidia-cublas-cu12; sys_platform != "darwin"
+nvidia-cudnn-cu12>=9,<10; sys_platform != "darwin"

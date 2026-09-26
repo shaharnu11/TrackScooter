@@ -103,7 +103,12 @@ class UsbCamera:
 
         if self._cap is None:
             return [], None
-        ok, frame = self._cap.read()
+        try:
+            ok, frame = self._cap.read()
+        except cv2.error as exc:
+            # One bad frame must not kill the camera thread.
+            log.warning("camera read failed: %s", exc)
+            return [], None
         if not ok or frame is None:
             return [], None
         boxes = self._detect(cv2, frame)
@@ -150,6 +155,10 @@ class UsbCamera:
         backends = []
         if sys.platform == "darwin":
             backends.append(cv2.CAP_AVFOUNDATION)
+        elif sys.platform == "win32":
+            # The default Media Foundation backend breaks after the MJPG
+            # switch below (_step >= minstep). DirectShow takes it.
+            backends.append(cv2.CAP_DSHOW)
         backends.append(cv2.CAP_ANY)
         for index in indices:
             for backend in backends:

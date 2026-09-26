@@ -9,23 +9,44 @@ A face with no sound is ignored. q quits the window.
 
     python3 talk_hebrew.py --auto --no-camera
     python3 talk_hebrew.py --type
+    python3 talk_hebrew.py --auto --thinking --turbo   # reasoning chat + fast STT
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
+import subprocess
+import sys
 import threading
+import urllib.request
 import time
 from pathlib import Path
 
-from hebrew_voice import Voice
+from hebrew_voice import STT_DIR, STT_TURBO_DIR, Voice
 from perception import Person
 from speaker_lock import SpeakerLock
 from usb_camera import UsbCamera
 
-CHAT_DIR = Path(__file__).resolve().parent / "models" / "chat"
+MODELS = Path(__file__).resolve().parent / "models"
+CHAT_DIR = MODELS / "chat"
 CHAT_REPO = "ssdataanalysis/DictaLM-3.0-1.7B-Instruct-mlx-8Bit"
+# Same DictaLM 1.7B as GGUF, for llama.cpp on the XPS's NVIDIA GPU. Q4_K_M is
+# ~1.1 GB, so it fits next to Whisper in the 3050 Ti's 4 GB. Q8 does not.
+GGUF_DIR = MODELS / "chat-gguf"
+GGUF_REPO = "EMD123/DictaLM-3.0-1.7B-Instruct-Q4_K_M-GGUF"
+GGUF_FILE = "dictalm-3.0-1.7b-instruct-q4_k_m.gguf"
+# The reasoning variant, same size. Its template always opens <think>, so
+# every answer costs a thinking pass first; THINK_BUDGET caps it.
+THINK_GGUF_REPO = "dicta-il/DictaLM-3.0-1.7B-Thinking-GGUF"
+THINK_GGUF_FILE = "DictaLM-3.0-1.7B-Thinking-Q4_K_M.gguf"
+THINK_BUDGET = 256  # tokens, ~4 s on the 3050 Ti at ~68 tok/s
+LLAMA_SERVER = MODELS / "llama-cpp" / (
+    "llama-server.exe" if sys.platform == "win32" else "llama-server"
+)
+LLAMA_PORT = 8089
+FALLBACK = "ווה? לא הבנתי. תגיד שוב?"
 
 SYSTEM = (
     "אתה וול-אי, רובוט קטן וסקרן מפסטיבל במדבר. "
@@ -62,23 +83,168 @@ def clean_reply(text: str) -> str:
     return out or t[:160]
 
 
-class Chat:
-    def __init__(self) -> None:
-        from mlx_lm import generate, load
+def _stale(text: str, recent: list[str]) -> bool:
+    """True if text repeats a recent answer, ignoring the first word
+    (he echoes the greeting: "הלו! אני כאן..." / "בשמחה! אני כאן...")."""
+    def tail(s: str) -> str:
+        parts = s.split(None, 1)
+        return parts[1] if len(parts) > 1 else s
 
-        print("Loading chat…")
-        self.model, self.tokenizer = load(str(ensure_chat()))
-        self._generate = generate
+    return any(tail(text) == tail(r) for r in recent)
+
+
+def ensure_gguf(thinking: bool = False) -> Path:
+    repo, name = (THINK_GGUF_REPO, THINK_GGUF_FILE) if thinking else (GGUF_REPO, GGUF_FILE)
+    path = GGUF_DIR / name
+    if path.exists():
+        return path
+    print(f"Chat model: {repo}  (~1.1 GB, first time only)")
+    from huggingface_hub import hf_hub_download
+
+    GGUF_DIR.mkdir(parents=True, exist_ok=True)
+    hf_hub_download(repo_id=repo, filename=name, local_dir=str(GGUF_DIR))
+    return path
+
+
+def start_llama(model: Path, extra: list[str]) -> subprocess.Popen:
+    """Start llama-server on LLAMA_PORT and wait until /health answers."""
+    if not LLAMA_SERVER.exists():
+        sys.exit(f"Missing {LLAMA_SERVER}\nRun: python download_hebrew_voice.py")
+    log_path = MODELS / "llama-server.log"
+    log = open(log_path, "w", encoding="utf-8")
+    server = subprocess.Popen(
+        [
+            str(LLAMA_SERVER),
+            "-m", str(model),
+            "--host", "127.0.0.1",
+            "--port", str(LLAMA_PORT),
+            "-c", "2048",
+            "--jinja",  # the chat template inside the GGUF
+            *extra,
+        ],
+        stdout=log,
+        stderr=subprocess.STDOUT,
+    )
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        if server.poll() is not None:
+            sys.exit(f"llama-server exited. See {log_path}")
+        try:
+            url = f"http://127.0.0.1:{LLAMA_PORT}/health"
+            with urllib.request.urlopen(url, timeout=1) as r:
+                if r.status == 200:
+                    return server
+        except OSError:
+            pass
+        time.sleep(0.3)
+    server.kill()
+    sys.exit("llama-server did not come up in 90 s.")
+
+
+def use_mlx() -> bool:
+    """Apple Silicon runs MLX. Everything else (the XPS) runs llama.cpp."""
+    if sys.platform != "darwin":
+        return False
+    try:
+        import mlx_lm  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+class Chat:
+    """DictaLM 1.7B. MLX on the Mac, llama.cpp on the GPU everywhere else."""
+
+    def __init__(self, thinking: bool = False) -> None:
         self.history: list[dict[str, str]] = []
+        self._server: subprocess.Popen | None = None
+        self.thinking = thinking
+        print("Loading chat…")
+        if use_mlx() and thinking:
+            sys.exit("--thinking needs llama.cpp (GGUF); there is no MLX build.")
+        if use_mlx():
+            from mlx_lm import generate, load
+
+            self.model, self.tokenizer = load(str(ensure_chat()))
+            self._generate = generate
+            self._backend = "mlx"
+        else:
+            self._start_llama()
+            self._backend = "llama.cpp"
+        print(f"Chat on {self._backend}")
+
+    def _start_llama(self) -> None:
+        extra = ["-ngl", "99"]  # every layer on the GPU
+        if self.thinking:
+            # Thoughts go to reasoning_content, not the spoken answer.
+            extra += ["--reasoning-format", "deepseek", "--reasoning-budget", str(THINK_BUDGET)]
+        self._server = start_llama(ensure_gguf(self.thinking), extra)
+
+    def close(self) -> None:
+        if self._server is not None and self._server.poll() is None:
+            self._server.terminate()
+            try:
+                self._server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._server.kill()
+        self._server = None
+
+    def _raw_reply(
+        self, messages: list[dict[str, str]], temperature: float = 0.8
+    ) -> str:
+        if self._backend == "mlx":
+            prompt = self.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            return self._generate(
+                self.model, self.tokenizer, prompt=prompt, max_tokens=80
+            )
+        # A 1.7B model copies its own last answers out of the history
+        # ("אני כאן, מוכן לפעולה" six times running). The penalties push it off
+        # words it has already used.
+        params = {
+            "messages": messages,
+            "max_tokens": 80,
+            "temperature": temperature,
+            "repeat_penalty": 1.3,
+            "frequency_penalty": 0.5,
+            "presence_penalty": 0.5,
+        }
+        if self.thinking:
+            # max_tokens counts the thoughts too. The penalties would punish
+            # the answer for words it already used while thinking. Dicta's
+            # card suggests 0.6.
+            params = {
+                "messages": messages,
+                "max_tokens": THINK_BUDGET + 120,
+                "temperature": 0.6 if temperature <= 0.8 else 0.9,  # retry: hotter
+            }
+        body = json.dumps(params).encode("utf-8")
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{LLAMA_PORT}/v1/chat/completions",
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
+        t0 = time.monotonic()
+        with urllib.request.urlopen(req, timeout=60) as r:
+            data = json.load(r)
+        msg = data["choices"][0]["message"]
+        if self.thinking:
+            used = data.get("usage", {}).get("completion_tokens", "?")
+            thought = msg.get("reasoning_content") or ""
+            print(f"(thought {len(thought)} chars, {used} tokens, {time.monotonic() - t0:.1f} s)")
+        return msg.get("content") or ""
 
     def reply(self, user_text: str) -> str:
         self.history.append({"role": "user", "content": user_text})
         messages = [{"role": "system", "content": SYSTEM}, *self.history[-8:]]
-        prompt = self.tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-        raw = self._generate(self.model, self.tokenizer, prompt=prompt, max_tokens=80)
-        text = clean_reply(raw)
+        text = clean_reply(self._raw_reply(messages))
+        recent = [
+            m["content"] for m in self.history[-7:] if m["role"] == "assistant"
+        ]
+        if self._backend != "mlx" and _stale(text, recent):
+            # Same answer as a recent one: one more try, hotter.
+            text = clean_reply(self._raw_reply(messages, temperature=1.1))
         if re.search(r"[\u4e00-\u9fff]", text) or not re.search(r"[\u0590-\u05ff]", text):
             text = "ווה? לא הבנתי. תגיד שוב?"
         if not text:
@@ -134,6 +300,11 @@ class TalkCam:
         with self._mu:
             return self.mouth and self.speaker_id is not None
 
+    def snapshot(self):
+        """The latest raw camera frame (no boxes drawn), or None."""
+        with self._mu:
+            return None if self.frame is None else self.frame.copy()
+
     def pump(self) -> bool:
         """Draw the window. Return False if the user pressed q."""
         if not self.ok:
@@ -174,12 +345,40 @@ class TalkCam:
                 frame, status, (12, 28),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2,
             )
+        self._draw_mic(cv2, frame)
         try:
             cv2.imshow("WALL-E speaker lock", frame)
         except cv2.error:
             print("No GUI window. Run in Terminal.app, not SSH.")
             return False
         return (cv2.waitKey(1) & 0xFF) != ord("q")
+
+    def set_mic(self, level: float, thresh: float) -> None:
+        self.mic_level = level
+        self.mic_thresh = thresh
+
+    def _draw_mic(self, cv2, frame) -> None:
+        """Mic bar, bottom left. The white tick is the trigger level."""
+        level = getattr(self, "mic_level", 0.0)
+        thresh = getattr(self, "mic_thresh", 0.0)
+        if thresh <= 0:
+            return
+        h = frame.shape[0]
+        full = 300
+        scale = full / (thresh * 3)  # the tick sits a third of the way along
+        x0, y0 = 12, h - 40
+        loud = level > thresh
+        cv2.rectangle(frame, (x0, y0), (x0 + full, y0 + 20), (60, 60, 60), -1)
+        cv2.rectangle(
+            frame, (x0, y0), (x0 + int(min(level * scale, full)), y0 + 20),
+            (0, 255, 0) if loud else (0, 200, 255), -1,
+        )
+        tx = x0 + int(thresh * scale)
+        cv2.line(frame, (tx, y0 - 4), (tx, y0 + 24), (255, 255, 255), 2)
+        cv2.putText(
+            frame, "MIC: HEARING YOU" if loud else "MIC", (x0 + full + 10, y0 + 17),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0) if loud else (200, 200, 200), 2,
+        )
 
     def _loop(self) -> None:
         while not self._stop.is_set():
@@ -224,6 +423,12 @@ def wait_for_mouth(cam: TalkCam | None) -> bool:
     print("Look at the camera, then speak…")
     sr = 16000
     block = int(sr * 0.1)
+    # The trigger follows the room, not a fixed number: a fixed 0.025 suited
+    # the Mac's mic but the XPS's Realtek mic never reached it. The floor
+    # tracks the quiet level (falls fast, rises slowly), and speech must be
+    # 3.5x above it, the same rule record_utterance uses.
+    floor: float | None = None
+    last_log = 0.0
     with sd.InputStream(samplerate=sr, channels=1, dtype="float32") as stream:
         while True:
             if not cam.pump():
@@ -231,7 +436,19 @@ def wait_for_mouth(cam: TalkCam | None) -> bool:
             data, _overflow = stream.read(block)
             x = np.asarray(data, dtype=np.float32).reshape(-1)
             rms = float(np.sqrt(np.mean(x * x) + 1e-12))
-            if cam.locked() and (cam.talking() or rms > 0.025):
+            if floor is None:
+                floor = rms
+            elif rms < floor:
+                floor = 0.7 * floor + 0.3 * rms
+            else:
+                floor = 0.98 * floor + 0.02 * rms
+            thresh = max(0.004, floor * 3.5)
+            cam.set_mic(rms, thresh)
+            now = time.monotonic()
+            if now - last_log > 2.0:
+                print(f"mic {rms:.4f}  trigger {thresh:.4f}  face {cam.locked()}")
+                last_log = now
+            if cam.locked() and (cam.talking() or rms > thresh):
                 return True
 
 
@@ -263,7 +480,7 @@ def record_utterance(
             rms = float(np.sqrt(np.mean(x * x) + 1e-12))
             if len(floors) < 5:
                 floors.append(rms)
-                thresh = max(0.015, float(np.median(floors)) * 3.5)
+                thresh = max(0.004, float(np.median(floors)) * 3.5)
             loud = rms > thresh
             mouth = cam is not None and cam.talking()
             face = cam is None or cam.locked()
@@ -292,6 +509,86 @@ def beep() -> None:
     sd.wait()
 
 
+def listen(
+    cam: TalkCam,
+    sr: int = 16000,
+    max_s: float = 8.0,
+    silence_s: float = 0.8,
+    preroll_s: float = 0.5,
+):
+    """Wait for the locked face to speak, then record it. One mic stream.
+
+    The old wait_for_mouth -> beep -> record_utterance chain closed the mic
+    between waiting and recording, so the first word was lost. Worse, the
+    recorder took its noise floor from its first 0.5 s, which was the person
+    already talking, set the trigger above their own voice and threw the
+    clip away ("Heard nothing"). Here the floor is only learned while waiting,
+    and the 0.5 s before the trigger is kept.
+
+    Returns (samples, sr), None for nothing heard, or False if q was pressed.
+    """
+    import collections
+
+    import numpy as np
+    import sounddevice as sd
+
+    print("Look at the camera, then speak…")
+    block = int(sr * 0.1)
+    preroll: collections.deque = collections.deque(maxlen=int(preroll_s / 0.1))
+    floor: float | None = None
+    thresh = 0.004
+    chunks: list = []
+    recording = False
+    voiced_blocks = 0
+    quiet = 0.0
+    t0 = 0.0
+    last_log = 0.0
+    with sd.InputStream(samplerate=sr, channels=1, dtype="float32") as stream:
+        while True:
+            if not cam.pump():
+                return False
+            data, _overflow = stream.read(block)
+            x = np.asarray(data, dtype=np.float32).reshape(-1).copy()
+            rms = float(np.sqrt(np.mean(x * x) + 1e-12))
+            loud = rms > thresh
+            if not recording:
+                # Floor falls fast and rises slowly, so speech barely moves it.
+                if floor is None:
+                    floor = rms
+                elif rms < floor:
+                    floor = 0.7 * floor + 0.3 * rms
+                else:
+                    floor = 0.98 * floor + 0.02 * rms
+                thresh = max(0.004, floor * 3.5)
+                cam.set_mic(rms, thresh)
+                now = time.monotonic()
+                if now - last_log > 2.0:
+                    print(f"mic {rms:.4f}  trigger {thresh:.4f}  face {cam.locked()}")
+                    last_log = now
+                preroll.append(x)
+                if cam.locked() and (rms > thresh or cam.talking()):
+                    print("Speak now…")
+                    recording = True
+                    chunks = list(preroll)
+                    voiced_blocks = 1
+                    quiet = 0.0
+                    t0 = time.monotonic()
+                continue
+            # Recording: the trigger level stays frozen at the waiting floor.
+            cam.set_mic(rms, thresh)
+            chunks.append(x)
+            if loud:
+                voiced_blocks += 1
+                quiet = 0.0
+            else:
+                quiet += 0.1
+            if quiet >= silence_s or time.monotonic() - t0 >= max_s:
+                break
+    if voiced_blocks < 3:  # under ~0.3 s of sound: a click, not a sentence
+        return None
+    return np.concatenate(chunks), sr
+
+
 def loop(
     voice: Voice,
     chat: Chat,
@@ -310,10 +607,7 @@ def loop(
     if typed:
         print("Type a line and press Enter.")
     while True:
-        if cam is not None:
-            if not wait_for_mouth(cam):
-                return
-        elif not auto and not typed:
+        if cam is None and not auto and not typed:
             try:
                 input()
             except EOFError:
@@ -321,7 +615,12 @@ def loop(
         if typed:
             user = input("You:    ").strip()
         else:
-            rec = record_utterance(cam=cam)
+            if cam is not None:
+                rec = listen(cam)
+                if rec is False:
+                    return
+            else:
+                rec = record_utterance(cam=None)
             if rec is None:
                 print("Heard nothing. Try again.")
                 continue
@@ -357,11 +656,21 @@ def main() -> None:
         action="store_true",
         help="Mic only. Do not open the USB camera.",
     )
+    parser.add_argument(
+        "--thinking",
+        action="store_true",
+        help="DictaLM 1.7B Thinking instead of Instruct (llama.cpp only)",
+    )
+    parser.add_argument(
+        "--turbo",
+        action="store_true",
+        help="Whisper large-v3-turbo instead of large-v3",
+    )
     args = parser.parse_args()
     if args.type and args.auto:
         parser.error("use --type or --auto, not both")
-    voice = Voice()
-    chat = Chat()
+    voice = Voice(STT_TURBO_DIR if args.turbo else STT_DIR)
+    chat = Chat(thinking=args.thinking)
     cam: TalkCam | None = None
     if not args.type and not args.no_camera:
         cam = TalkCam()
@@ -376,6 +685,7 @@ def main() -> None:
     except KeyboardInterrupt:
         print("\nBye.")
     finally:
+        chat.close()
         if cam is not None:
             cam.stop()
 
