@@ -532,6 +532,19 @@ bolt_mu     = 0.2;  // clean dry steel
 sleeve_od   = 25;   // steel sleeve welded inside the rail at each bolt, so the
 sleeve_id   = 13;   //   2 mm walls are not crushed by the bolt (guarded)
 
+// -- top U brace (owner, 2026-09-26) -------------------------------------------
+// One per pod, front and rear. An upside-down U of the same 40x6 flat bar,
+// square corners, standing straight up over the pod and tying the two carrier
+// plates together. Each leg lies against its carrier's INNER face, stands on
+// the top edge of the shock stub (front) or the green plate (rear), and is
+// held by ONE M12 through carrier + leg. The M12 takes the place of the old
+// fork-leg M8 at y=52 on the carrier: open that hole to Ø13.
+use_ubar    = true;
+ub_h        = 150;  // U height, from the stub / green plate top to the top of the bridge
+ub_t        = 6;    // 40x6 bar
+ub_w        = 40;
+ub_bolt_y   = 52;   // M12 centre above the hub axle (was the M8 fork-leg hole)
+
 // -- top of the shock (MEASURED) ---------------------------------------------
 coil_d      = 45;   // MEASURED 2026-09-18 by the owner: the spring coil is 45
                     // across. Was hard-coded as 44 (r22) in three separate
@@ -1405,7 +1418,8 @@ module carrier_2d(m8 = use_bracket_eff ? [-12, 12] : []){
     // pod's freed carrier-to-leg M8x30s move here. Weld blade-to-carrier at
     // final fit on top. (Front pod: skip drilling until it gets a bracket.)
     for (yy = m8) translate([0,yy]) circle(d=8.4);
-    translate([0,52])      circle(d=8.5);       // M8 into fork leg (drill leg)
+    translate([0, ub_bolt_y])                   // M8 into fork leg (drill leg), or
+      circle(d = use_ubar ? bolt_d + 1 : 8.5);  // opened to Ø13 for the U brace M12
     translate(pivot)       circle(d=pivot_d);   // pivot bore, ream in pair
     if (use_keel) translate([0, y_keel]) circle(d=8.5);  // keel bolt M8
   }
@@ -1843,6 +1857,9 @@ module carrier_group(mount = use_bracket_eff ? "bracket" : "stub"){
   // hub plate; the rails and bolts belong to the frame (rear_link)
   if (mount == "green") color(c_green) for (s=[1,-1]) scale([1,1,s])
     translate([0,0,gp_z0]) linear_extrude(gp_t) green_plate_2d(s);
+  // top U brace: stands on the stub (front) or the green plate (rear)
+  if (use_ubar && mount != "bracket")
+    ubar3d(mount == "green" ? ub_seat_rear : mount == "stub_clear" ? ub_seat_front : -20 + 40);
   // REV 011d rear-fork bracket: blade + pad per side, keyed on the axle at
   // z = carrier outer face .. +brk_t; the shock stub moves outboard by brk_t
   if (mount == "bracket") for (s=[1,-1]) scale([1,1,s]){
@@ -1991,6 +2008,47 @@ gp_z0   = cz - gp_t;                 // 76.5 — plate INNER face
 gp_x0   = -rear_ct_x + gp_gap;       // -188 — plate front end
 gp_x1_tr = round(upP[0]) + 20;       // +72 — right (+z) plate, past the rear shock eye
 gp_x1_ld = 20;                       // +20 — left (-z) plate, past the axle key
+// ---- top U brace, derived (owner, 2026-09-26) --------------------------------
+car_top       = 52 + 16;                // carrier strip top edge (carrier_2d)
+ub_z0         = cz - ub_t;              // 76.5 — leg INNER face |z|, flat on the carrier
+ub_seat_front = stub_yb + 40;           // 21 — top edge of the front pod's shock stub
+ub_seat_rear  = gp_yc + gp_w/2;         // 41 — top edge of the rear pod's green plate
+ub_bridge_in  = 2*ub_z0;                // 153 — bridge length between the legs
+module ubar3d(seat){
+  color([0.95,0.55,0.10]){
+    for (s = [1,-1]) scale([1,1,s]) translate([-ub_w/2, seat, ub_z0])
+      difference(){
+        cube([ub_w, ub_h, ub_t]);
+        translate([ub_w/2, ub_bolt_y - seat, -1]) cylinder(h = ub_t + 2, d = bolt_d + 1);
+      }
+    translate([-ub_w/2, seat + ub_h - ub_t, -ub_z0]) cube([ub_w, ub_t, 2*ub_z0]);
+  }
+  color([0.25,0.25,0.27]) for (s = [1,-1]) scale([1,1,s])     // M12 x 35 + nut
+    translate([0, ub_bolt_y, ub_z0 - 11]) cylinder(h = 35, d = bolt_d);
+}
+// Checks, per pod. Edge distance wants 1.2 x the Ø13 hole (EN 1993 e1 min).
+// The REAR pod WARNs twice (27 mm on the carrier, M12 11 above the leg edge):
+// OWNER ACCEPTED AS IS, 2026-09-26. Left as WARN so the numbers stay visible.
+ub_edge_min = 1.2*(bolt_d + 1);
+for (p = [["FRONT", ub_seat_front], ["REAR", ub_seat_rear]]) {
+  ov = car_top - p[1];
+  echo(str(ov >= 45 ? "PASS " : "*** WARN ", "U brace ", p[0], ": leg lies on the carrier for ",
+           ov, " mm (owner wants ~50, pass at 45)"));
+  echo(str(ub_bolt_y - p[1] >= ub_edge_min ? "PASS " : "*** WARN ",
+           "U brace ", p[0], ": M12 centre ", ub_bolt_y - p[1], " mm above the leg's bottom edge (want ",
+           ub_edge_min, "), ", car_top - ub_bolt_y, " below the carrier top"));
+  echo(str((p[1] + ub_h - ub_t) - (r_wrap + T) >= 10 ? "PASS " : "*** WARN ",
+           "U brace ", p[0], ": bridge underside ", p[1] + ub_h - ub_t,
+           " above the hub axle, ", (p[1] + ub_h - ub_t) - (r_wrap + T), " mm over the belt crown"));
+}
+echo(str(ub_z0 - track_w/2 >= 10 ? "PASS " : "*** WARN ",
+         "U brace legs (|z| ", ub_z0, "..", cz, ") to the belt edge: ", ub_z0 - track_w/2, " mm"));
+echo(str(car_top - ub_bolt_y >= ub_edge_min ? "PASS " : "*** WARN ",
+         "carrier top edge above the U brace M12: ", car_top - ub_bolt_y, " mm (want ", ub_edge_min, ")"));
+echo(str("CUT — U brace, per pod (x2 pods): 40x6 bar, 2 legs x ", ub_h, " + 1 bridge x ",
+         ub_bridge_in, " welded between the leg tops; Ø13 in each leg ", ub_bolt_y,
+         " above the axle; open the carrier's M8 hole at y=", ub_bolt_y, " to Ø13;",
+         " 2x M12x35 8.8 + washer + nylock per pod"));
 gp_gap_z = sz - (gp_z0 + gp_t);      // shock centreline minus the plate OUTER
                                      // face. Negative now the plate is inboard:
                                      // the shock sits inboard of it

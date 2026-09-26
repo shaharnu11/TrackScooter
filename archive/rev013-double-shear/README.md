@@ -1,5 +1,22 @@
 # Apollo Track Pod — Articulated "Split-Frame" Suspension Mod
 
+> ## REV 013 ADD — TOP U BRACE (2026-09-26)
+> One per pod, front and rear: an upside-down U of 40×6 bar, square corners, **150 tall**,
+> standing straight up over the pod and tying the two carrier plates together.
+> - Each leg lies against its carrier's **inner** face and stands on the top edge of the
+>   shock stub (front pod) or the green plate (rear pod).
+> - One **M12** per side through carrier + leg, at 52 above the hub axle — the old fork-leg M8
+>   hole in the carrier, opened to Ø13.
+> - Cut per pod: 2 legs × 150 + 1 bridge × 153 welded between the leg tops; 2× M12×35 8.8 +
+>   washer + nylock.
+> - Model: `use_ubar`, `ub_h`, `ub_bolt_y` in `apollo_track_pod_rev013.scad`.
+>
+> **Front pod: all PASS** (47 mm on the carrier, M12 31 above the leg's bottom edge,
+> bridge 54 mm over the belt crown). **Rear pod: 2 WARNs** — the green plate top is at 41,
+> so the leg lies on only **27 mm** of carrier, and the M12 is only **11 mm** above the leg's
+> bottom edge (want 15.6). **Owner accepted this as is (2026-09-26)** — the WARNs stay in the
+> echo output so the numbers are not forgotten.
+
 > ## THIS FOLDER = REV 012 — LIVE (2026-09-10)
 > **The pod is Rev 011, unchanged** — everything below about the pod still applies.
 > New in Rev 012: the scratch-built **narrow frame** — two 100×40×2 rails whose inner faces
