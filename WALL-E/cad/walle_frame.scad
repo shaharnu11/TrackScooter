@@ -74,7 +74,7 @@ rail_len    = 550;   // -> FRONT end at +275, symmetric about the ground contact
 
 // -- the battery box: plywood, slung between the rails ------------------------
 // The lid is the pack hatch (L17). Daily charge is in place. To lift a pack
-// out: unbolt the body from the four risers, unbolt the lid, unplug XT90-S
+// out: unbolt the body from the four risers, unbolt the lid, unplug XT60
 // and the charge pigtail. Nothing in this box is glued or captured by a gland.
 tray_t      = 12;    // plywood
 tray_y0     = 150;   // box UNDERSIDE above ground = the robot's lowest point

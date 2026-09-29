@@ -76,14 +76,14 @@ Garden ASSIST (radio **on**, sticks centred, Spine still owns stop):
 
 ---
 
-## Contactor / fuse buy (decided in chat, **docs not fully updated**)
+## Contactor / fuse buy (decided in chat; **BOM and wiring doc updated 2026-09-29**)
 
-BOM still says Albright 80 A+ and 60 A fuses / XT90-S. Chat decision:
+Now in `05-bom.md` and `04-power-and-wiring.md`: ZJ50A, 30 A fuse (10×38 gPV, changed from 40 A on 2026-09-29), XT60, three wire sizes (12 / 16 / 22 shielded). Decision:
 
 | Item | Decision |
 |---|---|
 | Contactor | **ZJ50A** (or ZJ100A), **48 V coil**, 1NO, **DC** rated. Not CJX2-K (that listing is coil-only / AC). |
-| Fuse | **40 A**, **smaller than the contactor**. Not 50 A fuse on a 50 A contactor. J-case must be **58 V DC**, not 32 V. |
+| Fuse | **30 A** 10×38 gPV 1000 V DC (was 40 A; owner 2026-09-29), **smaller than the contactor**. Anything on 48 V must be **≥ 58 V DC**; blade and J-case are 32 V. |
 | Main plug | Owner already has **XT60**. Allowed for ~250 W **only if you plug with contactors open**. |
 | Mushroom | **NC on the coil chain only** (~0.3 A/coil). Battery motor current does **not** go through the mushroom. |
 | Arm | Radio channel 3. Coil powered while armed. |
@@ -100,7 +100,7 @@ Lighting buy (WS2815 12 V 60/m IP67, fused 12 V, not 48 V) was designed in chat.
 2. Port talk to XPS: CUDA Whisper, non-MLX chat, keep answers short.
 3. Wire `talk_hebrew` into `main.py` / personality (one place for camera + rules + talk).
 4. Follow behaviour: already coded; owner wants it later.
-5. Update BOM/docs to ZJ50A + 40 A fuse + XT60 if owner confirms buy.
+5. ~~Update BOM/docs to ZJ50A + fuse + XT60~~ — done 2026-09-29 (30 A fuse). WALLE-GUIDE.html still needs a rebuild on the Mac (`cad/render_all.sh`, then `build_guide.py`).
 6. CAD 100×40 only if asked. Front fork→frame.
 7. `tof_poll()` empty. IMU/LiDAR empty.
 8. Do not commit `brain/models/` weights.

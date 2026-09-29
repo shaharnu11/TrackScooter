@@ -8,19 +8,19 @@ Physical version of `01-architecture.md`.
 ## 1. Tree
 
 ```
-PACK A 48 V ── XT90-S ─┬── 60 A ── CONTACTOR A ── controller L ── left hub
+PACK A 48 V ── XT60 ───┬── 30 A ── CONTACTOR A ── controller L ── left hub
                         ├── 10 A ── 48→32 V ── amp
                         └──  5 A ── E-stop chain ── both contactor coils (48 V)
 
-PACK B 48 V ── XT90-S ──── 60 A ── CONTACTOR B ── controller R ── right hub
+PACK B 48 V ── XT60 ────── 30 A ── CONTACTOR B ── controller R ── right hub
 
 12 V 20 Ah ── 15 A ── 12 V rail ── 12→5 V ── Teensy, ESP32
               (USB hub, fans). XPS is NOT on this rail.
 
-PACK A (−) ══ 10 AWG bond, not fused ══ PACK B (−) ══ 12 V (−)
+PACK A (−) ══ 12 AWG bond, not fused ══ PACK B (−) ══ 12 V (−)
 ```
 
-- E-stop kills **motors only**. Electronics stay up. E-stop is not an isolator. Isolator = XT90-S (section 5).
+- E-stop kills **motors only**. Electronics stay up. E-stop is not an isolator. Isolator = XT60 (section 5).
 - Both coils on one chain. Cutting one track only is a spin command. Never do that.
 
 ## 2. Current (91.6 kg)
@@ -32,7 +32,7 @@ PACK A (−) ══ 10 AWG bond, not fused ══ PACK B (−) ══ 12 V (−)
 | Start / rut | ~25 A | Seconds |
 | Absolute | **40 A** | Wire and fuse must survive |
 
-40 A is **measured**, not chosen. Controllers cannot change their peak. Clamp-meter at stall on blocks. If real peak ≠ 40 A, resize 12 AWG and 60 A. Teensy current control = back off throttle from ACS758. Slow.
+40 A is **measured**, not chosen. Controllers cannot change their peak. Clamp-meter at stall on blocks. Main fuse is **30 A** (10×38 gPV, owner 2026-09-29): 40 A bursts of seconds pass, a minute of stall does not. If the real peak is well above 40 A, rethink wire and fuse together. Teensy current control = back off throttle from ACS758. Slow.
 
 ## 3. 12 V rail
 
@@ -70,12 +70,14 @@ Check every part against **full** pack voltage.
 
 | # | What | When |
 |---|---|---|
-| 1 | XT90-S per pack | Before wiring, transport, overnight |
+| 1 | XT60 per pack | Before wiring, transport, overnight. **Only with the contactors open** |
 | 2 | Mushroom E-stop | Emergency. Motors dead, electronics alive |
 | 3 | Wireless E-stop | Must **open on signal loss**, not only on a stop message |
 | 4 | Arm switch on TX | Session start/stop. Software |
 
-XT90-S, not XT60, for the disconnect: ~43 A on pack A, anti-spark resistor, daily cycles.
+Every 48 V fuse is 10×38 mm gPV, 1000 V DC (30 / 10 / 5 A). Blade and J-case fuses are 32 V: 12 V side only.
+
+XT60 for the disconnect (owner, 2026-09-29; was XT90-S). It has **no anti-spark resistor**, so **plug and unplug only disarmed, contactors open**: the controller capacitors then sit behind the open contactor and the contacts do not arc. Plugging in armed burns the pins a little every time. 30 A continuous is fine for ~8 A cruising and 40 A bursts.
 
 **Socket half on the battery.** Live pins on the pack = unfused short. Cap both halves.
 
@@ -93,15 +95,21 @@ Non-emergency: Spine ramps to zero, then drops the contactor. Mushroom does not 
 
 | Run | Gauge |
 |---|---|
-| Pack → contactor → controller, 40 A | 10 AWG silicone |
-| Phases | 12 AWG (or motor lead, whichever thicker) |
-| Ground bond | 10 AWG, short, **not fused** |
-| 12 V pack → rail | 14 AWG (sized for 15 A fuse) |
+Three sizes only (owner, 2026-09-29). All silicone.
+
+| Run | Gauge |
+|---|---|
+| Pack → 30 A fuse → contactor → controller | 12 AWG |
+| Phases | owned motor cable |
+| Ground bond | 12 AWG, short, **not fused** |
+| 12 V pack → rail | 12 AWG (15 A fuse) |
 | Amp 48→32 and 32 V | 16 AWG |
 | 12 V distribution | 16 AWG |
-| Coils | 20 AWG |
-| Throttle | 22 AWG **shielded** |
-| Halls / thermistors | 24 AWG shielded, away from phases |
+| Coils, E-stop chain | 16 AWG |
+| Throttle, reverse, e-brake | 22 AWG **shielded** |
+| Halls / thermistors | 22 AWG shielded, away from phases |
+
+Ring terminals: 12 AWG → yellow RV5.5, 16 AWG → red RV1.25, one HS-30J crimper.
 
 ## 7. Throttle path
 

@@ -21,7 +21,7 @@ Six 12 mm ply panels. Cut list from `cad/walle_frame.scad`.
 
 **Lift out:**
 
-- 48 V: body off four risers → 12 × M5 lid → unplug XT90-S + charge pigtail → lift.
+- 48 V: body off four risers → 12 × M5 lid → unplug XT60 + charge pigtail → lift.
 - 12 V and PD pack: speaker boxes off → tray off → unplug → lift. 12 V is 14.6 V LiFePO4 charger. Label the three XT60s.
 - XPS comes out with the tray.
 
