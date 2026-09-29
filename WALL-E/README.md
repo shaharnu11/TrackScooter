@@ -52,9 +52,9 @@ python3 build_guide.py  # guide and document pages only
 ## Pod rule
 
 - The pods are built. **No new hole goes into a built pod.**
-- Their 23 numbers exist in one file: `cad/pod_interface.scad`.
+- Their 31 numbers exist in one file: `cad/pod_interface.scad`.
 - `cad/check_pod_interface.scad` compares that file against the newest pod revision in `../archive/`.
 - `cad/pod_latest.sh` selects that revision. Nothing is pinned by hand.
 - MISMATCH: stop. Every dimension downstream is wrong.
 
-2026-09-22: 23/23 agree with `rev013-double-shear`.
+2026-09-29: 31/31 agree with `rev013-double-shear` (7 new: the U braces the frame hangs from).

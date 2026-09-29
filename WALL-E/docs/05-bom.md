@@ -69,9 +69,8 @@ Throttle is +5 V, GND, signal (~0.8 V rest, ~4.2 V full). **Measure yours.** DAC
 | 1 | Buck converter, **48→24 V, 5 A (120 W)**, sealed aluminium, input **48V60V (30–75 V)** | 9 | Stock | The amplifier's supply only (owner, 2026-09-29: was 48→32 V for the TPA3255). Pick the **30–75 V** input variant, not 30–60 V: a full pack is 54.6 V. `04-power-and-wiring.md` section 4. | [search](https://www.aliexpress.com/w/wholesale-48V-to-24V-5A-step-down-converter.html) |
 | 1 | Buck converter, 12→5 V, 5 A | 12 | Stock | Teensy and ESP32 only. | [search](https://www.aliexpress.com/w/wholesale-DC-DC-buck-converter-12V-5V-5A.html) |
 | — | Capacitors: 4700 µF 25 V (12 V rail), 10 µF and ~1 µF (NE555), 100 nF (analogue pins) — **owned** (2026-09-29). **TVS diodes still to buy:** voltage depends on 13S or 16S packs. | 20 | Stock | Rail buffer and controller input protection. | [search](https://www.aliexpress.com/w/wholesale-capacitor-4700uF-25V.html) |
-| — | Steel box tube 60×30×3 and 30×30, plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 263 cross members, 1626 mm of 60×30 in total. | owned |
-| 2 | **Packer, 60×6 flat bar, 60 mm long, 2 holes Ø13** | 5 | Stock | One per side. Fills the 6 mm step between the carrier face the rail sits on and the green plate the M12s thread into. **Without it the bolts crush the rail wall into the gap and the joint has no clamp.** Offcut of the same 60×6 as the plates. | Offcut / steel stockist |
-| — | M12 10.9 bolts, and the Ø25/Ø13×30 sleeves to weld into the rails | 25 | Stock | The sleeve is what stops an M12 crushing a 3 mm box wall. Not optional. | [search](https://www.aliexpress.com/w/wholesale-M12-10.9-bolt.html) |
+| — | Steel box tube 60×30×3 and 30×30, 60×6 flat, 6 mm plate | — | — | **You already have the steel.** Cut list is echoed by `cad/walle_frame.scad`: 2 × 550 rails, 2 × 251 cross members (1602 mm of 60×30), 2 hangers 60×6 (215 and 195 mm), 2 tabs 80 × 177 and 4 clamp plates 80 × 30 from 6 mm plate. The frame hangs from the pods' U braces (2026-09-29). | owned |
+| — | Pod joint bolts: **2 × M12×40 8.8** (replace the U braces' inboard M12×35) and **8 × M10×35 8.8**, all with washers and nylocks | 10 | Stock | Per pod: 1 M12 + 4 M10. No sleeves, no packers: the rails have no bolt holes now. | local hardware store |
 | 12 mm | Birch plywood sheet | 60 | Stock | Battery box (six panels), electronics shelf, and the lift-out laptop tray (315 × 360). | timber yard |
 | 2 | Castor wheels, Ø75 | 35 | Stock | Anti-tip. `cad/walle_frame.scad`. Mounting steel you already have. | [search](https://www.aliexpress.com/w/wholesale-caster-wheel-75mm.html) |
 
@@ -84,7 +83,6 @@ has the reasoning. Cheap parts, so buy spares of all of them.
 |---|---|---|---|---|---|
 | 5 m | Closed-cell foam tape, 3 mm, self-adhesive | 10 | Stock | The lid gasket. EPDM, not open-cell — open-cell soaks up water and holds grit. | [search](https://www.aliexpress.com/w/wholesale-EPDM-foam-tape-3mm.html) |
 | 1 sheet | Closed-cell foam, 8 mm | 10 | Stock | The pad on top of the packs. Clamps them down and takes the vibration. | [search](https://www.aliexpress.com/w/wholesale-closed-cell-foam-sheet-8mm.html) |
-| 8 | Silicone blanking plug, Ø30 | 10 | Stock | 4 needed, 4 spare. **These plug the M12 spanner holes.** Without them the rest of the sealing is pointless. Check them every morning. | [search](https://www.aliexpress.com/w/wholesale-silicone-blanking-plug-30mm.html) |
 | 2 | Screw-in membrane vent, M12, IP67 (Gore type or equivalent) | 16 | Stock | 1 needed, 1 spare. Goes in the **lid**. A sealed box breathes with the day/night temperature swing; this is the clean path so it does not pull dust through a leak. | [search](https://www.aliexpress.com/w/wholesale-M12-waterproof-breather-vent.html) |
 | 4 | Cable gland, M16, IP68 | 10 | Stock | Charge leads and pack sense wiring out of the box. Not a drilled hole. **The gland holds a jumper, not the pack.** Each traction pack unplugs inside the box (XT60 plus a charge pigtail) so the pack lifts out. | [search](https://www.aliexpress.com/w/wholesale-cable-gland-M16-IP68.html) |
 | 16 | M5 bolts, nuts and washers, 25 mm | 8 | Stock | 12 for the lid at 110 mm pitch, plus spares. A gasket only seals where it is squeezed. | [search](https://www.aliexpress.com/w/wholesale-M5-bolt-nut-washer-set.html) |
@@ -135,7 +133,7 @@ Brain = owned XPS 15 9510 (L25). No internet. Two floors (L26). Camera ordered (
 | — | Gasket tape, acoustic wadding, M5 bolts for the drivers and the boxes | 20 | Stock | The boxes **bolt** to the chest panel — they shade 54 % of the shelf and have to lift out. | [search](https://www.aliexpress.com/w/wholesale-acoustic-wadding-speaker.html) |
 | — | LED strip, drivers, eye illumination | 120 | Stock | | [search](https://www.aliexpress.com/w/wholesale-WS2812B-LED-strip.html) |
 
-- Speakers: 6.8 kg at 613 mm, both forward. **6.8°** castor margin. Weigh before adding high/forward mass. Buy on **sensitivity**, not “max watts”.
+- Speakers: 6.8 kg at 706 mm, both forward. **5.1°** castor margin. Weigh before adding high/forward mass. Buy on **sensitivity**, not “max watts”.
 - Screens: **QSPI 480×480** for the eyes, not RGB/MIPI/40-pin. Chest is a separate **HDMI** 7 inch. Two ESP32-S3, one per eye, one sync wire. Do not use 1.28 inch GC9A01.
 
 ---
@@ -183,13 +181,13 @@ Set failsafe on every channel to the last column. Test: TX off, on blocks. Wirel
 |---|---|---|
 | 1 — de-risking (Teensy owned; FS-i6X set ordered, $41, not a $120 generic) | now | 173 |
 | 1b — throttle interface for the scooter controllers | now | 60 |
-| 2 — frame and drive, including sealing the box and the electronics battery | 1 | 681 |
+| 2 — frame and drive, including sealing the box and the electronics battery | 1 | 651 |
 | 3 — compute and sensors (COIN-D6 $44, not the A1M8 $100; BNO085 ordered $12 + CP2102 $3) | 2 | 288 |
 | 4 — face and sound | 4 | 409 |
 | 5 — body and head, plywood | 5 | 315 |
 | Tools and consumables not listed above | throughout | 250 |
 | Spares kit (`00-plan.md` phase 6) | 6 | 300 |
-| **Total** | | **≈ 2,476** |
+| **Total** | | **≈ 2,446** |
 
 Cut first: LiDAR, GPS+IMU, LED strip. Do not cut: DC contactors, crimp tool, current-limited bench supply, hardware watchdog.
 

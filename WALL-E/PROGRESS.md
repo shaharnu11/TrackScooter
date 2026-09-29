@@ -71,7 +71,7 @@ Garden ASSIST (radio **on**, sticks centred, Spine still owns stop):
 - Head rigid. Gaze = pupils. Camera = ELP-USB1080P03-KLC1100.
 - **DC contactors stay.** Owner asked to skip them more than once. Refuse.
 - Low-level e-brake = pull to GND via PC817. Radio stays on in ASSIST.
-- Rear pod rails bolt to **inboard green plates** (M12 at 108/168 mm forward of hub), not carrier-only. Sleeves Ø25×Ø13×40 flush or 0.5 mm short, weld, then grind. Front fork is still carriers; front fork→frame is **undesigned**.
+- The frame **hangs from both pods' U braces** (2026-09-29). Per pod: a 60×6 hanger on the inboard carrier face, on the U brace's inboard M12 (now M12×40), and a tab clamped to the U bridge by 4 × M10 beside the bridge. No new hole in a pod. The green plates are not used (only the rear pod has them).
 - CAD frame is still **60×30** unless the owner asks to change it to 100×40.
 
 ---
@@ -101,8 +101,8 @@ Lighting buy (WS2815 12 V 60/m IP67, fused 12 V, not 48 V) was designed in chat.
 3. Wire `talk_hebrew` into `main.py` / personality (one place for camera + rules + talk).
 4. Follow behaviour: already coded; owner wants it later.
 5. ~~Update BOM/docs to ZJ50A + fuse + XT60~~ — done 2026-09-29 (30 A fuse). WALLE-GUIDE.html still needs a rebuild on the Mac (`cad/render_all.sh`, then `build_guide.py`).
-6. CAD 100×40 only if asked. Front fork→frame.
-   **Decided 2026-09-29: the frame mounts on the pods' top U braces** (rev013 `use_ubar`, 40×6, one M12 per leg at 52 above the hub). **Both U braces are already built** — design around them, do not change them. Do this after the BOM walk-through. Open problems: front bridge top is 387 mm, rear 407 mm (20 mm spacer on the front); one M12 per leg lets the U rock fore and aft; the bridge is only 40 mm long over the hub, against a 550 mm frame. The frame mount must add pitch stiffness itself. The M12 bolt and rail-sleeve count in the BOM waits for this design.
+6. CAD 100×40 only if asked.
+   **Done 2026-09-29: the frame hangs from the U braces** (`cad/walle_frame.scad`, `docs/FRAME_AND_PODS.md` section 3). Cost: body floor 335 → 428 mm, robot 910 → 1003 mm, forward tip 18.9° → 17.4° (castor still catches first at 12.3°). Open: which pod goes on which side (`hi_side`); whether to pocket the body floor over the U tops to win the height back.
 7. `tof_poll()` empty. IMU/LiDAR empty.
 8. Do not commit `brain/models/` weights.
 

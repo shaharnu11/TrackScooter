@@ -19,7 +19,7 @@ Read `99-glossary.md` for words. Read `01-architecture.md` for the boards.
 | Frame | Not welded |
 | Electronics / body | Nothing built |
 
-**Measure before welding:** 177 mm over the carrier outer faces (green plates 6 mm inboard; packer fills it). `cad/pod_latest.sh` + `cad/check_pod_interface.scad`.
+**Measure before welding:** 177 mm over the carrier outer faces, and the U bridge tops (387 mm front pod, 407 mm rear pod). The frame hangs from the U braces. `cad/pod_latest.sh` + `cad/check_pod_interface.scad`.
 
 | Fact | Value |
 |---|---|
@@ -185,7 +185,7 @@ Camera: window → one photo → live video → robot.
 | R8 | Sand in bearings / box | Covers. Closed box, plugs, vent (L16) |
 | R8d | Charge heat in a sealed box | Log one full charge with the lid on |
 | R9 | PLA sprocket in the sun | Check filament. Spare in ASA/nylon |
-| R10 | Forward margin eaten | Speakers + two floors leave **6.8°**. Weigh real parts before adding mass |
+| R10 | Forward margin eaten | Speakers, two floors and the U-brace mount leave **5.1°**. Weigh real parts before adding mass |
 | R11 | Speakers rattle | Sealed, braced, grille. Bench at full volume |
 | R12 | Stuck on electronics | Section 10. Bench early |
 

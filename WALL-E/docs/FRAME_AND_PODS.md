@@ -22,7 +22,7 @@ openscad -o chk.echo --export-format echo cad/check_pod_interface.scad
 - No revision is pinned by hand.
 - `cad/render_all.sh` runs the check first and exits on MISMATCH. A wrong pod number invalidates every dimension below it.
 
-State: newest revision `rev013-double-shear`, 23/23 numbers agree.
+State: newest revision `rev013-double-shear`, 31/31 numbers agree.
 
 ---
 
@@ -33,31 +33,53 @@ Measured on the built pods, 2026-09-18. Distance outward from one pod centre pla
 | From | To | Part |
 |---|---|---|
 | 0 | 59 | belt, 118 wide |
-| 76.5 | 82.5 | **green plate**, 60×6. Contains the two M12 holes |
+| 76.5 | 82.5 | **U brace leg**, 40×6, at the hub. **Green plate**, 60×6, rear pod only |
 | 82.5 | 88.5 | **carrier plate**, 40×6 |
-| 88.5 | 92.5 | scooter fork leg. **Not fitted on WALL-E** |
+| 88.5 | 94.5 | **WALL-E hanger**, 60×6, inboard side only |
 
-Change from rev012: green plate is **inboard**. Carrier 6 mm proud. Rail on carrier at 88.5. Packer required.
+The scooter fork legs (88.5–92.5) are **not fitted on WALL-E**. The hanger takes their place on the inboard side.
 
 ---
 
-## 3. Joint stack
+## 3. Joint: the frame hangs from the U braces
 
-Per side, inboard to outboard:
+Decided 2026-09-29. Both U braces are **already built** (rev013 `use_ubar`).
 
-```
-M12 head  →  rail inner wall  →  Ø25/Ø13 sleeve in the rail  →  rail outer wall
-          →  PACKER 6 mm  →  green plate 6 mm  →  M12 nut welded on the far face
-```
+Why not the green plates any more: **only the rear pod has green plates**. The front pod has shock stubs instead. So the old rail-to-green-plate joint could not bolt the front pod.
+
+Per pod, on the **inboard** side only:
+
+1. A **hanger** (60×6 flat bar) stands flat on the carrier's outer face, centred on the hub.
+2. The U brace's **inboard M12** goes through the U leg, the carrier and the hanger. The head stays inside the U, as built. The nut is on the hanger. The bolt is 6 mm longer: M12×40 instead of M12×35.
+3. At the top, the hanger is welded under a **tab** (6 mm plate, 80 × 177). The tab lies on the U bridge.
+4. Two **clamp plates** (80 × 30 × 6) go under the bridge, one near each U leg.
+5. **4 × M10** per pod go down through the tab, **beside** the 40 mm bridge, and through the clamp plates. Nothing is drilled into the pod.
+6. The rail is welded to the hanger's inboard face.
+
+Pitch (nose-down) load goes into the pod at two points 119 mm apart vertically: the M12 and the bridge. The M10 pairs on either side of the bridge also resist it.
+
+The two bridges are **not the same height**:
+
+| Pod | U seat | Bridge top | Hanger length |
+|---|---|---|---|
+| Front (shock stubs) | hub + 21 | **387** | 195 |
+| Rear (green plates) | hub + 41 | **407** | 215 |
+
+So the two hangers are cut to different lengths. Tack the tabs with the frame sitting on the pods, then take it off and finish the welds.
 
 | Part | Specification | Function |
 |---|---|---|
-| Rail | 60×30×3 box, outer face at 161.5 from robot centre | Structure |
-| Sleeve | Ø25 OD, Ø13 bore, 30 long, welded through both rail walls | Prevents M12 preload crushing the 3 mm wall |
-| Packer | 60×6, one per side, 2 × Ø13 at the M12 centres | Fills the carrier-to-plate step. Without it the bolt pulls the rail wall into the gap and clamp force is zero |
-| Bolts | 2 × M12 10.9 per side | 4 bolts total: pod removal |
+| Rail | 60×30×3 box, 192–252 above ground, outer face 155.5 from robot centre | Structure. No holes |
+| Hanger | 60×6 flat, Ø13 at 76 mm up from the bottom end | Joins the rail to the pod |
+| Tab | 6 mm plate 80 × 177, 4 × Ø11 | Sits on the U bridge |
+| Clamp | 6 mm plate 80 × 30, 2 × Ø11, 4 total | Under the bridge |
+| Bolts | per pod: 1 × M12×40 8.8 + 4 × M10×35 8.8, washers, nylocks | Pod removal: 5 bolts per side |
+
+The rail sits **under** the M12 nut (5.6 mm clear). That is what sets the rail height.
 
 Overall width: **677 mm** at pod centres 500 mm apart.
+
+**Cost of this joint:** the body floor has to clear the M10 heads on the rear pod's tab (413 + 7 mm). The floor goes from 335 to **428 mm**. The robot is **1003 mm** tall (was 910). Forward tip goes from 18.9° to **17.4°**. The castor still catches first (12.3°).
 
 ---
 
@@ -67,10 +89,11 @@ Overall width: **677 mm** at pod centres 500 mm apart.
 |---|---|
 | Clear gap between carrier plates | 165 mm |
 | Over carrier plates, outer to outer | 177 mm |
-| Over the two green plates | 165 mm |
-| Green plate band, bottom edge above ground | 197 mm |
-| Green plate band, top edge above ground | 257 mm |
-| M12 hole centres, forward of hub axle | 108 and 168 mm |
+| U bridge top above ground, **front** pod | 387 mm |
+| U bridge top above ground, **rear** pod | 407 mm |
+| U brace M12 centre above ground | 268 mm |
+| U bridge width (fore-aft), centred on the hub | 40 mm |
+| Space under the front bridge to the belt | ~54 mm |
 | Belt width | 118 mm |
 
 On disagreement the pod is authoritative. Correct `cad/pod_interface.scad`, re-run the check, re-run the guards. Do not edit frame numbers directly — they are derived.
@@ -84,13 +107,13 @@ archive/rev013-*/apollo_track_pod_rev013.scad     the pods (not edited here)
         │
         ├── cad/pod_latest.sh → cad/pod_latest.scad   newest revision on disk
         │        │
-        │        └── cad/check_pod_interface.scad     23 numbers, OK or MISMATCH
+        │        └── cad/check_pod_interface.scad     31 numbers, OK or MISMATCH
         │
 cad/pod_interface.scad                            only copy of pod facts
         │
 cad/walle_frame.scad                              all else derived
         │
-        └── guards: clearances, stresses, bolt edge distances (55 today)
+        └── guards: clearances, stresses, bolt edge distances (64 today)
 ```
 
 - Changing `pod_cl` moves width, bay, box, and anti-tip together.
@@ -103,9 +126,10 @@ cad/walle_frame.scad                              all else derived
 | Qty | Part | Stock |
 |---|---|---|
 | 2 | Rail, 550 long | 60×30×3 box |
-| 4 | Sleeve, Ø25 × Ø13 × 30 | turned or bought |
-| 2 | Packer, 60 long, 2 × Ø13 | 60×6 flat |
-| 4 | Bolt M12 × 10.9 + nyloc | — |
-| 4 | M12 nut, welded to green plate far face | — |
+| 2 | Hanger, 215 (rear pod) and 195 (front pod), 1 × Ø13 | 60×6 flat |
+| 2 | Tab, 80 × 177, 4 × Ø11 | 6 mm plate |
+| 4 | Clamp plate, 80 × 30, 2 × Ø11 | 6 mm plate |
+| 2 | Bolt M12×40 8.8 + washer + nylock (replaces the U brace's inboard M12×35) | — |
+| 8 | Bolt M10×35 8.8 + washer + nylock | — |
 
 Prices and lead times: `docs/05-bom.md`.

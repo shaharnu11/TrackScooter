@@ -8,12 +8,11 @@ Six 12 mm ply panels. Cut list from `cad/walle_frame.scad`.
 
 | Panel | Size |
 |---|---|
-| Floor, lid | 444 × 240. Lid: 12 × M5 at 110 mm pitch |
-| Sides | 2 × 444 × 142. Each: 2 × Ø30 spanner holes, 77 mm up |
-| Ends | 2 × 240 × 142 |
+| Floor, lid | 444 × 251. Lid: 12 × M5 at 110 mm pitch |
+| Sides | 2 × 444 × 142. No holes |
+| Ends | 2 × 251 × 142 |
 
 - 3 mm closed-cell gasket. Bolt pitch 110 mm (gasket only seals where squeezed).
-- Ø30 silicone plugs in the spanner holes whenever a pod is not coming off.
 - 8 mm foam pad on the packs. Pad, not glue.
 - M12 membrane vent in the **lid**, centreline, over the 24 mm gap between packs. A sealed box is a dust pump without it.
 
@@ -37,15 +36,15 @@ Packs need a sealed case **wherever** they go. Body is hot (XPS, controllers, am
 
 | | CoM | Tips forward |
 |---|---|---|
-| Packs in the frame | 318 mm | **19.3°** |
-| Packs on the shelf | 351 mm | 17.6° |
+| Packs in the frame | 356 mm | **17.4°** |
+| Packs on the shelf | 402 mm | 15.5° |
 
-Castor at 12.3°. Speakers + two floors already leave **6.8°**. Run the model for today’s numbers.
+Castor at 12.3°. Speakers, two floors and the U-brace mount leave **5.1°**. Run the model for today’s numbers.
 
 ## 3. Ground clearance
 
-Box floor = lowest point, **150 mm**. Raising it to **173 mm** is the lid-bolt limit (20 mm under the body floor). Buys 23 mm, costs ~0.3°.
+Box floor = lowest point, **150 mm**. Since the U-brace mount (2026-09-29) the body floor is 136 mm over the lid, so the old 173 mm lid-bolt limit is gone. The box still hangs off the rails (192–252 mm). A higher box is not checked yet.
 
-Do not put packs in the body for clearance. Do not go past 173 without dropping `body_gap` or lying packs flat.
+Do not put packs in the body for clearance.
 
 Owner: leave 150 mm until the first sand drive (L18).

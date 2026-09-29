@@ -34,17 +34,17 @@ Body narrower than the tracks on purpose.
 | | |
 |---|---|
 | Width | 677 mm (pod centres 500) |
-| Height | 910 mm to barrel tops |
-| Body | 430 × 640 × 400, floor 335 mm |
-| Rails | 60×30×3, 550 long, 263 mm clear |
+| Height | 1003 mm to barrel tops |
+| Body | 430 × 640 × 400, floor 428 mm |
+| Rails | 60×30×3, 550 long, 251 mm clear |
 | Lowest point | 150 mm (box floor) |
-| Mass | 91.6 kg — pods/packs/electronics still guesses |
-| CoM | 323.5 mm up, 3.9 mm forward |
-| Tips forward | 19.0° (back 20.3°) |
-| Castor catches | 12.3° — **6.8°** margin |
-| Ground pressure | 0.168 kg/cm² |
+| Mass | 94.9 kg — pods/packs/electronics still guesses |
+| CoM | 355.5 mm up, 4.5 mm forward |
+| Tips forward | 17.4° (back 18.7°) |
+| Castor catches | 12.3° — **5.1°** margin |
+| Ground pressure | 0.174 kg/cm² |
 
-Pod off: 2 × M12 per side. Rail on the carrier. 6 mm packer. Weigh a pod and a pack before trusting 19.0°.
+The frame hangs from the pods' U braces. Pod off: 1 × M12 + 4 × M10 per side. Weigh a pod and a pack before trusting 17.4°.
 
 ## Model results
 
@@ -65,7 +65,7 @@ Pod off: 2 × M12 per side. Rail on the carrier. 6 mm packer. Weigh a pod and a 
 - 2 × 6.5 inch, 330 mm apart, 613 mm up. On the chest edges. 140 mm between rims.
 - 7 inch LCD, 107 × 183 mm, **portrait**, between them. HDMI from the XPS. Glass window 90 × 160. Bezel on the chest, not through the speaker boxes.
 - 7.5 L sealed box each. Bolt on. Shade 54 % of the shelf.
-- 6.8 kg, both forward. Same 6.8° castor margin. Weigh before adding high/forward mass.
+- 6.8 kg, both forward. Castor margin now 5.1° (the U-brace mount lifted the body). Weigh before adding high/forward mass.
 
 ![The chest panel and the two sealed enclosures, from behind](fig/walle_chest.png)
 
