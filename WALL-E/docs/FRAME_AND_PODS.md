@@ -58,14 +58,9 @@ Per pod, on the **inboard** side only:
 
 Pitch (nose-down) load goes into the pod at two points 119 mm apart vertically: the M12 and the bridge. The M10 pairs on either side of the bridge also resist it.
 
-The two bridges are **not the same height**:
+Bridge heights: rev013 draws the front U 20 mm lower (387 mm) than the rear U (407 mm). **The owner says the built U braces are the same height** (2026-09-29). The built pods win, so the model uses **407 mm for both**, and both hangers are **215 mm**. This is **not measured yet**. Measure both bridge tops and correct `cad/pod_interface.scad`.
 
-| Pod | U seat | Bridge top | Hanger length |
-|---|---|---|---|
-| Front (shock stubs) | hub + 21 | **387** | 195 |
-| Rear (green plates) | hub + 41 | **407** | 215 |
-
-So the two hangers are cut to different lengths. Tack the tabs with the frame sitting on the pods, then take it off and finish the welds.
+Tack the tabs with the frame sitting on the pods, then take it off and finish the welds.
 
 | Part | Specification | Function |
 |---|---|---|
@@ -79,7 +74,7 @@ The rail sits **under** the M12 nut (5.6 mm clear). That is what sets the rail h
 
 Overall width: **677 mm** at pod centres 500 mm apart.
 
-**Cost of this joint:** the body floor has to clear the M10 heads on the rear pod's tab (413 + 7 mm). The floor goes from 335 to **428 mm**. The robot is **1003 mm** tall (was 910). Forward tip goes from 18.9° to **17.4°**. The castor still catches first (12.3°).
+**Cost of this joint:** the body floor has to clear the M10 heads on the tabs (413 + 7 mm). Owner accepted this height (2026-09-29). The floor goes from 335 to **428 mm**. The robot is **1003 mm** tall (was 910). Forward tip goes from 18.9° to **17.4°**. The castor still catches first (12.3°).
 
 ---
 
@@ -89,11 +84,11 @@ Overall width: **677 mm** at pod centres 500 mm apart.
 |---|---|
 | Clear gap between carrier plates | 165 mm |
 | Over carrier plates, outer to outer | 177 mm |
-| U bridge top above ground, **front** pod | 387 mm |
+| U bridge top above ground, **front** pod | 407 mm (owner: same as rear; rev013 draws 387) |
 | U bridge top above ground, **rear** pod | 407 mm |
 | U brace M12 centre above ground | 268 mm |
 | U bridge width (fore-aft), centred on the hub | 40 mm |
-| Space under the front bridge to the belt | ~54 mm |
+| Space under each bridge to the belt | ~74 mm |
 | Belt width | 118 mm |
 
 On disagreement the pod is authoritative. Correct `cad/pod_interface.scad`, re-run the check, re-run the guards. Do not edit frame numbers directly — they are derived.
@@ -126,7 +121,7 @@ cad/walle_frame.scad                              all else derived
 | Qty | Part | Stock |
 |---|---|---|
 | 2 | Rail, 550 long | 60×30×3 box |
-| 2 | Hanger, 215 (rear pod) and 195 (front pod), 1 × Ø13 | 60×6 flat |
+| 2 | Hanger, 215 long, 1 × Ø13 | 60×6 flat |
 | 2 | Tab, 80 × 177, 4 × Ø11 | 6 mm plate |
 | 4 | Clamp plate, 80 × 30, 2 × Ø11 | 6 mm plate |
 | 2 | Bolt M12×40 8.8 + washer + nylock (replaces the U brace's inboard M12×35) | — |

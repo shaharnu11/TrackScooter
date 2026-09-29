@@ -95,10 +95,15 @@ pod_carr_top  = 284;     // rev013 hub_h + car_top (car_top = 52 + 16)
 // (|z| 76.5..82.5), one bridge welded between the leg tops. The bridge top is
 // flush with the leg tops, so the flat top runs |z| 0..82.5, x -20..+20.
 // One M12 per leg at hub + 52, through leg + carrier (the old M8 fork-leg
-// hole, opened to Ø13). The legs stand on different parts per pod, so the
-// two bridges are NOT at the same height:
+// hole, opened to Ø13).
+// rev013 draws the two bridges at DIFFERENT heights, because the legs stand
+// on different parts:
 //   FRONT pod (shock stub,   seat hub + 21): bridge top 387
 //   REAR  pod (green plates, seat hub + 41): bridge top 407
+// OWNER, 2026-09-29: on the BUILT pods both U braces are the SAME height.
+// The built pods win, so the front value is set to the rear one. 407 is the
+// safe side of the two (the body clears it). NOT MEASURED YET: measure both
+// bridge tops above the ground and put the real number in both lines.
 // Only the REAR pod has green plates. The front pod has none, so the green
 // plate M12 holes above exist on ONE pod only. WALL-E mounts on the U.
 pod_ub_w      = 40;      // rev013 ub_w, along x, centred on the hub axle
@@ -106,7 +111,7 @@ pod_ub_t      = 6;       // rev013 ub_t
 pod_ub_h      = 150;     // rev013 ub_h, leg bottom to bridge top
 pod_ub_zi     = 76.5;    // rev013 ub_z0 = cz - ub_t   leg INNER face
 pod_ub_bolt_y = 268;     // rev013 hub_h + ub_bolt_y   leg M12 centre
-pod_ub_top_f  = 387;     // rev013 hub_h + ub_seat_front + ub_h
+pod_ub_top_f  = 407;     // OWNER: same as the rear. rev013 says 387
 pod_ub_top_r  = 407;     // rev013 hub_h + ub_seat_rear  + ub_h
 
 // ============================================================================

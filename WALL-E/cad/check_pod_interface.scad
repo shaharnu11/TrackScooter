@@ -69,7 +69,10 @@ checks = [
   ["U brace height",         pod_ub_h,     ub_h,                       0.01],
   ["U brace leg inner face", pod_ub_zi,    ub_z0,                      0.01],
   ["U brace M12 height",     pod_ub_bolt_y,hub_h + ub_bolt_y,          0.01],
-  ["U bridge top, FRONT pod",pod_ub_top_f, hub_h + ub_seat_front + ub_h, 0.01],
+  // The owner says the built front U is the same height as the rear one, and
+  // rev013 draws it 20 mm lower. The built pod wins, so this compares the
+  // front against rev013's REAR bridge. See pod_interface.scad.
+  ["U bridge top, FRONT pod (built = rear)", pod_ub_top_f, hub_h + ub_seat_rear + ub_h, 0.01],
   ["U bridge top, REAR pod", pod_ub_top_r, hub_h + ub_seat_rear + ub_h,  0.01],
 ];
 

@@ -42,7 +42,7 @@ Stops on pod mismatch. On purpose.
 
 - The frame **hangs from the pods' U braces**. Only the rear pod has green plates, so they are not used.
 - Per pod: a hanger on the inboard carrier face, on the U brace's own inboard M12 (made M12×40). A tab on top, clamped to the U bridge with 4 × M10 beside the bridge.
-- The front pod's bridge is at 387 mm, the rear pod's at 407 mm. The hangers are 195 and 215 mm.
+- Both U bridges are the same height on the built pods (owner, 2026-09-29). The model uses 407 mm, **not measured yet**. Both hangers are 215 mm.
 - Scooter fork legs come **off**.
 - Full stack: [FRAME_AND_PODS.md](FRAME_AND_PODS.md).
 
@@ -52,7 +52,7 @@ Stops on pod mismatch. On purpose.
 |---|---|
 | Clear between carriers | 165 mm |
 | Over carriers | **177 mm** |
-| U bridge top, front pod | 387 mm |
+| U bridge top, front pod | 407 mm (rev013 draws 387) |
 | U bridge top, rear pod | 407 mm |
 | U brace M12 above ground | 268 mm |
 | U bar | 40 × 6 mm |
@@ -77,7 +77,7 @@ Sheet 2. 60×30×3 except castor legs.
 | Cross member | 2 | 251 mm |
 | Castor leg, 30×30 | 2 | 82 mm |
 | Castor tie | 2 | — |
-| Hanger, 60×6 flat | 1 + 1 | 215 mm (rear pod), 195 mm (front pod) |
+| Hanger, 60×6 flat | 2 | 215 mm. Cut 10 mm long, trim to the measured bridge |
 | Tab, 6 mm plate | 2 | 80 × 177 mm |
 | Clamp plate, 6 mm plate | 4 | 80 × 30 mm |
 
@@ -106,7 +106,7 @@ The rails get **no holes**.
 - Rear cross 25 mm. Front 525 mm. From rail rear. Crosses between the rails: 251 mm.
 - Rails 192–252 mm above ground.
 - Hanger centred 275 mm from each rail's rear end, bottom flush with the rail bottom. Rail outer face welded to the hanger.
-- Tab: tack it on top of the hanger **with the frame sitting on the pods**, M12s and M10s in. The two bridges are 20 mm apart in height, so do not trust a drawing here. Take it off, finish the welds.
+- Tab: tack it on top of the hanger **with the frame sitting on the pods**, M12s and M10s in. The bridge heights are not measured yet, so do not trust a drawing here. Take it off, finish the welds.
 - Anti-tip: 82 mm uprights, Ø75, 280 mm out, **35 mm** off the ground.
 
 **Check:** diagonals match. Clear 251 mm at both ends.
@@ -145,7 +145,7 @@ Daily charge: XT60 on the body. Lift-out: L17. Floor is **150 mm** and the lowes
 
 ![Sheet 4 — chest panel and speaker baffle, with the two holes.](fig/s4.svg)
 
-Floor 428 mm (8 mm over the M10 heads on the rear pod's U tab). Body 430 × 640 × 400 on 176 mm risers.
+Floor 428 mm (8 mm over the M10 heads on the U tabs). Body 430 × 640 × 400 on 176 mm risers.
 
 Chest: 530 × 290, set back 20 mm. Two Ø165, 330 mm apart, 194 mm up from panel bottom. Dry-fit drivers. 140 mm between rims. Each rim has 5 mm of plywood outboard. 7 inch LCD portrait 107 × 183 between them. Window 90 × 160. Bezel on the face.
 

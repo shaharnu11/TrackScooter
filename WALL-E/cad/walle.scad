@@ -305,8 +305,9 @@ module sheet2(){
     note([hg_w/2, pod_ub_bolt_y], [rail_x1 + 120, fr_top + 60],
          str("Ø13 at ", pod_ub_bolt_y - fr_bot, " up — the U brace M12"), s);
     note([tab_w/2, ub_top_hi], [rail_x1 + 120, fr_top + 190],
-         str("hangers ", hg_len(hi_side), " (rear pod) and ", hg_len(-hi_side),
-             " (front pod), tab ", tab_w, " x ", tab_len, " on top"), s);
+         str(hg_len(1) == hg_len(-1) ? str("2 hangers ", hg_len(1))
+               : str("hangers ", hg_len(hi_side), " (rear pod) and ", hg_len(-hi_side), " (front pod)"),
+             ", tab ", tab_w, " x ", tab_len, " on top"), s);
     translate([0, -95]) text("RAIL ELEVATION   front to the RIGHT",
                               size = txt*s*1.35, halign = "center");
   }

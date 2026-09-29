@@ -68,8 +68,9 @@ pod_cl      = 500;   // POD CENTRE TO CENTRE, left to right. Owner, 2026-09-16.
 // the 40 mm bridge. Nothing on the pod is drilled.
 // Two points 119+ mm apart vertically (the M12 and the bridge) plus the clamp
 // bolts either side of the bridge are what stop the frame pitching on the pod.
-// The two U bridges are 20 mm apart in height, so the two hangers are cut to
-// different lengths. Tack the tabs with the frame sitting on the pods.
+// rev013 draws the two U bridges 20 mm apart in height, but the owner says
+// the built ones are the same (pod_interface.scad). hg_len() follows each
+// pod's own number either way. Tack the tabs with the frame on the pods.
 hg_t        = 6;     // hanger, 60x6 flat bar, z
 hg_w        = 60;    // hanger along x, centred on the hub axle
 tab_t       = 6;     // tab on the bridge, from plate
@@ -1158,8 +1159,8 @@ echo(str("BATTERY:  48 V pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
          " on the lower deck, NOT the same case · L17: every pack unplugs — ",
          "48 V after the body comes off the risers, 12 V and PD after the laptop tray"));
 echo(str("DECK:     frame-level stack tops out at ", deck_y,
-         " · belt crown ", pod_crown, " · but the hanger tab on the rear pod's",
-         " U bridge is higher, at ", tab_top_hi, " + ", m10_head_h,
+         " · belt crown ", pod_crown, " · but the hanger tabs on the",
+         " U bridges are higher, at ", tab_top_hi, " + ", m10_head_h,
          " of M10 head, so the body floor has to clear THAT"));
 echo(str("BODY:     floor ", body_y0, " (", body_gap, " over the M10 heads), top ",
          body_y1, " · ", body_l, " long x ", body_w, " wide x ", body_h,
@@ -1277,9 +1278,12 @@ echo("--- THE POD JOINT --------------------------------------------------------
 echo(str("  per pod: 1 hanger on the inboard carrier face, held by the U brace's",
          " inboard M12 at ", pod_ub_bolt_y, " (M12x40 now, was x35) and by a tab",
          " clamped on the U bridge with 4 x M10. NO NEW HOLE IN THE POD"));
-echo(str("  hangers are NOT the same length: ", hg_len(hi_side), " on the rear pod, ",
-         hg_len(-hi_side), " on the front pod (the U bridges are ",
-         ub_top_hi - ub_top_lo, " mm apart in height)"));
+echo(ub_top_hi == ub_top_lo
+     ? str("  both hangers ", hg_len(1), " long: the U bridges are the same height (",
+           ub_top_hi, ", owner — NOT MEASURED YET)")
+     : str("  hangers are NOT the same length: ", hg_len(hi_side), " on the rear pod, ",
+           hg_len(-hi_side), " on the front pod (the U bridges are ",
+           ub_top_hi - ub_top_lo, " mm apart in height)"));
 echo(str("  static load per pod ", round(jt_F), " N, on the hub axle, so no lever.",
          " Worst case is a castor catching the pitch: ", round(jt_M/1000),
          " N.m per pod, lever M12 to bridge ", jt_lever, " mm"));
@@ -1388,9 +1392,11 @@ echo(str("  ", fr_h, "x", fr_w, "x", fr_t, " box  cross members       2 x ", cm_
          "   -> ", 2*rail_len + 2*cm_len, " mm of box tube total"));
 echo(str("    rails have NO holes. Weld each rail's outer face to a hanger, hanger centred ",
          -rail_x0, " mm from the rail's REAR end, hanger bottom flush with the rail bottom"));
-echo(str("  ", hg_w, "x", hg_t, " flat   hangers  1 x ", hg_len(hi_side), " (rear pod) + 1 x ",
-         hg_len(-hi_side), " (front pod), each with 1 hole Ø13 centred, ",
-         pod_ub_bolt_y - fr_bot, " up from the bottom end"));
+echo(str("  ", hg_w, "x", hg_t, " flat   hangers  ",
+         hg_len(1) == hg_len(-1) ? str("2 x ", hg_len(1))
+           : str("1 x ", hg_len(hi_side), " (rear pod) + 1 x ", hg_len(-hi_side), " (front pod)"),
+         ", each with 1 hole Ø13 centred, ", pod_ub_bolt_y - fr_bot,
+         " up from the bottom end. Cut 10 long, trim to the MEASURED bridge"));
 echo(str("  ", tab_t, " mm plate   tabs     2 x ", tab_w, " x ", tab_len,
          ", 4 holes Ø", clamp_d + 1, " at x ±", clamp_bx, ", ",
          pod_z - clamp_zl - rail_zo, " and ", pod_z + clamp_zl - rail_zo,

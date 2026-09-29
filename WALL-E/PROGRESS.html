@@ -168,7 +168,7 @@ PYTHONUNBUFFERED=1 ./.venv/bin/python -u talk_hebrew.py --auto</code></pre>
 <li>Wire <code>talk_hebrew</code> into <code>main.py</code> / personality (one place for camera + rules + talk).</li>
 <li>Follow behaviour: already coded; owner wants it later.</li>
 <li>~~Update BOM/docs to ZJ50A + fuse + XT60~~ — done 2026-09-29 (30 A fuse). WALLE-GUIDE.html still needs a rebuild on the Mac (<code>cad/render_all.sh</code>, then <code>build_guide.py</code>).</li>
-<li>CAD 100×40 only if asked. <strong>Done 2026-09-29: the frame hangs from the U braces</strong> (<code>cad/walle_frame.scad</code>, <code>docs/FRAME_AND_PODS.md</code> section 3). Cost: body floor 335 → 428 mm, robot 910 → 1003 mm, forward tip 18.9° → 17.4° (castor still catches first at 12.3°). Open: which pod goes on which side (<code>hi_side</code>); whether to pocket the body floor over the U tops to win the height back.</li>
+<li>CAD 100×40 only if asked. <strong>Done 2026-09-29: the frame hangs from the U braces</strong> (<code>cad/walle_frame.scad</code>, <code>docs/FRAME_AND_PODS.md</code> section 3). Cost: body floor 335 → 428 mm, robot 910 → 1003 mm, forward tip 18.9° → 17.4° (castor still catches first at 12.3°). Owner accepted the height. Owner says both built U braces are the same height; the model uses 407 mm for both. <strong>Measure both bridge tops</strong> before cutting the hangers.</li>
 <li><code>tof_poll()</code> empty. IMU/LiDAR empty.</li>
 <li>Do not commit <code>brain/models/</code> weights.</li>
 </ol>

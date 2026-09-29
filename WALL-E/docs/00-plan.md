@@ -19,7 +19,7 @@ Read `99-glossary.md` for words. Read `01-architecture.md` for the boards.
 | Frame | Not welded |
 | Electronics / body | Nothing built |
 
-**Measure before welding:** 177 mm over the carrier outer faces, and the U bridge tops (387 mm front pod, 407 mm rear pod). The frame hangs from the U braces. `cad/pod_latest.sh` + `cad/check_pod_interface.scad`.
+**Measure before welding:** 177 mm over the carrier outer faces, and both U bridge tops above the ground (model: 407 mm; owner says both are the same height). The frame hangs from the U braces. `cad/pod_latest.sh` + `cad/check_pod_interface.scad`.
 
 | Fact | Value |
 |---|---|

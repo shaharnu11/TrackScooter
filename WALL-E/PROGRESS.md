@@ -102,7 +102,7 @@ Lighting buy (WS2815 12 V 60/m IP67, fused 12 V, not 48 V) was designed in chat.
 4. Follow behaviour: already coded; owner wants it later.
 5. ~~Update BOM/docs to ZJ50A + fuse + XT60~~ — done 2026-09-29 (30 A fuse). WALLE-GUIDE.html still needs a rebuild on the Mac (`cad/render_all.sh`, then `build_guide.py`).
 6. CAD 100×40 only if asked.
-   **Done 2026-09-29: the frame hangs from the U braces** (`cad/walle_frame.scad`, `docs/FRAME_AND_PODS.md` section 3). Cost: body floor 335 → 428 mm, robot 910 → 1003 mm, forward tip 18.9° → 17.4° (castor still catches first at 12.3°). Open: which pod goes on which side (`hi_side`); whether to pocket the body floor over the U tops to win the height back.
+   **Done 2026-09-29: the frame hangs from the U braces** (`cad/walle_frame.scad`, `docs/FRAME_AND_PODS.md` section 3). Cost: body floor 335 → 428 mm, robot 910 → 1003 mm, forward tip 18.9° → 17.4° (castor still catches first at 12.3°). Owner accepted the height. Owner says both built U braces are the same height; the model uses 407 mm for both. **Measure both bridge tops** before cutting the hangers.
 7. `tof_poll()` empty. IMU/LiDAR empty.
 8. Do not commit `brain/models/` weights.
 
