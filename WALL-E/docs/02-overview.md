@@ -52,7 +52,7 @@ The frame hangs from the pods' U braces. Pod off: 1 × M12 + 4 × M10 per side. 
 
 ![The electronics shelf, labelled](fig/walle_shelf.png)
 
-2. **Body floor clears the belt crown** (327 mm), not the frame (257 mm). Four 78 mm risers.
+2. **Body floor clears the U brace tabs** (413 mm + M10 heads), not the belt crown (327 mm) or the frame (252 mm). Four 176 mm risers.
 
 3. **Battery box closed.** Six panels, gasket, plugs, vent. Daily charge in place. Packs still lift out (L17).
 

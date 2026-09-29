@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>README.md — WALL-E</title><style>
+:root{--bg:#f7f6f2;--fg:#201d18;--mut:#6b6458;--line:#dcd7cb;--card:#fffdf8;
+      --acc:#b0761d;--accbg:#fbf2e0;--code:#efebe1;--warn:#8d2f20;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:0 22px 80px}
+a{color:var(--acc)}
+h1{font-size:34px;line-height:1.2;margin:.2em 0}
+h2{font-size:25px;margin:1.8em 0 .5em;padding-top:.35em;border-top:1px solid var(--line)}
+h3{font-size:20px;margin:1.5em 0 .4em}
+h4,h5,h6{font-size:16.5px;margin:1.3em 0 .3em}
+p,ul,ol,table,pre,blockquote{margin:.7em 0}
+li{margin:.25em 0}
+code{background:var(--code);padding:1px 5px;border-radius:4px;
+     font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+pre{background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--acc);background:var(--accbg);
+           padding:.5em 14px;border-radius:0 6px 6px 0}
+blockquote p:first-child{margin-top:0} blockquote p:last-child{margin-bottom:0}
+.tw{overflow-x:auto;margin:.8em 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--code)}
+hr{border:0;border-top:1px solid var(--line);margin:1.8em 0}
+
+/* ---- cover ---- */
+.cover{padding:60px 0 26px;border-bottom:3px solid var(--fg)}
+.cover .sub{font-size:19px;color:var(--mut);margin-top:.3em}
+.cover .meta{font-size:13.5px;color:var(--mut);margin-top:1.4em}
+
+/* ---- contents ---- */
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;
+     padding:8px 18px 14px;margin:26px 0}
+.toc h2{border:0;margin:.8em 0 .3em;font-size:19px}
+.toc ol{list-style:none;padding:0;margin:0}
+.toc>ol>li{border-top:1px solid var(--line);padding:9px 0}
+.toc>ol>li:first-child{border-top:0}
+.toc .n{display:inline-block;min-width:28px;height:28px;line-height:28px;
+        text-align:center;border-radius:50%;background:var(--acc);color:#fff;
+        font-size:14px;margin-right:10px;font-weight:600}
+.toc .t{font-weight:600;font-size:17px;text-decoration:none;color:inherit}
+.toc .t:hover{color:var(--acc)}
+.toc .w{color:var(--mut);font-size:14px;margin:.35em 0 0 38px}
+.toc .subs{margin:.4em 0 0 38px;font-size:13.5px;color:var(--mut);
+            display:flex;flex-wrap:wrap;gap:3px 14px}
+.toc .subs a{color:var(--mut);text-decoration:none}
+.toc .subs a:hover{color:var(--acc)}
+
+/* ---- parts ---- */
+.part{padding-top:26px}
+.part-hd{border-top:3px solid var(--fg);padding-top:16px;margin-top:40px}
+.part-hd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.part-hd h1{font-size:29px;margin:.15em 0 .25em}
+.part-hd .lead{color:var(--mut);font-size:16.5px;margin:0}
+.src{color:var(--mut);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;
+     border-bottom:1px solid var(--line);padding-bottom:4px;margin:2.4em 0 .8em}
+
+/* ---- figures ---- */
+figure{margin:1.4em 0;background:var(--card);border:1px solid var(--line);
+       border-radius:10px;padding:14px}
+figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+figure svg{display:block;width:100%;height:auto}
+figure svg path{fill:#16130e;stroke:none}
+figcaption{color:var(--mut);font-size:13.5px;margin-top:10px;text-align:center}
+.sheet figure{background:#fff}
+
+.pagehd{padding:34px 0 20px}
+.pagehd .kick{font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;
+              color:var(--acc);font-weight:700}
+.pagenav{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 6px}
+.pagenav a{display:inline-block;padding:4px 11px;border:1px solid var(--line);
+           border-radius:999px;background:var(--card);text-decoration:none;
+           color:var(--mut);font-size:13px}
+.pagenav a.here{background:var(--acc);border-color:var(--acc);color:#fff}
+.pagetoc ol{margin:0;padding-left:20px;list-style:decimal}
+.pagetoc li{font-size:14.5px;margin:.15em 0}
+.pagetoc h2{border:0;margin:.6em 0 .4em;font-size:17px}
+
+.note{background:var(--accbg);border:1px solid var(--line);border-left:4px solid var(--acc);
+      border-radius:0 8px 8px 0;padding:13px 16px;margin:20px 0;font-size:15px}
+.note strong:first-child{color:var(--warn)}
+.top{position:fixed;right:16px;bottom:16px;background:var(--acc);color:#fff;
+     text-decoration:none;border-radius:999px;padding:9px 15px;font-size:13.5px;
+     box-shadow:0 2px 8px rgba(0,0,0,.2)}
+footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--line);
+       color:var(--mut);font-size:13.5px}
+
+@media print{
+  body{background:#fff;font-size:11.5pt}
+  .wrap{max-width:none;padding:0}
+  .top{display:none}
+  .part-hd{break-before:page;page-break-before:always}
+  figure,table,pre,blockquote{break-inside:avoid;page-break-inside:avoid}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+  a{color:inherit;text-decoration:none}
+  .toc{break-after:page;page-break-after:always}
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15140f;--fg:#ece7dc;--mut:#9b9284;--line:#34302a;--card:#1d1b15;
+        --acc:#d99c3c;--accbg:#29221a;--code:#25231c;--warn:#e0705c;}
+  figure svg path{fill:#e8e3d8}
+  .sheet figure{background:#14120e}
+}
+</style></head><body><div class="wrap"><header class="cover pagehd"><div class="kick">WALL-E · brain/models/whisper-en/README.md</div><h1>README.md</h1><div class="meta">One document of the project. The whole thing in reading order is in <a href="../../../WALLE-GUIDE.html">the build guide</a>. Generated 2026-09-29 from <code>brain/models/whisper-en/README.md</code> — do not edit this file.</div></header><nav class="pagenav"><a href="../../../README.html">WALL-E</a><a href="../../../docs/02-overview.html">02 — What this robot is</a><a href="../../../docs/00-plan.html">00 — Plan</a><a href="../../../docs/01-architecture.html">01 — Architecture</a><a href="../../../docs/05-bom.html">05 — Bill of materials</a><a href="../../../docs/FRAME_AND_PODS.html">Frame and pods — mechanical interface</a><a href="../../../docs/BUILD.html">Building WALL-E</a><a href="../../../docs/04-power-and-wiring.html">04 — Power and wiring</a><a href="../../../docs/06-why-the-batteries-are-low.html">06 — Batteries low, box sealed</a><a href="../../../firmware/README.html">Firmware</a><a href="../../README.html">Brain</a><a href="../../../docs/03-safety-log.html">03 — Safety log</a><a href="../../../docs/99-glossary.html">Glossary</a><a href="../../../PROGRESS.html">WALL-E — where we stopped</a><a href="../README.html">Hebrew speech models (offline)</a><a href="../chat/README.html">README.md</a><a href="../tts-blue/README.html">ONNX export — text2latent_v2_ru @ step 748000</a><a href="README.html" class="here">README.md</a><a href="../whisper-he-turbo/README.html">README.md</a><a href="../whisper-he/README.html">README.md</a><a href="../../music/README.html">WALL-E&#x27;s music</a><a href="../../personality.html">personality.md</a></nav><hr>
+<p>language:</p>
+<ul>
+<ul>
+<li>en</li>
+</ul>
+</ul>
+<p>tags:</p>
+<ul>
+<ul>
+<li>audio</li>
+<li>automatic-speech-recognition</li>
+</ul>
+</ul>
+<p>license: mit library_name: ctranslate2</p>
+<hr>
+<h2 id="whisper-smallen-model-for-ctranslate2">Whisper small.en model for CTranslate2</h2>
+<p>This repository contains the conversion of <a href="https://huggingface.co/openai/whisper-small.en">openai/whisper-small.en</a> to the <a href="https://github.com/OpenNMT/CTranslate2">CTranslate2</a> model format.</p>
+<p>This model can be used in CTranslate2 or projects based on CTranslate2 such as <a href="https://github.com/systran/faster-whisper">faster-whisper</a>.</p>
+<h3 id="example">Example</h3>
+<pre><code>from faster_whisper import WhisperModel
+
+model = WhisperModel(&quot;small.en&quot;)
+
+segments, info = model.transcribe(&quot;audio.mp3&quot;)
+for segment in segments:
+    print(&quot;[%.2fs -&gt; %.2fs] %s&quot; % (segment.start, segment.end, segment.text))</code></pre>
+<h3 id="conversion-details">Conversion details</h3>
+<p>The original model was converted with the following command:</p>
+<pre><code>ct2-transformers-converter --model openai/whisper-small.en --output_dir faster-whisper-small.en \
+    --copy_files tokenizer.json --quantization float16</code></pre>
+<p>Note that the model weights are saved in FP16. This type can be changed when the model is loaded using the <a href="https://opennmt.net/CTranslate2/quantization.html"><code>compute_type</code> option in CTranslate2</a>.</p>
+<h3 id="more-information">More information</h3>
+<p><strong>For more information about the original model, see its <a href="https://huggingface.co/openai/whisper-small.en">model card</a>.</strong></p><footer>Generated by <code>build_guide.py</code> from <code>brain/models/whisper-en/README.md</code>. Edit the markdown, not this page.</footer></div><a class="top" href="#">Top</a></body></html>

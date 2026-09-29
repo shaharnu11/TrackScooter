@@ -22,6 +22,7 @@ brain/english_talk.wav
 # WALL-E's songs: yours, not the repo's. Keep the README.
 brain/music/*
 !brain/music/README.md
+!brain/music/README.html
 # Spotify login token and your song list: private.
 brain/spotify/
 # Shahar's face features and hashed secret word (owner.py): private.
