@@ -63,6 +63,14 @@ checks = [
   ["front M12 hole",         pod_bolt_x[0],rl_bolts[0],                0.01],
   ["rear M12 hole",          pod_bolt_x[1],rl_bolts[1],                0.01],
   ["M12 diameter",           pod_bolt_d,   bolt_d,                     0.01],
+  ["carrier top edge",       pod_carr_top, hub_h + car_top,            0.01],
+  ["U brace bar width",      pod_ub_w,     ub_w,                       0.01],
+  ["U brace bar thickness",  pod_ub_t,     ub_t,                       0.01],
+  ["U brace height",         pod_ub_h,     ub_h,                       0.01],
+  ["U brace leg inner face", pod_ub_zi,    ub_z0,                      0.01],
+  ["U brace M12 height",     pod_ub_bolt_y,hub_h + ub_bolt_y,          0.01],
+  ["U bridge top, FRONT pod",pod_ub_top_f, hub_h + ub_seat_front + ub_h, 0.01],
+  ["U bridge top, REAR pod", pod_ub_top_r, hub_h + ub_seat_rear + ub_h,  0.01],
 ];
 
 echo("");

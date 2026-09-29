@@ -63,13 +63,13 @@ solid(){ # name camera imgsize mode
     walle_frame.scad 2>/dev/null
 }
 echo "== 4. solid views"
-solid walle_robot_3q    1900,-1700,1100,0,0,420   1000,950  robot
-solid walle_robot_front 2700,0,460,0,0,460        900,1000  robot
-solid walle_robot_side  0,-2600,500,0,0,440       1000,900  robot
-solid walle_frame_3q    1500,-1500,1000,0,0,300   1000,900  assembly
-solid walle_frame_section 2000,-1900,1250,0,0,430 1000,900  section
-solid walle_head        700,-620,950,0,0,830      900,700   head
-solid walle_chest       -1250,-1100,1500,60,0,560 950,800   chest
+solid walle_robot_3q    2000,-1800,1150,0,0,470   1000,950  robot
+solid walle_robot_front 2900,0,505,0,0,505        900,1000  robot
+solid walle_robot_side  0,-2800,550,0,0,490       1000,900  robot
+solid walle_frame_3q    1500,-1500,1050,0,0,330   1000,900  assembly
+solid walle_frame_section 2000,-1900,1300,0,0,480 1000,900  section
+solid walle_head        700,-620,1040,0,0,920     900,700   head
+solid walle_chest       -1250,-1100,1590,60,0,650 950,800   chest
 
 echo "   build/walle_shelf.png"
 "$OSC" -o "$OUT/walle_shelf.png" --imgsize=1100,900 \

@@ -196,7 +196,7 @@ module view_top(t = 4){
 
 // the robot without the ground plane, which would swamp every projection
 module robot_nog(){
-  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod();
+  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod(s);
   frame_steel(); pod_bolts(); battery_box();
   if (show_batteries) batteries();
   anti_tip(); risers(); body_shell(); shelf_layout();
@@ -273,54 +273,48 @@ module sheet2(){
   // its own bands above and below.
 
   // ---- PLAN, looking down
-  translate([0, 820]){
+  translate([0, 760]){
     view_top(4) steel_only();
-    // above: widths
-    dim_h(-rail_zi, rail_zi, 210, str("CLEAR BAY ", bay_w), s);
-    dim_h(-rail_zo, rail_zo, 320, str("OVER THE RAILS ", 2*rail_zo), s);
+    // above: widths. The hanger tabs reach out to |z| 332, so these go above them
+    dim_h(-rail_zi, rail_zi, 380, str("CLEAR BAY ", bay_w), s);
+    dim_h(-rail_zo, rail_zo, 460, str("OVER THE RAILS ", 2*rail_zo), s);
     // below: lengths, measured from the REAR end (x0), which is -x
-    dim_h(rail_x0, rail_x1, -230, str("RAIL LENGTH ", rail_len), s, true);
-    dim_h(rail_x0, cm_rear_x, -340,
+    dim_h(rail_x0, rail_x1, -400, str("RAIL LENGTH ", rail_len), s, true);
+    dim_h(rail_x0, cm_rear_x, -480,
           str("rear cross member ", round(cm_rear_x - rail_x0)), s, true);
-    dim_h(rail_x0, cm_front_x, -450,
+    dim_h(rail_x0, cm_front_x, -560,
           str("front cross member ", round(cm_front_x - rail_x0)), s, true);
-    note([0, rail_zi], [560, 300],
+    note([cm_front_x, 0], [560, 200],
          str("cross members ", fr_w, "x", fr_h, ", ", cm_len,
              " long, ", bay_w, " clear"), s);
-    translate([0, 355]) text("PLAN   front to the RIGHT",
+    translate([0, 530]) text("PLAN   front to the RIGHT",
                              size = txt*s*1.35, halign = "center");
   }
 
-  // ---- RAIL ELEVATION, and the M12 holes. This is the point of the sheet.
-  translate([0, -330]){
+  // ---- RAIL ELEVATION, and the hanger. This is the point of the sheet.
+  translate([0, -440]){
     view_side(4) steel_only();
-    // the two holes, ringed, with witness lines up into the dimension bands
-    for (bx = pod_bolt_x){
-      ring([bx, pod_gp_yc], 25, s);
-      wit([bx, pod_gp_yc], [bx, fr_top + 70], s);
-    }
-    dim_h(pod_bolt_x[0], pod_bolt_x[1], fr_top + 90,
-          str("M12 PITCH ", pod_bolt_x[1] - pod_bolt_x[0]), s);
-    dim_h(rail_x0, pod_bolt_x[0], fr_top + 200,
-          str("REAR hole, ", round(pod_bolt_x[0] - rail_x0),
-              " from the rail's REAR end"), s);
+    // the hanger's M12 hole, ringed
+    ring([0, pod_ub_bolt_y], 20, s);
+    dim_h(rail_x0, 0, ub_top_hi + 60,
+          str("HANGER CENTRE, ", -rail_x0, " from the rail's REAR end"), s);
     // heights, on the left where nothing else goes
     dim_v(fr_bot, fr_top, rail_x0 - 110, str("rail ", fr_h), s, true);
     dim_v(0, fr_bot, rail_x0 - 260, str("rail bottom ", fr_bot), s, true);
-    // and the sleeve note, out to the right
-    note([pod_bolt_x[1] + 20, pod_gp_yc], [rail_x1 + 120, fr_top + 150],
-         str("2 x Ø25 THROUGH BOTH WALLS, ", pod_gp_yc - fr_bot,
-             " up from the rail bottom"), s);
-    note([pod_bolt_x[1] + 20, pod_gp_yc - 30], [rail_x1 + 120, fr_top + 60],
-         str("weld a Ø25 / Ø13 x ", fr_w, " sleeve into each"), s);
-    translate([0, -150]) text("RAIL ELEVATION   front to the RIGHT",
+    // and the hanger notes, out to the right
+    note([hg_w/2, pod_ub_bolt_y], [rail_x1 + 120, fr_top + 60],
+         str("Ø13 at ", pod_ub_bolt_y - fr_bot, " up — the U brace M12"), s);
+    note([tab_w/2, ub_top_hi], [rail_x1 + 120, fr_top + 190],
+         str("hangers ", hg_len(hi_side), " (rear pod) and ", hg_len(-hi_side),
+             " (front pod), tab ", tab_w, " x ", tab_len, " on top"), s);
+    translate([0, -95]) text("RAIL ELEVATION   front to the RIGHT",
                               size = txt*s*1.35, halign = "center");
   }
 
-  translate([-770, 1270])
-    text("Reuses the 4 M12 holes ALREADY DRILLED in the pods. No new hole goes into a built pod.",
+  translate([-770, 1340])
+    text("Hangs from the pods' U braces: the U's own M12 + 4 x M10 clamps. No new hole goes into a built pod.",
          size = txt*s*0.85);
-  sheet_frame(-830, -760, 1510, 1350, s);
+  sheet_frame(-830, -760, 1510, 1420, s);
   title_block(-750, -700, "SHEET 2", "FRAME WELDMENT — STEEL ONLY", s);
 }
 
@@ -359,25 +353,13 @@ module sheet3(){
          str("Ø", vent_d, " MEMBRANE VENT, on the centreline"), s);
   }
 
-  // ---- side walls. The M12 spanner holes are the only tricky part here.
+  // ---- side walls. Plain panels: the pod joint is outside the box now.
   translate([0, y_sideA]){
     o2() box_side_2d();
-    translate([tray_len*0.70, box_wall_h*0.22])
-      text("SIDE WALL   2 off, HANDED", size = txt*s, halign = "center");
-    for (bx = pod_bolt_x)
-      wit([bx + tray_len/2, pod_gp_yc - tray_y0], [bx + tray_len/2, -60], s);
-    dim_h(pod_bolt_x[0] + tray_len/2, pod_bolt_x[1] + tray_len/2, -90,
-          str("pitch ", pod_bolt_x[1] - pod_bolt_x[0]), s, true);
-    dim_h(0, pod_bolt_x[0] + tray_len/2, -200,
-          str("from the REAR edge ", round(pod_bolt_x[0] + tray_len/2)), s, true);
-    dim_v(0, pod_gp_yc - tray_y0, -90, str(pod_gp_yc - tray_y0, " up"), s, true);
+    translate([tray_len*0.50, box_wall_h*0.45])
+      text("SIDE WALL   NO HOLES", size = txt*s, halign = "center");
+    dim_h(0, tray_len, -90, str(tray_len), s, true);
     dim_v(0, box_wall_h, tray_len + 90, str(box_wall_h), s);
-    note([pod_bolt_x[1] + tray_len/2 + bolt_access_d/2, pod_gp_yc - tray_y0],
-         [tray_len + 130, box_wall_h*0.75],
-         str("2 x Ø", bolt_access_d, " M12 SPANNER ACCESS"), s);
-    note([pod_bolt_x[1] + tray_len/2 + bolt_access_d/2, pod_gp_yc - tray_y0 - 18],
-         [tray_len + 130, box_wall_h*0.30],
-         "FIT SILICONE BLANKING PLUGS AFTER BOLTING UP", s);
   }
   translate([0, y_sideB]){
     o2() box_side_2d();

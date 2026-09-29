@@ -2,11 +2,11 @@
 // #  WALL-E FRAME — the two Rev 012 track pods, SIDE BY SIDE, skid steer     #
 // #                                                                          #
 // #  The pods are BUILT. Every pod number in here is therefore a fixed       #
-// #  input, not a choice: carrier plate inner faces 148 apart, green plates  #
-// #  at |z| 80..86, the M12 holes already drilled at pod-local x -168 and    #
-// #  -108. Those |z| figures read 94..100 until 2026-09-17, which was a      #
-// #  reverted proposal no pod was built to. Numbers come from               #
-// #  pod_interface.scad; check_pod_interface.scad verifies them.            #
+// #  input, not a choice: carrier inner faces 165 apart, and the top U brace #
+// #  on each pod (bridge top 387 on the front pod, 407 on the rear pod).     #
+// #  Since 2026-09-29 the frame HANGS FROM THE U BRACES. It used to bolt to  #
+// #  the green plates, but only the rear pod has green plates. Numbers come  #
+// #  from pod_interface.scad; check_pod_interface.scad verifies them.        #
 // #  This file designs only the thing that does not exist yet — the frame    #
 // #  that holds the two pods left and right, carries a battery each side,    #
 // #  and stops the robot pitching onto its face.                            #
@@ -49,8 +49,8 @@ png_up          = false;    // true only for PNG renders — see the note at the
 //
 //     openscad -o /dev/null WALL-E/check_pod_interface.scad
 //
-// It compares all 23 numbers and prints OK or MISMATCH for each. As of
-// 2026-09-16 all 23 agree.
+// It compares all 30 numbers and prints OK or MISMATCH for each. As of
+// 2026-09-29 all 30 agree.
 include <pod_interface.scad>
 
 // ============================================================================
@@ -60,8 +60,33 @@ pod_cl      = 500;   // POD CENTRE TO CENTRE, left to right. Owner, 2026-09-16.
                      // Overall width = pod_cl + 200 (the green plates stick out
                      // 100 each side). 500 -> 700 wide, good WALL-E proportion.
 
-// -- rails: box tube, running fore/aft, bolted to the INBOARD green plates ----
-fr_h        = 60;    // rail height, y. 60 matches the green plate band exactly
+// -- the pod mount: a HANGER on each pod's top U brace (owner, 2026-09-29) ----
+// Per pod, one 60x6 flat bar stands on the inboard carrier's outer face. The U
+// brace's existing inboard M12 goes through it (a longer bolt, no new hole).
+// At the top it turns into a flat TAB that lies on the U bridge, and two
+// clamp plates under the bridge pull the tab down with M10s that pass BESIDE
+// the 40 mm bridge. Nothing on the pod is drilled.
+// Two points 119+ mm apart vertically (the M12 and the bridge) plus the clamp
+// bolts either side of the bridge are what stop the frame pitching on the pod.
+// The two U bridges are 20 mm apart in height, so the two hangers are cut to
+// different lengths. Tack the tabs with the frame sitting on the pods.
+hg_t        = 6;     // hanger, 60x6 flat bar, z
+hg_w        = 60;    // hanger along x, centred on the hub axle
+tab_t       = 6;     // tab on the bridge, from plate
+tab_w       = 80;    // tab along x. Wider than the bridge so the M10s clear it
+clamp_t     = 6;     // clamp plate under the bridge
+clamp_w     = 30;    // clamp plate along z
+clamp_zl    = 55;    // clamp centres at pod-local |z|, one near each U leg
+clamp_bx    = 27;    // M10 centres at x +-27, beside the 40 mm bridge
+clamp_d     = 10;    // M10 8.8
+m10_head_h  = 7;     // M10 head on top of the tab. The body floor clears it
+m10_tail    = 14;    // nut + 4 mm of thread under the clamp plate
+m12_nut_r   = 10.4;  // M12 nut, half across corners. It sits on the hanger
+hi_side     = 1;     // the side the REAR pod (the 407 bridge) goes on.
+                     //   Cosmetic until pod handedness is decided.
+
+// -- rails: box tube, running fore/aft, welded to the hangers -----------------
+fr_h        = 60;    // rail height, y
 fr_w        = 30;    // rail thickness, z
 fr_t        = 3;     // wall
 rail_x0     = -275;  // rail REAR end. Front is +x on this robot — the chest
@@ -88,9 +113,6 @@ batt_upright = true; // true  = pack on its side: 80 wide, 110 tall  <- DEFAULT
                      // about 15 mm of extra centre-of-mass height, which is
                      // nothing next to the body. Guards below check both.
 batt_gap_z  = 24;    // gap between the two packs, for straps and wiring
-bolt_access_d = 30;  // hole in the box side wall to get a spanner on each M12
-                     //   Each one gets a SILICONE BLANKING PLUG. They are
-                     //   holes in a sealed box, and they point at the belts.
 
 // -- sealing the box ---------------------------------------------------------
 tray_lid_t  = 12;    // plywood lid over the top
@@ -166,7 +188,7 @@ body_w      = 640;   // +20 for the chest LCD slot. Pods still proud of the body
 body_l      = 430;   // pod is 363 long — this overhangs it by 33 each end
 body_h      = 400;
 body_wall   = 12;    // SOLID plywood, not a skin over foam. Owner 2026-09-17.
-body_gap    = 8;     // body floor clearance over the pod belt crown
+body_gap    = 8;     // body floor clearance over the highest thing under it
 chest_d     = 20;    // how deep the front chest panel is recessed
 chest_marg  = 55;    // border round the chest panel
 chest_t     = 12;    // the chest panel itself. It has to BE a panel: chest_d is
@@ -342,22 +364,29 @@ body_com_frac = (m_body_shell*body_shell_frac + body_extra*body_extra_frac)
 $fa = 4; $fs = 0.7;
 
 pod_z       = pod_cl/2;                 // each pod's centre plane
-// pod_mount_z comes from ../pod_interface.scad. Since rev013 measured the
-// built pods it is the CARRIER's outer face at 88.5, not the green plate:
-// the plate moved inboard (76.5..82.5) and the carrier now stands 6 mm proud
-// of it. The rail lands on the carrier; pod_packer_t fills the gap at the
-// bolts. Read the mounting-face section of pod_interface.scad before touching
-// anything below.
+// pod_mount_z comes from ../pod_interface.scad: the CARRIER's outer face at
+// 88.5. The hanger lies flat on it. The green plates play no part any more.
 width_over  = pod_cl + 2*pod_mount_z;   // 677 — overall robot width
 
-// the rail's OUTER face lies flat on the inboard CARRIER face
-rail_zo     = pod_z - pod_mount_z;      // 161.5
-rail_zi     = rail_zo - fr_w;           // 131.5 — rail inner face
-bay_w       = 2*rail_zi;                // 263 — clear width between the rails
+// the hanger lies on the inboard carrier face, the rail is welded to the hanger
+hg_zo       = pod_z - pod_mount_z;      // 161.5 — hanger face on the carrier
+rail_zo     = hg_zo - hg_t;             // 155.5 — rail outer face on the hanger
+rail_zi     = rail_zo - fr_w;           // 125.5 — rail inner face
+bay_w       = 2*rail_zi;                // 251 — clear width between the rails
 
-fr_bot      = pod_gp_yc - pod_gp_w/2;   // 197 — rail bottom, flush with the plate
-fr_top      = fr_bot + fr_h;            // 257 — rail top, flush with the plate
+// The rail sits UNDER the U brace M12, so the nut on the hanger face clears it.
+fr_top      = floor(pod_ub_bolt_y - m12_nut_r - 5);  // 252
+fr_bot      = fr_top - fr_h;            // 192
 rail_x1     = rail_x0 + rail_len;       // 275
+
+// the two U bridges, per side. s = +1 / -1 is the pod at z = +pod_z / -pod_z
+function ub_top(s) = s == hi_side ? pod_ub_top_r : pod_ub_top_f;
+ub_top_lo   = min(pod_ub_top_f, pod_ub_top_r);  // 387, front pod
+ub_top_hi   = max(pod_ub_top_f, pod_ub_top_r);  // 407, rear pod
+tab_z1      = pod_z + pod_carr_zi;      // 332.5 — the bridge's outer end
+tab_len     = tab_z1 - rail_zo;         // 177 — tab, rail face to bridge end
+function hg_len(s) = ub_top(s) - fr_bot;// hanger, rail bottom to the bridge top
+tab_top_hi  = ub_top_hi + tab_t;        // 413 — highest steel under the body
 cm_rear_x   = rail_x0 + fr_w/2 + 10;    // cross member centres
 cm_front_x  = rail_x1 - fr_w/2 - 10;
 
@@ -368,8 +397,8 @@ cm_front_x  = rail_x1 - fr_w/2 - 10;
 // sand inward and upward, and a U is open at the top and at both ends. Owner,
 // 2026-09-16: the packs must be in a closed box. So: floor, two sides, two
 // ends, and a gasketed lid over the top.
-tray_zi     = rail_zi - tray_t;         // 108 — box inner wall face
-tray_clear  = 2*tray_zi;                // 216 — usable width inside the box
+tray_zi     = rail_zi - tray_t;         // 113.5 — box inner wall face
+tray_clear  = 2*tray_zi;                // 227 — usable width inside the box
 tray_floor  = tray_y0 + tray_t;         // 162 — packs stand on this
 tray_len    = batt_l + 2*tray_t + 20;   // box outside length
 tray_in_len = tray_len - 2*tray_t;      // clear length inside, between the ends
@@ -388,11 +417,11 @@ box_wall_h  = box_top - tray_y0;                // how tall the side walls are
 deck_y      = max(fr_top, box_top) + 8;         // top of the frame-level stack
 
 // -- body and head geometry --------------------------------------------------
-// The body floor cannot sit at deck_y, because the pods' belt crown is HIGHER
-// than the frame. It has to clear the crown, and the gap between the two is
-// bridged by four risers off the rail tops.
-pod_crown   = pod_top;                          // 327 — belt crown, the high point
-body_y0     = max(pod_crown, deck_y) + body_gap;// body floor
+// The body floor cannot sit at deck_y. The U braces stand higher than the
+// belt crown, and the hanger tabs and their M10 heads sit on top of them, so
+// the floor clears THOSE. Four risers off the rail tops bridge the gap.
+pod_crown   = pod_top;                          // 327 — belt crown
+body_y0     = max(pod_crown, deck_y, tab_top_hi + m10_head_h) + body_gap;
 body_y1     = body_y0 + body_h;                 // body top
 riser_h     = body_y0 - fr_top;                 // riser length, rail top to floor
 shelf_y     = body_y0 + body_wall;              // electronics stand on this
@@ -546,7 +575,11 @@ shelf_reach = 100*(shelf_area - spk_shadow)/shelf_area;
 fr_area     = (fr_h*fr_w - (fr_h - 2*fr_t)*(fr_w - 2*fr_t)) * 1e-6;
 cm_len      = bay_w;                            // cross member length
 steel_len   = (2*rail_len + 2*cm_len) * 1e-3;   // m
-m_steel     = fr_area * steel_len * steel_rho;
+m_mount     = (hg_w*hg_t*(hg_len(1) + hg_len(-1))     // 2 hangers
+             + 2*tab_w*tab_t*tab_len                  // 2 tabs
+             + 4*tab_w*clamp_w*clamp_t                // 4 clamp plates
+              ) * 1e-9 * steel_rho;
+m_steel     = fr_area * steel_len * steel_rho + m_mount;
 // the battery box is now a CLOSED box, so this counts all six panels. It used
 // to count a floor and two short walls, and so it under-read.
 box_out_w   = tray_clear + 2*tray_t;
@@ -555,7 +588,7 @@ m_tray      = (tray_len*box_out_w*tray_t                  // floor
              + 2*tray_len*box_wall_h*tray_t               // side walls
              + 2*box_out_w*box_wall_h*tray_t              // end walls
               ) * 1e-9 * ply_rho;
-m_frame     = m_steel + m_tray + 1.5;           // +1.5 bolts, sleeves, brackets
+m_frame     = m_steel + m_tray + 1.5;           // +1.5 bolts, brackets, welds
 
 // one speaker: the driver, plus its enclosure worked out from the geometry
 // rather than guessed. The enclosure is open at the front, where the chest
@@ -625,19 +658,25 @@ at_lever   = at_x - tip_edge;
 at_catch   = asin(at_clear/at_lever);
 
 // -- the pod joint -----------------------------------------------------------
-// The bolt pair is 138 mm forward of the ground contact centre, so the vertical
-// load arrives at the joint with a lever and the two bolts take it as a couple.
-jt_xc      = (pod_bolt_x[0] + pod_bolt_x[1])/2; // -138
-jt_span    = abs(pod_bolt_x[1] - pod_bolt_x[0]);// 60
-jt_F       = m_total*9.81/2;                    // vertical load per pod
-jt_M       = jt_F * abs(jt_xc - com_x);         // N.mm
-jt_Fbolt   = jt_M/jt_span;                      // per bolt, tension/compression
-jt_Zgp     = pod_gp_t*pod_gp_w*pod_gp_w/6;      // green plate, 60x6 on edge
+// The hanger is on the hub axle (x = 0), right over the ground contact centre,
+// so the static load has almost no lever. The worst case is a castor catching
+// the pitch: the whole robot, 1 g, on one castor at_x out. Each pod's joint
+// takes half of that as a pitch moment.
+jt_F       = m_total*9.81/2;                    // static vertical load per pod
+jt_M       = m_total*9.81/2 * at_x;             // N.mm, pitch moment per pod
+// the moment reaches the pod as a couple between the M12 and the bridge.
+// The FRONT pod's bridge is the lower one, so its lever is the short one.
+jt_lever   = ub_top_lo - pod_ub_bolt_y;         // 119
+jt_Fm12    = jt_M/jt_lever;                     // fore-aft shear on the M12
+// and, if the bridge bearing is ignored, the M10s alone as a couple across x
+jt_Fm10    = jt_M/(2*clamp_bx)/2;               // per bolt, 2 bolts each side
+jt_Zhg     = hg_t*hg_w*hg_w/6;                  // hanger, 60x6 on edge
 jt_Irl     = (fr_w*pow(fr_h,3) - (fr_w - 2*fr_t)*pow(fr_h - 2*fr_t,3))/12;
 jt_Zrl     = jt_Irl/(fr_h/2);
-jt_s_gp    = jt_M/jt_Zgp;
-jt_s_rl    = jt_M/jt_Zrl;
-bolt_preload = 50000;                           // N, M12 10.9 at ~100 N.m
+jt_s_hg    = jt_M/jt_Zhg;                       // hanger, at the rail weld
+jt_s_rl    = m_total*9.81/2 * cm_front_x/jt_Zrl;// rail, castor to hanger
+m12_shear  = 40000;                             // N, M12 8.8 single shear
+m10_preload = 24000;                            // N, M10 8.8 at ~45 N.m
 
 // ============================================================================
 //  5. GEOMETRY
@@ -662,9 +701,11 @@ module beam_z(len, h, w, t){           // box tube along z
   }
 }
 
-// ---- one pod, simplified: belt envelope + carrier + green plates ------------
-module pod(){
+// ---- one pod, simplified: belt, carriers, U brace, green plates -------------
+// s is the side the pod sits on. Only the REAR pod (hi_side) has green plates.
+module pod(s = 1){
   idler_y = pod_hub_h - pod_B;                    // 66
+  rear    = s == hi_side;
   // belt envelope — hull of the sprocket circle and the two idler circles
   color(c_belt, 0.55) translate([0,0,-pod_belt_w/2])
     linear_extrude(pod_belt_w) hull(){
@@ -672,74 +713,101 @@ module pod(){
       translate([ pod_A/2, idler_y])     circle(r = pod_idler_d/2 + pod_T);
       translate([-pod_A/2, idler_y])     circle(r = pod_idler_d/2 + pod_T);
     };
-  // carrier plates, |z| 88..94
-  color([0.36,0.43,0.56]) for (s = [1,-1]) scale([1,1,s])
-    translate([0, 0, pod_gp_zi - 6]) linear_extrude(6)
+  // carrier plates, |z| 82.5..88.5, with the strip up to the carrier top
+  color([0.36,0.43,0.56]) for (k = [1,-1]) scale([1,1,k])
+    translate([0, 0, pod_carr_zi]) linear_extrude(pod_carr_t)
       hull(){ translate([0, pod_hub_h]) circle(d = 48);
+              translate([pod_carr_x[0], pod_hub_h])
+                square([pod_carr_x[1] - pod_carr_x[0], pod_carr_top - pod_hub_h]);
               translate([ pod_A/2, idler_y]) circle(d = 40);
               translate([-pod_A/2, idler_y]) circle(d = 40); };
-  // green plates, |z| 94..100, the band the frame bolts to
-  color(c_green) for (s = [1,-1]) scale([1,1,s])
+  // green plates, |z| 76.5..82.5 — rear pod only. WALL-E does not use them.
+  if (rear) color(c_green) for (k = [1,-1]) scale([1,1,k])
     translate([0, 0, pod_gp_zi]) linear_extrude(pod_gp_t)
-      difference(){
-        translate([-188, pod_gp_yc - pod_gp_w/2]) square([260, pod_gp_w]);
-        for (bx = pod_bolt_x) translate([bx, pod_gp_yc]) circle(d = pod_bolt_d + 1);
-      };
+      translate([-188, pod_gp_yc - pod_gp_w/2]) square([260, pod_gp_w]);
+  // the top U brace: 2 legs on the carrier inner faces, bridge on top
+  ub_y1 = ub_top(s);
+  color([0.52,0.40,0.62]){
+    for (k = [1,-1]) scale([1,1,k])
+      translate([-pod_ub_w/2, ub_y1 - pod_ub_h, pod_ub_zi])
+        cube([pod_ub_w, pod_ub_h, pod_ub_t]);
+    translate([-pod_ub_w/2, ub_y1 - pod_ub_t, -pod_ub_zi])
+      cube([pod_ub_w, pod_ub_t, 2*pod_ub_zi]);
+  }
   // hub
   color([0.25,0.25,0.28]) translate([0, pod_hub_h, -40]) cylinder(h = 80, d = 90);
 }
 
-// ---- the frame: 2 rails + 2 cross members ----------------------------------
+// ---- the frame: 2 rails + 2 cross members + 2 hangers ----------------------
 module frame_steel(){
   color(c_steel){
-    // rails, bolt holes bored through both walls
+    // rails. No holes: they are welded to the hangers
     for (s = [1,-1]) scale([1,1,s]) translate([rail_x0, fr_bot, rail_zi])
-      difference(){
-        beam_x(rail_len, fr_h, fr_w, fr_t);
-        for (bx = pod_bolt_x)
-          translate([bx - rail_x0, pod_gp_yc - fr_bot, -1])
-            rotate([0,0,0]) translate([0,0,0])
-              cylinder(h = fr_w + 2, d = 25);
-      }
+      beam_x(rail_len, fr_h, fr_w, fr_t);
     // front + rear cross members, between the rail inner faces
     for (cx = [cm_rear_x, cm_front_x])
       translate([cx - fr_w/2, fr_bot, -rail_zi]) beam_z(bay_w, fr_h, fr_w, fr_t);
-  }
-  // the Ø25 sleeves welded into each rail at the bolt holes, so the bolt does
-  // not crush the thin box walls
-  color([0.62,0.64,0.68]) for (s = [1,-1]) scale([1,1,s])
-    for (bx = pod_bolt_x) translate([bx, pod_gp_yc, rail_zi]) difference(){
-      cylinder(h = fr_w, d = 25);
-      translate([0,0,-1]) cylinder(h = fr_w + 2, d = 13);
+    // per side: the hanger up the carrier face, and the tab over the bridge
+    for (s = [1,-1]) scale([1,1,s]){
+      translate([-hg_w/2, fr_bot, rail_zo]) difference(){
+        cube([hg_w, hg_len(s), hg_t]);
+        translate([hg_w/2, pod_ub_bolt_y - fr_bot, -1])
+          cylinder(h = hg_t + 2, d = pod_bolt_d + 1);
+      }
+      difference(){
+        translate([-tab_w/2, ub_top(s), rail_zo]) cube([tab_w, tab_t, tab_len]);
+        m10_holes(s, tab_t);
+      }
     }
+  }
+  // clamp plates, loose, one under the bridge near each U leg
+  color([0.62,0.64,0.68]) for (s = [1,-1]) scale([1,1,s]) difference(){
+    for (k = [1,-1])
+      translate([-tab_w/2, ub_top(s) - pod_ub_t - clamp_t,
+                 pod_z + k*clamp_zl - clamp_w/2])
+        cube([tab_w, clamp_t, clamp_w]);
+    m10_holes(s, clamp_t);
+  }
 }
 
-// ---- M12s: in from the INBOARD side, through the rail, through the 6 mm
-//      PACKER that fills the carrier-to-plate step, through the green plate,
-//      into a nut welded on the plate's far face. Axis along z.
-//      The head therefore faces the battery bay, which is why the plywood box
-//      wall needs an access hole at each bolt — see battery_box().
+// vertical Ø11 holes for the 4 M10s on one side, through the tab and clamps
+module m10_holes(s, t){
+  for (bx = [1,-1]) for (k = [1,-1])
+    translate([bx*clamp_bx, ub_top(s) - pod_ub_t - clamp_t - 1, pod_z + k*clamp_zl])
+      rotate([-90,0,0]) cylinder(h = pod_ub_t + clamp_t + tab_t + 2, d = clamp_d + 1);
+}
+
+// ---- fasteners: per pod, the U brace's inboard M12 made 6 mm longer so it
+//      also takes the hanger (head on the U leg as built, nut on the hanger),
+//      and 4 M10s that clamp the tab down onto the bridge. Nothing is drilled
+//      into the pod.
 module pod_bolts(){
-  for (s = [1,-1]) scale([1,1,s]) for (bx = pod_bolt_x)
-    translate([bx, pod_gp_yc, rail_zi - 12]) {
-      color([0.75,0.72,0.55])
-        cylinder(h = 12 + fr_w + pod_packer_t + pod_gp_t + 10, d = pod_bolt_d - 0.2);
-      color([0.75,0.72,0.55]) cylinder(h = 10, d = 21.9, $fn = 6);      // head
-    }
+  c_bolt = [0.75,0.72,0.55];
+  for (s = [1,-1]) scale([1,1,s]){
+    z_head = pod_z - pod_ub_zi;                   // U leg inner face
+    color(c_bolt) translate([0, pod_ub_bolt_y, rail_zo - 12])
+      cylinder(h = z_head - rail_zo + 12, d = pod_bolt_d - 0.2);
+    color(c_bolt) translate([0, pod_ub_bolt_y, rail_zo - 10.8])
+      cylinder(h = 10.8, r = m12_nut_r, $fn = 6);   // nut on the hanger
+    color(c_bolt) translate([0, pod_ub_bolt_y, z_head])
+      cylinder(h = 8, d = 21.9, $fn = 6);           // head inside the U
+    for (bx = [1,-1]) for (k = [1,-1])
+      translate([bx*clamp_bx, 0, pod_z + k*clamp_zl]) rotate([-90,0,0]){
+        y_bot = ub_top(s) - pod_ub_t - clamp_t;
+        color(c_bolt) translate([0, 0, y_bot - m10_tail])
+          cylinder(h = m10_tail + clamp_t + pod_ub_t + tab_t, d = clamp_d - 0.2);
+        color(c_bolt) translate([0, 0, ub_top(s) + tab_t])
+          cylinder(h = m10_head_h, d = 18.5, $fn = 6);
+      }
+  }
 }
 
 // ---- plywood battery box ---------------------------------------------------
-// A U hung off the two rail inner faces. It is the battery box AND the floor,
-// and it keeps the sand off the packs.
+// A closed box hung off the two rail inner faces. It is the battery box AND
+// the floor, and it keeps the sand off the packs. The side walls have no
+// holes: the pod joint is up on the U brace, out of the box.
 module box_side_2d(){
-  difference(){
-    square([tray_len, box_wall_h]);
-    // access for the 4 M12 heads — without these you cannot get a spanner on
-    // the bolts that hold the pods, so the pods cannot come off. Each one is
-    // closed with a silicone blanking plug in service.
-    for (bx = pod_bolt_x)
-      translate([bx + tray_len/2, pod_gp_yc - tray_y0]) circle(d = bolt_access_d);
-  }
+  square([tray_len, box_wall_h]);
 }
 
 module box_end_2d(){
@@ -1009,7 +1077,7 @@ module ground(){
 
 module robot(){
   ground();
-  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod();
+  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod(s);
   frame_steel();
   pod_bolts();
   battery_box();
@@ -1022,7 +1090,7 @@ module robot(){
 // the whole robot, with the shell and head on rather than the ghost
 module robot_full(){
   ground();
-  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod();
+  if (show_pods) for (s = [1,-1]) translate([0, 0, s*pod_z]) pod(s);
   frame_steel();
   pod_bolts();
   battery_box();
@@ -1079,7 +1147,9 @@ echo(str("LAYOUT:   pods ", pod_cl, " apart centre to centre -> ", width_over,
          " per pod, TOTAL FOOTPRINT ", pod_A, " long x ", pod_cl + pod_belt_w, " wide"));
 echo(str("FRAME:    rails ", fr_h, "x", fr_w, "x", fr_t, " box, ", rail_len,
          " long, outer faces ", 2*rail_zo, " apart, ", bay_w, " clear inside · ",
-         "rails ", fr_bot, "..", fr_top, " above ground, flush with the green plate band"));
+         "rails ", fr_bot, "..", fr_top, " above ground, welded to 2 hangers that hang",
+         " from the pods' U braces (bridge tops ", pod_ub_top_f, " front pod, ",
+         pod_ub_top_r, " rear pod)"));
 echo(str("BATTERY:  48 V pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
          batt_upright ? "UPRIGHT (80 wide, 110 tall)" : "FLAT (110 wide, 80 tall)",
          " · box floor ", tray_floor, ", pack top ", batt_y1,
@@ -1088,9 +1158,10 @@ echo(str("BATTERY:  48 V pack ", batt_l, "x", batt_w, "x", batt_h, " — ",
          " on the lower deck, NOT the same case · L17: every pack unplugs — ",
          "48 V after the body comes off the risers, 12 V and PD after the laptop tray"));
 echo(str("DECK:     frame-level stack tops out at ", deck_y,
-         " · but the pod BELT CROWN is higher, at ", pod_crown,
-         ", so the body floor has to clear THAT"));
-echo(str("BODY:     floor ", body_y0, " (", body_gap, " over the crown), top ",
+         " · belt crown ", pod_crown, " · but the hanger tab on the rear pod's",
+         " U bridge is higher, at ", tab_top_hi, " + ", m10_head_h,
+         " of M10 head, so the body floor has to clear THAT"));
+echo(str("BODY:     floor ", body_y0, " (", body_gap, " over the M10 heads), top ",
          body_y1, " · ", body_l, " long x ", body_w, " wide x ", body_h,
          " tall · risers ", round(riser_h), " tall, rail top to floor",
          " · anti-tip arms show ", round(at_proud), " past each end, BY DESIGN"));
@@ -1203,10 +1274,15 @@ echo(str("  GAIN:    ground clearance would go from ", tray_y0, " to ",
 
 echo("");
 echo("--- THE POD JOINT --------------------------------------------------------");
-echo(str("  the 2 M12 holes are ALREADY DRILLED at pod-local x ", pod_bolt_x,
-         ", centroid ", jt_xc, ", span ", jt_span));
-echo(str("  load per pod ", round(jt_F), " N, arriving ", round(abs(jt_xc - com_x)),
-         " mm forward of the ground contact centre -> moment ", round(jt_M/1000), " N.m"));
+echo(str("  per pod: 1 hanger on the inboard carrier face, held by the U brace's",
+         " inboard M12 at ", pod_ub_bolt_y, " (M12x40 now, was x35) and by a tab",
+         " clamped on the U bridge with 4 x M10. NO NEW HOLE IN THE POD"));
+echo(str("  hangers are NOT the same length: ", hg_len(hi_side), " on the rear pod, ",
+         hg_len(-hi_side), " on the front pod (the U bridges are ",
+         ub_top_hi - ub_top_lo, " mm apart in height)"));
+echo(str("  static load per pod ", round(jt_F), " N, on the hub axle, so no lever.",
+         " Worst case is a castor catching the pitch: ", round(jt_M/1000),
+         " N.m per pod, lever M12 to bridge ", jt_lever, " mm"));
 
 guards = [
   // [name, actual, minimum, unit]
@@ -1218,15 +1294,18 @@ guards = [
   ["gap between the packs clears the lid vent",         batt_gap_z - vent_d, 8],
   ["box floor above the ground (obstacle clearance)",  tray_y0, 120],
   ["rail inner face to the belt edge, per side",       rail_zi - pod_belt_w/2, 20],
-  ["rail outer face sits ON the pod mounting face (must be 0)", -abs(rail_zo - (pod_z - pod_mount_z)), -0.01],
-  // the carrier stands proud of the green plate, so the bolts cross an air
-  // gap. If this ever goes to 0 the packer is not needed and the BOM changes.
-  ["packer thickness, rail face to green plate (60x6 offcut)", pod_packer_t, 5.9],
-  // and the packer must not be so thick that the M12 runs out of thread
-  ["M12 grip: rail 2 walls + packer + plate, under the 100 mm bolt",
-   100 - (fr_w + pod_packer_t + pod_gp_t), 10],
-  ["front bolt to the green plate's front end",        (pod_bolt_x[0] - (-188)) - 1.5*(pod_bolt_d + 1), 0],
-  ["both bolts land within the rail",                  min(pod_bolt_x[0] - rail_x0, rail_x1 - pod_bolt_x[1]), 40],
+  ["hanger lies flat ON the carrier face (must be 0)", -abs(rail_zo + hg_t - (pod_z - pod_mount_z)), -0.01],
+  // the M12 nut sits on the hanger face, just above the rail. This is what
+  // sets the rail height.
+  ["M12 nut on the hanger clears the rail top",        (pod_ub_bolt_y - m12_nut_r) - fr_top, 3],
+  ["M10 clamp bolts clear the U bridge edge",          clamp_bx - clamp_d/2 - pod_ub_w/2, 1],
+  ["M10 hole edge distance in the tab",                tab_w/2 - clamp_bx - (clamp_d + 1)/2, 5],
+  ["clamp plates sit between the U legs",              pod_ub_zi - (clamp_zl + clamp_w/2), 3],
+  ["tab reaches over the far U leg",                   tab_z1 - (pod_z + pod_ub_zi), 5],
+  // the front pod's bridge is the LOW one, so it has the least room under it
+  ["clamp + M10 tail clear the belt crown (front pod)",
+   ub_top_lo - pod_ub_t - clamp_t - m10_tail - pod_top, 10],
+  ["body floor clears the M10 heads on the tabs",      body_y0 - (tab_top_hi + m10_head_h), 6],
   ["anti-tip catches BEFORE the robot tips forward",   tip_fwd - at_catch, 4],
   // at_clear MUST exceed the pods' bump travel, or the castor takes load on
   // every bump and fights the suspension. That fights wanting it small, so it
@@ -1285,13 +1364,11 @@ guards = [
   ["eye screen fills enough of the barrel (%)",        100*scr_d/eye_d, 45],
   ["eye barrel MOUTHS do not collide when toed in",    eye_mouth_cl - eye_d, 4],
   ["screen shaded from the midday sun (deg elevation)", 75 - sun_block, 0],
-  ["bolt access hole above the box floor",             (pod_gp_yc - bolt_access_d/2) - tray_floor, 10],
-  ["bolt access hole below the box top edge",          fr_top - (pod_gp_yc + bolt_access_d/2), 5],
-  ["bolt access holes inside the box length",          tray_len/2 - abs(pod_bolt_x[0]) - bolt_access_d/2, 10],
   ["CoM within the footprint, fore/aft",               tip_edge - abs(com_x) - 40, 0],
-  ["green plate bending at the joint (MPa under 235)", 235 - jt_s_gp, 100],
-  ["rail bending at the joint (MPa under 235)",        235 - jt_s_rl, 100],
-  ["M12 bolt load vs preload (N of margin)",           bolt_preload - jt_Fbolt, 10000],
+  ["hanger bending at the rail weld (MPa under 235)",  235 - jt_s_hg, 100],
+  ["rail bending, castor to hanger (MPa under 235)",   235 - jt_s_rl, 100],
+  ["M12 shear vs capacity (N of margin)",              m12_shear - jt_Fm12, 10000],
+  ["M10 clamp load vs preload (N of margin)",          m10_preload - jt_Fm10, 10000],
 ];
 echo("");
 echo("--- GUARDS ---------------------------------------------------------------");
@@ -1299,25 +1376,30 @@ for (g = guards)
   echo(str(g[1] < g[2] ? "*** WARN " : "PASS ", g[0], ": ", round(g[1]*10)/10));
 
 echo("");
-echo(str("STRESS:   green plate at the joint ", round(jt_s_gp*10)/10,
-         " MPa · rail at the joint ", round(jt_s_rl*10)/10,
-         " MPa · per M12 ", round(jt_Fbolt), " N of ", bolt_preload, " preload"));
+echo(str("STRESS:   castor catch, 1 g · hanger ", round(jt_s_hg*10)/10,
+         " MPa · rail ", round(jt_s_rl*10)/10,
+         " MPa · M12 shear ", round(jt_Fm12), " N of ", m12_shear,
+         " · per M10 ", round(jt_Fm10), " N of ", m10_preload, " preload"));
 
 echo("");
 echo("--- CUT LIST -------------------------------------------------------------");
 echo(str("  ", fr_h, "x", fr_w, "x", fr_t, " box  rails               2 x ", rail_len));
 echo(str("  ", fr_h, "x", fr_w, "x", fr_t, " box  cross members       2 x ", cm_len,
          "   -> ", 2*rail_len + 2*cm_len, " mm of box tube total"));
-echo(str("    each rail: 2 holes Ø25 through BOTH walls at ",
-         pod_bolt_x[0] - rail_x0, " and ", pod_bolt_x[1] - rail_x0,
-         " mm from the rail's REAR end, ", pod_gp_yc - fr_bot,
-         " mm up from the rail's bottom; weld a Ø25xØ13x", fr_w, " sleeve in each"));
+echo(str("    rails have NO holes. Weld each rail's outer face to a hanger, hanger centred ",
+         -rail_x0, " mm from the rail's REAR end, hanger bottom flush with the rail bottom"));
+echo(str("  ", hg_w, "x", hg_t, " flat   hangers  1 x ", hg_len(hi_side), " (rear pod) + 1 x ",
+         hg_len(-hi_side), " (front pod), each with 1 hole Ø13 centred, ",
+         pod_ub_bolt_y - fr_bot, " up from the bottom end"));
+echo(str("  ", tab_t, " mm plate   tabs     2 x ", tab_w, " x ", tab_len,
+         ", 4 holes Ø", clamp_d + 1, " at x ±", clamp_bx, ", ",
+         pod_z - clamp_zl - rail_zo, " and ", pod_z + clamp_zl - rail_zo,
+         " from the inboard end. Weld on top of the hanger, flush with its inboard face"));
+echo(str("  ", clamp_t, " mm plate   clamps   4 x ", tab_w, " x ", clamp_w,
+         ", 2 holes Ø", clamp_d + 1, " at ±", clamp_bx, " — loose, they go UNDER the U bridge"));
 echo(str("  ", tray_t, " mm plywood  box floor        1 x ", tray_len, " x ", tray_clear + 2*tray_t));
 echo(str("  ", tray_t, " mm plywood  box side walls   2 x ", tray_len, " x ", box_wall_h,
-         ", each with 2 holes Ø", bolt_access_d, " at ",
-         pod_bolt_x[0] + tray_len/2, " and ", pod_bolt_x[1] + tray_len/2,
-         " mm from the REAR edge, ", pod_gp_yc - tray_y0,
-         " mm up (M12 spanner access — FIT SILICONE PLUGS)"));
+         ", no holes"));
 echo(str("  ", tray_t, " mm plywood  box END walls    2 x ", tray_clear + 2*tray_t,
          " x ", box_wall_h, "   <- these are what close the box"));
 echo(str("  ", tray_lid_t, " mm plywood  box LID       1 x ", tray_len, " x ",
@@ -1329,8 +1411,7 @@ echo(str("  ", shelf_t, " mm plywood  electronics shelf 1 x ", round(shelf_l),
 echo(str("  ", upper_t, " mm plywood  laptop tray        1 x ", round(upper_l),
          " x ", round(upper_w), "  <- lifts out after the speaker boxes"));
 echo(str("  sealing:  ", gasket_t, " mm closed-cell foam tape under the lid · ",
-         batt_pad, " mm foam pad on top of the packs · 4 x Ø", bolt_access_d,
-         " silicone blanking plugs · 1 x M", vent_d,
+         batt_pad, " mm foam pad on top of the packs · 1 x M", vent_d,
          " screw-in membrane vent in the LID centre, over the gap between the packs"));
 echo(str("  anti-tip legs  30x30 box  2 x ", round(fr_bot - at_clear - at_d),
          " + 2 fore/aft ties · castors 2 x Ø", at_d));
@@ -1338,8 +1419,10 @@ echo(str("  ", eye_ring_t, " mm plywood  EYE RINGS   ", 2*eye_rings, " x \u00d8"
      " discs: ", 2*5, " bored \u00d8", scr_d + 6, " (screen well), ", 2*1, " bored \u00d8", scr_d,
      " (screen shoulder), ", 2*(eye_rings - 6), " bored \u00d8", eye_d - 24,
      " (cables). Glue each stack of ", eye_rings, ", then sand the OUTSIDE round"));
-echo(str("  M12 10.9 bolts 4 off, through the rail into the nut welded on the ",
-         "green plate — THE POD COMES OFF WITH 2 BOLTS PER SIDE"));
+echo(str("  M12x40 8.8  2 off + washer + nylock: REPLACE the U brace's INBOARD M12x35",
+         " on each pod, so it also takes the hanger"));
+echo(str("  M10x", 5*ceil((pod_ub_t + clamp_t + tab_t + m10_tail)/5), " 8.8  8 off + washer + nylock,",
+         " head on top of the tab — THE POD COMES OFF WITH 1 M12 + 4 M10 PER SIDE"));
 echo(str("  M8  4 off, body floor into the risers — THE BODY COMES OFF SO THE ",
          "48 V PACKS CAN LIFT OUT"));
 

@@ -88,6 +88,26 @@ pod_bolt_d    = 12;      // M12 10.9
 // below the pivot up to axle+68 — so it crosses the whole 197..257 rail band.
 // The rail cannot dodge it vertically.
 pod_carr_x    = [-20, 20];
+pod_carr_top  = 284;     // rev013 hub_h + car_top (car_top = 52 + 16)
+
+// ---- the top U brace, ALREADY BUILT on both pods ----------------------------
+// rev013 ubar3d: 40x6 bar. Two legs flat on the carriers' INNER faces
+// (|z| 76.5..82.5), one bridge welded between the leg tops. The bridge top is
+// flush with the leg tops, so the flat top runs |z| 0..82.5, x -20..+20.
+// One M12 per leg at hub + 52, through leg + carrier (the old M8 fork-leg
+// hole, opened to Ø13). The legs stand on different parts per pod, so the
+// two bridges are NOT at the same height:
+//   FRONT pod (shock stub,   seat hub + 21): bridge top 387
+//   REAR  pod (green plates, seat hub + 41): bridge top 407
+// Only the REAR pod has green plates. The front pod has none, so the green
+// plate M12 holes above exist on ONE pod only. WALL-E mounts on the U.
+pod_ub_w      = 40;      // rev013 ub_w, along x, centred on the hub axle
+pod_ub_t      = 6;       // rev013 ub_t
+pod_ub_h      = 150;     // rev013 ub_h, leg bottom to bridge top
+pod_ub_zi     = 76.5;    // rev013 ub_z0 = cz - ub_t   leg INNER face
+pod_ub_bolt_y = 268;     // rev013 hub_h + ub_bolt_y   leg M12 centre
+pod_ub_top_f  = 387;     // rev013 hub_h + ub_seat_front + ub_h
+pod_ub_top_r  = 407;     // rev013 hub_h + ub_seat_rear  + ub_h
 
 // ============================================================================
 //  THE MOUNTING FACE — the one decision everything downstream hangs on
