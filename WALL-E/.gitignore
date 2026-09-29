@@ -24,6 +24,9 @@ brain/music/*
 !brain/music/README.md
 # Spotify login token and your song list: private.
 brain/spotify/
+# Shahar's face features and hashed secret word (owner.py): private.
+brain/owner/
+brain/personality_history/
 
 # OpenSCAD exports. The PNG renders ARE committed; meshes are not.
 *.stl

@@ -157,7 +157,15 @@ class Perception:
             cam.close()
 
     def _lidar_loop(self) -> None:
-        """RPLIDAR A1.
+        """WitMotion COIN-D6 (dToF), 3.3 V UART 230400 through its USB adapter.
+
+        Protocol (seller's "COIN-D6 LiDAR Data Format Standard Specification
+        V1.0", in the Drive folder linked from docs/05-bom.md): idle at power
+        on; start AA 55 F0 0F, stop AA 55 F5 0A. Packets start 0x55AA, then
+        M&T, LSN, FSA, LSA, a 2-byte XOR checksum, and 3 bytes per point:
+        distance_mm = S_H*64 + (S_2nd>>2). Angle = (FSA>>1)/64 ... (LSA>>1)/64,
+        and the angle correction the device info asks for is in their ROS
+        driver source.
 
         TODO: read the scan, bin it into the 8 sectors, take the nearest
         return in each. Note what this is NOT: it is not SLAM and not a map.

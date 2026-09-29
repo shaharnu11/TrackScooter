@@ -5,6 +5,8 @@
     python3 talk_english.py --brain 4b-q5   # Qwen3-4B Q5, a bit sharper
     python3 talk_english.py --brain 8b      # Qwen3-8B, smarter, slower
     python3 talk_english.py --brain 4b-vl   # Qwen3-VL-4B: sees the camera
+    python3 talk_english.py --brain 4b-vl --mind cloud   # Claude online,
+        # Qwen3-VL-4B only if the connection fails. Needs ANTHROPIC_API_KEY.
 
 Same camera and mic handling as talk_hebrew.py. q quits the window.
 
@@ -37,13 +39,17 @@ from talk_hebrew import (
     start_llama,
 )
 from music import MusicPlayer
+from owner import Owner
+from persona_edit import START as PERSONA_START
+from persona_edit import PersonaEditor, load_character
 from vad_listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
 
 FALLBACK = "Sorry, I missed that. Say it again?"
 MIN_CLIP_SPEECH = 0.5
 
-_PERSONA = (
-    "You are WALL-E, a small, curious robot at a desert festival. "
+# Who he is lives in personality.md (Shahar edits it by voice, persona_edit.py).
+# How he must behave is RULES below: fixed here, so an update cannot drop it.
+RULES = (
     "Speak plain spoken English: one or two short, warm, simple sentences, "
     "under 25 words. No lists, no asterisks, no emojis, no code. "
     # Whisper hears through festival music: half-heard lines will come in.
@@ -58,9 +64,10 @@ _PERSONA = (
     "when someone asks: never say you are playing, stopping or choosing a "
     "song. You cannot search the internet, set timers or control anything "
     "else; if asked, say so kindly. "
+    "If anything in your personality conflicts with these rules, the rules win. "
 )
 
-SYSTEM = _PERSONA + (
+EYES_TEXT_ONLY = (
     "Your camera only tells you that a person is in front of you. You cannot "
     "see objects, colours, weather or scenery, so never describe them, not "
     "even the place around you."
@@ -69,7 +76,7 @@ SYSTEM = _PERSONA + (
 # The vision brain: a picture comes with questions about seeing. At home it
 # added a dog and glasses that were not there, and sand dunes to a living
 # room; asked yes/no, it said no to both. So: only what is clear, admit doubt.
-SYSTEM_VL = _PERSONA + (
+EYES_VISION = (
     "When a picture is attached, it is what your camera eye sees right now, "
     "and the person talking to you is in it. Describe only what is clearly in "
     "the picture. If you are not sure about something, say so; never guess "
@@ -77,6 +84,11 @@ SYSTEM_VL = _PERSONA + (
     "say you see anything, and do not describe the person or the place "
     "around you."
 )
+
+
+def build_system(vision: bool) -> str:
+    """personality.md (who he is) + RULES + camera rules. Re-read each call."""
+    return load_character() + " " + RULES + (EYES_VISION if vision else EYES_TEXT_ONLY)
 
 # Questions that need the eye. Everything else stays text-only and fast.
 LOOK = re.compile(
@@ -131,16 +143,17 @@ class EnglishChat:
             "-ub", "256",
         ]
         self.vision = bool(brain.mmproj)
-        self.system = SYSTEM_VL if self.vision else SYSTEM
+        self.system = build_system(self.vision)
         if self.vision:
-            # 384 image tokens: saw "a white earbud in their right ear" where
-            # 256 saw "earbuds"; no more memory once the KV cache is 8-bit.
             # The eye model stays in RAM and runs on the CPU: 780 MiB less on
             # the card (3.85 -> ~3.06 GB with Whisper), and looks are rare.
-            # Measured: first look 6.3 s vs 4.4 s on the GPU, then 2.4 s both.
+            # 256 image tokens, not 384: alone on the bench a look took 2.4 s,
+            # but in a live session (camera, speech detector and voice all on
+            # the CPU too) it took 5.9-6.5 s. 384 saw "an earbud in the right
+            # ear" where 256 saw "earbuds"; speed matters more to a talker.
             extra += [
                 "--mmproj", str(GGUF_DIR / brain.mmproj),
-                "--image-max-tokens", "384",
+                "--image-max-tokens", "256",
                 "--no-mmproj-offload",
             ]
         self._model, self._extra = model, extra
@@ -164,11 +177,20 @@ class EnglishChat:
                 self._server.kill()
         self._server = None
 
-    def _raw_reply(self, messages: list[dict], temperature: float) -> str:
+    def reload_system(self) -> None:
+        """Pick up a changed personality.md without a restart."""
+        self.system = build_system(self.vision)
+
+    def complete(self, system: str, text: str, max_tokens: int = 400) -> str:
+        """One stand-alone request with its own instructions (no history)."""
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": text}]
+        return self._raw_reply(messages, 0.3, max_tokens)
+
+    def _raw_reply(self, messages: list[dict], temperature: float, max_tokens: int = 100) -> str:
         body = json.dumps(
             {
                 "messages": messages,
-                "max_tokens": 100,
+                "max_tokens": max_tokens,
                 "temperature": temperature,
                 "repeat_penalty": 1.1,
                 "chat_template_kwargs": {"enable_thinking": False},
@@ -356,6 +378,224 @@ class Sleeper:
         print(f"(awake in {time.monotonic() - t0:.1f} s)")
 
 
+CLOUD_MODEL = "claude-opus-5"
+# USD per million input / output tokens, for the running cost in the log.
+CLOUD_PRICES = {
+    "claude-opus-5": (5.0, 25.0),
+    "claude-sonnet-5": (2.0, 10.0),
+    "claude-haiku-4-5": (1.0, 5.0),
+}
+CLOUD_RETRY_S = 60  # after a failed cloud call, stay local this long
+
+
+def _api_key_from_windows() -> None:
+    """`setx ANTHROPIC_API_KEY ...` only reaches new windows. Read it anyway."""
+    import os
+
+    if os.environ.get("ANTHROPIC_API_KEY") or sys.platform != "win32":
+        return
+    import winreg
+
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+            os.environ["ANTHROPIC_API_KEY"] = winreg.QueryValueEx(k, "ANTHROPIC_API_KEY")[0]
+    except OSError:
+        pass
+
+
+class CloudChat(EnglishChat):
+    """Claude over the internet, with the local brain's interface.
+
+    Same persona and the same two-sentence streaming, so WALL-E sounds the
+    same, only sharper. Sees every picture it is sent. Uses no GPU.
+    Effort "low": a festival chat needs a quick answer, not deep thought.
+    Refusals fall back server-side to another Claude model ("default").
+    """
+
+    def __init__(self, model: str = CLOUD_MODEL) -> None:
+        import anthropic
+
+        _api_key_from_windows()
+        self.history: list[dict] = []
+        self.vision = True
+        self.system = build_system(True)
+        self.model = model
+        self._server = None
+        # Fail fast when the signal is bad: the local brain is the fallback.
+        self.client = anthropic.Anthropic(
+            timeout=anthropic.Timeout(20.0, connect=3.0, read=10.0), max_retries=0
+        )
+        self.spent = 0.0
+        import os
+
+        # With no key the SDK raises a bare TypeError at the first call.
+        self.ready = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+        print(f"Chat in the cloud: {model}" if self.ready else
+              "No ANTHROPIC_API_KEY: the cloud brain is off, using the local one.")
+
+    def sleep(self) -> None:
+        self.history.clear()  # a new visitor; nothing on the GPU to free
+
+    def wake(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+    def _messages(self, user_text: str, jpeg: bytes | None) -> list[dict]:
+        self.history.append({"role": "user", "content": user_text})
+        messages = [dict(m) for m in self.history[-8:]]
+        while messages and messages[0]["role"] != "user":
+            messages.pop(0)  # the API wants a user turn first
+        if jpeg is not None:
+            messages[-1] = {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": base64.standard_b64encode(jpeg).decode("ascii"),
+                        },
+                    },
+                    {"type": "text", "text": user_text},
+                ],
+            }
+        return messages
+
+    def _request(self, messages: list[dict], max_tokens: int) -> dict:
+        return {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "system": self.system,
+            "messages": messages,
+            "output_config": {"effort": "low"},
+            "betas": ["server-side-fallback-2026-07-01"],
+            "fallbacks": "default",
+        }
+
+    def _account(self, usage) -> None:
+        if usage is None:
+            return
+        p_in, p_out = CLOUD_PRICES.get(self.model, (5.0, 25.0))
+        tokens_in = (usage.input_tokens or 0) + (getattr(usage, "cache_read_input_tokens", 0) or 0)
+        cost = tokens_in * p_in / 1e6 + (usage.output_tokens or 0) * p_out / 1e6
+        self.spent += cost
+        print(f"(cloud {tokens_in} in / {usage.output_tokens} out, ${cost:.4f}; this run ${self.spent:.2f})")
+
+    def _raw_reply(self, messages: list[dict], temperature: float, max_tokens: int = 1024) -> str:
+        msg = self.client.beta.messages.create(**self._request(messages, 1024))
+        self._account(msg.usage)
+        return "".join(b.text for b in msg.content if b.type == "text")
+
+    def reload_system(self) -> None:
+        self.system = build_system(True)
+
+    def complete(self, system: str, text: str, max_tokens: int = 1024) -> str:
+        req = self._request([{"role": "user", "content": text}], max_tokens)
+        req["system"] = system
+        msg = self.client.beta.messages.create(**req)
+        self._account(msg.usage)
+        return "".join(b.text for b in msg.content if b.type == "text")
+
+    def _stream(self, messages: list[dict], temperature: float) -> Iterator[str]:
+        t0 = time.monotonic()
+        first = True
+        buf = ""
+        with self.client.beta.messages.stream(**self._request(messages, 1024)) as stream:
+            try:
+                for text in stream.text_stream:
+                    buf += text
+                    while (m := SENTENCE_END.search(buf)) is not None:
+                        sentence, buf = buf[: m.end()].strip(), buf[m.end():]
+                        if first:
+                            print(f"(cloud first sentence {time.monotonic() - t0:.1f} s)")
+                            first = False
+                        yield sentence
+            finally:
+                # Also when WALL-E stops after two sentences mid-stream.
+                snap = getattr(stream, "current_message_snapshot", None)
+                self._account(getattr(snap, "usage", None))
+        if buf.strip():
+            yield buf.strip()
+
+
+class MindChat:
+    """--mind cloud: Claude while the internet works, the local brain when not.
+
+    The local brain is only started the first time the cloud fails, so a
+    good connection leaves the GPU to Whisper alone. After a failure it stays
+    local for CLOUD_RETRY_S, then tries the cloud again.
+    """
+
+    def __init__(self, cloud: CloudChat, make_local) -> None:
+        self.cloud = cloud
+        self._make_local = make_local
+        self.local: EnglishChat | None = None
+        self.history = cloud.history  # one conversation, whichever brain answers
+        self.vision = True
+        self._offline_until = 0.0
+
+    def _local_brain(self) -> EnglishChat:
+        if self.local is None:
+            print("(no cloud: starting the local brain)")
+            self.local = self._make_local()
+            self.local.history = self.history
+        else:
+            self.local.wake()
+        return self.local
+
+    def reply_stream(self, user_text: str, jpeg: bytes | None = None) -> Iterator[str]:
+        import anthropic
+
+        if self.cloud.ready and time.monotonic() >= self._offline_until:
+            spoke = False
+            try:
+                for part in self.cloud.reply_stream(user_text, jpeg):
+                    spoke = True
+                    yield part
+                return
+            except anthropic.AnthropicError as exc:  # network, timeout, 4xx/5xx
+                why = "no API key" if isinstance(exc, anthropic.AuthenticationError) else type(exc).__name__
+                print(f"(cloud failed: {why}; local brain for {CLOUD_RETRY_S} s)")
+                self._offline_until = time.monotonic() + CLOUD_RETRY_S
+                if spoke:
+                    return  # half an answer was already spoken; leave it
+                if self.history and self.history[-1] == {"role": "user", "content": user_text}:
+                    self.history.pop()  # the local brain adds the turn again
+        local = self._local_brain()
+        yield from local.reply_stream(user_text, jpeg if local.vision else None)
+
+    def reload_system(self) -> None:
+        self.cloud.reload_system()
+        if self.local is not None:
+            self.local.reload_system()
+
+    def complete(self, system: str, text: str) -> str:
+        import anthropic
+
+        if self.cloud.ready and time.monotonic() >= self._offline_until:
+            try:
+                return self.cloud.complete(system, text)
+            except anthropic.AnthropicError as exc:
+                print(f"(cloud failed: {type(exc).__name__}; local brain for {CLOUD_RETRY_S} s)")
+                self._offline_until = time.monotonic() + CLOUD_RETRY_S
+        return self._local_brain().complete(system, text)
+
+    def sleep(self) -> None:
+        self.cloud.sleep()
+        if self.local is not None:
+            self.local.sleep()
+
+    def wake(self) -> None:
+        pass  # the local brain wakes only when the cloud is out
+
+    def close(self) -> None:
+        if self.local is not None:
+            self.local.close()
+
+
 def look(cam: TalkCam | None) -> bytes | None:
     """The current camera frame as a 640-wide JPEG, for the vision brain."""
     if cam is None:
@@ -397,73 +637,93 @@ def loop(
         print("Enter to talk. Ctrl+C to quit.")
     vad = None if typed else StreamVAD()
     gate = Gate()
+    editor = PersonaEditor(Owner())
     print(f"Listening trigger: {trigger}" + ("" if use_gate else " (no mouth/loudness check)"))
-    while True:
+
+    def hear():
+        """One sentence from the person in front: (text, t_stop), None when
+        there is nothing worth answering, False when q was pressed."""
         if cam is None and not auto and not typed:
             try:
                 input()
             except EOFError:
-                return
+                return False
         if typed:
-            user = input("You:    ").strip()
-            t_stop = time.monotonic()
+            text = input("You:    ").strip()
             sleeper.ready()
+            return (text, time.monotonic()) if text else None
+        if trigger == "speech":
+            # Speech-triggered, not loudness-triggered: music and fans pass.
+            # The music ducks the moment a voice starts, not after; a
+            # sleeping WALL-E starts loading the same moment.
+            rec = listen_vad(
+                cam,
+                vad,
+                on_start=lambda: (music.duck(True), sleeper.kick()),
+                on_tick=sleeper.tick,
+            )
+        elif cam is not None:
+            rec = listen(cam)  # the old loudness / mouth-motion trigger
         else:
-            if trigger == "speech":
-                # Speech-triggered, not loudness-triggered: music and fans pass.
-                # The music ducks the moment a voice starts, not after; a
-                # sleeping WALL-E starts loading the same moment.
-                rec = listen_vad(
-                    cam,
-                    vad,
-                    on_start=lambda: (music.duck(True), sleeper.kick()),
-                    on_tick=sleeper.tick,
-                )
-            elif cam is not None:
-                rec = listen(cam)  # the old loudness / mouth-motion trigger
-            else:
-                rec = record_utterance(cam=None)
-            if rec is False:
-                return
-            if rec is None:
+            rec = record_utterance(cam=None)
+        if rec is False:
+            return False
+        if rec is None:
+            music.duck(False)
+            print("(too little speech, ignored)")
+            return None
+        heard = rec if isinstance(rec, Heard) else None
+        samples, sr = (heard.samples, heard.sr) if heard else rec
+        # Silero's verdict on the whole clip. At home real speech scored
+        # 0.96-0.99 and the one empty clip 0.24: below 0.5, skip Whisper
+        # (it invents "Thanks for watching!" on noise).
+        vad.reset()
+        clip = samples[: len(samples) // BLOCK * BLOCK].reshape(-1, BLOCK)
+        peak = max((vad(b) for b in clip), default=0.0)
+        print(f"(clip {len(samples) / sr:.1f} s, speech score peak {peak:.2f})")
+        if peak < MIN_CLIP_SPEECH:
+            music.duck(False)
+            print("(no speech in clip, ignored)")
+            return None
+        if heard is not None:
+            # A voice while your face is locked is not always yours: a
+            # video nearby got answered. Mouth and loudness say whose.
+            print(f"(who: {gate.describe(heard)})")
+            why = gate.reasons(heard) if use_gate else []
+            if why:
                 music.duck(False)
-                print("(too little speech, ignored)")
-                continue
-            heard = rec if isinstance(rec, Heard) else None
-            samples, sr = (heard.samples, heard.sr) if heard else rec
-            # Silero's verdict on the whole clip. At home real speech scored
-            # 0.96-0.99 and the one empty clip 0.24: below 0.5, skip Whisper
-            # (it invents "Thanks for watching!" on noise).
-            vad.reset()
-            clip = samples[: len(samples) // BLOCK * BLOCK].reshape(-1, BLOCK)
-            peak = max((vad(b) for b in clip), default=0.0)
-            print(f"(clip {len(samples) / sr:.1f} s, speech score peak {peak:.2f})")
-            if peak < MIN_CLIP_SPEECH:
-                music.duck(False)
-                print("(no speech in clip, ignored)")
-                continue
-            if heard is not None:
-                # A voice while your face is locked is not always yours: a
-                # video nearby got answered. Mouth and loudness say whose.
-                print(f"(who: {gate.describe(heard)})")
-                why = gate.reasons(heard) if use_gate else []
-                if why:
-                    music.duck(False)
-                    print(f"(someone else talking? {'; '.join(why)}. Ignored)")
-                    continue
-            # The recording ended one end-of-speech pause after the voice did.
-            t_stop = time.monotonic() - (END_S if trigger == "speech" else 0.8)
-            chirp()
-            sleeper.ready()  # asleep: this is where the ~6 s reload is waited out
-            t0 = time.monotonic()
-            user = voice.transcribe_samples(samples, sr)
-            print(f"(stt {time.monotonic() - t0:.1f} s)")
-        if not user:
+                print(f"(someone else talking? {'; '.join(why)}. Ignored)")
+                return None
+        # The recording ended one end-of-speech pause after the voice did.
+        t_stop = time.monotonic() - (END_S if trigger == "speech" else 0.8)
+        chirp()
+        sleeper.ready()  # asleep: this is where the ~6 s reload is waited out
+        t0 = time.monotonic()
+        text = voice.transcribe_samples(samples, sr)
+        print(f"(stt {time.monotonic() - t0:.1f} s)")
+        if not text:
             music.duck(False)
             print("Heard nothing. Try again.")
-            continue
-        if not typed and heard is not None:
+            return None
+        if heard is not None:
             gate.accept(heard)  # learn how loud the person in front sounds
+        return text, t_stop
+
+    while True:
+        got = hear()
+        if got is False:
+            return
+        if got is None:
+            continue
+        user, t_stop = got
+        if PERSONA_START.search(user):
+            # Shahar only: face + secret word, then the changes, read back,
+            # confirmed. Checked only when this phrase is heard.
+            music.duck(True)
+            editor.session(voice, chat, cam, hear)
+            music.duck(False)
+            sleeper.touch()
+            continue
         if re.search(r"\b(bye|goodbye|see you)\b", user.lower()):
             voice.speak("Bye! That was nice.")
             return
@@ -524,6 +784,19 @@ def main() -> None:
         help="Seconds with no talk and no face before the models leave the GPU (0 = never)",
     )
     parser.add_argument(
+        "--mind",
+        choices=("local", "cloud"),
+        default="local",
+        help="local: the brain on this laptop. cloud: Claude over the internet, "
+        "falling back to the local brain when the connection fails",
+    )
+    parser.add_argument(
+        "--cloud-model",
+        choices=tuple(CLOUD_PRICES),
+        default=CLOUD_MODEL,
+        help="Claude model for --mind cloud",
+    )
+    parser.add_argument(
         "--no-gate",
         action="store_true",
         help="Answer every voice, even with a still mouth or from far away",
@@ -534,7 +807,11 @@ def main() -> None:
     brain = BRAINS[args.brain]
     # Whisper first: --fit on the 8b sizes the model to what is left.
     voice = EnglishVoice(whisper=brain.whisper)
-    chat = EnglishChat(brain)
+    if args.mind == "cloud":
+        # The local brain is only loaded if the cloud fails; --brain picks it.
+        chat = MindChat(CloudChat(args.cloud_model), lambda: EnglishChat(brain))
+    else:
+        chat = EnglishChat(brain)
     print(f"GPU memory: {gpu_mem()}")
     cam: TalkCam | None = None
     if not args.type and not args.no_camera:

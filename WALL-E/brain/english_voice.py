@@ -24,6 +24,30 @@ KOKORO_VOICE = "am_michael"
 GGUF_DIR = MODELS / "chat-gguf"
 TALK_WAV = ROOT / "english_talk.wav"
 
+# Whisper learned from YouTube audio and fills noise with the lines that end
+# videos: a live session got "Like and subscribe!" from nobody. Only a whole
+# result that IS one of these is dropped; a real sentence that contains the
+# words ("thanks for watching my stuff") passes.
+PHANTOMS = {
+    "like and subscribe",
+    "please subscribe",
+    "subscribe to my channel",
+    "thanks for watching",
+    "thank you for watching",
+    "thanks for watching please subscribe",
+    "see you in the next video",
+    "see you next time",
+    "thank you",  # a real lone "thank you" is lost too; it needs no answer
+    "you",
+}
+
+
+def phantom(text: str) -> bool:
+    import re
+
+    words = " ".join(re.findall(r"[a-z']+", text.lower()))
+    return words in PHANTOMS
+
 
 @dataclass(frozen=True)
 class Brain:
@@ -257,4 +281,7 @@ class EnglishVoice:
         self._conn.send(audio)
         text = self._conn.recv()
         print(f"STT  out: {text}")
+        if text and phantom(text):
+            print("(a Whisper phantom phrase, not speech: ignored)")
+            return ""
         return text

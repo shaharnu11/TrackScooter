@@ -210,7 +210,11 @@ class Gate:
     # ELP camera (see _mouth_speaking). The loudness check does the work;
     # it rejected a video at 0.038 against a talker at 0.176.
     MOUTH_CHECK = False
-    NEAR_SHARE = 0.35  # of the talker's usual level (about -9 dB)
+    # Share of the talker's usual level below which a voice is "far away".
+    # Was 0.35: with a group, the loudest person set the bar (0.242) and a
+    # friend a metre back (0.067-0.084) was ignored four times. 0.25 hears
+    # them and still drops the video from the first test (0.038 vs 0.176).
+    NEAR_SHARE = 0.25
     LEARN_AFTER = 3  # accepted clips before the loudness check starts
 
     def __init__(self) -> None:
