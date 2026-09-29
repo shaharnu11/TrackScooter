@@ -53,7 +53,7 @@ Read `99-glossary.md` for words. Read `01-architecture.md` for the boards.
 | L11 | Frame 550 mm. All electronics on two floors in the body |
 | L12 | Body length follows the pod, not the castors |
 | L13 | Two Face boards, one per eye |
-| L14 | Amp on its own 48→32 V converter |
+| L14 | Amp (TPA3116D2) on its own 48→24 V converter |
 | L15 | Traction packs stay in the frame box, not the body |
 | L16 | Battery box closed, gasketed, vent in the lid |
 | L17 | Every battery unplugs and lifts out. Daily charge still in place (XT60 on the body) |

@@ -148,7 +148,7 @@ ebatt_wh    = 240;             // 12 V x 20 Ah
 ebatt_kg    = 2.5;             // LiFePO4. The same case in lead-acid is 5.5
 rail12_w    = 20;              // 12 V rail, continuous W. docs/04 section 3
                                //   XPS is NOT on this rail. Own battery + PD pack.
-amp_ps_d    = [120, 70, 35];   // 48 V -> 32 V buck, amplifier only. See
+amp_ps_d    = [120, 70, 35];   // 48 V -> 24 V buck, amplifier only. See
                                //   docs/04-power-and-wiring.md section 4: the
                                //   amp CANNOT run off a full 54.6 V pack.
 fuse_d      = [80, 50, 40];    // fuse / distribution block
@@ -1171,7 +1171,7 @@ echo(str("  mass:      ", round(spk_kg*10)/10, " kg each (", spk_drv_kg,
          " kg, and it sits FORWARD: com_x moved to ", round(com_x*10)/10, " mm"));
 echo(str("  amplifier: one channel each, 4 Ω. The amp is on the shelf below —",
          " see docs/04-power-and-wiring.md section 4 for why it gets its own",
-         " 48->32 V supply"));
+         " 48->24 V supply"));
 echo(str("  SERVICE:   each enclosure sits OVER the shelf with ", spk_clr,
          " mm of headroom, shading ", round(100 - shelf_reach),
          "% of it. BOLT them to the chest panel, do not glue them in — only ",

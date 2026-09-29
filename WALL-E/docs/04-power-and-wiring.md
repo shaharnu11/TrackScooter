@@ -9,7 +9,7 @@ Physical version of `01-architecture.md`.
 
 ```
 PACK A 48 V ── XT60 ───┬── 30 A ── CONTACTOR A ── controller L ── left hub
-                        ├── 10 A ── 48→32 V ── amp
+                        ├── 10 A ── 48→24 V ── amp
                         └──  5 A ── E-stop chain ── both contactor coils (48 V)
 
 PACK B 48 V ── XT60 ────── 30 A ── CONTACTOR B ── controller R ── right hub
@@ -62,7 +62,7 @@ PACK A (−) ══ 12 AWG bond, not fused ══ PACK B (−) ══ 12 V (−)
 
 ## 4. Amp
 
-TPA3255 max **53.5 V**. A “48 V” pack is **54.6 V** full (13S) or **58.4 V** (16S LiFePO4). Dedicated **48→32 V 150 W**, non-isolated, off pack A. Not on 12 V.
+TPA3116D2 (owner, 2026-09-29; was TPA3255). Max **26 V**. A “48 V” pack is **54.6 V** full (13S) or **58.4 V** (16S LiFePO4). Dedicated **48→24 V 5 A (120 W)**, input **30–75 V**, off pack A through the 10 A fuse. Not on 12 V: bass peaks on the 12 V rail can reset the Teensy.
 
 Check every part against **full** pack voltage.
 
@@ -103,7 +103,7 @@ Three sizes only (owner, 2026-09-29). All silicone.
 | Phases | owned motor cable |
 | Ground bond | 12 AWG, short, **not fused** |
 | 12 V pack → rail | 12 AWG (15 A fuse) |
-| Amp 48→32 and 32 V | 16 AWG |
+| Amp 48→24 and 24 V | 16 AWG |
 | 12 V distribution | 16 AWG |
 | Coils, E-stop chain | 16 AWG |
 | Throttle, reverse, e-brake | 22 AWG **shielded** |

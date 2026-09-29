@@ -82,7 +82,7 @@
 
 ## Electrical
 
-**DC-DC** — One DC voltage to another. Amp is 48→32. Logic is 12→5.
+**DC-DC** — One DC voltage to another. Amp is 48→24. Logic is 12→5.
 
 **Brownout** — Voltage dip resets a board. Why electronics have their own 12 V pack (D8).
 

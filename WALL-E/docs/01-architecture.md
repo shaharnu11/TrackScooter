@@ -77,7 +77,7 @@ Positives never meet. Negatives bonded at **one** point, including the 12 V pack
 | Pack B | Only rule 4 (halls). Contactor B stays closed with no power behind it |
 | Teensy crash, packs alive | Watchdog only |
 
-Coils stay on pack A. Amp stays on 48→32 V off pack A. Do not move either onto 12 V.
+Coils stay on pack A. Amp stays on 48→24 V off pack A. Do not move either onto 12 V.
 
 ## 4. Brain heartbeat
 

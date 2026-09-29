@@ -153,7 +153,7 @@ Chest: 530 × 290, set back 20 mm. Two Ø165, 330 mm apart, 194 mm up from panel
 
 ![Sheet 5 — the electronics shelf: what goes where, and where the cable runs.](fig/s5.svg)
 
-Two floors. Lower 356 × 546 at 347 mm: controllers, contactor, fuses, Teensy, 12 V pack **flat**, PD 65 W+, amp. Upper 315 × 360 tray at 451 mm: XPS + USB hub. Hub from 12 V rail. Amp has its own 48→32 V.
+Two floors. Lower 356 × 546 at 347 mm: controllers, contactor, fuses, Teensy, 12 V pack **flat**, PD 65 W+, amp. Upper 315 × 360 tray at 451 mm: XPS + USB hub. Hub from 12 V rail. Amp has its own 48→24 V.
 
 Straps, not glue. Cables long enough for the tray. After boxes on: can you still reach connectors? Can 12 V and PD come out?
 
