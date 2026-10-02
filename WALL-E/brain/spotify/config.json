@@ -1,0 +1,11 @@
+{
+  "client_id": "d99f6536c23949acad3a9230e5c335f7",
+  "token": {
+    "access_token": "BQDUanbdYyjodGOU4hDI3YoKJEHOWMkigmUBS-P9m_ioLRs3K9XkliJoSc8hWZEk3QJtRGxg6aNL3Ysf57zYx-wbBmIZJ2IWD8fpl1E6HUhlYMwGC19rgAZbaUsK6_C_9mVztn5O9Jf0aGYIoBepBdNPMB60v485xvQLP1ygNy63GdfTNQau0j0-iV05FVsBpdBiddwGYRBibaW1zlKJEISIDI_EpayK29hn-aa7NZhQBqJeEqDCmqXs54HL5RpF",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "refresh_token": "AQClyKWx7DH_s_gS3kYk0vwzsNWHIiUBVfkNy5IN5auPGPg7XxcOvln42eD9RWQy1z0YZZFuAUyX6hwufD8Yg2GyNNxfZ0uYI6GKF4tiyaZFXXDNexVVebuNtfUzZjwjY8I",
+    "scope": "playlist-read-private playlist-read-collaborative user-library-read",
+    "expires_at": 1790444850.4392822
+  }
+}
