@@ -1,5 +1,20 @@
 # Brain
 
+## Talking WALL-E: start here
+
+The code is the same on both computers. Only setup and start differ:
+
+| Computer | Folder | Start |
+|---|---|---|
+| **Windows** (XPS, works today) | [`windows/`](windows/README.md) | double-click `windows\start_walle.bat` |
+| **Mac** (Apple Silicon, not tested yet) | [`mac/`](mac/README.md) | double-click `mac/start_walle.command` |
+
+Main differences: Windows runs Whisper on the NVIDIA GPU and has Spotify
+ducking. Mac runs the brain on Metal (shared RAM, so bigger brains fit) and
+Whisper on the CPU. Details in each folder.
+
+## Robot control loop
+
 XPS 15 9510. Python. Camera, personality, sounds, optional local LLM. **No internet.** Allowed to be slow and to crash. Radio is on the Spine.
 
 Closed on the upper tray, spacers. PD 65 W+ and 12 V pack on the lower deck. USB hub on the tray (12 V rail): ELP camera, LiDAR, Teensy, Face. Speaker boxes off → tray out.
