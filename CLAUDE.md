@@ -40,10 +40,12 @@ Order of work:
      (Qwen3-VL-4B + mmproj, Whisper small.en, Kokoro; ~4 GB). Later other
      brains with `--brain 8b` etc. Do not run `download_hebrew_voice.py`
      (Hebrew only, ~5 GB, not needed).
-   - Owner (face + secret word): run `.venv/bin/python owner.py enroll` with
-     Shahar at the camera. He types the secret word himself.
-   - Spotify (optional): `spotify_sync.py --client-id <ID>` needs Shahar's
-     Spotify developer app ID and his login in the browser. Ask him first.
+   - Owner (face + secret word) and Spotify (app ID, login, synced song list)
+     **are in git** (`brain/owner/`, `brain/spotify/`, added by Shahar on
+     purpose). Use them; no new enroll or login needed. Only if the face
+     check fails on the Mac camera: `.venv/bin/python owner.py enroll` with
+     Shahar there. Only if Spotify refuses the saved login:
+     `spotify_sync.py --client-id <ID>` with Shahar logging in.
    - Cloud key (optional): Shahar adds `export ANTHROPIC_API_KEY=...` to
      `~/.zshrc` himself. Never ask him to paste it in chat.
    - Music files (`brain/music/`) are not in git: ask Shahar for them.
