@@ -63,9 +63,10 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
 8. **Owner** (face + secret word) and **Spotify** (song list) are in git
    (`brain/owner/`, `brain/spotify/`). Nothing to do. The XPS face matched on
    the Mac camera. Only if it stops matching: `.venv/bin/python owner.py enroll`.
-9. **Spotify songs offline:** open the Spotify app on the Mac, log in, and
-   **download** the playlists (the green arrow). WALL-E can only play
-   downloaded songs without internet.
+9. **Spotify songs offline:** WALL-E can only play downloaded songs without
+   internet. All his songs are in one private playlist, **"WALL-E offline"**.
+   In the Spotify app on the Mac: open it and switch **Download** on, once.
+   After a new `spotify_sync.py`, update it: `spotify_sync.py --offline-playlist`.
 10. Optional, **cloud brain**: add to `~/.zshrc`:
     `export ANTHROPIC_API_KEY="sk-ant-..."`. Type it yourself. Do not paste it
     in chat.

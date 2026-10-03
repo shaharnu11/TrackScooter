@@ -11,11 +11,17 @@ and handed to the Spotify desktop app, which plays its downloaded copy.
     python spotify_sync.py --list                # your playlists, numbered
     python spotify_sync.py                       # sync all playlists + Liked Songs
     python spotify_sync.py --only "Desert, Road Trip"   # just these playlists
+    python spotify_sync.py --offline-playlist    # every song in one playlist, to download
 
 The Spotify API cannot tell which playlists are downloaded on this laptop,
 so sync the ones you switched Download on for (or everything; a song that
 is not downloaded just will not play offline). Re-run after downloading
 new music.
+
+Spotify downloads whole lists, not songs, and has no API for it. So
+--offline-playlist puts every song in library.json into one private
+playlist, "WALL-E offline": switch Download on for it once in the app and
+all of them come down. Run it again after a sync to bring it up to date.
 
 One-time setup (5 min): developer.spotify.com/dashboard -> Create app.
 Any name and description. Redirect URI: http://127.0.0.1:8765/callback
@@ -45,7 +51,8 @@ LIBRARY = SPOTIFY_DIR / "library.json"
 PORT = 8765
 # Spotify no longer accepts "localhost" redirects; the loopback IP it does.
 REDIRECT = f"http://127.0.0.1:{PORT}/callback"
-SCOPES = "playlist-read-private playlist-read-collaborative user-library-read"
+SCOPES = "playlist-read-private playlist-read-collaborative user-library-read playlist-modify-private"
+OFFLINE_NAME = "WALL-E offline"  # --offline-playlist; never synced back as a list
 API = "https://api.spotify.com/v1"
 LIKED = "Liked Songs"
 
@@ -127,6 +134,8 @@ def _login(client_id: str) -> dict:
 
 def _access_token(cfg: dict) -> str:
     tok = cfg.get("token")
+    if tok and not set(SCOPES.split()) <= set(tok.get("scope", "").split()):
+        tok = None  # an older login without all the rights: log in again
     if tok and tok["expires_at"] > time.time():
         return tok["access_token"]
     if tok and tok.get("refresh_token"):
@@ -166,6 +175,60 @@ def _get(token: str, url: str) -> dict:
             raise
 
 
+def _send(token: str, method: str, url: str, body: dict) -> dict:
+    """POST / PUT JSON to the Web API."""
+    if not url.startswith("http"):
+        url = API + url
+    while True:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(body).encode(),
+            method=method,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                raw = r.read()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                time.sleep(int(e.headers.get("Retry-After", "2")) + 1)
+                continue
+            raise
+
+
+def offline_playlist(token: str, me: dict, lists: list[dict]) -> None:
+    """Every song in library.json in one private playlist (see the top)."""
+    if not LIBRARY.exists():
+        sys.exit("No song list yet: run python spotify_sync.py first.")
+    uris = [t["uri"] for t in json.loads(LIBRARY.read_text(encoding="utf-8"))["tracks"]]
+    if len(uris) > 10_000:
+        print(f"{len(uris)} songs: Spotify downloads at most 10,000. Keeping the first 10,000.")
+        uris = uris[:10_000]
+    have = next((p for p in lists if p["name"] == OFFLINE_NAME and (p.get("owner") or {}).get("id") == me["id"]), None)
+    if have is None:
+        body = {"name": OFFLINE_NAME, "public": False, "description": "All of WALL-E's songs, to download for offline."}
+        try:
+            have = _send(token, "POST", "/me/playlists", body)
+        except urllib.error.HTTPError:
+            have = _send(token, "POST", f"/users/{me['id']}/playlists", body)
+        print(f'Made the playlist "{OFFLINE_NAME}".')
+    # Like reading (see main), adding moved from /tracks to /items.
+    for path in (f"/playlists/{have['id']}/items", f"/playlists/{have['id']}/tracks"):
+        try:
+            _send(token, "PUT", path, {"uris": uris[:100]})  # replaces what was there
+            for i in range(100, len(uris), 100):
+                _send(token, "POST", path, {"uris": uris[i : i + 100]})
+                print(f"  {min(i + 100, len(uris))} / {len(uris)}", end="\r")
+            break
+        except urllib.error.HTTPError as e:
+            if path.endswith("/tracks"):
+                raise
+            print(f"({path} answered {e.code}; trying the old address)")
+    print(f'\n"{OFFLINE_NAME}" has {len(uris)} songs.')
+    print("Now in the Spotify app: open it and switch Download on (the arrow).")
+
+
 def _pages(token: str, url: str):
     while url:
         page = _get(token, url)
@@ -196,6 +259,11 @@ def main() -> None:
     parser.add_argument("--only", help='Comma-separated playlist names or numbers from --list, e.g. "Desert, 3"')
     parser.add_argument("--no-liked", action="store_true", help="Skip Liked Songs")
     parser.add_argument("--no-albums", action="store_true", help="Skip saved albums")
+    parser.add_argument(
+        "--offline-playlist",
+        action="store_true",
+        help=f'Put every synced song in one playlist, "{OFFLINE_NAME}", to download at once',
+    )
     args = parser.parse_args()
 
     cfg = _load_config()
@@ -213,6 +281,9 @@ def main() -> None:
     if args.list:
         for i, p in enumerate(lists, 1):
             print(f"{i:3}. {p['name']}  ({(p.get('tracks') or p.get('items') or {}).get('total', '?')} songs)")
+        return
+    if args.offline_playlist:
+        offline_playlist(token, me, lists)
         return
 
     wanted = None
@@ -240,6 +311,8 @@ def main() -> None:
     for p in lists:
         if wanted is not None and p["id"] not in wanted:
             continue
+        if p["name"] == OFFLINE_NAME:
+            continue  # all songs again: not a list to play by name
         n = 0
         try:
             # /playlists/{id}/tracks answers 403 now, even for your own
