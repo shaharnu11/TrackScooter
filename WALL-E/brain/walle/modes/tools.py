@@ -30,7 +30,6 @@ import shutil
 import subprocess
 import sys
 from datetime import datetime
-from pathlib import Path
 
 from walle.mind.brains import BRAINS
 from walle.lang import hebrew, t
@@ -60,6 +59,14 @@ PLAN = (
     '- people {"action": "list"} or {"action": "delete", "name": "..."}: the '
     "people WALL-E remembers.\n"
     "- none {}: he is chatting, asking a question, or asking for music.\n"
+    "Only a clear order to do something is a tool. A question about WALL-E, "
+    "even one that names a tool, is none. Examples:\n"
+    'Set the volume to 40. -> {"tool": "volume", "args": {"level": 40}}\n'
+    'Switch to the shemTovEvi personality. -> {"tool": "personality", "args": {"name": "shemTovEvi"}}\n'
+    'Do you have a personality file? -> {"tool": "none", "args": {}}\n'
+    'What personality are you? -> {"tool": "none", "args": {}}\n'
+    'Be more sarcastic. -> {"tool": "none", "args": {}}\n'
+    'How loud are you? -> {"tool": "none", "args": {}}\n'
     'Answer with JSON only, like {"tool": "volume", "args": {"level": 40}}.'
 )
 
@@ -91,6 +98,17 @@ def plan(chat, text: str, lang: str) -> tuple[str, dict]:
     return tool, args if isinstance(args, dict) else {}
 
 
+def _sure(question: str, voice, chat, hear) -> bool:
+    """Ask before a restart: a live session restarted on a question
+    ("do you have a personality file?") read as an order."""
+    voice.speak(question)
+    got = hear()
+    if got and confirmed(chat, got[0]) == "YES":
+        return True
+    voice.speak(t("Okay, I'll stay as I am.", "בסדר, נשאר כמו שאני."))
+    return False
+
+
 def run(tool: str, args: dict, voice, chat, hear, people) -> bool:
     """Do it. False when the plan was not a tool after all (then just talk)."""
     if tool == "shell":
@@ -104,12 +122,16 @@ def run(tool: str, args: dict, voice, chat, hear, people) -> bool:
         if name not in available("he" if hebrew() else "en"):
             voice.speak(t(f"I don't have a personality called {name}.", f"אין לי אישיות בשם {name}."))
             return True
+        if not _sure(t(f"Switch to the {name} personality? Say yes or no.", f"לעבור לאישיות {name}? תגיד כן או לא."), voice, chat, hear):
+            return True
         voice.speak(t(f"Okay, becoming {name}. Back in a few seconds.", f"בסדר, הופך ל{name}. חוזר עוד כמה שניות."))
         raise Restart({"--personality": name})
     elif tool == "language":
         lang = str(args.get("lang", "")).lower()
         if lang not in ("en", "he"):
             return False
+        if not _sure(t(f"Switch to {'Hebrew' if lang == 'he' else 'English'}? Say yes or no.", f"לעבור ל{'עברית' if lang == 'he' else 'אנגלית'}? תגיד כן או לא."), voice, chat, hear):
+            return True
         voice.speak(t("Okay, switching language. Back in a few seconds.", "בסדר, מחליף שפה. חוזר עוד כמה שניות."))
         # Each language has its own brain and personalities.
         raise Restart({"--lang": lang, "--brain": "dicta-12b" if lang == "he" else "30b-vl", "--personality": "default"})
@@ -117,6 +139,8 @@ def run(tool: str, args: dict, voice, chat, hear, people) -> bool:
         key = str(args.get("key", ""))
         if key not in BRAINS:
             voice.speak(t(f"I don't have a brain called {key}.", f"אין לי מוח בשם {key}."))
+            return True
+        if not _sure(t(f"Switch to the {key} brain? Say yes or no.", f"לעבור למוח {key}? תגיד כן או לא."), voice, chat, hear):
             return True
         voice.speak(t(f"Okay, switching to {key}. Back in a few seconds.", f"בסדר, עובר ל-{key}. חוזר עוד כמה שניות."))
         raise Restart({"--brain": key})
