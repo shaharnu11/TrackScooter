@@ -39,7 +39,7 @@ _IDLE_TITLES = {"spotify", "spotify premium", "spotify free", ""}
 
 
 def _words(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9']+", text.lower())
+    return re.findall(r"[a-z0-9'\u05d0-\u05ea]+", text.lower())
 
 
 def _same(title: str, t: dict) -> bool:

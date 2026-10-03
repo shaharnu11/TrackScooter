@@ -49,6 +49,32 @@ def main() -> None:
             else:
                 print(f"STT (Mac GPU) {name} already at {folder}")
 
+    if sys.platform == "darwin":
+        # Hebrew (--lang he): ivrit.ai Whisper (MLX), Kokoro Hebrew, Phonikud
+        # and its tokenizer (else it fetches it at every start).
+        from english_voice import (
+            KOKORO_HE_DIR,
+            KOKORO_HE_REPO,
+            PHONIKUD,
+            PHONIKUD_REPO,
+            PHONIKUD_TOK,
+            PHONIKUD_TOK_REPO,
+            STT_MLX_HE,
+        )
+
+        name, folder, repo = STT_MLX_HE
+        if not (folder / "config.json").exists():
+            print(f"STT Hebrew (Mac GPU): {repo}  (~1.6 GB)")
+            snapshot_download(repo_id=repo, local_dir=str(folder))
+        if not (KOKORO_HE_DIR / "kokoro.onnx").exists():
+            print(f"TTS Hebrew: {KOKORO_HE_REPO}  (~0.3 GB)")
+            snapshot_download(repo_id=KOKORO_HE_REPO, local_dir=str(KOKORO_HE_DIR))
+        if not PHONIKUD.exists():
+            print(f"Hebrew vowels: {PHONIKUD_REPO}  (~0.3 GB)")
+            hf_hub_download(PHONIKUD_REPO, PHONIKUD.name, local_dir=str(PHONIKUD.parent))
+        if not PHONIKUD_TOK.exists():
+            hf_hub_download(PHONIKUD_TOK_REPO, PHONIKUD_TOK.name, local_dir=str(PHONIKUD_TOK.parent))
+
     # The face models download on first use. Fetch them now: no internet later.
     from owner import SFACE_PATH, SFACE_URL
     from usb_camera import _ensure_yunet
@@ -89,6 +115,11 @@ def main() -> None:
         hf_hub_download(repo_id=brain.repo, filename=brain.file, local_dir=str(GGUF_DIR))
         if brain.mmproj:
             hf_hub_download(repo_id=brain.repo, filename=brain.mmproj, local_dir=str(GGUF_DIR))
+        if brain.eyes:  # a brain that cannot see gets a vision brain as its eyes
+            eyes = BRAINS[brain.eyes]
+            print(f"  its eyes {brain.eyes}: {eyes.repo} / {eyes.file}")
+            hf_hub_download(repo_id=eyes.repo, filename=eyes.file, local_dir=str(GGUF_DIR))
+            hf_hub_download(repo_id=eyes.repo, filename=eyes.mmproj, local_dir=str(GGUF_DIR))
 
     print()
     print(f"Done. Talk:  python3 talk_english.py --brain {' | '.join(BRAINS)}")

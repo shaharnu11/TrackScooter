@@ -16,12 +16,14 @@ import re
 import subprocess
 import sys
 
+from lang import hebrew, t
 from persona_edit import load_character
 
-START = re.compile(r"\b(management|manager|manage|admin)\s+mode\b", re.I)
+START = re.compile(r"\b(management|manager|manage|admin)\s+mode\b|מצב ניהול|מצב מנהל", re.I)
 EXIT = re.compile(
     r"\b(exit|leave|end|stop|close|quit|finish|out of)\b.*\b(management|manager|manage|admin)\b"
-    r"|\b(back to normal|normal mode|festival mode)\b",
+    r"|\b(back to normal|normal mode|festival mode)\b"
+    r"|(צא|צאי|לצאת|יציאה|סיים|סיום|תסיים)\s+(מ|את )?(ה)?מצב (ה)?ניהול|מצב רגיל|חזור לרגיל|חזרה לרגיל|תחזור לרגיל",
     re.I,
 )
 
@@ -46,16 +48,26 @@ SYSTEM = (
 
 KIND = (
     "In management mode, Shahar talks to WALL-E, a robot. Speech recognition "
-    "may garble words. Is his sentence a QUESTION (about WALL-E, his setup, "
-    "or anything to answer) or a CHANGE (a wish to change how WALL-E talks or "
-    "behaves, his personality, jokes, topics)? Answer with one word: QUESTION "
-    "or CHANGE."
+    "may garble words. Is his sentence a QUESTION (asking about WALL-E, his "
+    "setup, or anything to answer) or a CHANGE (telling WALL-E to change how "
+    "he talks or behaves, his personality, jokes, topics)? A question about "
+    "his personality is still a QUESTION. Examples:\n"
+    "What brain do you run? -> QUESTION\n"
+    "Is barge-in on? -> QUESTION\n"
+    "Tell me your personality. -> QUESTION\n"
+    "איזה מוח אתה מריץ? -> QUESTION\n"
+    "באיזו שפה אתה מדבר? -> QUESTION\n"
+    "Be less sarcastic with kids. -> CHANGE\n"
+    "From time to time say something funny about drugs. -> CHANGE\n"
+    "תהיה יותר מצחיק. -> CHANGE\n"
+    "Answer with one word: QUESTION or CHANGE."
 )
 
-CHANGE_LINE = (
-    "I can't change that in management mode. To change my personality, "
-    "say: update personality start."
-)
+def CHANGE_LINE() -> str:  # noqa: N802 — was a constant
+    return t(
+        "I can't change that in management mode. To change my personality, say: update personality start.",
+        "את זה אני לא יכול לשנות במצב ניהול. כדי לשנות את האישיות שלי, תגיד: עדכון אישיות.",
+    )
 
 
 def _mac_chip() -> str:
@@ -136,7 +148,8 @@ class Manager:
                 return False
         self._saved = list(chat.history)
         chat.history.clear()
-        chat.set_mode(SYSTEM + self.status(chat), sentences=5, tokens=300)
+        lang = " Answer in simple spoken Hebrew; keep technical names as they are." if hebrew() else ""
+        chat.set_mode(SYSTEM.replace("\n\nFacts:", lang + "\n\nFacts:") + self.status(chat), sentences=5, tokens=300)
         self.active = True
         return True
 

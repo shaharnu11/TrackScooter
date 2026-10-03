@@ -25,18 +25,24 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from lang import hebrew, t
+
 ROOT = Path(__file__).resolve().parent
 PERSONALITY_FILE = ROOT / "personality.md"
 HISTORY_DIR = ROOT / "personality_history"
 
-START = re.compile(r"\b(update|change)\s+(your\s+|my\s+)?personality\W*\s*(start|starts|started|starting|begin)\b", re.I)
+START = re.compile(
+    r"\b(update|change)\s+(your\s+|my\s+)?personality\W*\s*(start|starts|started|starting|begin)\b"
+    r"|(עדכון|עדכן|תעדכן|לעדכן|שינוי|תשנה)\s+(את\s+)?(ה)?אישיות",
+    re.I,
+)
 FINISH = re.compile(r"\b(update|change)\s+(your\s+|my\s+)?personality\W*\s*(finish|finished|finishing|done|end|ended)\b", re.I)
-CANCEL = re.compile(r"\b(cancel|never\s*mind|forget it|abort)\b", re.I)
-YES = re.compile(r"\b(yes|yeah|yep|yup|confirm|confirmed|save it|correct|do it|sure|go ahead)\b", re.I)
-NO = re.compile(r"\b(no|nope|don't|do not|wrong)\b", re.I)
+CANCEL = re.compile(r"\b(cancel|never\s*mind|forget it|abort|בטל|תבטל|לבטל|עזוב|לא משנה|תשכח מזה)\b", re.I)
+YES = re.compile(r"\b(yes|yeah|yep|yup|confirm|confirmed|save it|correct|do it|sure|go ahead|כן|בטח|יאללה|תשמור|שמור|נכון|סבבה|אישור)\b", re.I)
+NO = re.compile(r"\b(no|nope|don't|do not|wrong|לא|אל תשמור|טעות)\b", re.I)
 
 # Exact phrases still work without the brain (and if it fails).
-DONE = re.compile(r"\b(that'?s (all|it)|i'?m (done|finished)|we'?re done|(stop|end|finish) the update)\b", re.I)
+DONE = re.compile(r"\b(that'?s (all|it)|i'?m (done|finished)|we'?re done|(stop|end|finish) the update|זהו|זה הכל|סיימתי|עד כאן|סיום עדכון|סוף עדכון)\b", re.I)
 # Talk about the update itself, not about WALL-E: "let the update finish",
 # "Wally stop got it and personality" (Whisper's "stop update personality").
 # "personality" only counts close to the word: "your personality is cheerful
@@ -109,8 +115,10 @@ def understand(chat, text: str, notes: list[str]) -> tuple[str, str]:
     if FINISH.search(text) or DONE.search(text) or ABOUT_UPDATE.search(text):
         return "DONE", ""
     so_far = "\n".join(f"- {n}" for n in notes) or "(none yet)"
-    raw = _ask(chat, SESSION, f"Changes so far:\n{so_far}\n\nLatest sentence: {text}")
+    system = SESSION + (" Write the part after the bar in Hebrew, starting with 'אני'." if hebrew() else "")
+    raw = _ask(chat, system, f"Changes so far:\n{so_far}\n\nLatest sentence: {text}")
     label, _, said = raw.partition("|")
+    # (In Hebrew mode the prompt asks for the part after the bar in Hebrew.)
     label = label.strip().strip("*").upper()
     if label not in ("CHANGE", "DONE", "CANCEL", "UNCLEAR"):
         # No usable answer: the old rules. Cancel words, else a change.
@@ -172,16 +180,16 @@ class PersonaEditor:
         if self.fails >= MAX_FAILS:
             self.locked_until = time.monotonic() + LOCK_S
             self.fails = 0
-        voice.speak("Sorry, only Shahar can change my personality.")
+        voice.speak(t("Sorry, only Shahar can change my personality.", "סליחה, רק שחר יכול לשנות את האישיות שלי."))
 
     def session(self, voice, chat, cam, hear) -> None:
         """hear() -> (text, t_stop), None for nothing, or False for quit."""
         if not self.owner.enrolled:
-            voice.speak("I don't know my owner yet. Shahar has to run the enroll step first.")
+            voice.speak(t("I don't know my owner yet. Shahar has to run the enroll step first.", "אני עוד לא מכיר את הבעלים שלי. שחר צריך לעשות רישום קודם."))
             return
         if time.monotonic() < self.locked_until:
             print("(personality update locked after failed checks)")
-            voice.speak("Sorry, only Shahar can change my personality.")
+            voice.speak(t("Sorry, only Shahar can change my personality.", "סליחה, רק שחר יכול לשנות את האישיות שלי."))
             return
 
         ok, score = self._is_shahar(cam)
@@ -189,25 +197,28 @@ class PersonaEditor:
         if not ok:
             self._fail(voice, "face")
             return
-        voice.speak("Hi Shahar. What's the secret word?")
+        voice.speak(t("Hi Shahar. What's the secret word?", "היי שחר. מה מילת הסוד?"))
         # Whisper mishears a short phrase now and then (a live "holy cow"
         # came out as "Pico"), so three tries count as one attempt.
         for attempt in range(3):
-            got = hear()
+            # The secret word is English: Hebrew mode hears it in English.
+            got = hear("en")
             if got is False:
                 return
             if got and self.owner.secret_ok(got[0]):
                 break
             print(f"(secret word not matched: {got[0] if got else 'nothing heard'!r})")
             if attempt < 2:
-                voice.speak("I didn't catch that. Say the secret word again.")
+                voice.speak(t("I didn't catch that. Say the secret word again.", "לא שמעתי. תגיד שוב את מילת הסוד."))
         else:
             self._fail(voice, "secret word")
             return
         self.fails = 0
 
-        voice.speak("Okay, I'm listening. Tell me how I should change. "
-                    "Say that's all when you're done.")
+        voice.speak(t(
+            "Okay, I'm listening. Tell me how I should change. Say that's all when you're done.",
+            "בסדר, אני מקשיב. תגיד לי איך להשתנות. כשתסיים, תגיד: זהו.",
+        ))
         notes: list[str] = []
         while True:
             got = hear()
@@ -218,35 +229,40 @@ class PersonaEditor:
             text = got[0]
             label, said = understand(chat, text, notes)
             if label == "CANCEL":
-                voice.speak("Okay, nothing changed.")
+                voice.speak(t("Okay, nothing changed.", "בסדר, לא שיניתי כלום."))
                 return
             if label == "DONE":
                 break
             if label == "UNCLEAR":
-                voice.speak("Sorry, I didn't get that. Say it again, or say that's all.")
+                voice.speak(t("Sorry, I didn't get that. Say it again, or say that's all.", "סליחה, לא הבנתי. תגיד שוב, או תגיד: זהו."))
                 continue
             notes.append(text)
             print(f"(personality note {len(notes)}: {text})")
-            voice.speak(f"Got it. {said}" if said else "Got it.")
+            got_it = t("Got it.", "הבנתי.")
+            voice.speak(f"{got_it} {said}" if said else got_it)
         if not notes:
-            voice.speak("You didn't tell me anything to change. Nothing changed.")
+            voice.speak(t("You didn't tell me anything to change. Nothing changed.", "לא אמרת לי מה לשנות. לא שיניתי כלום."))
             return
 
-        voice.speak("Let me think about that.")
+        voice.speak(t("Let me think about that.", "רגע, אני חושב על זה."))
         current = load_character()
         prompt = "Current personality:\n" + current + "\n\nShahar said:\n" + "\n".join(f"- {n}" for n in notes)
-        raw = chat.complete(EDITOR, prompt)
+        # Hebrew mode: lines in Hebrew, so WALL-E can read them back.
+        raw = chat.complete(EDITOR + (" Write the lines in Hebrew." if hebrew() else ""), prompt)
         lines = [ln.strip()[2:].strip() for ln in raw.splitlines() if ln.strip().startswith("- ")][:MAX_LINES]
         if not lines:
             print(f"(personality editor gave nothing usable: {raw!r})")
-            voice.speak("I couldn't turn that into changes. Nothing changed.")
+            voice.speak(t("I couldn't turn that into changes. Nothing changed.", "לא הצלחתי להפוך את זה לשינויים. לא שיניתי כלום."))
             return
 
-        voice.speak(f"Here {'is the change' if len(lines) == 1 else f'are the {len(lines)} changes'}.")
+        voice.speak(t(
+            f"Here {'is the change' if len(lines) == 1 else f'are the {len(lines)} changes'}.",
+            "הנה השינוי." if len(lines) == 1 else f"הנה {len(lines)} השינויים.",
+        ))
         for i, ln in enumerate(lines, 1):
             voice.speak(f"{i}. {ln}")
         for _ in range(3):
-            voice.speak("Should I save this? Say yes or no.")
+            voice.speak(t("Should I save this? Say yes or no.", "לשמור את זה? תגיד כן או לא."))
             got = hear()
             if got is False:
                 return
@@ -261,9 +277,9 @@ class PersonaEditor:
                 backup = _save(lines)
                 chat.reload_system()
                 print(f"(personality saved; previous version in {backup.name})")
-                voice.speak("Saved. I feel different already.")
+                voice.speak(t("Saved. I feel different already.", "שמרתי. אני כבר מרגיש אחרת."))
                 return
             if verdict == "NO":
-                voice.speak("Okay, nothing changed.")
+                voice.speak(t("Okay, nothing changed.", "בסדר, לא שיניתי כלום."))
                 return
-        voice.speak("I didn't get a yes, so nothing changed.")
+        voice.speak(t("I didn't get a yes, so nothing changed.", "לא שמעתי כן, אז לא שיניתי כלום."))

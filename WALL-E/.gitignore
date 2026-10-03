@@ -16,6 +16,8 @@ brain/models/**
 # Whisper for the Mac GPU: its README comes with the download.
 brain/models/whisper-en-mlx/
 brain/models/whisper-turbo-mlx/
+# Hebrew models (ivrit.ai Whisper, Kokoro Hebrew, Phonikud): downloads.
+brain/models/he/
 hebrew_try.wav
 hebrew_talk.wav
 brain/hebrew_try.wav

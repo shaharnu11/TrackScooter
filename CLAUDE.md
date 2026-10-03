@@ -36,6 +36,10 @@ Status 2026-10-03 (branch `mac-brain-port`, MacBook Pro M4 Max, 48 GB):
   script uses it). The XPS stays on `4b-vl`. Times: `mac/README.md`.
 - Step 4: the Mac uses Whisper `large-v3-turbo` (mlx, 0.22 s, better in
   noise); `WALLE_WHISPER=small` for small.en. The XPS keeps small.en on CUDA.
+- Hebrew on the Mac (`--lang he`, `mac/hebrew/start_walle.command`):
+  ivrit.ai Whisper turbo, DictaLM 3.0 12B + Qwen3-VL-4B eyes, Kokoro Hebrew
+  + Phonikud. Fixed lines via `lang.t()`; commands match both languages.
+  English start: `mac/english/start_walle.command`.
 - Barge-in on the Mac (`echo.py`, `loop_barge` in talk_english.py): talk
   over WALL-E, he stops. Windows keeps the old `loop`.
 - Open: a real spoken test with Shahar (loud music); Spotify playlists must

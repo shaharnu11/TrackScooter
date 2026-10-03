@@ -1,7 +1,7 @@
 #!/bin/bash
-# WALL-E talking, Mac (Apple Silicon). Double-click in Finder, or run in Terminal.
+# WALL-E talking Hebrew, Mac (Apple Silicon): ivrit.ai Whisper, DictaLM 3.0, Kokoro Hebrew. Double-click in Finder, or run in Terminal.
 # Extra options pass through, e.g.:  ./start_walle.command --mind cloud
-cd "$(dirname "$0")/.." || exit 1
+cd "$(dirname "$0")/../.." || exit 1
 # An old WALL-E still running (once one ignored Ctrl+C): ask it to quit,
 # then force it, with its brain (llama-server) and Whisper process.
 # Only a Python running talk_english.py: a looser pattern also hit other
@@ -20,4 +20,4 @@ if [ ! -x .venv/bin/python ]; then
   read -r -p "Press Enter to close."
   exit 1
 fi
-.venv/bin/python talk_english.py --brain 30b-vl "$@"
+.venv/bin/python talk_english.py --lang he --brain dicta-12b "$@"

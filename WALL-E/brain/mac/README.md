@@ -10,16 +10,35 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
 
 ## Start
 
-- Double-click **`start_walle.command`** in Finder, or in Terminal:
-  ```
-  cd WALL-E/brain
-  .venv/bin/python talk_english.py --brain 30b-vl
-  ```
-- Stop: **Ctrl+C**, or close the window.
+Two folders, one per language. Double-click the start script in Finder:
+
+| Language | Start | Listens | Thinks | Speaks |
+|---|---|---|---|---|
+| English | **`mac/english/start_walle.command`** | Whisper large-v3-turbo | Qwen3-VL-30B (`30b-vl`, sees) | Kokoro (am_michael) |
+| Hebrew | **`mac/hebrew/start_walle.command`** | ivrit.ai Whisper large-v3-turbo | DictaLM 3.0 12B (`dicta-12b`) + Qwen3-VL-4B as its eyes | Kokoro Hebrew (he_shaul) + Phonikud |
+
+- Or in Terminal, from `WALL-E/brain`:
+  `.venv/bin/python talk_english.py --brain 30b-vl` (English) or
+  `.venv/bin/python talk_english.py --lang he --brain dicta-12b` (Hebrew).
+- Stop: **Ctrl+C**, **q** in the camera window, or say bye / ביי.
 - Options: the same as on Windows (`--brain`, `--mind cloud`, `--type`,
   `--no-camera`, `--sleep-after`). See `../windows/README.md`.
-- Brain on the Mac: **`30b-vl`** (Qwen3-VL-30B-A3B, sees). **Mac only**:
-  Windows does not offer it. Smaller ones: `--brain 4b-vl`, `--brain 8b-vl`.
+- Voice commands work in both languages in both modes (sleep / לך לישון,
+  wake up / תתעורר, management mode / מצב ניהול, update personality /
+  עדכון אישיות, forget me / תשכח אותי, music / תנגן…, bye / ביי).
+- Hebrew mode hears the secret word in English (it is an English word).
+
+### Why these Hebrew models (measured on the M4 Max)
+
+- **Listening:** ivrit.ai large-v3-turbo vs large-v3: 0.24 s vs 0.43 s a
+  sentence; letter errors 0.8% vs 0% clean, 3.0% vs 3.8% at 0 dB noise.
+- **Brain:** DictaLM 3.0 12B vs Qwen3-VL-30B on the same Hebrew chat: Dicta
+  natural and asks back (0.6–1.0 s an answer); Qwen made up words. Dicta
+  cannot see, so Qwen3-VL-4B describes the camera in words (0.4–0.7 s).
+- **Voice:** Kokoro Hebrew vs Chatterbox Multilingual: Whisper misheard
+  0.8% vs 38% of the letters; 0.35 s vs 1.8 s a sentence. Kokoro Hebrew is
+  **non-commercial** only. Qwen3-TTS Hebrew (needs its own C++ build and a
+  voice sample) was not tried.
 
 ## Setup (once)
 
@@ -37,10 +56,11 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
    python3.12 -m venv .venv
    .venv/bin/python -m pip install -r requirements-voice.txt
    ```
-4. Models (~21 GB for `30b-vl`). Download them on the Mac; nothing comes
+4. Models (~21 GB for `30b-vl`; Hebrew adds ~12 GB with `--brain dicta-12b`). Download them on the Mac; nothing comes
    from the XPS:
    ```
    .venv/bin/python download_english.py --brain 30b-vl
+   .venv/bin/python download_english.py --brain dicta-12b   # Hebrew
    ```
    On the Mac this also gets Whisper for the Mac GPU (`models/whisper-turbo-mlx/`,
    `models/whisper-en-mlx/`)
@@ -55,7 +75,7 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
    (Do not copy the Windows `llama-server.exe`. It does not run on a Mac.)
 6. Allow the start script to run (once):
    ```
-   chmod +x mac/start_walle.command
+   chmod +x mac/english/start_walle.command mac/hebrew/start_walle.command
    ```
 7. **Permissions:** the first start asks for **Microphone** and **Camera**
    for Terminal. Allow both (System Settings → Privacy & Security).
@@ -124,7 +144,7 @@ new sentence. The mic and the camera window never stop.
   TFLite runtime (`ai-edge-litert`), ~2 ms a face. Not MediaPipe: it sends
   usage logs to Google and has no off switch. Threshold `LIPS_TALK` 0.75;
   **check it with `.venv/bin/python lips_test.py`** (quiet 6 s, talk 6 s)
-  and set it with `WALLE_LIPS_TALK=<n> ./mac/start_walle.command`. Off: `--no-lips`.
+  and set it with `WALLE_LIPS_TALK=<n> ./mac/english/start_walle.command`. Off: `--no-lips`.
   Off: `--no-lips`. The log line `speech … lips 3.2` shows the value.
 - Not cancelled: music and Spotify (they play on their own). They stay ducked.
 

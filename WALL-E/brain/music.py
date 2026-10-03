@@ -26,6 +26,8 @@ from typing import Callable
 
 import numpy as np
 
+from lang import hebrew, t
+
 MUSIC_DIR = Path(__file__).resolve().parent / "music"
 AUDIO_EXT = {".mp3", ".m4a", ".aac", ".wav", ".flac", ".ogg", ".opus"}
 SR = 44100
@@ -33,19 +35,29 @@ DUCK = 0.2  # music level, as a share of normal, while WALL-E listens or talks
 
 _STOP = re.compile(
     r"\b(stop|pause|turn off|switch off|kill|enough)\b.*\b(music|song|it|playing|this)\b"
-    r"|\bstop (the )?music\b|\bmusic off\b",
+    r"|\bstop (the )?music\b|\bmusic off\b"
+    r"|(עצור|תעצור|תעצרי|תפסיק|תפסיקי|תכבה|תכבי|די עם|בלי)\s+(את\s+)?(ה)?(מוזיקה|שיר)",
     re.IGNORECASE,
 )
 _NEXT = re.compile(
-    r"\b(next|skip|another|different|change)\b.*\b(song|track|one|music|it|this)\b|^\W*skip\b",
+    r"\b(next|skip|another|different|change)\b.*\b(song|track|one|music|it|this)\b|^\W*skip\b"
+    r"|(ה)?שיר (ה)?הבא|שיר אחר|תעביר (שיר|את השיר)|תחליף (שיר|את השיר)|^\W*דלג",
     re.IGNORECASE,
 )
 _WHAT = re.compile(
     r"\bwhat('s| is)?\s+(this|that|the)?\s*(song|track|playing)\b"
-    r"|\bwhat are (we|you) (listening|playing)\b|\bwho (is )?(sings|singing)\b",
+    r"|\bwhat are (we|you) (listening|playing)\b|\bwho (is )?(sings|singing)\b"
+    r"|מה מתנגן|איזה שיר (זה|מתנגן)|מה השיר (הזה|שמתנגן)|מי שר",
     re.IGNORECASE,
 )
-_PLAY = re.compile(r"\b(play|put on|throw on|blast)\b(.*)", re.IGNORECASE)
+# The asked-for words land in group "q". Hebrew "שים" alone is too wide
+# ("תשים לב" = pay attention): it needs a music word after it.
+_PLAY = re.compile(
+    r"\b(play|put on|throw on|blast)\b(?P<q>.*)"
+    r"|(תנגן|נגן|תנגני|נגני)(?P<q2>.*)"
+    r"|(תשים|שים|תשימי|תפעיל|תפעילי)\s+(לי\s+|לנו\s+)?(?P<q3>(שיר|מוזיקה|את)\b.*)",
+    re.IGNORECASE,
+)
 # "play" also means "play a game". Anything else after "play" is taken as
 # music, so "play Coldplay" gets "I don't have Coldplay" rather than the
 # brain pretending to play it.
@@ -62,11 +74,14 @@ _FILLER = {
     "track", "tracks", "tune", "tunes", "something", "anything", "by", "of",
     "from", "random", "little", "bit", "your", "my", "good", "nice", "cool",
     "one", "to", "listen", "i", "want", "like", "let", "lets", "let's", "us",
+    # Hebrew
+    "לי", "לנו", "את", "שיר", "שירים", "מוזיקה", "של", "קצת", "משהו", "בבקשה",
+    "תנגן", "נגן", "תשים", "שים", "וולי", "וול", "אי", "איזה", "כלשהו", "אחד",
 }
 
 
 def _words(text: str) -> list[str]:
-    return re.findall(r"[a-z0-9']+", text.lower())
+    return re.findall(r"[a-z0-9'\u05d0-\u05ea]+", text.lower())
 
 
 def _speakable(text: str) -> bool:
@@ -144,55 +159,55 @@ class MusicPlayer:
         sp = self.spotify
         if _STOP.search(text):
             if not self.playing:
-                return Command("Nothing is playing.")
+                return Command(t("Nothing is playing.", "שום דבר לא מתנגן."))
             self.stop()
             sp.pause()
-            return Command("Okay, music off.")
+            return Command(t("Okay, music off.", "בסדר, כיביתי את המוזיקה."))
         if _WHAT.search(text):
             now = sp.now() if sp.active else self.now if self._playing else None
-            return Command(f"This is {now}." if now else "Nothing is playing right now.")
+            return Command(t(f"This is {now}.", f"זה {now}.") if now else t("Nothing is playing right now.", "שום דבר לא מתנגן עכשיו."))
         if _NEXT.search(text) and self.playing:
             if sp.active:
-                return Command("Next one!", sp.next)
+                return Command(t("Next one!", "הבא!"), sp.next)
             nxt = self._pick(exclude=self._path)
             if nxt is None:
-                return Command("That is the only song I have.")
-            return Command(f"Next one: {song_name(nxt)}.", lambda: self.play(nxt))
+                return Command(t("That is the only song I have.", "זה השיר היחיד שיש לי."))
+            return Command(t(f"Next one: {song_name(nxt)}.", f"הבא: {song_name(nxt)}."), lambda: self.play(nxt))
         m = _PLAY.search(text)
         if m is None:
             return None
-        query = m.group(2)
+        query = m.group("q") or m.group("q2") or m.group("q3") or ""
         wanted = [w for w in _words(query) if w not in _FILLER]
         # "play a game", "play with me": not music. With 3,751 Spotify songs
         # some title always matches ("Tender Games"), so these words win
         # unless music is named outright.
         # Two or more words that all match a title still win: "play Piano Man".
-        if _NOT_MUSIC.search(query) and not re.search(r"\b(song|music|track|playlist)\b", query, re.IGNORECASE):
+        if _NOT_MUSIC.search(query) and not re.search(r"\b(song|music|track|playlist)\b|שיר|מוזיקה|פלייליסט", query, re.IGNORECASE):
             if len(wanted) < 2 or (self.find(query) is None and sp.find(query, _FILLER) is None):
                 return None
         if re.search(r"\bspotify\b", query, re.IGNORECASE) and not [w for w in wanted if w != "spotify"]:
             if not sp.running():
-                return Command("Spotify is not open on my laptop.")
+                return Command(t("Spotify is not open on my laptop.", "ספוטיפיי לא פתוח במחשב שלי."))
             self.stop()
-            return Command("Okay, Spotify!", sp.resume)
+            return Command(t("Okay, Spotify!", "בסדר, ספוטיפיי!"), sp.resume)
         # Asked for something: the music folder first, then the Spotify list.
         if wanted:
             song = self.find(query)
             if song is not None:
-                return Command(f"Here's {song_name(song)}.", lambda: self._local(song))
+                return Command(t(f"Here's {song_name(song)}.", f"הנה {song_name(song)}."), lambda: self._local(song))
             hit = sp.find(query, _FILLER) if sp.ready else None
             if hit is not None:
                 return self._spotify(*hit)
         # Anything, or nothing matched: a random song from wherever there is one.
         song = self._pick(exclude=self._path)
         if song is not None:
-            say = f"Here's {song_name(song)}"
+            say = t(f"Here's {song_name(song)}", f"הנה {song_name(song)}")
             if wanted:
-                say = f"I don't have {' '.join(wanted)}. {say} instead"
+                say = t(f"I don't have {' '.join(wanted)}. {say} instead", f"אין לי {' '.join(wanted)}. {say} במקום")
             return Command(say + "!", lambda: self._local(song))
         if sp.ready:
-            return self._spotify("any", None, f"I don't have {' '.join(wanted)}. " if wanted else "")
-        return Command("My music folder is empty. Put some songs in it and ask me again.")
+            return self._spotify("any", None, t(f"I don't have {' '.join(wanted)}. ", f"אין לי {' '.join(wanted)}. ") if wanted else "")
+        return Command(t("My music folder is empty. Put some songs in it and ask me again.", "תיקיית המוזיקה שלי ריקה. תשים בה שירים ותבקש שוב."))
 
     def _local(self, song: Path) -> None:
         self.spotify.pause()
@@ -200,20 +215,26 @@ class MusicPlayer:
 
     def _spotify(self, kind: str, item, prefix: str = "") -> Command:
         if not self.spotify.running():
-            return Command("Spotify is not open on my laptop.")
+            return Command(t("Spotify is not open on my laptop.", "ספוטיפיי לא פתוח במחשב שלי."))
 
         def go() -> str:
             self.stop()
-            t = self.spotify.play(kind, item)
-            if t is None:
-                return prefix + "I couldn't start that one. It may not be downloaded."
+            tr = self.spotify.play(kind, item)
+            if tr is None:
+                return prefix + t("I couldn't start that one. It may not be downloaded.", "לא הצלחתי להפעיל את זה. אולי הוא לא הורד.")
             if kind == "playlist":
-                what = "album" if item.get("album") else "playlist"
+                album = item.get("album")
                 name = item["name"].replace("ClaudeDJ / ", "")
+                if hebrew():
+                    return prefix + f"הנה {'האלבום' if album else 'הפלייליסט'} {name}."
+                what = "album" if album else "playlist"
                 return prefix + (f"Here's your {name} {what}." if _speakable(name) else f"Here's your {what}.")
-            artists = [a for a in t.get("artists", [])[:2] if _speakable(a)]
-            if _speakable(t["name"]):
-                return prefix + f"Here's {t['name']}" + (f" by {', '.join(artists)}." if artists else ".")
+            if hebrew():  # the Hebrew voice reads Hebrew names; English ones it only tries
+                artists = tr.get("artists", [])[:2]
+                return prefix + f"הנה {tr['name']}" + (f" של {', '.join(artists)}." if artists else ".")
+            artists = [a for a in tr.get("artists", [])[:2] if _speakable(a)]
+            if _speakable(tr["name"]):
+                return prefix + f"Here's {tr['name']}" + (f" by {', '.join(artists)}." if artists else ".")
             # Kokoro speaks English only: "Here's סטלות" comes out as noise.
             return prefix + (f"Here's a song by {', '.join(artists)}." if artists else "Here's a song for you.")
 

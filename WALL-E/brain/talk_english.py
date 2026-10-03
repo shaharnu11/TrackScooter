@@ -30,7 +30,8 @@ import urllib.request
 from collections.abc import Iterator
 from contextlib import closing
 
-from english_voice import BRAINS, GGUF_DIR, KOKORO_VOICE, Brain, EnglishVoice, chirp, wake_sound
+from english_voice import BRAINS, GGUF_DIR, KOKORO_HE_VOICE, KOKORO_VOICE, Brain, EnglishVoice, chirp, wake_sound
+from lang import hebrew, set_lang, t
 from talk_hebrew import (
     LLAMA_PORT,
     TalkCam,
@@ -51,18 +52,28 @@ from persona_edit import START as PERSONA_START
 from persona_edit import PersonaEditor, load_character
 from vad_listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
 
-FALLBACK = "Sorry, I missed that. Say it again?"
+def fallback() -> str:
+    return t("Sorry, I missed that. Say it again?", "סליחה, לא שמעתי. תגיד שוב?")
 MIN_CLIP_SPEECH = 0.5
 
 # Who he is lives in personality.md (Shahar edits it by voice, persona_edit.py).
 # How he must behave is RULES below: fixed here, so an update cannot drop it.
-RULES = (
+LANG_EN = (
     "Speak plain spoken English: one or two short, warm, simple sentences, "
     "under 25 words. No lists, no asterisks, no emojis, no code. "
     # Midburn: most people are Israelis, English is not their first language.
     "Most people you meet are not native English speakers. Use simple, common "
     "words a learner knows (say tiring, not exhausting), short sentences, and "
-    "no idioms, slang or fancy words. Often end with one short, simple question "
+    "no idioms, slang or fancy words. "
+)
+LANG_HE = (
+    "Always answer in Hebrew: everyday spoken Hebrew, one or two short, warm, "
+    "simple sentences, under 25 words. No English words except names. No "
+    "lists, no asterisks, no emojis, no code. Use the right gender for the "
+    "person when you know it. "
+)
+RULES = (
+    "Often end with one short, simple question "
     "to the person, to keep the talk going. "
     # Whisper hears through festival music: half-heard lines will come in.
     # Worded softly: "it is loud around you" made him answer a clear
@@ -99,9 +110,21 @@ EYES_VISION = (
 )
 
 
-def build_system(vision: bool) -> str:
+# Hebrew mode: DictaLM cannot see; Qwen3-VL-4B describes the picture in
+# English words, added to the person's sentence in brackets.
+EYES_DESCRIBED = (
+    "Sometimes the person's sentence comes with a line in brackets that tells "
+    "you what your camera sees right now. Trust only that line: mention only "
+    "what it says, never add details. You may mention or ask about one thing "
+    "in it, even when nobody asked. With no such line, never say you see "
+    "anything, and do not describe the person or the place around you."
+)
+
+
+def build_system(vision: bool, described: bool = False) -> str:
     """personality.md (who he is) + RULES + camera rules. Re-read each call."""
-    return load_character() + " " + RULES + (EYES_VISION if vision else EYES_TEXT_ONLY)
+    eyes = EYES_DESCRIBED if described else EYES_VISION if vision else EYES_TEXT_ONLY
+    return load_character() + " " + (LANG_HE if hebrew() else LANG_EN) + RULES + eyes
 
 # Questions that need the eye. Everything else stays text-only and fast.
 LOOK = re.compile(
@@ -110,7 +133,11 @@ LOOK = re.compile(
     r"what is this|what's this|how many|"
     # Surroundings: without the picture he invented "grass and trees".
     r"where (are you|are we|you are|we are)|around (you|us|me|here)|"
-    r"this place|surround\w*)\b",
+    r"this place|surround\w*)\b"
+    # Hebrew: see, look, camera, picture, wear, hold, colour, shirt, hair,
+    # glasses, how many, where are we, around.
+    r"|(רואה|רואים|תסתכל|תסתכלי|תראה|מצלמה|תמונה|לובש|לובשת|מחזיק|מחזיקה|"
+    r"צבע|חולצה|שיער|משקפיים|כמה אצבעות|איפה אנחנו|מסביב|מה זה)",
     re.IGNORECASE,
 )
 
@@ -138,8 +165,78 @@ def gpu_mem() -> str:
         return "no nvidia-smi"
 
 
+EYES_PORT = 18090  # 8090 was taken by Cursor on this Mac
+DESCRIBE = (
+    "You are the camera eye of a small robot. Describe the picture in one or "
+    "two short English sentences: the person in front (clothes, hair, what "
+    "they hold, how they look) and the place. Only what is clearly there; "
+    "never guess small things like writing or animals."
+)
+
+
+class Eyes:
+    """A vision brain that only describes the camera picture in words, for a
+    brain that cannot see (DictaLM in Hebrew). Its own llama-server port."""
+
+    def __init__(self, brain: Brain) -> None:
+        model = GGUF_DIR / brain.file
+        if not model.exists() or not (GGUF_DIR / brain.mmproj).exists():
+            sys.exit(f"Missing {model} or its mmproj\nRun: python download_english.py --brain {brain.file}")
+        print(f"Loading eyes: {brain.file}")
+        self._model = model
+        self._extra = [
+            "-ngl", "99", "-np", "1", "-fa", "on",
+            "--reasoning", "off",
+            "--mmproj", str(GGUF_DIR / brain.mmproj),
+            "--image-max-tokens", "256",
+        ]
+        self._server: subprocess.Popen | None = start_llama(model, self._extra, EYES_PORT)
+
+    def describe(self, jpeg: bytes) -> str:
+        url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
+        body = json.dumps({
+            "messages": [
+                {"role": "system", "content": DESCRIBE},
+                {"role": "user", "content": [
+                    {"type": "image_url", "image_url": {"url": url}},
+                    {"type": "text", "text": "What do you see?"},
+                ]},
+            ],
+            "max_tokens": 70, "temperature": 0.2,
+            "chat_template_kwargs": {"enable_thinking": False},
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{EYES_PORT}/v1/chat/completions", data=body, headers={"Content-Type": "application/json"}
+        )
+        t0 = time.monotonic()
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                text = (json.load(r)["choices"][0]["message"].get("content") or "").strip()
+        except OSError as exc:
+            print(f"(eyes failed: {exc})")
+            return ""
+        print(f"(eyes {time.monotonic() - t0:.1f} s: {text})")
+        return text
+
+    def wake(self) -> None:
+        if self._server is None or self._server.poll() is not None:
+            self._server = start_llama(self._model, self._extra, EYES_PORT)
+
+    def close(self) -> None:
+        if self._server is not None and self._server.poll() is None:
+            self._server.terminate()
+            try:
+                self._server.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._server.kill()
+        self._server = None
+
+
 class EnglishChat:
     """A Qwen3 GGUF in llama-server. Thinking off: WALL-E answers at once."""
+
+    port = LLAMA_PORT
+    eyes: Eyes | None = None
 
     # Management mode (manage.py) swaps these; None = the festival persona.
     override: str | None = None
@@ -181,9 +278,10 @@ class EnglishChat:
             "-ctv", "q8_0",
             "-ub", "256",
         ]
-        self.vision = bool(brain.mmproj)
-        self.system = build_system(self.vision)
-        if self.vision:
+        self.vision = bool(brain.mmproj) or bool(brain.eyes)
+        self.eyes = Eyes(BRAINS[brain.eyes]) if brain.eyes else None
+        self.system = build_system(self.vision, described=self.eyes is not None)
+        if brain.mmproj:
             # The eye model stays in RAM and runs on the CPU: 780 MiB less on
             # the card (3.85 -> ~3.06 GB with Whisper), and looks are rare.
             # 256 image tokens, not 384: alone on the bench a look took 2.4 s,
@@ -207,6 +305,8 @@ class EnglishChat:
     def wake(self) -> None:
         if self._server is None or self._server.poll() is not None:
             self._server = start_llama(self._model, self._extra)
+        if self.eyes is not None:
+            self.eyes.wake()
 
     def close(self) -> None:
         if self._server is not None and self._server.poll() is None:
@@ -216,10 +316,12 @@ class EnglishChat:
             except subprocess.TimeoutExpired:
                 self._server.kill()
         self._server = None
+        if self.eyes is not None:
+            self.eyes.close()
 
     def reload_system(self) -> None:
         """Pick up a changed personality.md without a restart."""
-        self.system = build_system(self.vision)
+        self.system = build_system(self.vision, described=self.eyes is not None)
 
     def complete(self, system: str, text: str, max_tokens: int = 400) -> str:
         """One stand-alone request with its own instructions (no history)."""
@@ -237,7 +339,7 @@ class EnglishChat:
             }
         ).encode("utf-8")
         req = urllib.request.Request(
-            f"http://127.0.0.1:{LLAMA_PORT}/v1/chat/completions",
+            f"http://127.0.0.1:{self.port}/v1/chat/completions",
             data=body,
             headers={"Content-Type": "application/json"},
         )
@@ -262,7 +364,7 @@ class EnglishChat:
             }
         ).encode("utf-8")
         req = urllib.request.Request(
-            f"http://127.0.0.1:{LLAMA_PORT}/v1/chat/completions",
+            f"http://127.0.0.1:{self.port}/v1/chat/completions",
             data=body,
             headers={"Content-Type": "application/json"},
         )
@@ -294,7 +396,12 @@ class EnglishChat:
     def _messages(self, user_text: str, jpeg: bytes | None) -> list[dict]:
         self.history.append({"role": "user", "content": user_text})
         messages: list[dict] = [{"role": "system", "content": self.system_prompt()}, *self.history[-8:]]
-        if jpeg is not None:
+        if jpeg is not None and self.eyes is not None:
+            # Hebrew: the eyes put the picture into words for DictaLM.
+            seen = self.eyes.describe(jpeg)
+            if seen:
+                messages[-1] = {"role": "user", "content": f"{user_text}\n\n(Your camera sees right now: {seen})"}
+        elif jpeg is not None:
             # The picture rides on this turn only; history keeps the words.
             url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
             messages[-1] = {
@@ -338,8 +445,8 @@ class EnglishChat:
                     if full >= self.max_sentences or len(said) >= self.max_sentences + 2:
                         break
             if not said:
-                said.append(FALLBACK)
-                yield FALLBACK
+                said.append(fallback())
+                yield said[-1]
         finally:
             # Also when he was talked over and the stream was closed early.
             if said:
@@ -355,8 +462,8 @@ class EnglishChat:
             # One cooler retry; if it is still not English, ask again.
             text = EMOJI.sub("", clean_reply(self._raw_reply(messages, 0.3))).strip()
             if CJK.search(text):
-                text = FALLBACK
-        text = text or FALLBACK
+                text = fallback()
+        text = text or fallback()
         self.history.append({"role": "assistant", "content": text})
         return text
 
@@ -743,9 +850,11 @@ def vet(rec, vad: StreamVAD, gate: Gate, use_gate: bool, trigger: str):
 
 
 # "Go to sleep" / "wake up". "I'm going to sleep now" is about the person.
-SLEEP = re.compile(r"\b(go to (sleep|bed)|sleep now|sleep mode|take a nap)\b", re.I)
+# Hebrew too: "\bלך לישון" does not match "הולך לישון" (I'm going to sleep).
+SLEEP = re.compile(r"\b(go to (sleep|bed)|sleep now|sleep mode|take a nap|לך לישון|לכי לישון|תלך לישון|מצב שינה|לך לנוח)\b", re.I)
 NOT_SLEEP = re.compile(r"\b(i|i'm|i am|i'll|we|we're|they)\b[^.?!]{0,15}\bgo(ing)? to (sleep|bed)\b", re.I)
-WAKE = re.compile(r"\b(wake|get up|good morning)\b", re.I)
+WAKE = re.compile(r"\b(wake|get up|good morning|תתעורר|תתעוררי|התעורר|קום|קומי|בוקר טוב)\b", re.I)
+BYE = re.compile(r"\b(bye|goodbye|see you|shut ?down|turn yourself off|ביי|להתראות|תכבה את עצמך|כבה את עצמך)\b", re.I)
 
 
 def _answers_only(parts):
@@ -765,7 +874,7 @@ def asleep_heard(user: str, voice, sleeper, cam) -> bool:
         if cam is not None:
             cam.resume()
         sleeper.wake_now()
-        voice.speak("I'm awake! Hi again.")
+        voice.speak(t("I'm awake! Hi again.", "התעוררתי! היי שוב."))
     else:
         print("(asleep: only wake up counts, ignored)")
     return True
@@ -775,22 +884,25 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
     """Answer one sentence. False when it was goodbye."""
     if manager is not None and not manager.active and MANAGE_START.search(user) and not MANAGE_EXIT.search(user):
         if manager.enter(chat, cam):
-            voice.speak("Management mode. Ask me anything about how I work. Say exit management mode when you're done.")
+            voice.speak(t(
+                "Management mode. Ask me anything about how I work. Say exit management mode when you're done.",
+                "מצב ניהול. תשאל אותי כל דבר על איך אני עובד. כשתסיים, תגיד: צא ממצב ניהול.",
+            ))
         else:
-            voice.speak("Sorry, management mode is only for Shahar.")
+            voice.speak(t("Sorry, management mode is only for Shahar.", "סליחה, מצב ניהול רק לשחר."))
         return True
     if manager is not None and manager.active and MANAGE_EXIT.search(user):
         manager.leave(chat)
-        voice.speak("Okay, back to normal.")
+        voice.speak(t("Okay, back to normal.", "בסדר, חוזר לרגיל."))
         return True
     if (
         manager is not None and manager.active and not PERSONA_START.search(user)
         and manager.wants_change(chat, user)
     ):
-        voice.speak(MANAGE_CHANGE_LINE)
+        voice.speak(MANAGE_CHANGE_LINE())
         return True
     if SLEEP.search(user) and not NOT_SLEEP.search(user):
-        voice.speak("Okay, going to sleep. Say wake up to wake me.")
+        voice.speak(t("Okay, going to sleep. Say wake up to wake me.", "בסדר, הולך לישון. תגיד תתעורר כדי להעיר אותי."))
         sleeper.sleep_now()
         if cam is not None:
             cam.pause()
@@ -803,8 +915,8 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         music.duck(False)
         sleeper.touch()
         return True
-    if re.search(r"\b(bye|goodbye|see you|shut ?down|turn yourself off)\b", user.lower()):
-        voice.speak("Bye! That was nice.")
+    if BYE.search(user):
+        voice.speak(t("Bye! That was nice.", "ביי! היה כיף."))
         return False
     managing = manager is not None and manager.active
     if people is not None and not managing:
@@ -858,7 +970,7 @@ def loop(
     manager: Manager | None = None,
     people: People | None = None,
 ) -> None:
-    voice.speak("Hi. I'm WALL-E. Talk to me.")
+    voice.speak(t("Hi. I'm WALL-E. Talk to me.", "היי. אני וול-אי. דבר איתי."))
     print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
     print()
     if cam is not None:
@@ -872,7 +984,7 @@ def loop(
     editor = PersonaEditor(Owner())
     print(f"Listening trigger: {trigger}" + ("" if use_gate else " (no mouth/loudness check)"))
 
-    def hear():
+    def hear(lang: str | None = None):
         """One sentence from the person in front: (text, t_stop), None when
         there is nothing worth answering, False when q was pressed."""
         if cam is None and not auto and not typed:
@@ -909,7 +1021,7 @@ def loop(
         chirp()
         sleeper.ready()  # asleep: this is where the ~6 s reload is waited out
         t0 = time.monotonic()
-        text = voice.transcribe_samples(samples, sr)
+        text = voice.transcribe_samples(samples, sr, lang)
         print(f"(stt {time.monotonic() - t0:.1f} s)")
         if not text:
             music.duck(False)
@@ -980,7 +1092,7 @@ def loop_barge(
         if not busy.is_set() and not recording.is_set() and clips.empty():
             music.duck(False)
 
-    def hear():
+    def hear(lang: str | None = None):
         """The worker's next sentence: (text, t_stop), None, or False to quit."""
         item = clips.get()
         if item is None:
@@ -989,7 +1101,7 @@ def loop_barge(
         voice.interrupt.clear()  # a new sentence: he may talk again
         sleeper.ready()  # asleep: this is where the reload is waited out
         t0 = time.monotonic()
-        text = voice.transcribe_samples(samples, sr)
+        text = voice.transcribe_samples(samples, sr, lang)
         print(f"(stt {time.monotonic() - t0:.1f} s)")
         if not text:
             print("Heard nothing. Try again.")
@@ -1032,7 +1144,7 @@ def loop_barge(
             print("(you spoke over WALL-E: he stops)")
             voice.interrupt.set()
 
-    voice.speak("Hi. I'm WALL-E. Talk to me.")
+    voice.speak(t("Hi. I'm WALL-E. Talk to me.", "היי. אני וול-אי. דבר איתי."))
     print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
     print()
     print("Talk any time, also while he talks. Ctrl+C or q to quit.")
@@ -1065,7 +1177,7 @@ def loop_barge(
         mic.close()
 
 
-INSTANCE_PORT = 8088  # held while WALL-E runs: a second start refuses
+INSTANCE_PORT = 18088  # held while WALL-E runs: a second start refuses (8088 is a common dev port)
 
 
 def one_instance():
@@ -1090,6 +1202,12 @@ def main() -> None:
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--brain", choices=BRAINS, default="4b", help="Language model")
+    parser.add_argument(
+        "--lang",
+        choices=("en", "he"),
+        default="en",
+        help="Language he hears and speaks. he (Mac only): ivrit.ai Whisper, Kokoro Hebrew; use --brain dicta-12b",
+    )
     parser.add_argument(
         "--type", action="store_true", help="Type English instead of using the mic"
     )
@@ -1149,11 +1267,14 @@ def main() -> None:
         help="Answer every voice, even with a still mouth or from far away",
     )
     args = parser.parse_args()
+    set_lang(args.lang)
+    if args.lang == "he" and sys.platform != "darwin":
+        parser.error("--lang he runs on the Mac only (talk_hebrew.py is the Windows Hebrew talker)")
     if args.type and args.auto:
         parser.error("use --type or --auto, not both")
     brain = BRAINS[args.brain]
     # Whisper first: --fit on the 8b sizes the model to what is left.
-    voice = EnglishVoice(whisper=brain.whisper)
+    voice = EnglishVoice(whisper=brain.whisper, lang=args.lang)
     if args.mind == "cloud":
         # The local brain is only loaded if the cloud fails; --brain picks it.
         chat = MindChat(CloudChat(args.cloud_model), lambda: EnglishChat(brain))
@@ -1190,7 +1311,11 @@ def main() -> None:
             if args.mind == "cloud" else f"{brain.file} (--brain {args.brain}) on this computer, offline"
         ) + (", it can see through the camera" if chat.vision else ""),
         "Hearing": f"{getattr(voice, 'ears', 'Whisper')}, Silero speech detector",
-        "Voice": f"Kokoro text to speech, voice {KOKORO_VOICE}",
+        "Voice": (
+            f"Kokoro Hebrew text to speech, voice {KOKORO_HE_VOICE}, vowels by Phonikud"
+            if hebrew() else f"Kokoro text to speech, voice {KOKORO_VOICE}"
+        ),
+        "Language": "Hebrew" if hebrew() else "English",
         "Talking over him (barge-in)": (
             "on: Shahar or a guest can talk while WALL-E talks; WALL-E then stops and listens"
             if barge else "off: WALL-E does not listen while he thinks or talks"

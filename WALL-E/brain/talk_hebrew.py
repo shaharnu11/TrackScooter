@@ -106,18 +106,18 @@ def ensure_gguf(thinking: bool = False) -> Path:
     return path
 
 
-def start_llama(model: Path, extra: list[str]) -> subprocess.Popen:
-    """Start llama-server on LLAMA_PORT and wait until /health answers."""
+def start_llama(model: Path, extra: list[str], port: int = LLAMA_PORT) -> subprocess.Popen:
+    """Start llama-server on port and wait until /health answers."""
     if not LLAMA_SERVER.exists():
         sys.exit(f"Missing {LLAMA_SERVER}\nRun: python download_hebrew_voice.py")
-    log_path = MODELS / "llama-server.log"
+    log_path = MODELS / ("llama-server.log" if port == LLAMA_PORT else f"llama-server-{port}.log")
     log = open(log_path, "w", encoding="utf-8")
     server = subprocess.Popen(
         [
             str(LLAMA_SERVER),
             "-m", str(model),
             "--host", "127.0.0.1",
-            "--port", str(LLAMA_PORT),
+            "--port", str(port),
             "-c", "2048",
             "--jinja",  # the chat template inside the GGUF
             *extra,
@@ -130,7 +130,7 @@ def start_llama(model: Path, extra: list[str]) -> subprocess.Popen:
         if server.poll() is not None:
             sys.exit(f"llama-server exited. See {log_path}")
         try:
-            url = f"http://127.0.0.1:{LLAMA_PORT}/health"
+            url = f"http://127.0.0.1:{port}/health"
             with urllib.request.urlopen(url, timeout=1) as r:
                 if r.status == 200:
                     return server

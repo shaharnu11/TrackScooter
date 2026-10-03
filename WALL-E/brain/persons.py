@@ -29,6 +29,7 @@ from pathlib import Path
 
 import numpy as np
 
+from lang import t
 from owner import SFACE_MATCH, Owner
 from persona_edit import confirmed
 
@@ -41,12 +42,13 @@ MAX_FEATS = 10
 PHOTOS = 4  # photos (and features) taken when someone is first remembered
 PHOTO_GAP_S = 0.5
 
-FORGET = re.compile(r"\bforget (me|about me|my face|who i am)\b", re.I)
+FORGET = re.compile(r"\bforget (me|about me|my face|who i am)\b|(תשכח|תשכחי|שכח|תמחק|תמחקי) אותי", re.I)
 
 NAME = (
     "A robot asked a person for their first name. Speech recognition may "
-    "garble words. Answer with the first name only, spelled the usual way, "
-    "or NONE if they did not say a name or refused."
+    "garble words. Answer with the first name only, spelled the usual way "
+    "in the language they said it, or NONE if they did not say a name or "
+    "refused."
 )
 
 NOTES = (
@@ -64,7 +66,7 @@ def _cos(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def _slug(name: str) -> str:
-    s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "person"
+    s = re.sub(r"[^a-z0-9\u05d0-\u05ea]+", "-", name.lower()).strip("-") or "person"
     out, n = s, 2
     while (PERSONS_DIR / out).exists():
         out, n = f"{s}-{n}", n + 1
@@ -180,7 +182,7 @@ class People:
     def forget(self, voice, chat) -> None:
         v = self.visit
         if v is None or v.person is None:
-            voice.speak("I don't have you saved, so there is nothing to forget.")
+            voice.speak(t("I don't have you saved, so there is nothing to forget.", "אתה לא שמור אצלי, אז אין מה לשכוח."))
             return
         name = v.person.name
         shutil.rmtree(v.person.folder)
@@ -188,22 +190,25 @@ class People:
         v.person, v.asked = None, True  # and do not ask again now
         chat.set_visitor("")
         print(f"(people: forgot {name})")
-        voice.speak(f"Done, {name}. I forgot you.")
+        voice.speak(t(f"Done, {name}. I forgot you.", f"זהו, {name}. שכחתי אותך."))
 
     def count(self) -> int:
         return len(self.known)
 
     # ----- remembering ------------------------------------------------------
     def _ask(self, voice, chat, hear) -> None:
-        voice.speak("Can I remember you, so I know you next time? I would keep your face and name, only on this computer.")
+        voice.speak(t(
+            "Can I remember you, so I know you next time? I would keep your face and name, only on this computer.",
+            "אפשר לזכור אותך, כדי שאכיר אותך בפעם הבאה? אשמור את הפנים והשם שלך, רק במחשב הזה.",
+        ))
         got = hear()
         if not got or confirmed(chat, got[0]) != "YES":
             print("(people: not remembered)")
-            voice.speak("No problem.")
+            voice.speak(t("No problem.", "אין בעיה."))
             return
         name = ""
         for _ in range(2):
-            voice.speak("What's your name?")
+            voice.speak(t("What's your name?", "איך קוראים לך?"))
             got = hear()
             if not got:
                 continue
@@ -212,9 +217,9 @@ class People:
                 break
             name = ""
         if not name:
-            voice.speak("I didn't get your name. Maybe next time.")
+            voice.speak(t("I didn't get your name. Maybe next time.", "לא הבנתי את השם. אולי בפעם הבאה."))
             return
-        voice.speak(f"Thanks, {name}. Look at me for two seconds.")
+        voice.speak(t(f"Thanks, {name}. Look at me for two seconds.", f"תודה, {name}. תסתכל עליי שתי שניות."))
         shots = self._photos()
         feats = [self.visit.feat] + [f for _jpg, f in shots]
         folder = PERSONS_DIR / _slug(name)
@@ -234,7 +239,7 @@ class People:
         self._update_notes(chat, p)
         chat.set_visitor(p.note())
         print(f"(people: remembered {name} in {folder.name}/)")
-        voice.speak(f"Nice to meet you, {name}. I will remember you.")
+        voice.speak(t(f"Nice to meet you, {name}. I will remember you.", f"נעים להכיר, {name}. אני אזכור אותך."))
 
     def _photos(self) -> list[tuple[bytes, np.ndarray]]:
         """PHOTOS face crops PHOTO_GAP_S apart, each with its face feature.

@@ -1,7 +1,14 @@
-"""Offline English STT/TTS for WALL-E: Whisper small.en + Kokoro.
+"""Offline STT/TTS for WALL-E: Whisper + Kokoro, English or Hebrew (--lang).
 
 English needs far less than Hebrew: small.en is 0.5 GB and Kokoro runs on the
 CPU, so most of the 3050 Ti's 4 GB goes to the language model (BRAINS).
+
+Hebrew (the Mac): ivrit.ai's Whisper large-v3-turbo on MLX, and Kokoro
+Hebrew (he_shaul) fed IPA from Phonikud (vowels + stress). Picked on the M4
+Max from: Whisper large-v3 vs turbo (turbo 0.24 s a sentence vs 0.43 s, and
+3.0% vs 3.8% letter errors at 0 dB), and Kokoro Hebrew vs Chatterbox
+Multilingual (0.8% vs 38% letters misheard by Whisper; 0.35 s vs 1.8 s a
+sentence). Kokoro Hebrew's license is non-commercial.
 """
 
 from __future__ import annotations
@@ -28,10 +35,25 @@ STT_MLX = {
 }
 
 
-def stt_mlx() -> tuple[str, Path, str]:
+HE_DIR = MODELS / "he"
+STT_MLX_HE = ("ivrit-ai large-v3-turbo", HE_DIR / "whisper-turbo-mlx", "mlx-community/ivrit-ai-whisper-large-v3-turbo-mlx")
+KOKORO_HE_DIR = HE_DIR / "tts-kokoro"
+KOKORO_HE_REPO = "thewh1teagle/kokoro-hebrew-nc"
+KOKORO_HE_VOICE = "he_shaul"
+PHONIKUD = HE_DIR / "phonikud" / "phonikud-1.0.int8.onnx"
+PHONIKUD_REPO = "thewh1teagle/phonikud-onnx"
+# Phonikud fetches this tokenizer from Hugging Face at every start; kept on
+# disk instead, so the Hebrew voice starts with no internet.
+PHONIKUD_TOK = PHONIKUD.parent / "tokenizer.json"
+PHONIKUD_TOK_REPO = "dicta-il/dictabert-large-char-menaked"
+
+
+def stt_mlx(lang: str = "en") -> tuple[str, Path, str]:
     """(name, folder, repo) of the Mac Whisper to use."""
     import os
 
+    if lang == "he":
+        return STT_MLX_HE
     return STT_MLX.get(os.environ.get("WALLE_WHISPER", "turbo"), STT_MLX["turbo"])
 KOKORO_DIR = MODELS / "tts-kokoro"
 KOKORO_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
@@ -55,13 +77,19 @@ PHANTOMS = {
     "see you next time",
     "thank you",  # a real lone "thank you" is lost too; it needs no answer
     "you",
+    # Hebrew Whisper's own (talk_hebrew.py saw "תודה" / "תודה רבה" on noise).
+    "תודה",
+    "תודה רבה",
+    "תודה שצפיתם",
+    "תודה על הצפייה",
+    "כתוביות",
 }
 
 
 def phantom(text: str) -> bool:
     import re
 
-    words = " ".join(re.findall(r"[a-z']+", text.lower()))
+    words = " ".join(re.findall(r"[a-z'\u05d0-\u05ea]+", text.lower()))
     return words in PHANTOMS
 
 
@@ -74,6 +102,7 @@ class Brain:
     note: str
     mmproj: str = ""  # vision projector file: set = the brain can see
     mac_only: bool = False  # too big for the XPS: offered on the Mac only
+    eyes: str = ""  # a BRAINS key: a vision brain that describes the camera in words
 
 
 BRAINS = {
@@ -132,24 +161,38 @@ BRAINS = {
         mmproj="mmproj-Qwen3VL-30B-A3B-Instruct-Q8_0.gguf",
         mac_only=True,
     ),
+    # Hebrew (--lang he): Dicta's DictaLM 3.0, Hebrew-first. Against
+    # Qwen3-VL-30B on the same Hebrew chat it was natural where Qwen made up
+    # words ("אם תסבכי על השמיים"); ~0.8 s an answer at 43 tok/s. It cannot
+    # see: Qwen3-VL-4B describes the camera picture in words for it.
+    "dicta-12b": Brain(
+        "dicta-il/DictaLM-3.0-Nemotron-12B-Instruct-GGUF",
+        "DictaLM-3.0-Nemotron-12B-Instruct-Q4_K_M.gguf",
+        "cpu", "99",
+        "DictaLM 3.0 12B (Hebrew), Qwen3-VL-4B as its eyes, all on the Mac GPU",
+        mac_only=True,
+        eyes="4b-vl",
+    ),
 }
 # The brains this computer can run: the Mac-only ones are left out elsewhere.
 BRAINS = {k: b for k, b in BRAINS.items() if not b.mac_only or sys.platform == "darwin"}
 
 
-def mlx_ready() -> bool:
+def mlx_ready(lang: str = "en") -> bool:
     """The Mac with mlx-whisper and its model: Whisper runs on the Mac GPU."""
-    if sys.platform != "darwin" or not (stt_mlx()[1] / "config.json").exists():
+    if sys.platform != "darwin" or not (stt_mlx(lang)[1] / "config.json").exists():
         return False
     import importlib.util
 
     return importlib.util.find_spec("mlx_whisper") is not None
 
 
-def whisper_device(want: str) -> tuple[str, str]:
+def whisper_device(want: str, lang: str = "en") -> tuple[str, str]:
     """WALLE_WHISPER_DEVICE=cpu forces the CPU, as in hebrew_voice."""
     import os
 
+    if lang == "he":
+        return "mlx", "float16"  # Hebrew runs on the Mac only (checked at start)
     if os.environ.get("WALLE_WHISPER_DEVICE") == "cpu":
         return "cpu", "int8"
     if mlx_ready():
@@ -200,22 +243,23 @@ def wake_sound() -> None:
     sd.play(np.concatenate(notes).astype(np.float32), sr)
 
 
-def _ears(conn, want: str) -> None:
+def _ears(conn, want: str, lang: str = "en") -> None:
     """Whisper in its own process, so sleep can end it.
 
     Deleting the model inside WALL-E's process left a 73 MiB CUDA context,
     and the NVIDIA chip stayed powered (D0) for as long as WALL-E ran; it
     only switched off (D3) once the process holding CUDA was gone.
     """
-    device, compute = whisper_device(want)
+    device, compute = whisper_device(want, lang)
     if device == "mlx":
-        _ears_mlx(conn, device, compute)
+        _ears_mlx(conn, device, compute, lang)
         return
     from faster_whisper import WhisperModel
 
     model = WhisperModel(str(STT_DIR), device=device, compute_type=compute)
     conn.send((device, f"small.en, {compute}"))
-    while (audio := conn.recv()) is not None:
+    while (msg := conn.recv()) is not None:
+        audio = msg[0]
         # VAD drops silence, and segments Whisper rates as not-speech are
         # thrown away ("Thank you." on noise), as on the Hebrew side.
         segments, _info = model.transcribe(
@@ -229,20 +273,21 @@ def _ears(conn, want: str) -> None:
         conn.send(" ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.6).strip())
 
 
-def _ears_mlx(conn, device: str, compute: str) -> None:
-    """The same loop on the Mac GPU (mlx-whisper)."""
+def _ears_mlx(conn, device: str, compute: str, lang: str = "en") -> None:
+    """The same loop on the Mac GPU (mlx-whisper). A clip can ask for the
+    other language: Hebrew mode hears the (English) secret word in English."""
     import mlx_whisper
     import numpy as np
 
-    name, folder, _repo = stt_mlx()
+    name = stt_mlx(lang)[0]
 
-    def hear(audio) -> str:
+    def hear(audio, in_lang: str) -> str:
         # No vad_filter here: the clip is already cut to speech by Silero
         # (vad_listen) before it gets this far.
         out = mlx_whisper.transcribe(
             audio,
-            path_or_hf_repo=str(folder),
-            language="en",
+            path_or_hf_repo=str(stt_mlx(in_lang)[1]),
+            language=in_lang,
             condition_on_previous_text=False,
             verbose=None,
         )
@@ -250,22 +295,48 @@ def _ears_mlx(conn, device: str, compute: str) -> None:
             s["text"].strip() for s in out["segments"] if s["no_speech_prob"] < 0.6
         ).strip()
 
-    hear(np.zeros(16000, dtype=np.float32))  # load + compile now, not on the first question
+    hear(np.zeros(16000, dtype=np.float32), lang)  # load + compile now, not on the first question
     conn.send((device, f"{name}, {compute}"))
-    while (audio := conn.recv()) is not None:
-        conn.send(hear(audio))
+    while (msg := conn.recv()) is not None:
+        audio, in_lang = msg
+        conn.send(hear(audio, in_lang or lang))
 
 
 class EnglishVoice:
-    def __init__(self, whisper: str = "cuda") -> None:
+    def __init__(self, whisper: str = "cuda", lang: str = "en") -> None:
         from kokoro_onnx import Kokoro
 
-        if not mlx_ready():
+        self.lang = lang
+        if lang == "he":
+            need(stt_mlx("he")[1] / "config.json", "Hebrew Whisper (ivrit-ai, MLX)")
+            need(KOKORO_HE_DIR / "kokoro.onnx", "Kokoro Hebrew")
+            need(PHONIKUD, "Phonikud")
+        elif not mlx_ready():
             need(STT_DIR / "model.bin", "Whisper small.en")
         for name in KOKORO_FILES:
             need(KOKORO_DIR / name, "Kokoro")
         print("Loading voice…")
-        self.tts = Kokoro(str(KOKORO_DIR / KOKORO_FILES[0]), str(KOKORO_DIR / KOKORO_FILES[1]))
+        if lang == "he":
+            import phonikud_onnx.model as pm
+            from phonikud_onnx import Phonikud
+            from tokenizers import Tokenizer
+
+            need(PHONIKUD_TOK, "Phonikud tokenizer")
+
+            class _LocalTokenizer:  # Phonikud asks the Hub by name; answer from disk
+                @staticmethod
+                def from_pretrained(_name):
+                    return Tokenizer.from_file(str(PHONIKUD_TOK))
+
+            pm.Tokenizer = _LocalTokenizer
+            self.tts = Kokoro(
+                str(KOKORO_HE_DIR / "kokoro.onnx"),
+                str(KOKORO_HE_DIR / "voices-hebrew.bin"),
+                vocab_config=str(KOKORO_HE_DIR / "config.json"),
+            )
+            self._nikud = Phonikud(str(PHONIKUD))
+        else:
+            self.tts = Kokoro(str(KOKORO_DIR / KOKORO_FILES[0]), str(KOKORO_DIR / KOKORO_FILES[1]))
         self._want = whisper
         # Barge-in (talk_english.py): speech goes through echo.Speaker, and
         # setting interrupt stops it mid-sentence.
@@ -284,7 +355,7 @@ class EnglishVoice:
 
         ctx = mp.get_context("spawn")
         self._conn, child = ctx.Pipe()
-        self._proc = ctx.Process(target=_ears, args=(child, self._want), daemon=True)
+        self._proc = ctx.Process(target=_ears, args=(child, self._want, self.lang), daemon=True)
         self._proc.start()
         self._ready = False
 
@@ -314,7 +385,7 @@ class EnglishVoice:
 
         print(f"\nWALL-E: {text}")
         t0 = time.monotonic()
-        samples, sample_rate = self.tts.create(text, voice=KOKORO_VOICE, lang="en-us")
+        samples, sample_rate = self.render(text)
         # Kokoro renders the whole reply before a sound comes out: this is
         # the wait between the brain answering and WALL-E speaking.
         print(f"(voice {time.monotonic() - t0:.1f} s for {len(samples) / sample_rate:.1f} s of speech)")
@@ -348,7 +419,7 @@ class EnglishVoice:
                     if halt.is_set():
                         break
                     t0 = time.monotonic()
-                    samples, sr = self.tts.create(text, voice=KOKORO_VOICE, lang="en-us")
+                    samples, sr = self.render(text)
                     print(f"(voice {time.monotonic() - t0:.1f} s for {len(samples) / sr:.1f} s)")
                     ready.put((text, samples, sr))
             except BaseException as exc:  # noqa: BLE001 — re-raised below
@@ -381,7 +452,17 @@ class EnglishVoice:
         if failed:
             raise failed[0]
 
-    def transcribe_samples(self, samples, sample_rate: int) -> str:
+    def render(self, text: str):
+        """Text to (samples, sample rate) in WALL-E's voice."""
+        if self.lang == "he":
+            import phonikud
+
+            # Hebrew script has no vowels: Phonikud adds them, then IPA.
+            ipa = phonikud.phonemize(self._nikud.add_diacritics(text))
+            return self.tts.create(ipa, voice=KOKORO_HE_VOICE, is_phonemes=True)
+        return self.tts.create(text, voice=KOKORO_VOICE, lang="en-us")
+
+    def transcribe_samples(self, samples, sample_rate: int, lang: str | None = None) -> str:
         import numpy as np
 
         audio = np.asarray(samples, dtype=np.float32).reshape(-1)
@@ -389,7 +470,7 @@ class EnglishVoice:
             sys.exit("Whisper wants 16 kHz audio.")
         self.wake_ears()
         self.wait_ears()
-        self._conn.send(audio)
+        self._conn.send((audio, lang))
         text = self._conn.recv()
         print(f"STT  out: {text}")
         if text and phantom(text):

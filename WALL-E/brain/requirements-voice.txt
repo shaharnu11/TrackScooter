@@ -24,6 +24,9 @@ mlx>=0.32; sys_platform == "darwin"
 mlx-lm>=0.31; sys_platform == "darwin"
 # Apple Silicon only: Whisper on the Mac GPU (faster-whisper is CPU only there).
 mlx-whisper>=0.4; sys_platform == "darwin"
+# Mac, --lang he: Hebrew vowels for Kokoro Hebrew (english_voice.py).
+phonikud>=0.4; sys_platform == "darwin"
+phonikud-onnx>=1.0; sys_platform == "darwin"
 # Mac: barge-in (talk over WALL-E). WebRTC echo cancellation, echo.py.
 livekit>=1.1; sys_platform == "darwin"
 # XPS / NVIDIA: cuBLAS + cuDNN 9 for Whisper on CUDA (CTranslate2).
