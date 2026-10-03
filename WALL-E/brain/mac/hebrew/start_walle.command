@@ -12,7 +12,9 @@ if [ -n "$OLD" ]; then
   for _ in 1 2 3 4 5; do kill -0 $OLD 2>/dev/null || break; sleep 1; done
   kill -9 $OLD 2>/dev/null
 fi
-pkill -f "llama-cpp/llama-server" 2>/dev/null
+# Leftover brain servers: only a process that IS our llama-server (anchored
+# at the start of its command line), not one that merely mentions it.
+pkill -f "^$PWD/models/llama-cpp/llama-server " 2>/dev/null
 if [ ! -x .venv/bin/python ]; then
   echo "No .venv here. Do the setup in mac/README.md first."
   read -r -p "Press Enter to close."
