@@ -72,6 +72,16 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
     in chat.
 11. Music files: put mp3s in `brain/music/`.
 
+## Remembering people (with their yes)
+
+After 3 exchanges with someone new, WALL-E asks: "Can I remember you?"
+Only on a yes: their name, then 4 face photos (0.5 s apart, cropped to the
+face) and face features, plus notes the brain writes (where from, with
+whom, what they like) go to `brain/persons/<name>/`. Next time the face
+matches, he greets them by name and knows the notes; the notes grow with
+each talk. **"Forget me"** deletes the folder. Never in git, never without
+a yes, not for Shahar (already known). Off: `--no-people`. Code: `persons.py`.
+
 ## Sleep by voice
 
 - **"Go to sleep"**: the brain is unloaded and the camera stops face and lip

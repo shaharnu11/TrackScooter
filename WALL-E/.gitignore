@@ -30,6 +30,8 @@ brain/music/*
 brain/spotify/
 # Shahar's face features and hashed secret word (owner.py): private.
 brain/owner/
+# People WALL-E remembers (face features, photo, notes), with their yes: never in git.
+brain/persons/
 brain/personality_history/
 
 # OpenSCAD exports. The PNG renders ARE committed; meshes are not.

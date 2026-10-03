@@ -77,6 +77,7 @@ class Manager:
         self.music, self.cam, self.sleeper = music, cam, sleeper
         self.active = False
         self._saved: list[dict] = []
+        self.people = None  # persons.People, set by talk_english
 
     def status(self, chat) -> str:
         m, sp = self.music, self.music.spotify
@@ -91,6 +92,11 @@ class Manager:
                 if sp.ready else "not set up on this computer"
             ),
             "Playing now": now or "nothing",
+            "People remembered": (
+                f"{self.people.count()} people said yes and are saved in persons/ "
+                "(face features, a face photo, name, notes); only with their yes; "
+                "'forget me' deletes a person" if self.people is not None else "off (no camera)"
+            ),
             "Sleep": (
                 f"after {self.sleeper.idle_s:.0f} seconds with no face and no talk the brain "
                 "and the ears are unloaded; a face wakes them" if self.sleeper.idle_s > 0 else "off"
@@ -98,7 +104,7 @@ class Manager:
             "Commands (his tools)": (
                 "play music, play an artist, song or playlist, next song, what's playing, "
                 "stop the music; update personality start (owner only: face and secret word); "
-                "management mode and exit management mode; go to sleep (brain off, camera "
+                "management mode and exit management mode; forget me (deletes that person); go to sleep (brain off, camera "
                 "paused, only wake up wakes him) and wake up; goodbye or shut down quits. "
                 "He cannot search the internet, set timers or control other things."
             ),

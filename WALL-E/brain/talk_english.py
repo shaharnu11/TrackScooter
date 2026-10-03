@@ -46,6 +46,7 @@ from manage import CHANGE_LINE as MANAGE_CHANGE_LINE
 from manage import EXIT as MANAGE_EXIT
 from manage import START as MANAGE_START
 from manage import Manager
+from persons import FORGET, People
 from persona_edit import START as PERSONA_START
 from persona_edit import PersonaEditor, load_character
 from vad_listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
@@ -147,6 +148,17 @@ class EnglishChat:
 
     def set_mode(self, system: str | None, sentences: int = 2, tokens: int = 100) -> None:
         self.override, self.max_sentences, self.max_tokens = system, sentences, tokens
+
+    # Who is in front (persons.py): name and notes, added to the persona.
+    visitor = ""
+
+    def set_visitor(self, note: str) -> None:
+        self.visitor = note
+
+    def system_prompt(self) -> str:
+        if self.override:
+            return self.override
+        return self.system + ("\n\n" + self.visitor if self.visitor else "")
 
     def __init__(self, brain: Brain) -> None:
         self.history: list[dict[str, str]] = []
@@ -281,7 +293,7 @@ class EnglishChat:
 
     def _messages(self, user_text: str, jpeg: bytes | None) -> list[dict]:
         self.history.append({"role": "user", "content": user_text})
-        messages: list[dict] = [{"role": "system", "content": self.override or self.system}, *self.history[-8:]]
+        messages: list[dict] = [{"role": "system", "content": self.system_prompt()}, *self.history[-8:]]
         if jpeg is not None:
             # The picture rides on this turn only; history keeps the words.
             url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
@@ -538,7 +550,7 @@ class CloudChat(EnglishChat):
         return {
             "model": self.model,
             "max_tokens": max_tokens,
-            "system": self.override or self.system,
+            "system": self.system_prompt(),
             "messages": messages,
             "output_config": {"effort": "low"},
             "betas": ["server-side-fallback-2026-07-01"],
@@ -613,12 +625,19 @@ class MindChat:
         if self.local is not None:
             self.local.set_mode(*self._mode)
 
+    def set_visitor(self, note: str) -> None:
+        self._visitor = note
+        self.cloud.set_visitor(note)
+        if self.local is not None:
+            self.local.set_visitor(note)
+
     def _local_brain(self) -> EnglishChat:
         if self.local is None:
             print("(no cloud: starting the local brain)")
             self.local = self._make_local()
             self.local.history = self.history
             self.local.set_mode(*getattr(self, "_mode", (None, 2, 100)))
+            self.local.set_visitor(getattr(self, "_visitor", ""))
         else:
             self.local.wake()
         return self.local
@@ -752,7 +771,7 @@ def asleep_heard(user: str, voice, sleeper, cam) -> bool:
     return True
 
 
-def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear, manager=None) -> bool:
+def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear, manager=None, people=None) -> bool:
     """Answer one sentence. False when it was goodbye."""
     if manager is not None and not manager.active and MANAGE_START.search(user) and not MANAGE_EXIT.search(user):
         if manager.enter(chat, cam):
@@ -787,6 +806,12 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
     if re.search(r"\b(bye|goodbye|see you|shut ?down|turn yourself off)\b", user.lower()):
         voice.speak("Bye! That was nice.")
         return False
+    managing = manager is not None and manager.active
+    if people is not None and not managing:
+        if FORGET.search(user):
+            people.forget(voice, chat)
+            return True
+        people.before(chat)  # same person, someone new, or someone remembered
     music.duck(True)
     print()
     # Management mode: "what can you play?" is a question, not a command.
@@ -815,6 +840,8 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         if manager is not None and manager.active:
             parts = _answers_only(parts)
         voice.speak_stream(parts, t_stop)
+    if people is not None and not managing and not (voice.interrupt is not None and voice.interrupt.is_set()):
+        people.after(voice, chat, hear)  # after a few exchanges: "can I remember you?"
     return True
 
 
@@ -829,6 +856,7 @@ def loop(
     trigger: str = "speech",
     use_gate: bool = True,
     manager: Manager | None = None,
+    people: People | None = None,
 ) -> None:
     voice.speak("Hi. I'm WALL-E. Talk to me.")
     print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
@@ -901,9 +929,9 @@ def loop(
         if asleep_heard(user, voice, sleeper, cam):
             continue
         if PERSONA_START.search(user):
-            respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager)
+            respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager, people)
             continue
-        if not respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager):
+        if not respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager, people):
             return
         music.duck(False)
         sleeper.touch()
@@ -922,6 +950,7 @@ def loop_barge(
     use_gate: bool = True,
     use_lips: bool = True,
     manager: Manager | None = None,
+    people: People | None = None,
 ) -> None:
     """Talk over WALL-E: he stops and listens.
 
@@ -982,7 +1011,7 @@ def loop_barge(
                     continue
                 busy.set()
                 try:
-                    if not respond(*got, voice, chat, cam, music, sleeper, editor, hear, manager):
+                    if not respond(*got, voice, chat, cam, music, sleeper, editor, hear, manager, people):
                         quit_.set()
                         return
                 finally:
@@ -1101,6 +1130,11 @@ def main() -> None:
         help="One thing at a time: no talking over WALL-E (the Mac's default is barge-in)",
     )
     parser.add_argument(
+        "--no-people",
+        action="store_true",
+        help="Do not offer to remember people (persons/)",
+    )
+    parser.add_argument(
         "--no-lips",
         action="store_true",
         help="Do not wait for moving lips (the Mac's default: a voice counts only while the lips move)",
@@ -1160,17 +1194,20 @@ def main() -> None:
         "Moving-lips check": "on: a voice counts only while the lips in front move" if lips else "off",
     }
     manager = Manager(PersonaEditor(Owner())._is_shahar, facts, music, cam, sleeper)
+    # Remembering people needs the camera; never without it.
+    people = People(cam) if cam is not None and not args.no_people else None
+    manager.people = people
     try:
         if barge:
             loop_barge(
                 voice, chat, cam, music, sleeper, use_gate=not args.no_gate,
-                use_lips=not args.no_lips, manager=manager,
+                use_lips=not args.no_lips, manager=manager, people=people,
             )
         else:
             loop(
                 voice, chat, typed=args.type, auto=auto, cam=cam,
                 music=music, sleeper=sleeper, trigger=args.trigger, use_gate=not args.no_gate,
-                manager=manager,
+                manager=manager, people=people,
             )
     except KeyboardInterrupt:
         print("\nBye.")
