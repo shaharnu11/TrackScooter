@@ -3,16 +3,14 @@
 # Extra options pass through, e.g.:  ./start_walle.command --mind cloud
 cd "$(dirname "$0")/../.." || exit 1
 # An old WALL-E still running (once one ignored Ctrl+C): ask it to quit,
-# then force it, with its brain (llama-server) and Whisper process.
-# Only a Python running talk_english.py: a looser pattern also hit other
-# programs whose command line merely mentioned it. Its Whisper process ends
-# by itself when WALL-E is gone.
-WALLE='[Pp]ython[0-9.]* .*talk_english\.py'
-if pgrep -f "$WALLE" >/dev/null; then
+# then force it. It is found by the lock port it holds (talk_english.py
+# INSTANCE_PORT), not by name: a name pattern also hit other programs.
+OLD=$(lsof -nP -t -iTCP:18088 -sTCP:LISTEN 2>/dev/null)
+if [ -n "$OLD" ]; then
   echo "Stopping the WALL-E that is still running..."
-  pkill -TERM -f "$WALLE"
-  for _ in 1 2 3 4 5; do pgrep -f "$WALLE" >/dev/null || break; sleep 1; done
-  pkill -9 -f "$WALLE" 2>/dev/null
+  kill -TERM $OLD
+  for _ in 1 2 3 4 5; do kill -0 $OLD 2>/dev/null || break; sleep 1; done
+  kill -9 $OLD 2>/dev/null
 fi
 pkill -f "llama-cpp/llama-server" 2>/dev/null
 if [ ! -x .venv/bin/python ]; then

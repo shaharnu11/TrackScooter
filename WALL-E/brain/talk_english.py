@@ -1189,6 +1189,7 @@ def one_instance():
     lock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         lock.bind(("127.0.0.1", INSTANCE_PORT))
+        lock.listen(1)  # listening: the start scripts find this WALL-E by its port
     except OSError:
         sys.exit("WALL-E is already running. Stop it first (Ctrl+C or q in its window).")
     return lock
