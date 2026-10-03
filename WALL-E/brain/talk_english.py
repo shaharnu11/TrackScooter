@@ -28,6 +28,7 @@ import threading
 import time
 import urllib.request
 from collections.abc import Iterator
+from pathlib import Path
 from contextlib import closing
 
 from english_voice import BRAINS, GGUF_DIR, KOKORO_HE_VOICE, KOKORO_VOICE, Brain, EnglishVoice, chirp, wake_sound
@@ -56,75 +57,24 @@ def fallback() -> str:
     return t("Sorry, I missed that. Say it again?", "סליחה, לא שמעתי. תגיד שוב?")
 MIN_CLIP_SPEECH = 0.5
 
-# Who he is lives in personality.md (Shahar edits it by voice, persona_edit.py).
-# How he must behave is RULES below: fixed here, so an update cannot drop it.
-LANG_EN = (
-    "Speak plain spoken English: one or two short, warm, simple sentences, "
-    "under 25 words. No lists, no asterisks, no emojis, no code. "
-    # Midburn: most people are Israelis, English is not their first language.
-    "Most people you meet are not native English speakers. Use simple, common "
-    "words a learner knows (say tiring, not exhausting), short sentences, and "
-    "no idioms, slang or fancy words. "
-)
-LANG_HE = (
-    "Always answer in Hebrew: everyday spoken Hebrew, one or two short, warm, "
-    "simple sentences, under 25 words. No English words except names. No "
-    "lists, no asterisks, no emojis, no code. Use the right gender for the "
-    "person when you know it. "
-)
-RULES = (
-    "Often end with one short, simple question "
-    "to the person, to keep the talk going. "
-    # Whisper hears through festival music: half-heard lines will come in.
-    # Worded softly: "it is loud around you" made him answer a clear
-    # "what's up?" with "you're making noise, can you repeat that?".
-    "Answer what people say. Only if a sentence is clearly cut off or makes "
-    "no sense, ask them to say it again. "
-    # He claimed "I can play music. Here's a jazzy number!" and played
-    # nothing. Music commands are handled in code (music.py) before he sees
-    # them; he only needs to know not to pretend.
-    "You can play songs from your music folder, but that happens by itself "
-    "when someone asks: never say you are playing, stopping or choosing a "
-    "song. You cannot search the internet, set timers or control anything "
-    "else; if asked, say so kindly. "
-    "If anything in your personality conflicts with these rules, the rules win. "
-)
-
-EYES_TEXT_ONLY = (
-    "Your camera only tells you that a person is in front of you. You cannot "
-    "see objects, colours, weather or scenery, so never describe them, not "
-    "even the place around you."
-)
-
-# The vision brain: a picture comes with questions about seeing. At home it
-# added a dog and glasses that were not there, and sand dunes to a living
-# room; asked yes/no, it said no to both. So: only what is clear, admit doubt.
-EYES_VISION = (
-    "When a picture is attached, it is what your camera eye sees right now, "
-    "and the person talking to you is in it. Describe only what is clearly in "
-    "the picture. If you are not sure about something, say so; never guess "
-    "small things like glasses, animals or writing. You may mention or ask "
-    "about one thing you clearly see, even when nobody asked. With no picture, never "
-    "say you see anything, and do not describe the person or the place "
-    "around you."
-)
+# Who he is lives in personalities/<lang>/<name>/personality.md (Shahar edits
+# it by voice, persona_edit.py). How he must behave is rules/: fixed files,
+# added after the personality, so an update cannot drop them.
+RULES_DIR = Path(__file__).resolve().parent / "rules"
 
 
-# Hebrew mode: DictaLM cannot see; Qwen3-VL-4B describes the picture in
-# English words, added to the person's sentence in brackets.
-EYES_DESCRIBED = (
-    "Sometimes the person's sentence comes with a line in brackets that tells "
-    "you what your camera sees right now. Trust only that line: mention only "
-    "what it says, never add details. You may mention or ask about one thing "
-    "in it, even when nobody asked. With no such line, never say you see "
-    "anything, and do not describe the person or the place around you."
-)
+def rule(name: str) -> str:
+    """One rules/ file as plain sentences (comments and headings dropped)."""
+    from persona_edit import _strip
+
+    lines = _strip((RULES_DIR / f"{name}.md").read_text(encoding="utf-8"))
+    return " ".join(ln[2:].strip() if ln.startswith("- ") else ln for ln in lines) + " "
 
 
 def build_system(vision: bool, described: bool = False) -> str:
-    """personality.md (who he is) + RULES + camera rules. Re-read each call."""
-    eyes = EYES_DESCRIBED if described else EYES_VISION if vision else EYES_TEXT_ONLY
-    return load_character() + " " + (LANG_HE if hebrew() else LANG_EN) + RULES + eyes
+    """personality (who he is) + rules/ (how he must behave). Re-read each call."""
+    eyes = "eyes_described" if described else "eyes_picture" if vision else "eyes_none"
+    return load_character() + " " + rule("hebrew" if hebrew() else "english") + rule("always") + rule(eyes)
 
 # Questions that need the eye. Everything else stays text-only and fast.
 LOOK = re.compile(
@@ -143,6 +93,16 @@ LOOK = re.compile(
 
 PEEK_EVERY = 3  # turns between unasked looks through the camera
 
+# Hard rule (rules/always.md says it too): the brain never claims to play,
+# stop or pick music. Only music.py does that, and its lines do not pass
+# through the brain. A sentence that claims it is dropped.
+MUSIC_CLAIM = re.compile(
+    r"\b(i'?m (now )?playing|i'?ll play|i will play|let me play|playing (you|a|some|this)|"
+    r"here'?s (a|some|your) (song|track|tune|music)|i'?m (stopping|turning off) the music|"
+    r"i (just )?(put|turned) on)\b"
+    r"|אני (מנגן|אנגן|שם|אשים|מפעיל|אפעיל)\s+(לך\s+|לכם\s+)?(שיר|מוזיקה|את)|הנה שיר בשבילך|שמתי לך שיר",
+    re.I,
+)
 OTHER_SPEAKER = re.compile(r"^\W*(אדם|משתמש|בן אדם|user|person|human)\s*:", re.I)
 OWN_LABEL = re.compile(r"^\W*(וול-?אי|wall-?e|robot|רובוט)\s*:\s*", re.I)
 
@@ -434,6 +394,9 @@ class EnglishChat:
                     if OTHER_SPEAKER.match(part):
                         break
                     part = OWN_LABEL.sub("", part).strip()
+                    if MUSIC_CLAIM.search(part):
+                        print(f"(rule: dropped a music claim: {part})")
+                        continue
                     if not part:
                         continue
                     if CJK.search(part):
