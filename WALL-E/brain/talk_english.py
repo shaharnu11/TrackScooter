@@ -85,7 +85,8 @@ EYES_VISION = (
     "When a picture is attached, it is what your camera eye sees right now, "
     "and the person talking to you is in it. Describe only what is clearly in "
     "the picture. If you are not sure about something, say so; never guess "
-    "small things like glasses, animals or writing. With no picture, never "
+    "small things like glasses, animals or writing. You may mention or ask "
+    "about one thing you clearly see, even when nobody asked. With no picture, never "
     "say you see anything, and do not describe the person or the place "
     "around you."
 )
@@ -105,6 +106,8 @@ LOOK = re.compile(
     r"this place|surround\w*)\b",
     re.IGNORECASE,
 )
+
+PEEK_EVERY = 3  # turns between unasked looks through the camera
 
 # A sentence is done at . ! ? once the next word starts. Not at "…", so
 # "One… two… three." stays one sentence.
@@ -718,7 +721,11 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
             {"role": "assistant", "content": cmd.line},
         ]
     else:
-        jpeg = look(cam) if chat.vision and LOOK.search(user) else None
+        # A picture also comes unasked on the first sentence and every third
+        # one, so he can notice things and ask about them (~0.5 s slower then).
+        # Not in management mode: there it only answers.
+        peek = (manager is None or not manager.active) and len(chat.history) // 2 % PEEK_EVERY == 0
+        jpeg = look(cam) if chat.vision and (LOOK.search(user) or peek) else None
         voice.speak_stream(chat.reply_stream(user, jpeg), t_stop)
     return True
 
