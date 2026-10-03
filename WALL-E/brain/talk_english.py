@@ -1036,7 +1036,25 @@ def loop_barge(
         mic.close()
 
 
+INSTANCE_PORT = 8088  # held while WALL-E runs: a second start refuses
+
+
+def one_instance():
+    """Two WALL-Es ran at once (an old one never quit): two voices, two
+    brains. Holding a local port is the lock; the OS frees it on any exit,
+    also a crash, on the Mac and on Windows."""
+    import socket
+
+    lock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        lock.bind(("127.0.0.1", INSTANCE_PORT))
+    except OSError:
+        sys.exit("WALL-E is already running. Stop it first (Ctrl+C or q in its window).")
+    return lock
+
+
 def main() -> None:
+    _lock = one_instance()  # noqa: F841 — kept open until WALL-E exits
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--brain", choices=BRAINS, default="4b", help="Language model")
     parser.add_argument(
