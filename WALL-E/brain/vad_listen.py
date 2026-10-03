@@ -216,9 +216,14 @@ class Gate:
     # them and still drops the video from the first test (0.038 vs 0.176).
     NEAR_SHARE = 0.25
     LEARN_AFTER = 3  # accepted clips before the loudness check starts
+    # Rejected clips never teach the level, so once the talker got quieter
+    # (leaned back from the Mac: 0.09 -> 0.007) he was ignored for good.
+    # The second "too quiet" in a row starts the level over and is answered.
+    RELEARN_AFTER = 2
 
     def __init__(self) -> None:
         self.levels: collections.deque = collections.deque(maxlen=10)
+        self.rejects = 0  # "too quiet" clips in a row
 
     def reasons(self, h: Heard) -> list[str]:
         why = []
@@ -228,10 +233,17 @@ class Gate:
         if len(self.levels) >= self.LEARN_AFTER:
             usual = float(np.median(self.levels))
             if h.level < self.NEAR_SHARE * usual:
-                why.append(f"too quiet for the one in front ({h.level:.3f} vs usual {usual:.3f})")
+                self.rejects += 1
+                if self.rejects >= self.RELEARN_AFTER:
+                    print(f"(too quiet {self.rejects} times in a row: learning the voice level again)")
+                    self.levels.clear()
+                    self.rejects = 0
+                else:
+                    why.append(f"too quiet for the one in front ({h.level:.3f} vs usual {usual:.3f})")
         return why
 
     def accept(self, h: Heard) -> None:
+        self.rejects = 0
         self.levels.append(h.level)
 
     def describe(self, h: Heard) -> str:
