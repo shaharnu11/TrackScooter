@@ -72,6 +72,20 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
     in chat.
 11. Music files: put mp3s in `brain/music/`.
 
+## Talking over WALL-E (barge-in)
+
+On the Mac you can talk while he talks: he stops at once and answers the
+new sentence. The mic and the camera window never stop.
+
+- His own voice is taken out of the mic (WebRTC echo cancellation,
+  `echo.py`): alone, his voice was heard as speech in 68% of the mic's
+  blocks before, 0% after.
+- Measured: a second voice over him stopped him **0.7 s** after it began.
+- While he talks, 0.4 s of speech is needed (0.25 s otherwise), so a cough
+  does not cut him off.
+- Off: `--no-barge-in` (one thing at a time, as on Windows).
+- Not cancelled: music and Spotify (they play on their own). They stay ducked.
+
 ## Measured on the M4 Max
 
 | Step | Mac (M4 Max) | XPS (3050 Ti) |

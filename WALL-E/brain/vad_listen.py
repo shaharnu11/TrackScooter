@@ -15,6 +15,7 @@ much. Singing does, which is why the face lock stays.
 from __future__ import annotations
 
 import collections
+import contextlib
 import time
 from dataclasses import dataclass
 
@@ -70,6 +71,10 @@ def listen_vad(
     face_grace_s: float = 1.0,
     on_start=None,
     on_tick=None,
+    stream=None,
+    busy=None,
+    barge_s: float = 0.4,
+    quit=None,
 ):
     """Wait for speech (from the locked face, if there is a camera), record it.
 
@@ -77,6 +82,11 @@ def listen_vad(
     worth sending to Whisper, or
     False if q was pressed in the camera window. on_start() runs the moment
     a recording starts; on_tick(face_seen) every 32 ms while waiting.
+
+    Barge-in (talk_english.py): stream is the always-on, echo-cancelled mic
+    (echo.Mic) instead of a fresh one; while busy() (WALL-E thinking or
+    talking) speech must last barge_s to count, so a cough does not cut him
+    off; quit (an Event) ends the wait like q does.
     """
     import sounddevice as sd
 
@@ -103,9 +113,16 @@ def listen_vad(
     mouth_talk: list[float] = []
     levels: list[float] = []
     mouth_still = None
-    with sd.InputStream(samplerate=SR, channels=1, dtype="float32", blocksize=BLOCK) as stream:
+    opened = (
+        contextlib.nullcontext(stream)
+        if stream is not None
+        else sd.InputStream(samplerate=SR, channels=1, dtype="float32", blocksize=BLOCK)
+    )
+    with opened as stream:
         while not done:
             if cam is not None and not cam.pump():
+                return False
+            if quit is not None and quit.is_set():
                 return False
             data, overflow = stream.read(READ)
             overflows += bool(overflow)
@@ -134,7 +151,7 @@ def listen_vad(
                         )
                         last_log = now
                         peak_p = 0.0
-                    if run * BLOCK_S >= start_s:
+                    if run * BLOCK_S >= (barge_s if busy is not None and busy() else start_s):
                         print("Speak now…")
                         if on_start is not None:
                             on_start()  # e.g. duck the music under the voice

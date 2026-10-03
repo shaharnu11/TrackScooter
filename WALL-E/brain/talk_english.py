@@ -283,27 +283,31 @@ class EnglishChat:
         """
         messages = self._messages(user_text, jpeg)
         said: list[str] = []
-        with closing(self._stream(messages, 0.7)) as parts:
-            for part in parts:
-                part = EMOJI.sub("", part.replace("*", "").replace("#", "")).strip()
-                if not part:
-                    continue
-                if CJK.search(part):
-                    if not said:
-                        # Nothing spoken yet: one cooler, whole-answer retry.
-                        retry = EMOJI.sub("", clean_reply(self._raw_reply(messages, 0.3))).strip()
-                        if retry and not CJK.search(retry):
-                            said.append(retry)
-                            yield retry
-                    break
-                said.append(part)
-                yield part
-                if len(said) == 2:
-                    break
-        if not said:
-            said.append(FALLBACK)
-            yield FALLBACK
-        self.history.append({"role": "assistant", "content": " ".join(said)})
+        try:
+            with closing(self._stream(messages, 0.7)) as parts:
+                for part in parts:
+                    part = EMOJI.sub("", part.replace("*", "").replace("#", "")).strip()
+                    if not part:
+                        continue
+                    if CJK.search(part):
+                        if not said:
+                            # Nothing spoken yet: one cooler, whole-answer retry.
+                            retry = EMOJI.sub("", clean_reply(self._raw_reply(messages, 0.3))).strip()
+                            if retry and not CJK.search(retry):
+                                said.append(retry)
+                                yield retry
+                        break
+                    said.append(part)
+                    yield part
+                    if len(said) == 2:
+                        break
+            if not said:
+                said.append(FALLBACK)
+                yield FALLBACK
+        finally:
+            # Also when he was talked over and the stream was closed early.
+            if said:
+                self.history.append({"role": "assistant", "content": " ".join(said)})
 
     def reply(self, user_text: str, jpeg: bytes | None = None) -> str:
         messages = self._messages(user_text, jpeg)
@@ -623,6 +627,73 @@ def look(cam: TalkCam | None) -> bytes | None:
     return buf.tobytes()
 
 
+def vet(rec, vad: StreamVAD, gate: Gate, use_gate: bool, trigger: str):
+    """A recording worth sending to Whisper: (samples, sr, heard, t_stop),
+    or None. Prints why not."""
+    if rec is None:
+        print("(too little speech, ignored)")
+        return None
+    heard = rec if isinstance(rec, Heard) else None
+    samples, sr = (heard.samples, heard.sr) if heard else rec
+    # Silero's verdict on the whole clip. At home real speech scored
+    # 0.96-0.99 and the one empty clip 0.24: below 0.5, skip Whisper
+    # (it invents "Thanks for watching!" on noise).
+    vad.reset()
+    clip = samples[: len(samples) // BLOCK * BLOCK].reshape(-1, BLOCK)
+    peak = max((vad(b) for b in clip), default=0.0)
+    print(f"(clip {len(samples) / sr:.1f} s, speech score peak {peak:.2f})")
+    if peak < MIN_CLIP_SPEECH:
+        print("(no speech in clip, ignored)")
+        return None
+    if heard is not None:
+        # A voice while your face is locked is not always yours: a
+        # video nearby got answered. Mouth and loudness say whose.
+        print(f"(who: {gate.describe(heard)})")
+        why = gate.reasons(heard) if use_gate else []
+        if why:
+            print(f"(someone else talking? {'; '.join(why)}. Ignored)")
+            return None
+    # The recording ended one end-of-speech pause after the voice did.
+    t_stop = time.monotonic() - (END_S if trigger == "speech" else 0.8)
+    return samples, sr, heard, t_stop
+
+
+def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear) -> bool:
+    """Answer one sentence. False when it was goodbye."""
+    if PERSONA_START.search(user):
+        # Shahar only: face + secret word, then the changes, read back,
+        # confirmed. Checked only when this phrase is heard.
+        music.duck(True)
+        editor.session(voice, chat, cam, hear)
+        music.duck(False)
+        sleeper.touch()
+        return True
+    if re.search(r"\b(bye|goodbye|see you)\b", user.lower()):
+        voice.speak("Bye! That was nice.")
+        return False
+    music.duck(True)
+    print()
+    cmd = music.command(user)
+    if cmd is not None:
+        # Handled in code, not by the brain; the brain still gets the
+        # exchange in its history so "did you like that song?" makes sense.
+        print("(music command)")
+        if cmd.first is not None:
+            cmd.line = cmd.first()  # Spotify: start it, check it plays, then name it
+            music.duck(True)  # the new song starts at full volume
+        voice.speak_stream(iter([cmd.line]), t_stop)
+        if cmd.after is not None:
+            cmd.after()
+        chat.history += [
+            {"role": "user", "content": user},
+            {"role": "assistant", "content": cmd.line},
+        ]
+    else:
+        jpeg = look(cam) if chat.vision and LOOK.search(user) else None
+        voice.speak_stream(chat.reply_stream(user, jpeg), t_stop)
+    return True
+
+
 def loop(
     voice: EnglishVoice,
     chat: EnglishChat,
@@ -676,34 +747,11 @@ def loop(
             rec = record_utterance(cam=None)
         if rec is False:
             return False
-        if rec is None:
+        got = vet(rec, vad, gate, use_gate, trigger)
+        if got is None:
             music.duck(False)
-            print("(too little speech, ignored)")
             return None
-        heard = rec if isinstance(rec, Heard) else None
-        samples, sr = (heard.samples, heard.sr) if heard else rec
-        # Silero's verdict on the whole clip. At home real speech scored
-        # 0.96-0.99 and the one empty clip 0.24: below 0.5, skip Whisper
-        # (it invents "Thanks for watching!" on noise).
-        vad.reset()
-        clip = samples[: len(samples) // BLOCK * BLOCK].reshape(-1, BLOCK)
-        peak = max((vad(b) for b in clip), default=0.0)
-        print(f"(clip {len(samples) / sr:.1f} s, speech score peak {peak:.2f})")
-        if peak < MIN_CLIP_SPEECH:
-            music.duck(False)
-            print("(no speech in clip, ignored)")
-            return None
-        if heard is not None:
-            # A voice while your face is locked is not always yours: a
-            # video nearby got answered. Mouth and loudness say whose.
-            print(f"(who: {gate.describe(heard)})")
-            why = gate.reasons(heard) if use_gate else []
-            if why:
-                music.duck(False)
-                print(f"(someone else talking? {'; '.join(why)}. Ignored)")
-                return None
-        # The recording ended one end-of-speech pause after the voice did.
-        t_stop = time.monotonic() - (END_S if trigger == "speech" else 0.8)
+        samples, sr, heard, t_stop = got
         chirp()
         sleeper.ready()  # asleep: this is where the ~6 s reload is waited out
         t0 = time.monotonic()
@@ -725,42 +773,130 @@ def loop(
             continue
         user, t_stop = got
         if PERSONA_START.search(user):
-            # Shahar only: face + secret word, then the changes, read back,
-            # confirmed. Checked only when this phrase is heard.
-            music.duck(True)
-            editor.session(voice, chat, cam, hear)
-            music.duck(False)
-            sleeper.touch()
+            respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear)
             continue
-        if re.search(r"\b(bye|goodbye|see you)\b", user.lower()):
-            voice.speak("Bye! That was nice.")
+        if not respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear):
             return
-        music.duck(True)
-        print()
-        cmd = music.command(user)
-        if cmd is not None:
-            # Handled in code, not by the brain; the brain still gets the
-            # exchange in its history so "did you like that song?" makes sense.
-            print("(music command)")
-            if cmd.first is not None:
-                cmd.line = cmd.first()  # Spotify: start it, check it plays, then name it
-                music.duck(True)  # the new song starts at full volume
-            voice.speak_stream(iter([cmd.line]), t_stop)
-            if cmd.after is not None:
-                cmd.after()
-            chat.history += [
-                {"role": "user", "content": user},
-                {"role": "assistant", "content": cmd.line},
-            ]
-        else:
-            jpeg = look(cam) if chat.vision and LOOK.search(user) else None
-            voice.speak_stream(chat.reply_stream(user, jpeg), t_stop)
         music.duck(False)
         sleeper.touch()
         if cam is None and not auto:
             print("Enter to talk again.")
         else:
             time.sleep(0.4)
+
+
+def loop_barge(
+    voice: EnglishVoice,
+    chat: EnglishChat,
+    cam: TalkCam | None,
+    music: MusicPlayer,
+    sleeper: Sleeper,
+    use_gate: bool = True,
+) -> None:
+    """Talk over WALL-E: he stops and listens.
+
+    loop() does one thing at a time: while Whisper, the brain and the voice
+    worked, the mic was closed and the camera window froze. Here this thread
+    listens all the time (mic, speech detector, camera window) and a worker
+    thread transcribes, thinks and talks. Speech from the person in front
+    while he thinks or talks stops him (Speaker fades out), and the new
+    sentence is answered. echo.py keeps his own voice out of the mic.
+    """
+    import queue
+
+    from echo import open_audio
+
+    speaker, mic = open_audio()
+    voice.speaker = speaker
+    voice.interrupt = threading.Event()
+    clips: queue.Queue = queue.Queue()
+    quit_ = threading.Event()
+    busy = threading.Event()  # the worker is on a sentence
+    recording = threading.Event()  # a voice is being recorded right now
+    vad = StreamVAD()
+    gate = Gate()
+    editor = PersonaEditor(Owner())
+
+    def unduck() -> None:
+        if not busy.is_set() and not recording.is_set() and clips.empty():
+            music.duck(False)
+
+    def hear():
+        """The worker's next sentence: (text, t_stop), None, or False to quit."""
+        item = clips.get()
+        if item is None:
+            return False
+        samples, sr, heard, t_stop = item
+        voice.interrupt.clear()  # a new sentence: he may talk again
+        sleeper.ready()  # asleep: this is where the reload is waited out
+        t0 = time.monotonic()
+        text = voice.transcribe_samples(samples, sr)
+        print(f"(stt {time.monotonic() - t0:.1f} s)")
+        if not text:
+            print("Heard nothing. Try again.")
+            return None
+        if heard is not None:
+            gate.accept(heard)  # learn how loud the person in front sounds
+        return text, t_stop
+
+    def work() -> None:
+        try:
+            while True:
+                got = hear()
+                if got is False:
+                    return
+                if got is None:
+                    unduck()
+                    continue
+                busy.set()
+                try:
+                    if not respond(*got, voice, chat, cam, music, sleeper, editor, hear):
+                        quit_.set()
+                        return
+                finally:
+                    busy.clear()
+                    sleeper.touch()
+                    unduck()
+        except BaseException:
+            quit_.set()  # a crash in the worker ends the listening too
+            raise
+
+    def on_start() -> None:
+        recording.set()
+        music.duck(True)  # under the voice from its first moment
+        sleeper.kick()  # a sleeping WALL-E starts loading now
+        if busy.is_set():
+            print("(you spoke over WALL-E: he stops)")
+            voice.interrupt.set()
+
+    voice.speak("Hi. I'm WALL-E. Talk to me.")
+    print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
+    print()
+    print("Talk any time, also while he talks. Ctrl+C or q to quit.")
+    print("Listening trigger: speech, barge-in" + ("" if use_gate else " (no mouth/loudness check)"))
+    worker = threading.Thread(target=work, daemon=True)
+    worker.start()
+    try:
+        while not quit_.is_set():
+            rec = listen_vad(
+                cam, vad, stream=mic, on_start=on_start, on_tick=sleeper.tick,
+                busy=busy.is_set, quit=quit_,
+            )
+            recording.clear()
+            if rec is False:
+                break
+            got = vet(rec, vad, gate, use_gate, "speech")
+            if got is None:
+                unduck()
+                continue
+            chirp()
+            clips.put(got)
+    finally:
+        voice.interrupt.set()  # stop talking
+        clips.put(None)
+        worker.join(timeout=10)
+        speaker.close()
+        mic.close()
 
 
 def main() -> None:
@@ -805,6 +941,11 @@ def main() -> None:
         help="Claude model for --mind cloud",
     )
     parser.add_argument(
+        "--no-barge-in",
+        action="store_true",
+        help="One thing at a time: no talking over WALL-E (the Mac's default is barge-in)",
+    )
+    parser.add_argument(
         "--no-gate",
         action="store_true",
         help="Answer every voice, even with a still mouth or from far away",
@@ -832,11 +973,26 @@ def main() -> None:
     auto = args.auto or cam is not None
     music = MusicPlayer()
     sleeper = Sleeper(voice, chat, args.sleep_after)
+    # Barge-in needs the echo canceller (echo.py). Mac only for now: it was
+    # tested there; the XPS keeps the one-thing-at-a-time loop.
+    barge = (
+        sys.platform == "darwin" and not args.no_barge_in and not args.type
+        and args.trigger == "speech" and auto
+    )
+    if barge:
+        from echo import available
+
+        if not available():
+            print("No echo canceller (pip install livekit): barge-in off.")
+            barge = False
     try:
-        loop(
-            voice, chat, typed=args.type, auto=auto, cam=cam,
-            music=music, sleeper=sleeper, trigger=args.trigger, use_gate=not args.no_gate,
-        )
+        if barge:
+            loop_barge(voice, chat, cam, music, sleeper, use_gate=not args.no_gate)
+        else:
+            loop(
+                voice, chat, typed=args.type, auto=auto, cam=cam,
+                music=music, sleeper=sleeper, trigger=args.trigger, use_gate=not args.no_gate,
+            )
     except KeyboardInterrupt:
         print("\nBye.")
     finally:

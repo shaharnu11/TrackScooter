@@ -267,6 +267,10 @@ class EnglishVoice:
         print("Loading voice…")
         self.tts = Kokoro(str(KOKORO_DIR / KOKORO_FILES[0]), str(KOKORO_DIR / KOKORO_FILES[1]))
         self._want = whisper
+        # Barge-in (talk_english.py): speech goes through echo.Speaker, and
+        # setting interrupt stops it mid-sentence.
+        self.speaker = None
+        self.interrupt = None
         self._proc = None
         self._conn = None
         self.wake_ears()
@@ -313,6 +317,10 @@ class EnglishVoice:
         # Kokoro renders the whole reply before a sound comes out: this is
         # the wait between the brain answering and WALL-E speaking.
         print(f"(voice {time.monotonic() - t0:.1f} s for {len(samples) / sample_rate:.1f} s of speech)")
+        if self.speaker is not None:
+            self.speaker.play(samples, sample_rate)
+            self.speaker.wait(self.interrupt)
+            return
         sf.write(str(TALK_WAV), samples, sample_rate)
         play(TALK_WAV)
 
@@ -331,10 +339,13 @@ class EnglishVoice:
 
         ready: queue.Queue = queue.Queue()
         failed: list[BaseException] = []
+        halt = threading.Event()  # interrupted: stop asking the brain
 
         def render() -> None:
             try:
                 for text in sentences:
+                    if halt.is_set():
+                        break
                     t0 = time.monotonic()
                     samples, sr = self.tts.create(text, voice=KOKORO_VOICE, lang="en-us")
                     print(f"(voice {time.monotonic() - t0:.1f} s for {len(samples) / sr:.1f} s)")
@@ -342,6 +353,9 @@ class EnglishVoice:
             except BaseException as exc:  # noqa: BLE001 — re-raised below
                 failed.append(exc)
             finally:
+                close = getattr(sentences, "close", None)
+                if close is not None:
+                    close()  # the brain's stream ends here, history kept
                 ready.put(None)
 
         threading.Thread(target=render, daemon=True).start()
@@ -351,7 +365,16 @@ class EnglishVoice:
             if first and t_stop is not None:
                 print(f"(answer started {time.monotonic() - t_stop:.1f} s after you stopped)")
             first = False
+            if self.interrupt is not None and self.interrupt.is_set():
+                halt.set()
+                continue  # drain: the render thread ends at the next sentence
             print(f"WALL-E: {text}")
+            if self.speaker is not None:
+                self.speaker.play(samples, sr)
+                if not self.speaker.wait(self.interrupt):
+                    print("(interrupted)")
+                    halt.set()
+                continue
             sd.play(samples, sr)
             sd.wait()
         if failed:
