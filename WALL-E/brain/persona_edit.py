@@ -1,10 +1,15 @@
 """Shahar updates WALL-E's personality by talking to him.
 
     "update personality start"   -> face check + secret word
-    ...say the changes, as many sentences as you like...
-    "update personality finish"  -> WALL-E reads the changes back
+    ...say the changes, as many sentences as you like; he says back each one...
+    "that's all" (or any way of saying you are done) -> he reads the changes back
     "yes"                        -> saved to personality.md, reloaded at once
     "cancel" at any point        -> nothing changes
+
+The brain reads each sentence for its meaning (SESSION): a change, done,
+cancel, or unclear. A live session got stuck: only the exact words "update
+personality finish" ended it, so "let the update finish" and "stop the
+update" were saved as personality notes.
 
 Only ever started by that phrase; nobody else's face is checked or kept.
 The brain turns the spoken notes into short personality lines; nothing is
@@ -30,6 +35,20 @@ CANCEL = re.compile(r"\b(cancel|never\s*mind|forget it|abort)\b", re.I)
 YES = re.compile(r"\b(yes|yeah|yep|yup|confirm|confirmed|save it|correct|do it|sure|go ahead)\b", re.I)
 NO = re.compile(r"\b(no|nope|don't|do not|wrong)\b", re.I)
 
+# Exact phrases still work without the brain (and if it fails).
+DONE = re.compile(r"\b(that'?s (all|it)|i'?m (done|finished)|we'?re done|(stop|end|finish) the update)\b", re.I)
+# Talk about the update itself, not about WALL-E: "let the update finish",
+# "Wally stop got it and personality" (Whisper's "stop update personality").
+# "personality" only counts close to the word: "your personality is cheerful
+# and you end every sentence with a beep" is a change.
+ABOUT_UPDATE = re.compile(
+    r"\bupdate\b.*\b(finish\w*|done|stop\w*|end|ended|over)\b"
+    r"|\b(finish\w*|done|stop|end)\b.*\bupdate\b"
+    r"|\bpersonality\W+(\w+\W+){0,2}(finish\w*|done|stop\w*|end|ended|over)\b"
+    r"|\b(finish\w*|done|stop|end)\W+(\w+\W+){0,3}personality\b",
+    re.I,
+)
+
 MAX_LINES = 8
 FACE_FRAMES = 6
 MAX_FAILS = 3
@@ -46,6 +65,70 @@ EDITOR = (
     f"anything the current personality already says. At most {MAX_LINES} "
     "lines. Output only the lines, or the single word NONE if nothing is left."
 )
+
+
+SESSION = (
+    "You help WALL-E, a small robot, during a personality update. His owner, "
+    "Shahar, is dictating changes to WALL-E's personality out loud, one "
+    "sentence at a time. Speech recognition may garble words, so read for "
+    "meaning. Decide what Shahar's latest sentence means:\n"
+    "CHANGE: something about who WALL-E is or how he acts (a trait, a like or "
+    "dislike, a way of talking, a fact about himself), even a whole new "
+    "personality, or a correction to an earlier change.\n"
+    "DONE: Shahar has finished dictating and wants to end, review or save the "
+    "update, in any words: 'that's all', 'let the update finish', 'stop the "
+    "update', 'finish personality'. A sentence about the update itself, not "
+    "about WALL-E, is DONE. A change that only mentions stopping or "
+    "finishing ('you never finish your sentences') is a CHANGE.\n"
+    "CANCEL: Shahar wants to throw this update away, saving nothing.\n"
+    "UNCLEAR: none of these, or too garbled to tell.\n"
+    "Answer with one line: the label, ' | ', then for CHANGE what you "
+    "understood, said to Shahar by WALL-E in a few words starting with 'I' "
+    "('CHANGE | I'll love dancing.'). For the other labels nothing after the bar."
+)
+
+CONFIRM = (
+    "WALL-E, a small robot, read a list of personality changes to his owner "
+    "and asked: should I save this? Speech recognition may garble words. "
+    "Answer with one word: YES if the owner agrees to save, NO if he refuses "
+    "or wants to throw it away, UNCLEAR otherwise."
+)
+
+
+def _ask(chat, system: str, text: str) -> str:
+    """The brain's one-line answer, or "" if it failed (no brain, no cloud)."""
+    try:
+        return chat.complete(system, text).strip().splitlines()[0].strip()
+    except Exception as exc:  # noqa: BLE001 — fall back to the fixed phrases
+        print(f"(personality brain failed: {exc})")
+        return ""
+
+
+def understand(chat, text: str, notes: list[str]) -> tuple[str, str]:
+    """(CHANGE / DONE / CANCEL / UNCLEAR, what WALL-E understood)."""
+    if FINISH.search(text) or DONE.search(text) or ABOUT_UPDATE.search(text):
+        return "DONE", ""
+    so_far = "\n".join(f"- {n}" for n in notes) or "(none yet)"
+    raw = _ask(chat, SESSION, f"Changes so far:\n{so_far}\n\nLatest sentence: {text}")
+    label, _, said = raw.partition("|")
+    label = label.strip().strip("*").upper()
+    if label not in ("CHANGE", "DONE", "CANCEL", "UNCLEAR"):
+        # No usable answer: the old rules. Cancel words, else a change.
+        label = "CANCEL" if CANCEL.search(text) else "CHANGE"
+        said = ""
+    print(f"(personality brain: {label}{' | ' + said.strip() if said.strip() else ''})")
+    return label, said.strip()
+
+
+def confirmed(chat, answer: str) -> str:
+    """YES / NO / UNCLEAR for the save question."""
+    yes, no = bool(YES.search(answer)), bool(NO.search(answer) or CANCEL.search(answer))
+    if yes != no:
+        return "YES" if yes else "NO"
+    if not answer:
+        return "UNCLEAR"
+    word = _ask(chat, CONFIRM, f"The owner answered: {answer}").strip(" .*").upper()
+    return word if word in ("YES", "NO") else "UNCLEAR"
 
 
 def load_character() -> str:
@@ -124,7 +207,7 @@ class PersonaEditor:
         self.fails = 0
 
         voice.speak("Okay, I'm listening. Tell me how I should change. "
-                    "Say update personality finish when you're done.")
+                    "Say that's all when you're done.")
         notes: list[str] = []
         while True:
             got = hear()
@@ -133,14 +216,18 @@ class PersonaEditor:
             if not got:
                 continue
             text = got[0]
-            if CANCEL.search(text):
+            label, said = understand(chat, text, notes)
+            if label == "CANCEL":
                 voice.speak("Okay, nothing changed.")
                 return
-            if FINISH.search(text):
+            if label == "DONE":
                 break
+            if label == "UNCLEAR":
+                voice.speak("Sorry, I didn't get that. Say it again, or say that's all.")
+                continue
             notes.append(text)
             print(f"(personality note {len(notes)}: {text})")
-            voice.speak("Got it.")
+            voice.speak(f"Got it. {said}" if said else "Got it.")
         if not notes:
             voice.speak("You didn't tell me anything to change. Nothing changed.")
             return
@@ -164,7 +251,9 @@ class PersonaEditor:
             if got is False:
                 return
             answer = got[0] if got else ""
-            if YES.search(answer) and not NO.search(answer):
+            verdict = confirmed(chat, answer)
+            print(f"(save answer: {answer!r} -> {verdict})")
+            if verdict == "YES":
                 ok, score = self._is_shahar(cam)  # still you at the confirm?
                 if not ok:
                     self._fail(voice, f"face at confirm, best {score:.2f}")
@@ -174,7 +263,7 @@ class PersonaEditor:
                 print(f"(personality saved; previous version in {backup.name})")
                 voice.speak("Saved. I feel different already.")
                 return
-            if NO.search(answer) or CANCEL.search(answer):
+            if verdict == "NO":
                 voice.speak("Okay, nothing changed.")
                 return
         voice.speak("I didn't get a yes, so nothing changed.")
