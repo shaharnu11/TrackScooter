@@ -76,8 +76,13 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
 | Whisper on CPU (fallback) | 0.9 s | 2.5 s |
 | Brain `4b-vl`, first sentence | 0.2–0.4 s | — |
 | Brain `4b-vl`, a look through the camera | **0.6 s** | 5.9–6.5 s |
-| Brain `8b-vl`, first sentence | see `8b-vl` notes below | does not fit |
+| Brain `8b-vl`, first sentence | 0.15–0.45 s | does not fit |
+| Brain `8b-vl`, a look through the camera | 0.8 s | does not fit |
 | Wake from sleep (Whisper) | 0.9 s | ~6–7 s (all) |
+| Brain load (`4b-vl` / `8b-vl`) | 1.2 s / 2.4 s | — |
+
+`8b-vl` gives shorter, drier answers; `4b-vl` talks more. Both are fast
+enough. Pick by ear.
 
 ## Differences from Windows
 

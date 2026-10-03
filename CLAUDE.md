@@ -27,6 +27,14 @@ The brain ran on a Dell XPS 15 (Windows, RTX 3050 Ti 4 GB). Shahar is now
 moving it to an Apple Silicon Mac. Start with `WALL-E/brain/mac/README.md`
 (setup, and what differs from Windows). Windows steps: `WALL-E/brain/windows/`.
 
+Status 2026-10-03 (branch `mac-brain-port`, MacBook Pro M4 Max, 48 GB):
+- Steps 1-4 and 6 done. `talk_english.py --brain 4b-vl` runs end to end
+  (mic, camera, owner face, voice). Whisper on the Mac GPU (mlx-whisper).
+  Spotify play/next/pause/ducking via AppleScript.
+- Step 5: brain `8b-vl` (Qwen3-VL-8B) added and measured; see `mac/README.md`.
+- Open: a real spoken test with Shahar (loud music); Spotify playlists must
+  be downloaded in the Mac app for offline; music files from Shahar.
+
 Order of work:
 1. Check the Mac: chip and RAM (`sysctl -n machdep.cpu.brand_string`,
    `sysctl -n hw.memsize`). Tell Shahar what that allows.
