@@ -36,14 +36,18 @@ YUNET_URL = (
 )
 YUNET_PATH = Path(__file__).resolve().parent / "models" / "camera" / YUNET_NAME
 
-# Lip landmarks: OpenCV's Facemark LBF (opencv-contrib), 68 points on the
-# YuNet face box. Lip activity = how much the inner-lip gap (over the eye
-# distance) varies in the last LIPS_WINDOW_S, x100. Measured on the Mac
-# camera, Shahar ~0.6 m away: quiet 1.0-1.6, talking 2.7-6.5. MediaPipe
-# was tried first: version 1.0.1 crashes on this Mac (Metal), also on CPU.
-LBF_PATH = YUNET_PATH.parent / "lbfmodel.yaml"
-LBF_URL = "https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml"
-LIPS_TALK = 2.1
+# Lip landmarks: MediaPipe Face Landmarker (CPU, ~7 ms a frame). Lip
+# activity = how much the inner-lip gap (points 13/14, over the eye distance)
+# varies in the last LIPS_WINDOW_S, x100. Measured on the Mac camera, Shahar
+# ~0.6 m away: quiet median 0.19 (max 0.67), talking median 3.1 (low 0.8).
+# OpenCV's Facemark LBF was tried: it jitters, quiet read 2.2-2.6 live, the
+# same as talking. MediaPipe 1.0.1 crashes on the Mac (Metal); 0.10.35 runs.
+LIPS_MODEL = YUNET_PATH.parent / "face_landmarker.task"
+LIPS_URL = (
+    "https://storage.googleapis.com/mediapipe-models/face_landmarker/"
+    "face_landmarker/float16/latest/face_landmarker.task"
+)
+LIPS_TALK = 0.75
 LIPS_WINDOW_S = 0.5
 
 
@@ -80,8 +84,9 @@ class UsbCamera:
         self._size: tuple[int, int] | None = None
         self._prev_mouth: dict[int, np.ndarray] = {}
         self._motion: dict[int, float] = {}
-        self._lbf = None  # lip landmarks, when lbfmodel.yaml is there
+        self._lips_model = None  # MediaPipe Face Landmarker, when installed
         self._lips: dict[int, collections.deque] = {}
+        self._t0 = time.monotonic()
         self._next_id = 1
         self._last: list[FaceObs] = []
         self.last_error = ""
@@ -132,8 +137,13 @@ class UsbCamera:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         obs = [self._observe(box, w, h) for box in boxes]
         self._assign_ids(obs)
-        for o in obs:
-            o.speaking = self._lips_speaking(gray, o) if self._lbf is not None else self._mouth_speaking(gray, o)
+        gap = self._lip_gap(cv2, frame) if self._lips_model is not None and obs else None
+        for i, o in enumerate(obs):
+            if self._lips_model is not None:
+                # One face measured: the biggest, which is obs[0].
+                o.speaking = self._lips_speaking(o, gap if i == 0 else None)
+            else:
+                o.speaking = self._mouth_speaking(gray, o)
         self._last = obs
         return obs, frame
 
@@ -275,26 +285,43 @@ class UsbCamera:
     @property
     def lips(self) -> bool:
         """True when speaking comes from real lip landmarks."""
-        return self._lbf is not None
+        return self._lips_model is not None
 
     def _load_lips(self, cv2) -> None:
-        if not hasattr(cv2, "face") or not LBF_PATH.exists():
-            log.warning("no lip landmarks (opencv-contrib-python + %s): mouth motion is a guess", LBF_PATH.name)
+        try:
+            from mediapipe.tasks.python import BaseOptions, vision
+        except ImportError:
+            log.warning("no lip landmarks (pip install mediapipe): mouth motion is a guess")
             return
-        fm = cv2.face.createFacemarkLBF()
-        fm.loadModel(str(LBF_PATH))
-        self._lbf = fm
+        if not LIPS_MODEL.exists():
+            log.warning("no lip landmarks: %s missing (download_english.py)", LIPS_MODEL)
+            return
+        self._lips_model = vision.FaceLandmarker.create_from_options(
+            vision.FaceLandmarkerOptions(
+                base_options=BaseOptions(model_asset_path=str(LIPS_MODEL), delegate=BaseOptions.Delegate.CPU),
+                running_mode=vision.RunningMode.VIDEO,
+                num_faces=1,
+            )
+        )
 
-    def _lips_speaking(self, gray, obs: FaceObs) -> bool:
-        ok, pts = self._lbf.fit(gray, np.array([obs.box], dtype=np.int32))
+    def _lip_gap(self, cv2, frame) -> float | None:
+        """Inner-lip gap over eye distance for the biggest face, or None."""
+        import mediapipe as mp
+
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        ms = int((time.monotonic() - self._t0) * 1000)
+        r = self._lips_model.detect_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb), ms)
+        if not r.face_landmarks:
+            return None
+        p = r.face_landmarks[0]
+        eye = float(np.hypot(p[33].x - p[263].x, p[33].y - p[263].y))
+        return float(np.hypot(p[13].x - p[14].x, p[13].y - p[14].y)) / eye if eye > 0 else None
+
+    def _lips_speaking(self, obs: FaceObs, gap: float | None) -> bool:
         hist = self._lips.setdefault(obs.track_id, collections.deque())
         now = time.monotonic()
-        if ok:
-            p = np.asarray(pts[0]).reshape(-1, 2)
-            eye = float(np.linalg.norm(p[36] - p[45]))
-            if eye > 1:
-                gap = np.mean([np.linalg.norm(p[a] - p[b]) for a, b in ((61, 67), (62, 66), (63, 65))])
-                hist.append((now, float(gap) / eye))
+        if gap is not None:
+            hist.append((now, gap))
         while hist and now - hist[0][0] > LIPS_WINDOW_S:
             hist.popleft()
         obs.mouth_ema = 100 * float(np.std([g for _, g in hist])) if len(hist) >= 5 else 0.0

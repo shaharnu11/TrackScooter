@@ -85,9 +85,10 @@ new sentence. The mic and the camera window never stop.
   does not cut him off.
 - Off: `--no-barge-in` (one thing at a time, as on Windows).
 - **Moving lips:** a voice counts only while the lips of the face in front
-  move (OpenCV lip landmarks, `usb_camera.py`). A TV talking next to a quiet
-  face no longer starts a recording or cuts him off. Measured lip activity:
-  quiet 1.0–1.6, talking 2.7–6.5, threshold 2.1 (`LIPS_TALK`).
+  move (MediaPipe lip landmarks, `usb_camera.py`). A TV talking next to a
+  quiet face no longer starts a recording or cuts him off. Measured lip
+  activity: quiet 0.19 (max 0.67), talking 3.1 (low 0.8), threshold 0.75
+  (`LIPS_TALK`). OpenCV's LBF landmarks were tried first: too jittery.
   Off: `--no-lips`. The log line `speech … lips 3.2` shows the value.
 - Not cancelled: music and Spotify (they play on their own). They stay ducked.
 

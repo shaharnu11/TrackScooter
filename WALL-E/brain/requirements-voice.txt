@@ -15,9 +15,9 @@ anthropic>=1.8
 pycaw>=20240316; sys_platform == "win32"
 numpy>=1.26
 sounddevice>=0.5
-# contrib: the same OpenCV plus cv2.face (lip landmarks, usb_camera.py).
-# Uninstall opencv-python first if it is there: the two clash.
-opencv-contrib-python>=4.8
+opencv-python>=4.8
+# Lip landmarks (usb_camera.py). 1.0.1 crashes on the Mac; 0.10.35 runs.
+mediapipe==0.10.35
 # Apple Silicon only: chat on MLX.
 mlx>=0.32; sys_platform == "darwin"
 mlx-lm>=0.31; sys_platform == "darwin"
