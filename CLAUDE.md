@@ -28,7 +28,7 @@ moving it to an Apple Silicon Mac. Start with `WALL-E/brain/mac/README.md`
 (setup, and what differs from Windows). Windows steps: `WALL-E/brain/windows/`.
 
 Status 2026-10-03 (branch `mac-brain-port`, MacBook Pro M4 Max, 48 GB):
-- Steps 1-4 and 6 done. `talk_english.py --brain 4b-vl` runs end to end
+- Steps 1-4 and 6 done. `talk.py --brain 4b-vl` runs end to end
   (mic, camera, owner face, voice). Whisper on the Mac GPU (mlx-whisper).
   Spotify play/next/pause/ducking via AppleScript.
 - Step 5: brains `8b-vl` and `30b-vl` (Qwen3-VL-30B-A3B) added. Shahar chose
@@ -40,7 +40,7 @@ Status 2026-10-03 (branch `mac-brain-port`, MacBook Pro M4 Max, 48 GB):
   ivrit.ai Whisper turbo, DictaLM 3.0 12B + Qwen3-VL-4B eyes, Kokoro Hebrew
   + Phonikud. Fixed lines via `lang.t()`; commands match both languages.
   English start: `mac/english/start_walle.command`.
-- Barge-in on the Mac (`echo.py`, `loop_barge` in talk_english.py): talk
+- Barge-in on the Mac (`walle/voice/echo.py`, `loop_barge` in talk.py): talk
   over WALL-E, he stops. Windows keeps the old `loop`.
 - Open: a real spoken test with Shahar (loud music); Spotify playlists must
   be downloaded in the Mac app for offline; music files from Shahar.
@@ -53,21 +53,21 @@ Order of work:
    **Nothing is copied from the XPS. Download everything on the Mac:**
    - `brew install python@3.12 llama.cpp git`, then link `llama-server` into
      `brain/models/llama-cpp/` (README step 5).
-   - In `brain/`: make `.venv`, `pip install -r requirements-voice.txt`.
-   - Models: `.venv/bin/python download_english.py --brain 4b-vl`
+   - In `brain/`: make `.venv`, `pip install -r requirements/voice.txt`.
+   - Models: `.venv/bin/python scripts/download_models.py --brain 4b-vl`
      (Qwen3-VL-4B + mmproj, Whisper small.en, Kokoro; ~4 GB). Later other
-     brains with `--brain 8b` etc. Do not run `download_hebrew_voice.py`
+     brains with `--brain 8b` etc. Do not run `scripts/download_hebrew_windows.py`
      (Hebrew only, ~5 GB, not needed).
    - Owner (face + secret word) and Spotify (app ID, login, synced song list)
      **are in git** (`brain/owner/`, `brain/spotify/`, added by Shahar on
      purpose). Use them; no new enroll or login needed. Only if the face
-     check fails on the Mac camera: `.venv/bin/python owner.py enroll` with
+     check fails on the Mac camera: `.venv/bin/python -m walle.people.owner enroll` with
      Shahar there. Only if Spotify refuses the saved login:
-     `spotify_sync.py --client-id <ID>` with Shahar logging in.
+     `scripts/spotify_sync.py --client-id <ID>` with Shahar logging in.
    - Cloud key (optional): Shahar adds `export ANTHROPIC_API_KEY=...` to
      `~/.zshrc` himself. Never ask him to paste it in chat.
    - Music files (`brain/music/`) are not in git: ask Shahar for them.
-3. Get `talk_english.py --brain 4b-vl` talking end to end (mic, camera,
+3. Get `talk.py --brain 4b-vl` talking end to end (mic, camera,
    voice). Grant Microphone + Camera to the terminal.
 4. Whisper on the Mac GPU: replace faster-whisper (CPU only on Mac) with
    mlx-whisper or whisper.cpp, behind a platform check. Keep the Windows

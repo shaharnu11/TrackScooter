@@ -18,8 +18,8 @@ Two folders, one per language. Double-click the start script in Finder:
 | Hebrew | **`mac/hebrew/start_walle.command`** | ivrit.ai Whisper large-v3-turbo | DictaLM 3.0 12B (`dicta-12b`) + Qwen3-VL-4B as its eyes | Kokoro Hebrew (he_shaul) + Phonikud |
 
 - Or in Terminal, from `WALL-E/brain`:
-  `.venv/bin/python talk_english.py --brain 30b-vl` (English) or
-  `.venv/bin/python talk_english.py --lang he --brain dicta-12b` (Hebrew).
+  `.venv/bin/python talk.py --brain 30b-vl` (English) or
+  `.venv/bin/python talk.py --lang he --brain dicta-12b` (Hebrew).
 - Stop: **Ctrl+C**, **q** in the camera window, or say bye / ביי.
 - Options: the same as on Windows (`--brain`, `--mind cloud`, `--type`,
   `--no-camera`, `--sleep-after`). See `../windows/README.md`.
@@ -36,7 +36,7 @@ style). Pick one: `./mac/hebrew/start_walle.command --personality shemTovEvi`.
 Without `--personality` he is `default`. "Update personality" by voice changes
 the one running (backups in its `history/`).
 
-New one from a video: `.venv/bin/python personality_from_video.py VIDEO NAME --lang he`
+New one from a video: `.venv/bin/python scripts/personality_from_video.py VIDEO NAME --lang he`
 writes the transcript and still frames to `personalities/hebrew/NAME/source/`
 (not in git); then personality.md and examples.md are written from it.
 - `hebrew/shemTovEvi`: the washed-up rapper from Kan's satire "עלייתו ונפילתו
@@ -69,13 +69,13 @@ writes the transcript and still frames to `personalities/hebrew/NAME/source/`
 3. Python environment:
    ```
    python3.12 -m venv .venv
-   .venv/bin/python -m pip install -r requirements-voice.txt
+   .venv/bin/python -m pip install -r requirements/voice.txt
    ```
 4. Models (~21 GB for `30b-vl`; Hebrew adds ~12 GB with `--brain dicta-12b`). Download them on the Mac; nothing comes
    from the XPS:
    ```
-   .venv/bin/python download_english.py --brain 30b-vl
-   .venv/bin/python download_english.py --brain dicta-12b   # Hebrew
+   .venv/bin/python scripts/download_models.py --brain 30b-vl
+   .venv/bin/python scripts/download_models.py --brain dicta-12b   # Hebrew
    ```
    On the Mac this also gets Whisper for the Mac GPU (`models/whisper-turbo-mlx/`,
    `models/whisper-en-mlx/`)
@@ -97,11 +97,11 @@ writes the transcript and still frames to `personalities/hebrew/NAME/source/`
    The first Spotify command asks to let Terminal **control Spotify**: allow.
 8. **Owner** (face + secret word) and **Spotify** (song list) are in git
    (`brain/owner/`, `brain/spotify/`). Nothing to do. The XPS face matched on
-   the Mac camera. Only if it stops matching: `.venv/bin/python owner.py enroll`.
+   the Mac camera. Only if it stops matching: `.venv/bin/python -m walle.people.owner enroll`.
 9. **Spotify songs offline:** WALL-E can only play downloaded songs without
    internet. All his songs are in one private playlist, **"WALL-E offline"**.
    In the Spotify app on the Mac: open it and switch **Download** on, once.
-   After a new `spotify_sync.py`, update it: `spotify_sync.py --offline-playlist`.
+   After a new `scripts/spotify_sync.py`, update it: `scripts/spotify_sync.py --offline-playlist`.
 10. Optional, **cloud brain**: add to `~/.zshrc`:
     `export ANTHROPIC_API_KEY="sk-ant-..."`. Type it yourself. Do not paste it
     in chat.
@@ -115,7 +115,7 @@ face) and face features, plus notes the brain writes (where from, with
 whom, what they like) go to `brain/persons/<name>/`. Next time the face
 matches, he greets them by name and knows the notes; the notes grow with
 each talk. **"Forget me"** deletes the folder. Never in git, never without
-a yes, not for Shahar (already known). Off: `--no-people`. Code: `persons.py`.
+a yes, not for Shahar (already known). Off: `--no-people`. Code: `walle/people/persons.py`.
 
 ## Sleep by voice
 
@@ -139,7 +139,7 @@ answers plainly about himself: brain, Whisper, voice, camera, lips,
 barge-in, music and Spotify, sleep, his commands, the computer and his
 personality. Up to five sentences; music words do not start music.
 **"Exit management mode"** or **"back to normal"** ends it, and the fun
-conversation comes back. Code: `manage.py`.
+conversation comes back. Code: `walle/modes/management.py`.
 
 ## Talking over WALL-E (barge-in)
 
@@ -147,7 +147,7 @@ On the Mac you can talk while he talks: he stops at once and answers the
 new sentence. The mic and the camera window never stop.
 
 - His own voice is taken out of the mic (WebRTC echo cancellation,
-  `echo.py`): alone, his voice was heard as speech in 68% of the mic's
+  `walle/voice/echo.py`): alone, his voice was heard as speech in 68% of the mic's
   blocks before, 0% after.
 - Measured: a second voice over him stopped him **0.7 s** after it began.
 - While he talks, 0.4 s of speech is needed (0.25 s otherwise), so a cough
@@ -158,7 +158,7 @@ new sentence. The mic and the camera window never stop.
   cuts him off. Lips: Google's face landmark model (478 points) on the plain
   TFLite runtime (`ai-edge-litert`), ~2 ms a face. Not MediaPipe: it sends
   usage logs to Google and has no off switch. Threshold `LIPS_TALK` 0.75;
-  **check it with `.venv/bin/python lips_test.py`** (quiet 6 s, talk 6 s)
+  **check it with `.venv/bin/python scripts/lips_test.py`** (quiet 6 s, talk 6 s)
   and set it with `WALLE_LIPS_TALK=<n> ./mac/english/start_walle.command`. Off: `--no-lips`.
   Off: `--no-lips`. The log line `speech … lips 3.2` shows the value.
 - Not cancelled: music and Spotify (they play on their own). They stay ducked.
@@ -207,5 +207,5 @@ word errors): at 5 dB turbo 0%, small.en 4%; at 0 dB turbo 10%, small.en
 
 ## Hebrew
 
-Not set up on the Mac. If needed: `pip install -r requirements-hebrew.txt`
-and `download_hebrew_voice.py` (~5 GB).
+Not set up on the Mac. If needed: `pip install -r requirements/hebrew.txt`
+and `scripts/download_hebrew_windows.py` (~5 GB).

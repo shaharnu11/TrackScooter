@@ -8,7 +8,7 @@ not in this folder. This folder has only the Windows steps and the start script.
 - Double-click **`start_walle.bat`**, or in a terminal:
   ```
   cd WALL-E\brain
-  .venv\Scripts\python.exe talk_english.py --brain 4b-vl
+  .venv\Scripts\python.exe talk.py --brain 4b-vl
   ```
 - Stop: **Ctrl+C**, or close the window.
 - Options (add after the command, or after `start_walle.bat`):
@@ -30,28 +30,28 @@ not in this folder. This folder has only the Windows steps and the start script.
 4. Make the Python environment, in `WALL-E\brain`:
    ```
    python -m venv .venv
-   .venv\Scripts\python.exe -m pip install -r requirements-voice.txt
+   .venv\Scripts\python.exe -m pip install -r requirements/voice.txt
    ```
-   Hebrew voice only (`talk_hebrew.py`): also `requirements-hebrew.txt`.
+   Hebrew voice only (`legacy/talk_hebrew.py`): also `requirements/hebrew.txt`.
 5. Download the models (~4 GB for English; more if you take all brains):
    ```
-   .venv\Scripts\python.exe download_english.py --brain 4b-vl
+   .venv\Scripts\python.exe scripts/download_models.py --brain 4b-vl
    ```
 6. Download **llama.cpp (CUDA build)**. It comes from the Hebrew script. That
    script also downloads the Hebrew models (~5 GB extra):
    ```
-   .venv\Scripts\python.exe download_hebrew_voice.py --turbo
+   .venv\Scripts\python.exe scripts/download_hebrew_windows.py --turbo
    ```
    Or copy `models\llama-cpp\` from the XPS. Faster.
 7. **Owner** (your face + secret word, once):
    ```
-   .venv\Scripts\python.exe owner.py enroll
+   .venv\Scripts\python.exe -m walle.people.owner enroll
    ```
    Or copy `brain\owner\` from the XPS.
 8. Optional, **Spotify** (desktop app, logged in):
    ```
-   .venv\Scripts\python.exe spotify_sync.py --client-id <ID>
-   .venv\Scripts\python.exe spotify_sync.py
+   .venv\Scripts\python.exe scripts/spotify_sync.py --client-id <ID>
+   .venv\Scripts\python.exe scripts/spotify_sync.py
    ```
 9. Optional, **cloud brain**: in a terminal, `setx ANTHROPIC_API_KEY "sk-ant-..."`.
    Type it yourself. Do not paste the key in chat.

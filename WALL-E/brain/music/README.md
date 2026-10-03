@@ -5,7 +5,7 @@ Drop songs here: mp3, m4a, wav, flac, ogg. Sub-folders are fine. Not in git.
 Name files `Artist - Title.mp3` and WALL-E says "Piano Man by Billy Joel"
 and finds it when you ask for "Billy Joel" or "Piano Man".
 
-Say to him (`talk_english.py`):
+Say to him (`talk.py`):
 
 | You say | He does |
 |---|---|
@@ -24,7 +24,7 @@ web player cannot play offline). Asked for something, he looks in this
 folder first, then in your Spotify list.
 
 1. In the desktop app, switch on Download (↓) for the playlists you want.
-2. Online, once: `python spotify_sync.py` (first time `--client-id <ID>`,
+2. Online, once: `python scripts/spotify_sync.py` (first time `--client-id <ID>`,
    see `--help`). It saves your playlists + Liked Songs to
    `spotify/library.json`. Re-run after downloading new music.
 3. Before a trip: open Spotify once online (it needs that every 30 days),

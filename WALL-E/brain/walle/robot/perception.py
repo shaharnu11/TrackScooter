@@ -1,0 +1,211 @@
+"""What the robot can see.
+
+Everything in here runs in its own thread and is allowed to be slow. The
+control loop never waits for a camera frame; it reads whatever the last result
+was and gets on with it.
+
+The "latest value" pattern
+--------------------------
+Each sensor thread writes into a single slot, overwriting whatever was there.
+There are no queues. A queue would let a slow consumer build up a backlog, and
+then the robot would be reacting to where a person was five seconds ago. For
+control, a stale-but-current reading is right and a complete history is wrong.
+
+Every reading carries the time it was taken, and the control loop is expected
+to check `fresh` before trusting it. A sensor that stops updating must look
+like a sensor that stopped, not like a sensor reporting "all clear".
+"""
+
+from __future__ import annotations
+
+import logging
+import threading
+import time
+from dataclasses import dataclass, field
+
+from walle.robot.speaker_lock import SpeakerLock
+
+log = logging.getLogger(__name__)
+
+STALE_AFTER_S = 1.0
+
+
+@dataclass
+class Person:
+    """Someone the camera found."""
+
+    az_deg: float               # negative is to the robot's left
+    el_deg: float
+    distance_m: float
+    confidence: float
+    track_id: int = 0
+    speaking: bool = False
+
+    @property
+    def interesting(self) -> bool:
+        # Close enough to be worth reacting to, confident enough to believe.
+        return self.distance_m < 6.0 and self.confidence > 0.55
+
+
+@dataclass
+class Snapshot:
+    """The latest of everything, with the time each part was taken."""
+
+    people: list[Person] = field(default_factory=list)
+    people_at: float = 0.0
+    # Clear distance in each of 8 sectors around the robot, metres.
+    # Index 0 is straight ahead, increasing clockwise.
+    sectors_m: list[float] = field(default_factory=lambda: [0.0] * 8)
+    sectors_at: float = 0.0
+    heading_deg: float = 0.0
+    pitch_deg: float = 0.0
+    imu_at: float = 0.0
+    speaker_id: int | None = None
+
+    def fresh(self, when: float) -> bool:
+        return when > 0.0 and (time.monotonic() - when) < STALE_AFTER_S
+
+    @property
+    def nearest_person(self) -> Person | None:
+        good = [p for p in self.people if p.interesting]
+        if not good or not self.fresh(self.people_at):
+            return None
+        return min(good, key=lambda p: p.distance_m)
+
+    @property
+    def focus_person(self) -> Person | None:
+        """The locked speaker if we have one, else the nearest person."""
+        if not self.fresh(self.people_at):
+            return None
+        if self.speaker_id is not None:
+            for p in self.people:
+                if p.track_id == self.speaker_id and p.interesting:
+                    return p
+        return self.nearest_person
+
+
+class Perception:
+    def __init__(self) -> None:
+        self._snap = Snapshot()
+        self._lock = threading.Lock()
+        self._stop = threading.Event()
+        self._threads: list[threading.Thread] = []
+        self._speakers = SpeakerLock()
+
+    @property
+    def snapshot(self) -> Snapshot:
+        with self._lock:
+            return self._snap
+
+    def start(self) -> None:
+        for fn in (self._camera_loop, self._lidar_loop, self._imu_loop):
+            t = threading.Thread(target=fn, daemon=True)
+            t.start()
+            self._threads.append(t)
+
+    def stop(self) -> None:
+        self._stop.set()
+        for t in self._threads:
+            t.join(timeout=1.0)
+
+    # -- sensor threads -----------------------------------------------------
+    def _camera_loop(self) -> None:
+        """ELP USB camera. Faces and mouth motion on the Brain CPU.
+
+        Depth is not required. The ToF ring covers close-range safety. Face
+        size is enough to guess distance for gaze. GPU stays free for the
+        language model.
+        """
+        try:
+            from walle.eyes.camera import UsbCamera
+        except ImportError:
+            log.warning("usb_camera import failed")
+            while not self._stop.wait(0.1):
+                pass
+            return
+
+        cam = UsbCamera()
+        if not cam.open():
+            while not self._stop.wait(0.1):
+                pass
+            return
+        try:
+            while not self._stop.is_set():
+                obs, frame = cam.read()
+                if frame is None:
+                    if self._stop.wait(0.05):
+                        break
+                    continue
+                people = [
+                    Person(
+                        az_deg=o.az_deg,
+                        el_deg=o.el_deg,
+                        distance_m=o.distance_m,
+                        confidence=o.confidence,
+                        track_id=o.track_id,
+                        speaking=o.speaking,
+                    )
+                    for o in obs
+                ]
+                now = time.monotonic()
+                speaker_id = self._speakers.update(people, now)
+                with self._lock:
+                    self._snap.people = people
+                    self._snap.people_at = now
+                    self._snap.speaker_id = speaker_id
+        finally:
+            cam.close()
+
+    def _lidar_loop(self) -> None:
+        """WitMotion COIN-D6 (dToF), 3.3 V UART 230400 through its USB adapter.
+
+        Protocol (seller's "COIN-D6 LiDAR Data Format Standard Specification
+        V1.0", in the Drive folder linked from docs/05-bom.md): idle at power
+        on; start AA 55 F0 0F, stop AA 55 F5 0A. Packets start 0x55AA, then
+        M&T, LSN, FSA, LSA, a 2-byte XOR checksum, and 3 bytes per point:
+        distance_mm = S_H*64 + (S_2nd>>2). Angle = (FSA>>1)/64 ... (LSA>>1)/64,
+        and the angle correction the device info asks for is in their ROS
+        driver source.
+
+        TODO: read the scan, bin it into the 8 sectors, take the nearest
+        return in each. Note what this is NOT: it is not SLAM and not a map.
+        Midburn is a flat featureless plain, so mapping buys nothing and GPS
+        plus a compass does the job. See docs/00-plan.md.
+
+        Beware the blind spot: the LiDAR sits on top of the body and cannot see
+        anything closer than the body is wide. Close-in work belongs to the ToF
+        ring, which is wired to the Spine, not here.
+        """
+        while not self._stop.wait(0.1):
+            pass
+
+    def _imu_loop(self) -> None:
+        """BNO085: fused heading, and pitch.
+
+        Pitch matters more than it looks. The robot tips forward at 19.4
+        degrees and the anti-tip castor catches it at 9.9 (cad/walle_frame.scad).
+        So a pitch reading above about 7 degrees means the castor is about to
+        take load, and the right response is to stop asking for forward motion.
+        """
+        while not self._stop.wait(0.05):
+            pass
+
+    # -- for testing without hardware --------------------------------------
+    def inject(self, **kw) -> None:
+        """Set fields directly. Used by the simulator and by tests."""
+        with self._lock:
+            now = time.monotonic()
+            if "people" in kw:
+                self._snap.people = kw["people"]
+                self._snap.people_at = now
+            if "speaker_id" in kw:
+                self._snap.speaker_id = kw["speaker_id"]
+            if "sectors_m" in kw:
+                self._snap.sectors_m = kw["sectors_m"]
+                self._snap.sectors_at = now
+            if "heading_deg" in kw:
+                self._snap.heading_deg = kw["heading_deg"]
+                self._snap.imu_at = now
+            if "pitch_deg" in kw:
+                self._snap.pitch_deg = kw["pitch_deg"]
+                self._snap.imu_at = now

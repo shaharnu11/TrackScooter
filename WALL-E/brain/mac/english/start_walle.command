@@ -3,7 +3,7 @@
 # Extra options pass through, e.g.:  ./start_walle.command --mind cloud
 cd "$(dirname "$0")/../.." || exit 1
 # An old WALL-E still running (once one ignored Ctrl+C): ask it to quit,
-# then force it. It is found by the lock port it holds (talk_english.py
+# then force it. It is found by the lock port it holds (talk.py
 # INSTANCE_PORT), not by name: a name pattern also hit other programs.
 OLD=$(lsof -nP -t -iTCP:18088 -sTCP:LISTEN 2>/dev/null)
 if [ -n "$OLD" ]; then
@@ -20,4 +20,4 @@ if [ ! -x .venv/bin/python ]; then
   read -r -p "Press Enter to close."
   exit 1
 fi
-.venv/bin/python talk_english.py --brain 30b-vl "$@"
+.venv/bin/python talk.py --brain 30b-vl "$@"

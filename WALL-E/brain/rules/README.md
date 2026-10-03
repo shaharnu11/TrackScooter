@@ -7,8 +7,8 @@ conflicts with these rules, the rules win.
 - Not editable by voice: "update personality" only changes
   `personalities/<lang>/<name>/personality.md`. Change these by hand.
 - These are instructions to the brain (soft): it almost always follows them.
-  The hard rules live in code (talk_english.py, persona_edit.py, persons.py,
-  manage.py): sentence limit, filters, owner checks, consent, tools.
+  The hard rules live in code (talk.py, walle/modes/personality_editor.py, walle/people/persons.py,
+  walle/modes/management.py): sentence limit, filters, owner checks, consent, tools.
 - `<!-- comments -->` and `#` headings are not sent to the brain.
 
 | File | When |

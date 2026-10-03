@@ -9,5 +9,5 @@ if not exist ".venv\Scripts\python.exe" (
   pause
   exit /b 1
 )
-".venv\Scripts\python.exe" talk_english.py --brain 4b-vl %*
+".venv\Scripts\python.exe" talk.py --brain 4b-vl %*
 pause
