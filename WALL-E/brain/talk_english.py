@@ -143,6 +143,9 @@ LOOK = re.compile(
 
 PEEK_EVERY = 3  # turns between unasked looks through the camera
 
+OTHER_SPEAKER = re.compile(r"^\W*(אדם|משתמש|בן אדם|user|person|human)\s*:", re.I)
+OWN_LABEL = re.compile(r"^\W*(וול-?אי|wall-?e|robot|רובוט)\s*:\s*", re.I)
+
 # A sentence is done at . ! ? once the next word starts. Not at "…", so
 # "One… two… three." stays one sentence.
 SENTENCE_END = re.compile(r"[.!?](?=\s)")
@@ -426,6 +429,11 @@ class EnglishChat:
             with closing(self._stream(messages, 0.7)) as parts:
                 for part in parts:
                     part = EMOJI.sub("", part.replace("*", "").replace("#", "")).strip()
+                    # A personality with example lines made the brain write
+                    # the visitor's next line too ("אדם: ..."): stop there.
+                    if OTHER_SPEAKER.match(part):
+                        break
+                    part = OWN_LABEL.sub("", part).strip()
                     if not part:
                         continue
                     if CJK.search(part):
@@ -1204,6 +1212,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--brain", choices=BRAINS, default="4b", help="Language model")
     parser.add_argument(
+        "--personality",
+        default="default",
+        help="Which personalities/<english|hebrew>/<name>/ to be (by --lang). Default: default",
+    )
+    parser.add_argument(
         "--lang",
         choices=("en", "he"),
         default="en",
@@ -1269,6 +1282,12 @@ def main() -> None:
     )
     args = parser.parse_args()
     set_lang(args.lang)
+    from persona_edit import available, set_personality
+
+    if args.personality not in available(args.lang):
+        parser.error(f"no {args.lang} personality {args.personality!r}; there are: {', '.join(available(args.lang))}")
+    set_personality(args.personality, args.lang)
+    print(f"Personality: {args.personality} ({args.lang})")
     if args.lang == "he" and sys.platform != "darwin":
         parser.error("--lang he runs on the Mac only (talk_hebrew.py is the Windows Hebrew talker)")
     if args.type and args.auto:
@@ -1317,6 +1336,7 @@ def main() -> None:
             if hebrew() else f"Kokoro text to speech, voice {KOKORO_VOICE}"
         ),
         "Language": "Hebrew" if hebrew() else "English",
+        "Personality": f"{args.personality} (personalities/{'hebrew' if hebrew() else 'english'}/{args.personality}/)",
         "Talking over him (barge-in)": (
             "on: Shahar or a guest can talk while WALL-E talks; WALL-E then stops and listens"
             if barge else "off: WALL-E does not listen while he thinks or talks"

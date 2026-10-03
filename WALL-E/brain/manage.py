@@ -121,7 +121,7 @@ class Manager:
                 "He cannot search the internet, set timers or control other things."
             ),
             "Conversation before this mode": f"{len(self._saved) // 2} exchanges",
-            "Personality (personality.md, changed by voice)": load_character(),
+            "Personality (personalities/<name>/personality.md, changed by voice)": load_character(),
             "Fixed rules (talk_english.py, cannot be changed by voice)": (
                 "one or two short sentences under 25 words, plain English, never pretend to play "
                 "music or search, describe only what the camera clearly shows"

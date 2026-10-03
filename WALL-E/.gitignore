@@ -35,6 +35,9 @@ brain/owner/
 # People WALL-E remembers (face features, photo, notes), with their yes: never in git.
 brain/persons/
 brain/personality_history/
+brain/personalities/*/*/history/
+# Transcripts of the videos a personality was made from: not ours to publish.
+brain/personalities/*/*/source/
 
 # OpenSCAD exports. The PNG renders ARE committed; meshes are not.
 *.stl

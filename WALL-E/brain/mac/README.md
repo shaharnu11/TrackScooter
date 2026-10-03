@@ -28,6 +28,21 @@ Two folders, one per language. Double-click the start script in Finder:
   עדכון אישיות, forget me / תשכח אותי, music / תנגן…, bye / ביי).
 - Hebrew mode hears the secret word in English (it is an English word).
 
+### Personalities
+
+`personalities/english/<name>/` and `personalities/hebrew/<name>/`, each with
+`personality.md` (who he is) and optional `examples.md` (sample lines in his
+style). Pick one: `./mac/hebrew/start_walle.command --personality shemTovEvi`.
+Without `--personality` he is `default`. "Update personality" by voice changes
+the one running (backups in its `history/`).
+
+New one from a video: `.venv/bin/python personality_from_video.py VIDEO NAME --lang he`
+writes the transcript and still frames to `personalities/hebrew/NAME/source/`
+(not in git); then personality.md and examples.md are written from it.
+- `hebrew/shemTovEvi`: the washed-up rapper from Kan's satire "עלייתו ונפילתו
+  של שם טוב האבי". Edgy on purpose (curses, drug and prison jokes); the joke
+  is always on him, never on the visitor's origin, colour or who they love.
+
 ### Why these Hebrew models (measured on the M4 Max)
 
 - **Listening:** ivrit.ai large-v3-turbo vs large-v3: 0.24 s vs 0.43 s a

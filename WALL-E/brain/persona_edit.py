@@ -28,8 +28,31 @@ from pathlib import Path
 from lang import hebrew, t
 
 ROOT = Path(__file__).resolve().parent
-PERSONALITY_FILE = ROOT / "personality.md"
-HISTORY_DIR = ROOT / "personality_history"
+# One folder per personality and language, personalities/<english|hebrew>/<name>/
+# (--personality NAME, the language from --lang): personality.md (who he
+# is), examples.md (optional: short example talks in his style), history/
+# (backups before each voice update), source/ (e.g. a video transcript it
+# was made from; not in git).
+PERSONALITIES = ROOT / "personalities"
+LANG_DIRS = {"en": "english", "he": "hebrew"}
+PERSONALITY = "default"
+PERSONALITY_FILE = PERSONALITIES / "english" / PERSONALITY / "personality.md"
+HISTORY_DIR = PERSONALITY_FILE.parent / "history"
+
+
+def folder(lang: str) -> Path:
+    return PERSONALITIES / LANG_DIRS[lang]
+
+
+def available(lang: str = "en") -> list[str]:
+    return sorted(d.name for d in folder(lang).iterdir() if (d / "personality.md").exists())
+
+
+def set_personality(name: str, lang: str = "en") -> None:
+    global PERSONALITY, PERSONALITY_FILE, HISTORY_DIR
+    PERSONALITY = name
+    PERSONALITY_FILE = folder(lang) / name / "personality.md"
+    HISTORY_DIR = PERSONALITY_FILE.parent / "history"
 
 START = re.compile(
     r"\b(update|change)\s+(your\s+|my\s+)?personality\W*\s*(start|starts|started|starting|begin)\b"
@@ -139,13 +162,28 @@ def confirmed(chat, answer: str) -> str:
     return word if word in ("YES", "NO") else "UNCLEAR"
 
 
-def load_character() -> str:
-    """personality.md for the prompt: comments and headings stripped."""
-    text = PERSONALITY_FILE.read_text(encoding="utf-8") if PERSONALITY_FILE.exists() else ""
+def _strip(text: str) -> list[str]:
+    """Lines without HTML comments, headings or blank lines."""
     text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
-    lines = [ln.strip() for ln in text.splitlines() if ln.strip() and not ln.lstrip().startswith("#")]
-    lines = [ln[2:].strip() if ln.startswith("- ") else ln for ln in lines]
-    return " ".join(lines) or "You are WALL-E, a small, curious robot at a desert festival."
+    return [ln.strip() for ln in text.splitlines() if ln.strip() and not ln.lstrip().startswith("#")]
+
+
+def load_character() -> str:
+    """personality.md for the prompt: comments and headings stripped.
+    examples.md, if there, follows line by line as examples of his style."""
+    text = PERSONALITY_FILE.read_text(encoding="utf-8") if PERSONALITY_FILE.exists() else ""
+    lines = [ln[2:].strip() if ln.startswith("- ") else ln for ln in _strip(text)]
+    who = " ".join(lines) or "You are WALL-E, a small, curious robot at a desert festival."
+    examples = PERSONALITY_FILE.with_name("examples.md")
+    if examples.exists():
+        ex = _strip(examples.read_text(encoding="utf-8"))
+        if ex:
+            who += (
+                "\n\nSample lines in your style. Make up new lines like these; never say these exact "
+                "lines, and only ever write your own answer, never the other person's line:\n"
+                + "\n".join(ex) + "\n\n"
+            )
+    return who
 
 
 def _save(lines: list[str]) -> Path:
