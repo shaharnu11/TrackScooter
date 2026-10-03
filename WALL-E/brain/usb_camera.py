@@ -10,9 +10,11 @@ The ELP LC1100 lens is 86° horizontal. MJPEG is required for 30 fps.
 
 from __future__ import annotations
 
+import collections
 import logging
 import os
 import sys
+import time
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
@@ -34,6 +36,16 @@ YUNET_URL = (
 )
 YUNET_PATH = Path(__file__).resolve().parent / "models" / "camera" / YUNET_NAME
 
+# Lip landmarks: OpenCV's Facemark LBF (opencv-contrib), 68 points on the
+# YuNet face box. Lip activity = how much the inner-lip gap (over the eye
+# distance) varies in the last LIPS_WINDOW_S, x100. Measured on the Mac
+# camera, Shahar ~0.6 m away: quiet 1.0-1.6, talking 2.7-6.5. MediaPipe
+# was tried first: version 1.0.1 crashes on this Mac (Metal), also on CPU.
+LBF_PATH = YUNET_PATH.parent / "lbfmodel.yaml"
+LBF_URL = "https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml"
+LIPS_TALK = 2.1
+LIPS_WINDOW_S = 0.5
+
 
 @dataclass
 class FaceObs:
@@ -44,7 +56,7 @@ class FaceObs:
     confidence: float
     speaking: bool
     box: tuple[int, int, int, int] = (0, 0, 0, 0)
-    mouth_ema: float = 0.0
+    mouth_ema: float = 0.0  # lip activity with LBF, else the old pixel motion
 
 
 def _ensure_yunet() -> Path:
@@ -68,6 +80,8 @@ class UsbCamera:
         self._size: tuple[int, int] | None = None
         self._prev_mouth: dict[int, np.ndarray] = {}
         self._motion: dict[int, float] = {}
+        self._lbf = None  # lip landmarks, when lbfmodel.yaml is there
+        self._lips: dict[int, collections.deque] = {}
         self._next_id = 1
         self._last: list[FaceObs] = []
         self.last_error = ""
@@ -85,6 +99,7 @@ class UsbCamera:
             return False
         if not self._load_detector(cv2):
             return False
+        self._load_lips(cv2)
         cap = self._open_capture(cv2)
         if cap is None:
             return False
@@ -118,7 +133,7 @@ class UsbCamera:
         obs = [self._observe(box, w, h) for box in boxes]
         self._assign_ids(obs)
         for o in obs:
-            o.speaking = self._mouth_speaking(gray, o)
+            o.speaking = self._lips_speaking(gray, o) if self._lbf is not None else self._mouth_speaking(gray, o)
         self._last = obs
         return obs, frame
 
@@ -256,6 +271,34 @@ class UsbCamera:
                 self._next_id += 1
             o.track_id = best_id
             used.add(best_id)
+
+    @property
+    def lips(self) -> bool:
+        """True when speaking comes from real lip landmarks."""
+        return self._lbf is not None
+
+    def _load_lips(self, cv2) -> None:
+        if not hasattr(cv2, "face") or not LBF_PATH.exists():
+            log.warning("no lip landmarks (opencv-contrib-python + %s): mouth motion is a guess", LBF_PATH.name)
+            return
+        fm = cv2.face.createFacemarkLBF()
+        fm.loadModel(str(LBF_PATH))
+        self._lbf = fm
+
+    def _lips_speaking(self, gray, obs: FaceObs) -> bool:
+        ok, pts = self._lbf.fit(gray, np.array([obs.box], dtype=np.int32))
+        hist = self._lips.setdefault(obs.track_id, collections.deque())
+        now = time.monotonic()
+        if ok:
+            p = np.asarray(pts[0]).reshape(-1, 2)
+            eye = float(np.linalg.norm(p[36] - p[45]))
+            if eye > 1:
+                gap = np.mean([np.linalg.norm(p[a] - p[b]) for a, b in ((61, 67), (62, 66), (63, 65))])
+                hist.append((now, float(gap) / eye))
+        while hist and now - hist[0][0] > LIPS_WINDOW_S:
+            hist.popleft()
+        obs.mouth_ema = 100 * float(np.std([g for _, g in hist])) if len(hist) >= 5 else 0.0
+        return obs.mouth_ema >= LIPS_TALK
 
     def _mouth_speaking(self, gray, obs: FaceObs) -> bool:
         x, y, bw, bh = obs.box

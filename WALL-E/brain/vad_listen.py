@@ -33,6 +33,11 @@ CONTEXT = 64
 # score drops as soon as the voice does, so 0.5 s is enough. A mid-sentence
 # pause longer than this gets answered half way: raise it if that happens.
 END_S = 0.5
+# need_lips: the lips must have moved this recently for a voice to count.
+# Start: short, they move all through a sentence. During: longer, so a
+# pause between words does not end it.
+LIPS_START_S = 0.4
+LIPS_END_S = 0.8
 
 
 class StreamVAD:
@@ -75,6 +80,7 @@ def listen_vad(
     busy=None,
     barge_s: float = 0.4,
     quit=None,
+    need_lips: bool = False,
 ):
     """Wait for speech (from the locked face, if there is a camera), record it.
 
@@ -87,7 +93,17 @@ def listen_vad(
     (echo.Mic) instead of a fresh one; while busy() (WALL-E thinking or
     talking) speech must last barge_s to count, so a cough does not cut him
     off; quit (an Event) ends the wait like q does.
+
+    need_lips: a voice only counts while the locked face's lips move (see
+    usb_camera LIPS_TALK). A TV talking near a quiet face started recordings
+    and cut WALL-E off; now it does neither, and a recording ends when the
+    talker's lips stop, not when the TV does.
     """
+
+    def lips_ok(within_s: float) -> bool:
+        if not need_lips or cam is None:
+            return True
+        return cam.lips_moving(within_s) is not False
     import sounddevice as sd
 
     print("Look at the camera, then speak…" if cam is not None else "Listening…")
@@ -139,14 +155,16 @@ def listen_vad(
                     face = now - last_face <= face_grace_s
                     if on_tick is not None:
                         on_tick(cam is not None and face)  # e.g. sleep / wake the GPU models
-                    run = run + 1 if (p > on and face) else 0
+                    run = run + 1 if (p > on and face and lips_ok(LIPS_START_S)) else 0
                     preroll.append(x)
                     m = cam.mouth_level() if cam is not None else None
                     mouth_hist.append(m)
                     if now - last_log > 2.0:
                         rms = float(np.sqrt(np.mean(audio * audio) + 1e-12))
+                        lips = cam.mouth_level() if cam is not None else None
                         print(
                             f"speech {peak_p:.2f}  level {rms:.3f}  face {face}"
+                            + (f"  lips {lips:.1f}" if lips is not None else "")
                             + (f"  OVERFLOW x{overflows}" if overflows else "")
                         )
                         last_log = now
@@ -167,13 +185,14 @@ def listen_vad(
                         levels = [_rms(b) for b in chunks[-run:]]
                     continue
                 chunks.append(x)
-                if p > on:
+                talking = lips_ok(LIPS_END_S)
+                if p > on and talking:
                     speech_blocks += 1
                     levels.append(_rms(x))
                     m = cam.mouth_level() if cam is not None else None
                     if m is not None:
                         mouth_talk.append(m)
-                quiet = quiet + BLOCK_S if p < off else 0.0
+                quiet = quiet + BLOCK_S if (p < off or not talking) else 0.0
                 if quiet >= end_s or time.monotonic() - t0 >= max_s:
                     done = True
                     break

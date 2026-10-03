@@ -792,6 +792,7 @@ def loop_barge(
     music: MusicPlayer,
     sleeper: Sleeper,
     use_gate: bool = True,
+    use_lips: bool = True,
 ) -> None:
     """Talk over WALL-E: he stops and listens.
 
@@ -873,14 +874,16 @@ def loop_barge(
     print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
     print()
     print("Talk any time, also while he talks. Ctrl+C or q to quit.")
-    print("Listening trigger: speech, barge-in" + ("" if use_gate else " (no mouth/loudness check)"))
+    lips = use_gate and use_lips and cam is not None and cam.cam.lips
+    print("Listening trigger: speech, barge-in" + (", moving lips" if lips else "")
+          + ("" if use_gate else " (no mouth/loudness check)"))
     worker = threading.Thread(target=work, daemon=True)
     worker.start()
     try:
         while not quit_.is_set():
             rec = listen_vad(
                 cam, vad, stream=mic, on_start=on_start, on_tick=sleeper.tick,
-                busy=busy.is_set, quit=quit_,
+                busy=busy.is_set, quit=quit_, need_lips=use_gate and use_lips,
             )
             recording.clear()
             if rec is False:
@@ -946,6 +949,11 @@ def main() -> None:
         help="One thing at a time: no talking over WALL-E (the Mac's default is barge-in)",
     )
     parser.add_argument(
+        "--no-lips",
+        action="store_true",
+        help="Do not wait for moving lips (the Mac's default: a voice counts only while the lips move)",
+    )
+    parser.add_argument(
         "--no-gate",
         action="store_true",
         help="Answer every voice, even with a still mouth or from far away",
@@ -987,7 +995,7 @@ def main() -> None:
             barge = False
     try:
         if barge:
-            loop_barge(voice, chat, cam, music, sleeper, use_gate=not args.no_gate)
+            loop_barge(voice, chat, cam, music, sleeper, use_gate=not args.no_gate, use_lips=not args.no_lips)
         else:
             loop(
                 voice, chat, typed=args.type, auto=auto, cam=cam,

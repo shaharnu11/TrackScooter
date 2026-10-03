@@ -84,6 +84,11 @@ new sentence. The mic and the camera window never stop.
 - While he talks, 0.4 s of speech is needed (0.25 s otherwise), so a cough
   does not cut him off.
 - Off: `--no-barge-in` (one thing at a time, as on Windows).
+- **Moving lips:** a voice counts only while the lips of the face in front
+  move (OpenCV lip landmarks, `usb_camera.py`). A TV talking next to a quiet
+  face no longer starts a recording or cuts him off. Measured lip activity:
+  quiet 1.0–1.6, talking 2.7–6.5, threshold 2.1 (`LIPS_TALK`).
+  Off: `--no-lips`. The log line `speech … lips 3.2` shows the value.
 - Not cancelled: music and Spotify (they play on their own). They stay ducked.
 
 ## Measured on the M4 Max

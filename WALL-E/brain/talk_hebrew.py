@@ -265,6 +265,7 @@ class TalkCam:
         self.obs: list = []
         self.speaker_id: int | None = None
         self.mouth = False
+        self._mouth_t = -1e9  # last time the locked face's lips moved
         self.ok = False
         self._thread: threading.Thread | None = None
 
@@ -299,6 +300,14 @@ class TalkCam:
     def talking(self) -> bool:
         with self._mu:
             return self.mouth and self.speaker_id is not None
+
+    def lips_moving(self, within_s: float) -> bool | None:
+        """Did the locked face's lips move in the last within_s? None when
+        there are no lip landmarks (then nothing can be said)."""
+        if not self.cam.lips:
+            return None
+        with self._mu:
+            return time.monotonic() - self._mouth_t <= within_s
 
     def mouth_level(self) -> float | None:
         """Mouth-area motion of the locked face (usb_camera mouth_ema), or None."""
@@ -419,6 +428,8 @@ class TalkCam:
                 self.speaker_id = sid
                 self.mouth = mouth
                 self.mouth_ema = mouth_ema
+                if mouth:
+                    self._mouth_t = now
 
 
 def wait_for_mouth(cam: TalkCam | None) -> bool:

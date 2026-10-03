@@ -54,6 +54,13 @@ def main() -> None:
     from usb_camera import _ensure_yunet
 
     _ensure_yunet()
+    from usb_camera import LBF_PATH, LBF_URL
+
+    if not LBF_PATH.exists():
+        print("Camera: lip landmark model (~56 MB)")
+        tmp = LBF_PATH.with_suffix(".part")
+        urllib.request.urlretrieve(LBF_URL, tmp)
+        tmp.rename(LBF_PATH)
     if not SFACE_PATH.exists():
         print("Camera: owner face model")
         SFACE_PATH.parent.mkdir(parents=True, exist_ok=True)
