@@ -30,7 +30,7 @@ import urllib.request
 from collections.abc import Iterator
 from contextlib import closing
 
-from english_voice import BRAINS, GGUF_DIR, Brain, EnglishVoice, chirp, wake_sound
+from english_voice import BRAINS, GGUF_DIR, KOKORO_VOICE, Brain, EnglishVoice, chirp, wake_sound
 from talk_hebrew import (
     LLAMA_PORT,
     TalkCam,
@@ -42,6 +42,9 @@ from talk_hebrew import (
 )
 from music import MusicPlayer
 from owner import Owner
+from manage import EXIT as MANAGE_EXIT
+from manage import START as MANAGE_START
+from manage import Manager
 from persona_edit import START as PERSONA_START
 from persona_edit import PersonaEditor, load_character
 from vad_listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
@@ -127,6 +130,14 @@ def gpu_mem() -> str:
 
 class EnglishChat:
     """A Qwen3 GGUF in llama-server. Thinking off: WALL-E answers at once."""
+
+    # Management mode (manage.py) swaps these; None = the festival persona.
+    override: str | None = None
+    max_sentences = 2
+    max_tokens = 100
+
+    def set_mode(self, system: str | None, sentences: int = 2, tokens: int = 100) -> None:
+        self.override, self.max_sentences, self.max_tokens = system, sentences, tokens
 
     def __init__(self, brain: Brain) -> None:
         self.history: list[dict[str, str]] = []
@@ -222,7 +233,7 @@ class EnglishChat:
         body = json.dumps(
             {
                 "messages": messages,
-                "max_tokens": 100,
+                "max_tokens": self.max_tokens,
                 "temperature": temperature,
                 "repeat_penalty": 1.1,
                 "chat_template_kwargs": {"enable_thinking": False},
@@ -261,7 +272,7 @@ class EnglishChat:
 
     def _messages(self, user_text: str, jpeg: bytes | None) -> list[dict]:
         self.history.append({"role": "user", "content": user_text})
-        messages: list[dict] = [{"role": "system", "content": self.system}, *self.history[-8:]]
+        messages: list[dict] = [{"role": "system", "content": self.override or self.system}, *self.history[-8:]]
         if jpeg is not None:
             # The picture rides on this turn only; history keeps the words.
             url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
@@ -299,7 +310,7 @@ class EnglishChat:
                         break
                     said.append(part)
                     yield part
-                    if len(said) == 2:
+                    if len(said) == self.max_sentences:
                         break
             if not said:
                 said.append(FALLBACK)
@@ -480,7 +491,7 @@ class CloudChat(EnglishChat):
         return {
             "model": self.model,
             "max_tokens": max_tokens,
-            "system": self.system,
+            "system": self.override or self.system,
             "messages": messages,
             "output_config": {"effort": "low"},
             "betas": ["server-side-fallback-2026-07-01"],
@@ -549,11 +560,18 @@ class MindChat:
         self.vision = True
         self._offline_until = 0.0
 
+    def set_mode(self, system: str | None, sentences: int = 2, tokens: int = 100) -> None:
+        self._mode = (system, sentences, tokens)
+        self.cloud.set_mode(*self._mode)
+        if self.local is not None:
+            self.local.set_mode(*self._mode)
+
     def _local_brain(self) -> EnglishChat:
         if self.local is None:
             print("(no cloud: starting the local brain)")
             self.local = self._make_local()
             self.local.history = self.history
+            self.local.set_mode(*getattr(self, "_mode", (None, 2, 100)))
         else:
             self.local.wake()
         return self.local
@@ -658,8 +676,18 @@ def vet(rec, vad: StreamVAD, gate: Gate, use_gate: bool, trigger: str):
     return samples, sr, heard, t_stop
 
 
-def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear) -> bool:
+def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear, manager=None) -> bool:
     """Answer one sentence. False when it was goodbye."""
+    if manager is not None and not manager.active and MANAGE_START.search(user) and not MANAGE_EXIT.search(user):
+        if manager.enter(chat, cam):
+            voice.speak("Management mode. Ask me anything about how I work. Say exit management mode when you're done.")
+        else:
+            voice.speak("Sorry, management mode is only for Shahar.")
+        return True
+    if manager is not None and manager.active and MANAGE_EXIT.search(user):
+        manager.leave(chat)
+        voice.speak("Okay, back to normal.")
+        return True
     if PERSONA_START.search(user):
         # Shahar only: face + secret word, then the changes, read back,
         # confirmed. Checked only when this phrase is heard.
@@ -673,7 +701,8 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         return False
     music.duck(True)
     print()
-    cmd = music.command(user)
+    # Management mode: "what can you play?" is a question, not a command.
+    cmd = None if manager is not None and manager.active else music.command(user)
     if cmd is not None:
         # Handled in code, not by the brain; the brain still gets the
         # exchange in its history so "did you like that song?" makes sense.
@@ -704,6 +733,7 @@ def loop(
     sleeper: Sleeper,
     trigger: str = "speech",
     use_gate: bool = True,
+    manager: Manager | None = None,
 ) -> None:
     voice.speak("Hi. I'm WALL-E. Talk to me.")
     print(f"Music folder: {music.folder}  ({len(music.songs())} songs)")
@@ -773,9 +803,9 @@ def loop(
             continue
         user, t_stop = got
         if PERSONA_START.search(user):
-            respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear)
+            respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager)
             continue
-        if not respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear):
+        if not respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager):
             return
         music.duck(False)
         sleeper.touch()
@@ -793,6 +823,7 @@ def loop_barge(
     sleeper: Sleeper,
     use_gate: bool = True,
     use_lips: bool = True,
+    manager: Manager | None = None,
 ) -> None:
     """Talk over WALL-E: he stops and listens.
 
@@ -851,7 +882,7 @@ def loop_barge(
                     continue
                 busy.set()
                 try:
-                    if not respond(*got, voice, chat, cam, music, sleeper, editor, hear):
+                    if not respond(*got, voice, chat, cam, music, sleeper, editor, hear, manager):
                         quit_.set()
                         return
                 finally:
@@ -993,13 +1024,32 @@ def main() -> None:
         if not available():
             print("No echo canceller (pip install livekit): barge-in off.")
             barge = False
+    lips = barge and not args.no_lips and not args.no_gate and cam is not None and cam.cam.lips
+    facts = {
+        "Brain": (
+            f"Claude {args.cloud_model} over the internet; when offline, {brain.file} on this computer"
+            if args.mind == "cloud" else f"{brain.file} (--brain {args.brain}) on this computer, offline"
+        ) + (", it can see through the camera" if chat.vision else ""),
+        "Hearing": f"{getattr(voice, 'ears', 'Whisper')}, Silero speech detector",
+        "Voice": f"Kokoro text to speech, voice {KOKORO_VOICE}",
+        "Talking over him (barge-in)": (
+            "on: Shahar or a guest can talk while WALL-E talks; WALL-E then stops and listens"
+            if barge else "off: WALL-E does not listen while he thinks or talks"
+        ),
+        "Moving-lips check": "on: a voice counts only while the lips in front move" if lips else "off",
+    }
+    manager = Manager(PersonaEditor(Owner())._is_shahar, facts, music, cam, sleeper)
     try:
         if barge:
-            loop_barge(voice, chat, cam, music, sleeper, use_gate=not args.no_gate, use_lips=not args.no_lips)
+            loop_barge(
+                voice, chat, cam, music, sleeper, use_gate=not args.no_gate,
+                use_lips=not args.no_lips, manager=manager,
+            )
         else:
             loop(
                 voice, chat, typed=args.type, auto=auto, cam=cam,
                 music=music, sleeper=sleeper, trigger=args.trigger, use_gate=not args.no_gate,
+                manager=manager,
             )
     except KeyboardInterrupt:
         print("\nBye.")

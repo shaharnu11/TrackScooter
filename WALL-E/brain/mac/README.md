@@ -72,6 +72,15 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
     in chat.
 11. Music files: put mp3s in `brain/music/`.
 
+## Management mode
+
+Say **"management mode"** (owner face check). WALL-E drops the jokes and
+answers plainly about himself: brain, Whisper, voice, camera, lips,
+barge-in, music and Spotify, sleep, his commands, the computer and his
+personality. Up to five sentences; music words do not start music.
+**"Exit management mode"** or **"back to normal"** ends it, and the fun
+conversation comes back. Code: `manage.py`.
+
 ## Talking over WALL-E (barge-in)
 
 On the Mac you can talk while he talks: he stops at once and answers the

@@ -292,6 +292,7 @@ class EnglishVoice:
         if not self._ready:
             device, compute = self._conn.recv()
             self._ready = True
+            self.ears = f"Whisper {compute} on {device}"
             print(f"Whisper on {device} ({compute})")
 
     def sleep_ears(self) -> None:
