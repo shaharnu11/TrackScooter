@@ -72,6 +72,17 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
     in chat.
 11. Music files: put mp3s in `brain/music/`.
 
+## Sleep by voice
+
+- **"Go to sleep"**: the brain is unloaded and the camera stops face and lip
+  tracking (the CPU cost). Only the mic and Whisper stay on, to hear
+  "wake up". A face does not wake him. The camera window shows SLEEPING.
+- **"Wake up"**: back in ~1 s.
+- **"Shut down"** (or "bye"): WALL-E quits.
+- "I'm going to sleep" is about you, not a command.
+- Without a command he still sleeps by himself after `--sleep-after`
+  seconds with nobody around, and a face wakes him.
+
 ## Management mode
 
 Say **"management mode"** (owner face check). WALL-E drops the jokes and

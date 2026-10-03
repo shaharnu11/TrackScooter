@@ -42,6 +42,7 @@ from talk_hebrew import (
 )
 from music import MusicPlayer
 from owner import Owner
+from manage import CHANGE_LINE as MANAGE_CHANGE_LINE
 from manage import EXIT as MANAGE_EXIT
 from manage import START as MANAGE_START
 from manage import Manager
@@ -363,12 +364,30 @@ class Sleeper:
         self.awake = True
         self.last = time.monotonic()  # last talk or face
         self._busy: threading.Thread | None = None
+        # "Go to sleep": brain off, camera paused, only the mic and Whisper
+        # listen, and only "wake up" wakes him (a face does not).
+        self.manual = False
 
     def touch(self) -> None:
         self.last = time.monotonic()
 
+    def sleep_now(self) -> None:
+        if self._busy is not None:
+            self._busy.join()
+        self.manual = True
+        print("(told to sleep: brain off, camera paused; say wake up)")
+        self.chat.sleep()
+        self.awake = False
+
+    def wake_now(self) -> None:
+        self.manual = False
+        if self._busy is not None:
+            self._busy.join()
+        if not self.awake:
+            self._wake()
+
     def tick(self, face: bool) -> None:
-        if self.idle_s <= 0:
+        if self.idle_s <= 0 or self.manual:
             return
         if face:
             self.last = time.monotonic()
@@ -381,11 +400,17 @@ class Sleeper:
 
     def kick(self) -> None:
         """Someone started talking: start waking now, if asleep."""
+        if self.manual:
+            return
         if not self.awake and (self._busy is None or not self._busy.is_alive()):
             self._run(self._wake)
 
     def ready(self) -> None:
         """Block until the models are loaded (before Whisper or the brain)."""
+        if self.manual:
+            self.voice.wake_ears()  # told to sleep: only Whisper, for "wake up"
+            self.voice.wait_ears()
+            return
         if self._busy is not None:
             self._busy.join()
         if not self.awake:
@@ -688,6 +713,35 @@ def vet(rec, vad: StreamVAD, gate: Gate, use_gate: bool, trigger: str):
     return samples, sr, heard, t_stop
 
 
+# "Go to sleep" / "wake up". "I'm going to sleep now" is about the person.
+SLEEP = re.compile(r"\b(go to (sleep|bed)|sleep now|sleep mode|take a nap)\b", re.I)
+NOT_SLEEP = re.compile(r"\b(i|i'm|i am|i'll|we|we're|they)\b[^.?!]{0,15}\bgo(ing)? to (sleep|bed)\b", re.I)
+WAKE = re.compile(r"\b(wake|get up|good morning)\b", re.I)
+
+
+def _answers_only(parts):
+    """Management mode: no question back after the answer. Told not to,
+    the brain still ended with "What kind of music do you like?"."""
+    for i, part in enumerate(parts):
+        if i > 0 and part.rstrip().endswith("?"):
+            continue
+        yield part
+
+
+def asleep_heard(user: str, voice, sleeper, cam) -> bool:
+    """Told to sleep: True if the sentence was handled here (woken or ignored)."""
+    if not sleeper.manual:
+        return False
+    if WAKE.search(user):
+        if cam is not None:
+            cam.resume()
+        sleeper.wake_now()
+        voice.speak("I'm awake! Hi again.")
+    else:
+        print("(asleep: only wake up counts, ignored)")
+    return True
+
+
 def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear, manager=None) -> bool:
     """Answer one sentence. False when it was goodbye."""
     if manager is not None and not manager.active and MANAGE_START.search(user) and not MANAGE_EXIT.search(user):
@@ -700,6 +754,18 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         manager.leave(chat)
         voice.speak("Okay, back to normal.")
         return True
+    if (
+        manager is not None and manager.active and not PERSONA_START.search(user)
+        and manager.wants_change(chat, user)
+    ):
+        voice.speak(MANAGE_CHANGE_LINE)
+        return True
+    if SLEEP.search(user) and not NOT_SLEEP.search(user):
+        voice.speak("Okay, going to sleep. Say wake up to wake me.")
+        sleeper.sleep_now()
+        if cam is not None:
+            cam.pause()
+        return True
     if PERSONA_START.search(user):
         # Shahar only: face + secret word, then the changes, read back,
         # confirmed. Checked only when this phrase is heard.
@@ -708,7 +774,7 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         music.duck(False)
         sleeper.touch()
         return True
-    if re.search(r"\b(bye|goodbye|see you)\b", user.lower()):
+    if re.search(r"\b(bye|goodbye|see you|shut ?down|turn yourself off)\b", user.lower()):
         voice.speak("Bye! That was nice.")
         return False
     music.duck(True)
@@ -735,7 +801,10 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         # Not in management mode: there it only answers.
         peek = (manager is None or not manager.active) and len(chat.history) // 2 % PEEK_EVERY == 0
         jpeg = look(cam) if chat.vision and (LOOK.search(user) or peek) else None
-        voice.speak_stream(chat.reply_stream(user, jpeg), t_stop)
+        parts = chat.reply_stream(user, jpeg)
+        if manager is not None and manager.active:
+            parts = _answers_only(parts)
+        voice.speak_stream(parts, t_stop)
     return True
 
 
@@ -786,6 +855,7 @@ def loop(
                 vad,
                 on_start=lambda: (music.duck(True), sleeper.kick()),
                 on_tick=sleeper.tick,
+                face_free=lambda: sleeper.manual,
             )
         elif cam is not None:
             rec = listen(cam)  # the old loudness / mouth-motion trigger
@@ -793,7 +863,7 @@ def loop(
             rec = record_utterance(cam=None)
         if rec is False:
             return False
-        got = vet(rec, vad, gate, use_gate, trigger)
+        got = vet(rec, vad, gate, use_gate and not sleeper.manual, trigger)
         if got is None:
             music.duck(False)
             return None
@@ -818,6 +888,8 @@ def loop(
         if got is None:
             continue
         user, t_stop = got
+        if asleep_heard(user, voice, sleeper, cam):
+            continue
         if PERSONA_START.search(user):
             respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager)
             continue
@@ -896,6 +968,8 @@ def loop_barge(
                 if got is None:
                     unduck()
                     continue
+                if asleep_heard(got[0], voice, sleeper, cam):
+                    continue
                 busy.set()
                 try:
                     if not respond(*got, voice, chat, cam, music, sleeper, editor, hear, manager):
@@ -911,6 +985,8 @@ def loop_barge(
 
     def on_start() -> None:
         recording.set()
+        if sleeper.manual:
+            return  # asleep: only listening for "wake up"
         music.duck(True)  # under the voice from its first moment
         sleeper.kick()  # a sleeping WALL-E starts loading now
         if busy.is_set():
@@ -931,11 +1007,12 @@ def loop_barge(
             rec = listen_vad(
                 cam, vad, stream=mic, on_start=on_start, on_tick=sleeper.tick,
                 busy=busy.is_set, quit=quit_, need_lips=use_gate and use_lips,
+                face_free=lambda: sleeper.manual,
             )
             recording.clear()
             if rec is False:
                 break
-            got = vet(rec, vad, gate, use_gate, "speech")
+            got = vet(rec, vad, gate, use_gate and not sleeper.manual, "speech")
             if got is None:
                 unduck()
                 continue

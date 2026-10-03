@@ -31,9 +31,30 @@ SYSTEM = (
     "no cursing. Answer his questions about WALL-E plainly and correctly, in "
     "spoken English: up to five short sentences, no lists, no markdown, no "
     "symbols. English is not his first language: use simple, common words, "
-    "but keep technical names exactly. Use only the facts below. If the answer is not in them, say you "
-    "do not know. When a picture is attached it is the camera view right now; "
-    "describe only what is clearly in it.\n\nFacts:\n"
+    "but keep technical names exactly. Use only the facts below. If the answer "
+    "is not in them, say you do not know. When a picture is attached it is the "
+    "camera view right now; describe only what is clearly in it. "
+    # A live session: he refused a personality wish as "not safe or allowed",
+    # then asked Shahar what music he likes. Neither belongs here.
+    "Do not ask Shahar questions, do not make small talk: only answer. Ask "
+    "back only when you did not understand his question. This mode cannot "
+    "change anything. If Shahar wants to change your personality or how you "
+    "behave, do not judge or refuse the wish: tell him to say update "
+    "personality start. Shahar decides who WALL-E is.\n\nFacts:\n"
+)
+
+
+KIND = (
+    "In management mode, Shahar talks to WALL-E, a robot. Speech recognition "
+    "may garble words. Is his sentence a QUESTION (about WALL-E, his setup, "
+    "or anything to answer) or a CHANGE (a wish to change how WALL-E talks or "
+    "behaves, his personality, jokes, topics)? Answer with one word: QUESTION "
+    "or CHANGE."
+)
+
+CHANGE_LINE = (
+    "I can't change that in management mode. To change my personality, "
+    "say: update personality start."
 )
 
 
@@ -43,7 +64,7 @@ def _mac_chip() -> str:
     try:
         chip = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True, text=True, timeout=2).stdout.strip()
         mem = int(subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True, timeout=2).stdout)
-        return f"{chip}, {mem // 2**30} GB memory"
+        return f"{chip}, {mem // 2**30} GB memory in total, shared by all programs"
     except (OSError, ValueError, subprocess.TimeoutExpired):
         return ""
 
@@ -77,7 +98,8 @@ class Manager:
             "Commands (his tools)": (
                 "play music, play an artist, song or playlist, next song, what's playing, "
                 "stop the music; update personality start (owner only: face and secret word); "
-                "management mode and exit management mode; goodbye ends the session. "
+                "management mode and exit management mode; go to sleep (brain off, camera "
+                "paused, only wake up wakes him) and wake up; goodbye or shut down quits. "
                 "He cannot search the internet, set timers or control other things."
             ),
             "Conversation before this mode": f"{len(self._saved) // 2} exchanges",
@@ -88,6 +110,17 @@ class Manager:
             ),
         }
         return "\n".join(f"- {k}: {v}" for k, v in lines.items())
+
+    def wants_change(self, chat, text: str) -> bool:
+        """A wish to change him, not a question? A live session took "say
+        something funny about drugs" as an order and performed it here."""
+        try:
+            word = chat.complete(KIND, text).strip().upper()
+        except Exception as exc:  # noqa: BLE001 — treat as a question
+            print(f"(management: kind check failed: {exc})")
+            return False
+        print(f"(management: {word[:20]})")
+        return word.startswith("CHANGE")
 
     def enter(self, chat, cam) -> bool:
         if cam is not None:

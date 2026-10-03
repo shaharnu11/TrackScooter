@@ -81,6 +81,7 @@ def listen_vad(
     barge_s: float = 0.4,
     quit=None,
     need_lips: bool = False,
+    face_free=None,
 ):
     """Wait for speech (from the locked face, if there is a camera), record it.
 
@@ -101,7 +102,7 @@ def listen_vad(
     """
 
     def lips_ok(within_s: float) -> bool:
-        if not need_lips or cam is None:
+        if not need_lips or cam is None or (face_free is not None and face_free()):
             return True
         return cam.lips_moving(within_s) is not False
     import sounddevice as sd
@@ -150,7 +151,8 @@ def listen_vad(
                     cam.set_mic(p, on)
                 if not recording:
                     now = time.monotonic()
-                    if cam is None or cam.locked():
+                    # face_free(): told to sleep, camera paused, any voice counts.
+                    if cam is None or cam.locked() or (face_free is not None and face_free()):
                         last_face = now
                     face = now - last_face <= face_grace_s
                     if on_tick is not None:

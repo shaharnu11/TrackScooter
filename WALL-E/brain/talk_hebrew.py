@@ -268,6 +268,7 @@ class TalkCam:
         self._mouth_t = -1e9  # last time the locked face's lips moved
         self.ok = False
         self._thread: threading.Thread | None = None
+        self._paused = threading.Event()  # "go to sleep": no faces, no lips
 
     def start(self) -> bool:
         if not self.cam.open():
@@ -292,6 +293,15 @@ class TalkCam:
             cv2.destroyAllWindows()
         except Exception:
             pass
+
+    def pause(self) -> None:
+        """Stop face and lip tracking (the CPU cost). The camera stays open."""
+        self._paused.set()
+        with self._mu:
+            self.obs, self.speaker_id, self.mouth = [], None, False
+
+    def resume(self) -> None:
+        self._paused.clear()
 
     def locked(self) -> bool:
         with self._mu:
@@ -333,6 +343,10 @@ class TalkCam:
             sid = self.speaker_id
         if frame is None:
             return True
+        if self._paused.is_set():
+            frame = (frame * 0.25).astype(frame.dtype)
+            cv2.putText(frame, "SLEEPING - say wake up", (12, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (200, 200, 200), 2)
+            obs = []
         for o in obs:
             x, y, w, h = o.box
             is_focus = sid is not None and o.track_id == sid
@@ -346,7 +360,7 @@ class TalkCam:
                 frame, f"{label}  m={o.mouth_ema:.1f}", (x, max(28, y - 8)),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2,
             )
-        if not obs:
+        if not obs and not self._paused.is_set():
             cv2.putText(
                 frame, "NO FACE — come closer, more light, look at camera",
                 (12, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2,
@@ -396,6 +410,9 @@ class TalkCam:
 
     def _loop(self) -> None:
         while not self._stop.is_set():
+            if self._paused.is_set():
+                self._stop.wait(0.2)
+                continue
             obs, frame = self.cam.read()
             if frame is None:
                 if self._stop.wait(0.03):
