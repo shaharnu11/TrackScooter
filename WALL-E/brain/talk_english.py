@@ -49,6 +49,7 @@ from manage import EXIT as MANAGE_EXIT
 from manage import START as MANAGE_START
 from manage import Manager
 from persons import FORGET, People
+import tools
 from persona_edit import START as PERSONA_START
 from persona_edit import PersonaEditor, load_character
 from vad_listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
@@ -851,8 +852,20 @@ def asleep_heard(user: str, voice, sleeper, cam) -> bool:
     return True
 
 
+# "owner" or "visitor" when there is no camera to tell: typed mode is the
+# owner at the keyboard; a voice with no camera is a visitor.
+NO_CAMERA_ROLE = "visitor"
+PENDING_RESTART: dict[str, str] | None = None  # set by an owner tool; main execs it
+
+
 def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear, manager=None, people=None) -> bool:
-    """Answer one sentence. False when it was goodbye."""
+    """Answer one sentence. False when WALL-E should stop (owner's bye, or a restart)."""
+    global PENDING_RESTART
+    managing = manager is not None and manager.active
+    if people is not None and not managing:
+        people.before(chat)  # owner, someone new, or someone remembered
+    owner = (people.role if people is not None else NO_CAMERA_ROLE) == "owner"
+    print(f"(who: {'owner' if owner else 'visitor'})")
     if manager is not None and not manager.active and MANAGE_START.search(user) and not MANAGE_EXIT.search(user):
         if manager.enter(chat, cam):
             voice.speak(t(
@@ -873,6 +886,9 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         voice.speak(MANAGE_CHANGE_LINE())
         return True
     if SLEEP.search(user) and not NOT_SLEEP.search(user):
+        if not owner:  # a visitor cannot switch him off
+            voice.speak(t("Sleep? No way, I'm having too much fun!", "לישון? בחיים לא, כיף לי מדי!"))
+            return True
         voice.speak(t("Okay, going to sleep. Say wake up to wake me.", "בסדר, הולך לישון. תגיד תתעורר כדי להעיר אותי."))
         sleeper.sleep_now()
         if cam is not None:
@@ -888,17 +904,29 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         return True
     if BYE.search(user):
         voice.speak(t("Bye! That was nice.", "ביי! היה כיף."))
-        return False
-    managing = manager is not None and manager.active
-    if people is not None and not managing:
-        if FORGET.search(user):
-            people.forget(voice, chat)
-            return True
-        people.before(chat)  # same person, someone new, or someone remembered
+        if owner:
+            return False  # the owner's bye (or shut down) quits WALL-E
+        if people is not None:
+            people.end_visit(chat)  # a visitor's bye only ends their talk
+        return True
+    if people is not None and not managing and FORGET.search(user):
+        people.forget(voice, chat)
+        return True
     music.duck(True)
     print()
     # Management mode: "what can you play?" is a question, not a command.
     cmd = None if manager is not None and manager.active else music.command(user)
+    if cmd is None and owner and not managing:
+        # Owner only: the brain may pick a tool; the code runs it (tools.py).
+        tool, args = tools.plan(chat, user, "he" if hebrew() else "en")
+        if tool != "none":
+            try:
+                if tools.run(tool, args, voice, chat, hear, people):
+                    chat.history += [{"role": "user", "content": user}, {"role": "assistant", "content": f"(did: {tool})"}]
+                    return True
+            except tools.Restart as r:
+                PENDING_RESTART = r.options
+                return False
     if cmd is not None:
         # Handled in code, not by the brain; the brain still gets the
         # exchange in its history so "did you like that song?" makes sense.
@@ -1307,9 +1335,12 @@ def main() -> None:
         "Moving-lips check": "on: a voice counts only while the lips in front move" if lips else "off",
     }
     manager = Manager(PersonaEditor(Owner())._is_shahar, facts, music, cam, sleeper)
-    # Remembering people needs the camera; never without it.
-    people = People(cam) if cam is not None and not args.no_people else None
-    manager.people = people
+    # Who is talking (owner or visitor) needs the camera; remembering people
+    # too. Without a camera: typed mode is the owner, a voice is a visitor.
+    global NO_CAMERA_ROLE
+    NO_CAMERA_ROLE = "owner" if args.type else "visitor"
+    people = People(cam, remember=not args.no_people) if cam is not None else None
+    manager.people = people if not args.no_people else None
     try:
         if barge:
             loop_barge(
@@ -1330,6 +1361,9 @@ def main() -> None:
         voice.sleep_ears()
         if cam is not None:
             cam.stop()
+    if PENDING_RESTART is not None:  # an owner tool asked for another WALL-E
+        del _lock  # free the instance lock before the new one takes it
+        tools.exec_restart(PENDING_RESTART)
 
 
 if __name__ == "__main__":

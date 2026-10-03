@@ -49,3 +49,5 @@ brain/personalities/*/*/source/
 
 # scratch renders: the guide embeds them, so they are never committed
 build/
+# WALL-E owner tool log (commands and results): local only.
+brain/owner_commands.log

@@ -113,13 +113,26 @@ class Visit:
 
 
 class People:
-    def __init__(self, cam) -> None:
+    """Who is in front, each sentence: the owner or a visitor (tools.py
+    decides what each may do); and, with remember on, people who said yes."""
+
+    def __init__(self, cam, remember: bool = True) -> None:
         self.cam = cam
+        self.remember = remember
         self._face = Owner()  # its SFace models, and the owner's own face
         PERSONS_DIR.mkdir(exist_ok=True)
         self.known = [Person(d) for d in sorted(PERSONS_DIR.iterdir()) if (d / "info.json").exists()]
         self.visit: Visit | None = None
         print(f"(people: {len(self.known)} remembered)")
+
+    @property
+    def role(self) -> str:
+        return "owner" if self.visit is not None and self.visit.owner else "visitor"
+
+    def end_visit(self, chat) -> None:
+        """A visitor said bye: their talk ends here (WALL-E keeps running)."""
+        self._end(chat)
+        chat.set_visitor("")
 
     # ----- who is in front --------------------------------------------------
     def _look(self) -> tuple[np.ndarray | None, list]:
@@ -151,6 +164,10 @@ class People:
             chat.set_visitor("You are talking to Shahar, who built you and owns you.")
             print("(people: Shahar)")
             return
+        if not self.remember:
+            chat.set_visitor("")
+            print("(people: a visitor)")
+            return
         best = max(self.known, key=lambda p: p.match(feat), default=None)
         score = best.match(feat) if best is not None else 0.0
         if best is not None and score >= SFACE_MATCH:
@@ -168,7 +185,7 @@ class People:
     def after(self, voice, chat, hear) -> None:
         """After WALL-E answered: count, maybe ask, maybe update notes."""
         v = self.visit
-        if v is None or v.owner:
+        if v is None or v.owner or not self.remember:
             return
         v.turns += 1
         if v.person is not None:
