@@ -577,16 +577,16 @@ class MindChat:
         if self.local is not None:
             self.local.reload_system()
 
-    def complete(self, system: str, text: str) -> str:
+    def complete(self, system: str, text: str, max_tokens: int = 1024) -> str:
         import anthropic
 
         if self.cloud.ready and time.monotonic() >= self._offline_until:
             try:
-                return self.cloud.complete(system, text)
+                return self.cloud.complete(system, text, max_tokens)
             except anthropic.AnthropicError as exc:
                 print(f"(cloud failed: {type(exc).__name__}; local brain for {CLOUD_RETRY_S} s)")
                 self._offline_until = time.monotonic() + CLOUD_RETRY_S
-        return self._local_brain().complete(system, text)
+        return self._local_brain().complete(system, text, max_tokens)
 
     def sleep(self) -> None:
         self.cloud.sleep()

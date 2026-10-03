@@ -6,7 +6,7 @@ up, and bye (for a visitor it only ends their own talk).
 
 Owner only (Shahar's face in front, lips moving; typed mode counts as the
 owner): sleep, quit, management mode, personality update (also needs the
-secret word), and the tools below. For an owner sentence the brain picks a
+management mode for changing the personality and soft rules), and the tools below. For an owner sentence the brain picks a
 tool (plan); the code checks and runs it. A visitor's sentence never
 reaches plan(): the brain cannot act for a visitor at all.
 

@@ -36,6 +36,7 @@ brain/owner/
 brain/persons/
 brain/personality_history/
 brain/personalities/*/*/history/
+brain/rules/history/
 # Transcripts of the videos a personality was made from: not ours to publish.
 brain/personalities/*/*/source/
 

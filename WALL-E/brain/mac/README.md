@@ -24,16 +24,19 @@ Two folders, one per language. Double-click the start script in Finder:
 - Options: the same as on Windows (`--brain`, `--mind cloud`, `--type`,
   `--no-camera`, `--sleep-after`). See `../windows/README.md`.
 - Voice commands work in both languages in both modes (sleep / לך לישון,
-  wake up / תתעורר, management mode / מצב ניהול, update personality /
-  עדכון אישיות, forget me / תשכח אותי, music / תנגן…, bye / ביי).
-- Hebrew mode hears the secret word in English (it is an English word).
+  wake up / תתעורר, management mode / מצב ניהול, forget me / תשכח אותי, music / תנגן…, bye / ביי).
+- **Changing him by voice:** say "management mode" (owner face check), then the
+  change ("be more sarcastic", "answers can be up to three sentences"). He
+  picks the personality or a `rules/` file, reads back what he adds and
+  removes, and saves on "yes" (old file in `history/`). Hard rules in code
+  (sentence limit, filters, owner checks, consent, tools) cannot be changed by voice.
 
 ### Personalities
 
 `personalities/english/<name>/` and `personalities/hebrew/<name>/`, each with
 `personality.md` (who he is) and optional `examples.md` (sample lines in his
 style). Pick one: `./mac/hebrew/start_walle.command --personality shemTovEvi`.
-Without `--personality` he is `default`. "Update personality" by voice changes
+Without `--personality` he is `default`. A change in management mode edits
 the one running (backups in its `history/`).
 
 New one from a video: `.venv/bin/python scripts/personality_from_video.py VIDEO NAME --lang he`

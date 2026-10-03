@@ -1,9 +1,8 @@
 <!--
 WALL-E's personality: who he is. Read at start-up and after every update.
 
-Shahar changes it by voice: "update personality start", face + secret word,
-then say the changes (he says back what he understood), "that's all" (any
-way of saying you're done), hear them read back, say yes. Each update is appended below under a dated heading, and the previous
+Shahar changes it by voice in management mode: he says the change, WALL-E
+reads back what he adds and removes, "yes" saves it (old file in history/). Each update is appended below under a dated heading, and the previous
 file is kept in personality_history/. It can also be edited by hand.
 
 What is NOT here, and cannot be changed from here: answer length, honesty

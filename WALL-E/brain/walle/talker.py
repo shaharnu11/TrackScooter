@@ -42,14 +42,14 @@ from walle.eyes.talk_cam import TalkCam
 from walle.voice.loud_listen import listen, record_utterance
 from walle.music.player import MusicPlayer
 from walle.people.owner import Owner
-from walle.modes.management import CHANGE_LINE as MANAGE_CHANGE_LINE
 from walle.modes.management import EXIT as MANAGE_EXIT
 from walle.modes.management import START as MANAGE_START
 from walle.modes.management import Manager
 from walle.people.persons import FORGET, People
 from walle.modes import tools
-from walle.modes.personality_editor import START as PERSONA_START
-from walle.modes.personality_editor import PersonaEditor, load_character
+from walle.modes.personality_editor import load_character
+from walle.modes.personality_editor import update as update_personality
+from walle.people.owner import check_owner
 from walle.voice.listen import BLOCK, END_S, Gate, Heard, StreamVAD, listen_vad
 
 MIN_CLIP_SPEECH = 0.5
@@ -177,13 +177,14 @@ NO_CAMERA_ROLE = "visitor"
 PENDING_RESTART: dict[str, str] | None = None  # set by an owner tool; main execs it
 
 
-def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, hear, manager=None, people=None) -> bool:
+def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, hear, manager=None, people=None) -> bool:
     """Answer one sentence. False when WALL-E should stop (owner's bye, or a restart)."""
     global PENDING_RESTART
     managing = manager is not None and manager.active
     if people is not None and not managing:
         people.before(chat)  # owner, someone new, or someone remembered
-    owner = (people.role if people is not None else NO_CAMERA_ROLE) == "owner"
+    # In management mode it is the owner: his face was checked to enter it.
+    owner = managing or (people.role if people is not None else NO_CAMERA_ROLE) == "owner"
     print(f"(who: {'owner' if owner else 'visitor'})")
     if manager is not None and not manager.active and MANAGE_START.search(user) and not MANAGE_EXIT.search(user):
         if manager.enter(chat, cam):
@@ -198,35 +199,35 @@ def respond(user: str, t_stop: float, voice, chat, cam, music, sleeper, editor, 
         manager.leave(chat)
         voice.speak(t("Okay, back to normal.", "בסדר, חוזר לרגיל."))
         return True
-    if (
-        manager is not None and manager.active and not PERSONA_START.search(user)
-        and manager.wants_change(chat, user)
-    ):
-        voice.speak(MANAGE_CHANGE_LINE())
+    # Bye and sleep come before any other check (in management mode "Bye
+    # Wally" was once refused as a personality change).
+    if BYE.search(user):
+        voice.speak(t("Bye! That was nice.", "ביי! היה כיף."))
+        if owner:
+            if managing:
+                manager.leave(chat)
+            return False  # the owner's bye (or shut down) quits WALL-E
+        if people is not None:
+            people.end_visit(chat)  # a visitor's bye only ends their talk
         return True
     if SLEEP.search(user) and not NOT_SLEEP.search(user):
         if not owner:  # a visitor cannot switch him off
             voice.speak(t("Sleep? No way, I'm having too much fun!", "לישון? בחיים לא, כיף לי מדי!"))
             return True
+        if managing:
+            manager.leave(chat)
         voice.speak(t("Okay, going to sleep. Say wake up to wake me.", "בסדר, הולך לישון. תגיד תתעורר כדי להעיר אותי."))
         sleeper.sleep_now()
         if cam is not None:
             cam.pause()
         return True
-    if PERSONA_START.search(user):
-        # Shahar only: face + secret word, then the changes, read back,
-        # confirmed. Checked only when this phrase is heard.
+    if managing and manager.wants_change(chat, user):
+        # Management mode: a change wish updates the personality (read back,
+        # saved on yes). The only way to change it by voice.
         music.duck(True)
-        editor.session(voice, chat, cam, hear)
+        update_personality(voice, chat, hear, user)
         music.duck(False)
         sleeper.touch()
-        return True
-    if BYE.search(user):
-        voice.speak(t("Bye! That was nice.", "ביי! היה כיף."))
-        if owner:
-            return False  # the owner's bye (or shut down) quits WALL-E
-        if people is not None:
-            people.end_visit(chat)  # a visitor's bye only ends their talk
         return True
     if people is not None and not managing and FORGET.search(user):
         people.forget(voice, chat)
@@ -299,7 +300,6 @@ def loop(
         print("Enter to talk. Ctrl+C to quit.")
     vad = None if typed else StreamVAD()
     gate = Gate()
-    editor = PersonaEditor(Owner())
     print(f"Listening trigger: {trigger}" + ("" if use_gate else " (no mouth/loudness check)"))
 
     def hear(lang: str | None = None):
@@ -361,10 +361,7 @@ def loop(
         user, t_stop = got
         if asleep_heard(user, voice, sleeper, cam):
             continue
-        if PERSONA_START.search(user):
-            respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager, people)
-            continue
-        if not respond(user, t_stop, voice, chat, cam, music, sleeper, editor, hear, manager, people):
+        if not respond(user, t_stop, voice, chat, cam, music, sleeper, hear, manager, people):
             return
         music.duck(False)
         sleeper.touch()
@@ -407,7 +404,6 @@ def loop_barge(
     recording = threading.Event()  # a voice is being recorded right now
     vad = StreamVAD()
     gate = Gate()
-    editor = PersonaEditor(Owner())
 
     def unduck() -> None:
         if not busy.is_set() and not recording.is_set() and clips.empty():
@@ -444,7 +440,7 @@ def loop_barge(
                     continue
                 busy.set()
                 try:
-                    if not respond(*got, voice, chat, cam, music, sleeper, editor, hear, manager, people):
+                    if not respond(*got, voice, chat, cam, music, sleeper, hear, manager, people):
                         quit_.set()
                         return
                 finally:
@@ -656,7 +652,8 @@ def main() -> None:
         ),
         "Moving-lips check": "on: a voice counts only while the lips in front move" if lips else "off",
     }
-    manager = Manager(PersonaEditor(Owner())._is_shahar, facts, music, cam, sleeper)
+    owner_face = Owner()
+    manager = Manager(lambda c: check_owner(owner_face, c), facts, music, cam, sleeper)
     # Who is talking (owner or visitor) needs the camera; remembering people
     # too. Without a camera: typed mode is the owner, a voice is a visitor.
     global NO_CAMERA_ROLE

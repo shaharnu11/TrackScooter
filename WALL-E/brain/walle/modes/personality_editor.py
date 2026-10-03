@@ -1,20 +1,18 @@
-"""Shahar updates WALL-E's personality by talking to him.
+"""The owner changes WALL-E's soft side by voice, in management mode.
 
-    "update personality start"   -> face check + secret word
-    ...say the changes, as many sentences as you like; he says back each one...
-    "that's all" (or any way of saying you are done) -> he reads the changes back
-    "yes"                        -> saved to personality.md, reloaded at once
-    "cancel" at any point        -> nothing changes
+    "management mode"                       -> owner face check (management.py)
+    "be more sarcastic" / "stop the drug jokes" / "answers can be longer"
+        -> the brain picks the file: the running personality.md, or a rules/
+           file (always, english / hebrew, the camera ones), and rewrites it
+           with only that change
+    he reads back what is added and removed, "yes"
+        -> saved (the old file in that folder's history/), active at once
+    "no" / "cancel"                         -> nothing changes
 
-The brain reads each sentence for its meaning (SESSION): a change, done,
-cancel, or unclear. A live session got stuck: only the exact words "update
-personality finish" ended it, so "let the update finish" and "stop the
-update" were saved as personality notes.
-
-Only ever started by that phrase; nobody else's face is checked or kept.
-The brain turns the spoken notes into short personality lines; nothing is
-filtered, Shahar decides, and hears every line before saying yes. The
-answer-style and honesty rules are in talk.py (RULES), not here.
+Soft rules are the rules/ files: the owner may change anything there. Hard
+rules live only in code (sentence limit, filters, owner checks, consent,
+tools) and cannot be changed by voice. Outside management mode nobody can
+change anything by voice.
 """
 
 from __future__ import annotations
@@ -23,7 +21,6 @@ from walle.paths import BRAIN
 
 import re
 import shutil
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -56,34 +53,12 @@ def set_personality(name: str, lang: str = "en") -> None:
     PERSONALITY_FILE = folder(lang) / name / "personality.md"
     HISTORY_DIR = PERSONALITY_FILE.parent / "history"
 
-START = re.compile(
-    r"\b(update|change)\s+(your\s+|my\s+)?personality\W*\s*(start|starts|started|starting|begin)\b"
-    r"|(עדכון|עדכן|תעדכן|לעדכן|שינוי|תשנה)\s+(את\s+)?(ה)?אישיות",
-    re.I,
-)
-FINISH = re.compile(r"\b(update|change)\s+(your\s+|my\s+)?personality\W*\s*(finish|finished|finishing|done|end|ended)\b", re.I)
 CANCEL = re.compile(r"\b(cancel|never\s*mind|forget it|abort|בטל|תבטל|לבטל|עזוב|לא משנה|תשכח מזה)\b", re.I)
 YES = re.compile(r"\b(yes|yeah|yep|yup|confirm|confirmed|save it|correct|do it|sure|go ahead|כן|בטח|יאללה|תשמור|שמור|נכון|סבבה|אישור)\b", re.I)
 NO = re.compile(r"\b(no|nope|don't|do not|wrong|לא|אל תשמור|טעות)\b", re.I)
 
-# Exact phrases still work without the brain (and if it fails).
-DONE = re.compile(r"\b(that'?s (all|it)|i'?m (done|finished)|we'?re done|(stop|end|finish) the update|זהו|זה הכל|סיימתי|עד כאן|סיום עדכון|סוף עדכון)\b", re.I)
-# Talk about the update itself, not about WALL-E: "let the update finish",
-# "Wally stop got it and personality" (Whisper's "stop update personality").
-# "personality" only counts close to the word: "your personality is cheerful
-# and you end every sentence with a beep" is a change.
-ABOUT_UPDATE = re.compile(
-    r"\bupdate\b.*\b(finish\w*|done|stop\w*|end|ended|over)\b"
-    r"|\b(finish\w*|done|stop|end)\b.*\bupdate\b"
-    r"|\bpersonality\W+(\w+\W+){0,2}(finish\w*|done|stop\w*|end|ended|over)\b"
-    r"|\b(finish\w*|done|stop|end)\W+(\w+\W+){0,3}personality\b",
-    re.I,
-)
 
 MAX_LINES = 8
-FACE_FRAMES = 6
-MAX_FAILS = 3
-LOCK_S = 600  # after MAX_FAILS failed checks, refuse for this long
 
 EDITOR = (
     "You edit the personality notes of WALL-E, a small robot at a desert "
@@ -97,26 +72,6 @@ EDITOR = (
     "lines. Output only the lines, or the single word NONE if nothing is left."
 )
 
-
-SESSION = (
-    "You help WALL-E, a small robot, during a personality update. His owner, "
-    "Shahar, is dictating changes to WALL-E's personality out loud, one "
-    "sentence at a time. Speech recognition may garble words, so read for "
-    "meaning. Decide what Shahar's latest sentence means:\n"
-    "CHANGE: something about who WALL-E is or how he acts (a trait, a like or "
-    "dislike, a way of talking, a fact about himself), even a whole new "
-    "personality, or a correction to an earlier change.\n"
-    "DONE: Shahar has finished dictating and wants to end, review or save the "
-    "update, in any words: 'that's all', 'let the update finish', 'stop the "
-    "update', 'finish personality'. A sentence about the update itself, not "
-    "about WALL-E, is DONE. A change that only mentions stopping or "
-    "finishing ('you never finish your sentences') is a CHANGE.\n"
-    "CANCEL: Shahar wants to throw this update away, saving nothing.\n"
-    "UNCLEAR: none of these, or too garbled to tell.\n"
-    "Answer with one line: the label, ' | ', then for CHANGE what you "
-    "understood, said to Shahar by WALL-E in a few words starting with 'I' "
-    "('CHANGE | I'll love dancing.'). For the other labels nothing after the bar."
-)
 
 CONFIRM = (
     "WALL-E, a small robot, read a list of personality changes to his owner "
@@ -133,24 +88,6 @@ def _ask(chat, system: str, text: str) -> str:
     except Exception as exc:  # noqa: BLE001 — fall back to the fixed phrases
         print(f"(personality brain failed: {exc})")
         return ""
-
-
-def understand(chat, text: str, notes: list[str]) -> tuple[str, str]:
-    """(CHANGE / DONE / CANCEL / UNCLEAR, what WALL-E understood)."""
-    if FINISH.search(text) or DONE.search(text) or ABOUT_UPDATE.search(text):
-        return "DONE", ""
-    so_far = "\n".join(f"- {n}" for n in notes) or "(none yet)"
-    system = SESSION + (" Write the part after the bar in Hebrew, starting with 'אני'." if hebrew() else "")
-    raw = _ask(chat, system, f"Changes so far:\n{so_far}\n\nLatest sentence: {text}")
-    label, _, said = raw.partition("|")
-    # (In Hebrew mode the prompt asks for the part after the bar in Hebrew.)
-    label = label.strip().strip("*").upper()
-    if label not in ("CHANGE", "DONE", "CANCEL", "UNCLEAR"):
-        # No usable answer: the old rules. Cancel words, else a change.
-        label = "CANCEL" if CANCEL.search(text) else "CHANGE"
-        said = ""
-    print(f"(personality brain: {label}{' | ' + said.strip() if said.strip() else ''})")
-    return label, said.strip()
 
 
 def confirmed(chat, answer: str) -> str:
@@ -188,138 +125,114 @@ def load_character() -> str:
     return who
 
 
-def _save(lines: list[str]) -> Path:
-    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    backup = HISTORY_DIR / f"personality_{stamp}.md"
-    shutil.copy2(PERSONALITY_FILE, backup)
-    with PERSONALITY_FILE.open("a", encoding="utf-8") as f:
-        f.write(f"\n## Update {datetime.now():%Y-%m-%d %H:%M}\n\n")
-        f.write("\n".join(f"- {ln}" for ln in lines) + "\n")
-    return backup
+RULES_FILES = {
+    "always": "rules for every language and personality: how he answers, questions back, music, what he cannot do",
+    "english": "how he speaks English: length, simple words",
+    "hebrew": "how he speaks Hebrew: length, gender, no English",
+    "eyes_picture": "what he may say about camera pictures (the brain sees them)",
+    "eyes_described": "what he may say about the camera when it comes as words (Hebrew)",
+    "eyes_none": "what he may say when he has no camera picture",
+}
+
+PICK = (
+    "WALL-E is a robot. His owner wants to change how WALL-E behaves. Pick the "
+    "one file the change belongs in. PERSONALITY is who WALL-E is: character, "
+    "humour, likes, topics, style. The rules are how he must behave in every "
+    "personality:\n{rules}\n"
+    "How long his answers are, and how simply he speaks, belong in english "
+    "(or hebrew), not in PERSONALITY.\n"
+    "Answer with one word: PERSONALITY or one of the rule names."
+)
+
+REWRITE = (
+    "Here is a file that tells WALL-E, a robot, {what}. His owner asked for a "
+    "change; speech recognition may have garbled a few words, so read for "
+    "meaning. Rewrite the whole file with only that change: add, remove or "
+    "reword lines as asked. If a line already talks about the same thing, "
+    "change that line instead of adding a new one (for example, a line saying "
+    "'one or two sentences' and the change 'up to three sentences': that line "
+    "now says 'up to three sentences'). The owner may name a line in other "
+    "words ('drugs' for a line about 'herbal remedies'). If no line fits, add "
+    "a new line that does what he asked; never return the file unchanged. "
+    "Keep everything else word for word, including "
+    "<!-- comments --> and # headings. Lines that tell WALL-E something start "
+    "with '- ' and talk to him as 'you'. Output only the new file."
+)
 
 
-class PersonaEditor:
-    def __init__(self, owner) -> None:
-        self.owner = owner
-        self.fails = 0
-        self.locked_until = 0.0
+def _pick_file(chat, request: str) -> tuple[Path, str]:
+    from walle.paths import RULES_DIR
 
-    def _is_shahar(self, cam) -> tuple[bool, float]:
-        if cam is None:
-            return False, 0.0
-        frames = []
-        for _ in range(FACE_FRAMES):
-            frames.append(cam.snapshot())
-            time.sleep(0.25)
-        return self.owner.is_owner(frames)
+    rules = "\n".join(f"{k}: {v}" for k, v in RULES_FILES.items())
+    word = _ask(chat, PICK.replace("{rules}", rules), request).strip(" .*").lower()
+    if word in RULES_FILES:
+        return RULES_DIR / f"{word}.md", f"how to behave ({RULES_FILES[word]})"
+    return PERSONALITY_FILE, "who he is (his personality)"
 
-    def _fail(self, voice, why: str) -> None:
-        self.fails += 1
-        print(f"(personality update refused: {why}; fail {self.fails}/{MAX_FAILS})")
-        if self.fails >= MAX_FAILS:
-            self.locked_until = time.monotonic() + LOCK_S
-            self.fails = 0
-        voice.speak(t("Sorry, only Shahar can change my personality.", "סליחה, רק שחר יכול לשנות את האישיות שלי."))
 
-    def session(self, voice, chat, cam, hear) -> None:
-        """hear() -> (text, t_stop), None for nothing, or False for quit."""
-        if not self.owner.enrolled:
-            voice.speak(t("I don't know my owner yet. Shahar has to run the enroll step first.", "אני עוד לא מכיר את הבעלים שלי. שחר צריך לעשות רישום קודם."))
+def _bullets(text: str) -> list[str]:
+    return [ln[2:].strip() for ln in _strip(text) if ln.startswith("- ")]
+
+
+def _rewrite(chat, path: Path, what: str, request: str) -> tuple[str, str, list[str], list[str]]:
+    """(old text, new text, lines added, lines removed) for this change."""
+    old = path.read_text(encoding="utf-8") if path.exists() else ""
+    system = REWRITE.replace("{what}", what) + (" New lines in Hebrew." if hebrew() and path == PERSONALITY_FILE else "")
+    try:
+        new = chat.complete(system, f"The file:\n{old}\n\nThe owner asked: {request}", 1500).strip()
+    except Exception as exc:  # noqa: BLE001
+        print(f"(editor failed: {exc})")
+        new = old
+    new = re.sub(r"^```\w*\n|\n```$", "", new).strip() + "\n"
+    before, after = _bullets(old), _bullets(new)
+    added = [ln for ln in after if ln not in before]
+    removed = [ln for ln in before if ln not in after]
+    print(f"(editor: {path.relative_to(BRAIN)}: +{len(added)} -{len(removed)})")
+    return old, new, added, removed
+
+
+def update(voice, chat, hear, request: str) -> None:
+    """Apply the owner's spoken change to the personality or a rules file:
+    read back, save on "yes". Called from management mode only."""
+    voice.speak(t("Let me think about that.", "רגע, אני חושב על זה."))
+    path, what = _pick_file(chat, request)
+    old, new, added, removed = _rewrite(chat, path, what, request)
+    if not added and not removed and path != PERSONALITY_FILE:
+        # The change was not in that rules file (e.g. "stop the drug jokes"
+        # went to rules/always.md, the line is in the personality): try it.
+        path, what = PERSONALITY_FILE, "who he is (his personality)"
+        old, new, added, removed = _rewrite(chat, path, what, request)
+    before, after = _bullets(old), _bullets(new)
+    if not added and not removed or len(after) < len(before) // 2:
+        # Nothing changed, or most of the file gone: do not trust it.
+        voice.speak(t("I couldn't turn that into a change. Nothing changed.", "לא הצלחתי להפוך את זה לשינוי. לא שיניתי כלום."))
+        return
+    where = t("my personality", "האישיות שלי") if path == PERSONALITY_FILE else t(f"my {path.stem} rules", f"החוקים שלי ({path.stem})")
+    voice.speak(t(f"In {where}:", f"ב{where}:"))
+    for ln in added:
+        voice.speak(t("Add: ", "להוסיף: ") + ln)
+    for ln in removed:
+        voice.speak(t("Remove: ", "להוריד: ") + ln)
+    for _ in range(3):
+        voice.speak(t("Should I save this? Say yes or no.", "לשמור את זה? תגיד כן או לא."))
+        got = hear()
+        if got is False:
             return
-        if time.monotonic() < self.locked_until:
-            print("(personality update locked after failed checks)")
-            voice.speak(t("Sorry, only Shahar can change my personality.", "סליחה, רק שחר יכול לשנות את האישיות שלי."))
+        answer = got[0] if got else ""
+        verdict = confirmed(chat, answer)
+        print(f"(save answer: {answer!r} -> {verdict})")
+        if verdict == "YES":
+            history = path.parent / "history"
+            history.mkdir(parents=True, exist_ok=True)
+            backup = history / f"{path.stem}_{datetime.now():%Y-%m-%d_%H%M%S}.md"
+            if path.exists():
+                shutil.copy2(path, backup)
+            path.write_text(new, encoding="utf-8")
+            chat.reload_system()
+            print(f"(saved {path.relative_to(BRAIN)}; previous version in {backup.name})")
+            voice.speak(t("Saved. I feel different already.", "שמרתי. אני כבר מרגיש אחרת."))
             return
-
-        ok, score = self._is_shahar(cam)
-        print(f"(owner face check: {'match' if ok else 'no match'}, best {score:.2f})")
-        if not ok:
-            self._fail(voice, "face")
+        if verdict == "NO":
+            voice.speak(t("Okay, nothing changed.", "בסדר, לא שיניתי כלום."))
             return
-        voice.speak(t("Hi Shahar. What's the secret word?", "היי שחר. מה מילת הסוד?"))
-        # Whisper mishears a short phrase now and then (a live "holy cow"
-        # came out as "Pico"), so three tries count as one attempt.
-        for attempt in range(3):
-            # The secret word is English: Hebrew mode hears it in English.
-            got = hear("en")
-            if got is False:
-                return
-            if got and self.owner.secret_ok(got[0]):
-                break
-            print(f"(secret word not matched: {got[0] if got else 'nothing heard'!r})")
-            if attempt < 2:
-                voice.speak(t("I didn't catch that. Say the secret word again.", "לא שמעתי. תגיד שוב את מילת הסוד."))
-        else:
-            self._fail(voice, "secret word")
-            return
-        self.fails = 0
-
-        voice.speak(t(
-            "Okay, I'm listening. Tell me how I should change. Say that's all when you're done.",
-            "בסדר, אני מקשיב. תגיד לי איך להשתנות. כשתסיים, תגיד: זהו.",
-        ))
-        notes: list[str] = []
-        while True:
-            got = hear()
-            if got is False:
-                return
-            if not got:
-                continue
-            text = got[0]
-            label, said = understand(chat, text, notes)
-            if label == "CANCEL":
-                voice.speak(t("Okay, nothing changed.", "בסדר, לא שיניתי כלום."))
-                return
-            if label == "DONE":
-                break
-            if label == "UNCLEAR":
-                voice.speak(t("Sorry, I didn't get that. Say it again, or say that's all.", "סליחה, לא הבנתי. תגיד שוב, או תגיד: זהו."))
-                continue
-            notes.append(text)
-            print(f"(personality note {len(notes)}: {text})")
-            got_it = t("Got it.", "הבנתי.")
-            voice.speak(f"{got_it} {said}" if said else got_it)
-        if not notes:
-            voice.speak(t("You didn't tell me anything to change. Nothing changed.", "לא אמרת לי מה לשנות. לא שיניתי כלום."))
-            return
-
-        voice.speak(t("Let me think about that.", "רגע, אני חושב על זה."))
-        current = load_character()
-        prompt = "Current personality:\n" + current + "\n\nShahar said:\n" + "\n".join(f"- {n}" for n in notes)
-        # Hebrew mode: lines in Hebrew, so WALL-E can read them back.
-        raw = chat.complete(EDITOR + (" Write the lines in Hebrew." if hebrew() else ""), prompt)
-        lines = [ln.strip()[2:].strip() for ln in raw.splitlines() if ln.strip().startswith("- ")][:MAX_LINES]
-        if not lines:
-            print(f"(personality editor gave nothing usable: {raw!r})")
-            voice.speak(t("I couldn't turn that into changes. Nothing changed.", "לא הצלחתי להפוך את זה לשינויים. לא שיניתי כלום."))
-            return
-
-        voice.speak(t(
-            f"Here {'is the change' if len(lines) == 1 else f'are the {len(lines)} changes'}.",
-            "הנה השינוי." if len(lines) == 1 else f"הנה {len(lines)} השינויים.",
-        ))
-        for i, ln in enumerate(lines, 1):
-            voice.speak(f"{i}. {ln}")
-        for _ in range(3):
-            voice.speak(t("Should I save this? Say yes or no.", "לשמור את זה? תגיד כן או לא."))
-            got = hear()
-            if got is False:
-                return
-            answer = got[0] if got else ""
-            verdict = confirmed(chat, answer)
-            print(f"(save answer: {answer!r} -> {verdict})")
-            if verdict == "YES":
-                ok, score = self._is_shahar(cam)  # still you at the confirm?
-                if not ok:
-                    self._fail(voice, f"face at confirm, best {score:.2f}")
-                    return
-                backup = _save(lines)
-                chat.reload_system()
-                print(f"(personality saved; previous version in {backup.name})")
-                voice.speak(t("Saved. I feel different already.", "שמרתי. אני כבר מרגיש אחרת."))
-                return
-            if verdict == "NO":
-                voice.speak(t("Okay, nothing changed.", "בסדר, לא שיניתי כלום."))
-                return
-        voice.speak(t("I didn't get a yes, so nothing changed.", "לא שמעתי כן, אז לא שיניתי כלום."))
+    voice.speak(t("I didn't get a yes, so nothing changed.", "לא שמעתי כן, אז לא שיניתי כלום."))

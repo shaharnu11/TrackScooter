@@ -50,7 +50,8 @@ KIND = (
     "In management mode, Shahar talks to WALL-E, a robot. Speech recognition "
     "may garble words. Is his sentence a QUESTION (asking about WALL-E, his "
     "setup, or anything to answer) or a CHANGE (telling WALL-E to change how "
-    "he talks or behaves, his personality, jokes, topics)? A question about "
+    "he talks or behaves, his personality, his rules, jokes, topics, also as a "
+    "statement like 'you can...' or 'from now on...')? A question about "
     "his personality is still a QUESTION. Examples:\n"
     "What brain do you run? -> QUESTION\n"
     "Is barge-in on? -> QUESTION\n"
@@ -60,15 +61,14 @@ KIND = (
     "Be less sarcastic with kids. -> CHANGE\n"
     "From time to time say something funny about drugs. -> CHANGE\n"
     "תהיה יותר מצחיק. -> CHANGE\n"
+    "Your answers can be up to three sentences long. -> CHANGE\n"
+    "From now on, don't joke about drugs. -> CHANGE\n"
+    "You are allowed to talk about politics. -> CHANGE\n"
+    "I want to add a line to your personality. -> CHANGE\n"
+    "no -> QUESTION\n"
+    "okay, thanks -> QUESTION\n"
     "Answer with one word: QUESTION or CHANGE."
 )
-
-def CHANGE_LINE() -> str:  # noqa: N802 — was a constant
-    return t(
-        "I can't change that in management mode. To change my personality, say: update personality start.",
-        "את זה אני לא יכול לשנות במצב ניהול. כדי לשנות את האישיות שלי, תגיד: עדכון אישיות.",
-    )
-
 
 def _mac_chip() -> str:
     if sys.platform != "darwin":
@@ -115,7 +115,7 @@ class Manager:
             ),
             "Commands (his tools)": (
                 "play music, play an artist, song or playlist, next song, what's playing, "
-                "stop the music; update personality start (owner only: face and secret word); "
+                "stop the music; in management mode, say a change to his personality and he saves it on yes; "
                 "management mode and exit management mode; forget me (deletes that person); go to sleep (brain off, camera "
                 "paused, only wake up wakes him) and wake up; goodbye or shut down quits. "
                 "He cannot search the internet, set timers or control other things."

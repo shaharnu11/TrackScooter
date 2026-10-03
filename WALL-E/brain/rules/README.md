@@ -4,11 +4,13 @@ How he must behave, in every personality. Read at start-up and added to his
 instructions **after** the personality, which is told: if anything in it
 conflicts with these rules, the rules win.
 
-- Not editable by voice: "update personality" only changes
-  `personalities/<lang>/<name>/personality.md`. Change these by hand.
-- These are instructions to the brain (soft): it almost always follows them.
-  The hard rules live in code (talk.py, walle/modes/personality_editor.py, walle/people/persons.py,
-  walle/modes/management.py): sentence limit, filters, owner checks, consent, tools.
+- The owner changes them by voice in management mode ("answers can be up to
+  three sentences"): read back, saved on "yes", the old file in `history/`.
+  Or by hand.
+- These are soft rules, instructions to the brain: it almost always follows
+  them. The hard rules live only in code and cannot be changed by voice: sentence limit, filters
+  (walle/mind/chat.py), owner/visitor checks and tools (walle/talker.py,
+  walle/modes/), consent (walle/people/persons.py).
 - `<!-- comments -->` and `#` headings are not sent to the brain.
 
 | File | When |

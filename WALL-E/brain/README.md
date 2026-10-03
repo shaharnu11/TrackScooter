@@ -29,11 +29,11 @@ brain/
     mind/            chat.py (local / cloud brains, eyes), brains.py (--brain list),
                      llama.py (llama-server), rules.py, sleeper.py
     eyes/            camera.py (faces, lips), talk_cam.py (camera window)
-    people/          owner.py (Shahar's face + secret word), persons.py (people who said yes)
+    people/          owner.py (Shahar's face), persons.py (people who said yes)
     modes/           management.py, personality_editor.py, tools.py (owner tools)
     music/           player.py (music folder), spotify.py
     robot/           perception.py, behavior.py, speaker_lock.py, spine_link.py, face_link.py
-  rules/             how he must behave (every personality); not editable by voice
+  rules/             how he must behave (every personality); the owner changes them in management mode
   personalities/     english/<name>/, hebrew/<name>/: who he is
   scripts/           download_models.py, spotify_sync.py, lips_test.py,
                      personality_from_video.py, download_hebrew_windows.py

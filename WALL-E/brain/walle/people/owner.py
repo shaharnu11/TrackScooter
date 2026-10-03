@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Is this Shahar? Face + secret word, for "update personality start".
+"""Is this Shahar? His face, for management mode and owner powers.
+
+The secret word set at enroll is no longer asked anywhere (the old
+"update personality start" session is gone).
 
 WALL-E only checks when he hears that phrase: nothing is recognised or
 stored for anyone else, ever.
@@ -54,6 +57,17 @@ def _norm_words(text: str) -> str:
 
 def _hash(salt: str, words: str) -> str:
     return hashlib.sha256((salt + words).encode("utf-8")).hexdigest()
+
+
+def check_owner(owner: "Owner", cam, frames: int = 6) -> tuple[bool, float]:
+    """Is the face in front Shahar's? (match, best score) over a few frames."""
+    if cam is None:
+        return False, 0.0
+    shots = []
+    for _ in range(frames):
+        shots.append(cam.snapshot())
+        time.sleep(0.25)
+    return owner.is_owner(shots)
 
 
 class Owner:
