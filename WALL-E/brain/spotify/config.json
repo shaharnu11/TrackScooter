@@ -1,11 +1,11 @@
 {
   "client_id": "d99f6536c23949acad3a9230e5c335f7",
   "token": {
-    "access_token": "BQDUanbdYyjodGOU4hDI3YoKJEHOWMkigmUBS-P9m_ioLRs3K9XkliJoSc8hWZEk3QJtRGxg6aNL3Ysf57zYx-wbBmIZJ2IWD8fpl1E6HUhlYMwGC19rgAZbaUsK6_C_9mVztn5O9Jf0aGYIoBepBdNPMB60v485xvQLP1ygNy63GdfTNQau0j0-iV05FVsBpdBiddwGYRBibaW1zlKJEISIDI_EpayK29hn-aa7NZhQBqJeEqDCmqXs54HL5RpF",
+    "access_token": "BQCzEnU2PfY2Xup2pcL7sOB1rnLcz5t6NmXZ1m6XipyWM35Lf_wyIdsxIfM7YH9BqlBvc01Rx_2aOnwiQFn3dYM8d-bJ0PLUV5ydOBWxkoHQchZZGAEIXS4QYOs7MFthXK4HIDuZ7W8K5_6Nic04Ri96iX7j4jSkqHdsKwN6PMkVuoYanZUlZhPjbUUT5Hi8x629WfCrYBxAaRssLU0j0P0hh9cUAsZETUiGWQXROZZMDl2Bnl8o1_KiNrSe0JwTNne7RcTzwHWVF3zg6fRiAjNJpJAqaq8",
     "token_type": "Bearer",
     "expires_in": 3600,
-    "refresh_token": "AQClyKWx7DH_s_gS3kYk0vwzsNWHIiUBVfkNy5IN5auPGPg7XxcOvln42eD9RWQy1z0YZZFuAUyX6hwufD8Yg2GyNNxfZ0uYI6GKF4tiyaZFXXDNexVVebuNtfUzZjwjY8I",
-    "scope": "playlist-read-private playlist-read-collaborative user-library-read",
-    "expires_at": 1790444850.4392822
+    "refresh_token": "AQCpBcpYGBoXhlGVO7S0jlQnaiu0RHP3pdASbBob8qCdisUeFQNscPvWLPYqp70we0_20c6yGylcLfFCF4GIqUjZ5uZcDjAIotJcXIPx8b4bq55nPdUWbZKqTPoMvUUvL8E",
+    "scope": "playlist-read-private playlist-read-collaborative user-library-read playlist-modify-private",
+    "expires_at": 1790986407.2089322
   }
 }
