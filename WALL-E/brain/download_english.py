@@ -23,8 +23,7 @@ from english_voice import (
     KOKORO_FILES,
     KOKORO_URL,
     STT_DIR,
-    STT_MLX_DIR,
-    STT_MLX_REPO,
+    STT_MLX,
     STT_REPO,
 )
 
@@ -41,12 +40,14 @@ def main() -> None:
         print(f"STT already at {STT_DIR}")
 
     if sys.platform == "darwin":
-        # Whisper for the Mac GPU. The one above stays as the CPU fallback.
-        if not (STT_MLX_DIR / "config.json").exists():
-            print(f"STT (Mac GPU): {STT_MLX_REPO}  (~0.5 GB)")
-            snapshot_download(repo_id=STT_MLX_REPO, local_dir=str(STT_MLX_DIR))
-        else:
-            print(f"STT (Mac GPU) already at {STT_MLX_DIR}")
+        # Whisper for the Mac GPU: turbo (1.6 GB) and small.en (0.5 GB).
+        # The one above stays as the CPU fallback.
+        for name, folder, repo in STT_MLX.values():
+            if not (folder / "config.json").exists():
+                print(f"STT (Mac GPU): {repo}")
+                snapshot_download(repo_id=repo, local_dir=str(folder))
+            else:
+                print(f"STT (Mac GPU) {name} already at {folder}")
 
     # The face models download on first use. Fetch them now: no internet later.
     from owner import SFACE_PATH, SFACE_URL

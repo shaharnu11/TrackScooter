@@ -6,6 +6,7 @@
     python3 talk_english.py --brain 8b      # Qwen3-8B, smarter, slower
     python3 talk_english.py --brain 4b-vl   # Qwen3-VL-4B: sees the camera
     python3 talk_english.py --brain 8b-vl   # Qwen3-VL-8B: sees, smarter (the Mac)
+    python3 talk_english.py --brain 30b-vl  # Qwen3-VL-30B-A3B: the Mac's brain (Mac only)
     python3 talk_english.py --brain 4b-vl --mind cloud   # Claude online,
         # Qwen3-VL-4B only if the connection fails. Needs ANTHROPIC_API_KEY.
 

@@ -9,4 +9,4 @@ if [ ! -x .venv/bin/python ]; then
   read -r -p "Press Enter to close."
   exit 1
 fi
-.venv/bin/python talk_english.py --brain 4b-vl "$@"
+.venv/bin/python talk_english.py --brain 30b-vl "$@"

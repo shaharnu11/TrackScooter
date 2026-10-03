@@ -17,9 +17,22 @@ ROOT = Path(__file__).resolve().parent
 MODELS = ROOT / "models"
 STT_DIR = MODELS / "whisper-en"
 STT_REPO = "Systran/faster-whisper-small.en"
-# The same small.en for the Mac GPU (MLX). faster-whisper is CPU only there.
-STT_MLX_DIR = MODELS / "whisper-en-mlx"
-STT_MLX_REPO = "mlx-community/whisper-small.en-mlx"
+# Whisper for the Mac GPU (MLX); faster-whisper is CPU only there.
+# Mac default: large-v3-turbo. With speech mixed into kick drum, bass and
+# crowd talk it made 0% word errors at 5 dB (small.en 4%) and 10% at 0 dB
+# (small.en 12.5%), for 0.22 s a question instead of 0.09 s.
+# WALLE_WHISPER=small picks small.en again.
+STT_MLX = {
+    "turbo": ("large-v3-turbo", MODELS / "whisper-turbo-mlx", "mlx-community/whisper-large-v3-turbo"),
+    "small": ("small.en", MODELS / "whisper-en-mlx", "mlx-community/whisper-small.en-mlx"),
+}
+
+
+def stt_mlx() -> tuple[str, Path, str]:
+    """(name, folder, repo) of the Mac Whisper to use."""
+    import os
+
+    return STT_MLX.get(os.environ.get("WALLE_WHISPER", "turbo"), STT_MLX["turbo"])
 KOKORO_DIR = MODELS / "tts-kokoro"
 KOKORO_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
 KOKORO_FILES = ("kokoro-v1.0.onnx", "voices-v1.0.bin")
@@ -60,6 +73,7 @@ class Brain:
     gpu_layers: str  # llama-server -ngl: how many layers live on the GPU
     note: str
     mmproj: str = ""  # vision projector file: set = the brain can see
+    mac_only: bool = False  # too big for the XPS: offered on the Mac only
 
 
 BRAINS = {
@@ -107,12 +121,25 @@ BRAINS = {
         "Qwen3-VL-8B Q4_K_M, split GPU/CPU, vision on CPU, Whisper on CPU",
         mmproj="mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf",
     ),
+    # The Mac's brain: 30B mixture of experts, ~3B of it works per word, so
+    # it answers about as fast as the 4B and knows more. 18.6 GB model +
+    # 0.7 GB vision projector: needs the Mac's shared memory (32 GB+).
+    "30b-vl": Brain(
+        "Qwen/Qwen3-VL-30B-A3B-Instruct-GGUF",
+        "Qwen3VL-30B-A3B-Instruct-Q4_K_M.gguf",
+        "cuda", "99",
+        "Qwen3-VL-30B-A3B Q4_K_M, all on the Mac GPU",
+        mmproj="mmproj-Qwen3VL-30B-A3B-Instruct-Q8_0.gguf",
+        mac_only=True,
+    ),
 }
+# The brains this computer can run: the Mac-only ones are left out elsewhere.
+BRAINS = {k: b for k, b in BRAINS.items() if not b.mac_only or sys.platform == "darwin"}
 
 
 def mlx_ready() -> bool:
     """The Mac with mlx-whisper and its model: Whisper runs on the Mac GPU."""
-    if sys.platform != "darwin" or not (STT_MLX_DIR / "config.json").exists():
+    if sys.platform != "darwin" or not (stt_mlx()[1] / "config.json").exists():
         return False
     import importlib.util
 
@@ -187,7 +214,7 @@ def _ears(conn, want: str) -> None:
     from faster_whisper import WhisperModel
 
     model = WhisperModel(str(STT_DIR), device=device, compute_type=compute)
-    conn.send((device, compute))
+    conn.send((device, f"small.en, {compute}"))
     while (audio := conn.recv()) is not None:
         # VAD drops silence, and segments Whisper rates as not-speech are
         # thrown away ("Thank you." on noise), as on the Hebrew side.
@@ -207,12 +234,14 @@ def _ears_mlx(conn, device: str, compute: str) -> None:
     import mlx_whisper
     import numpy as np
 
+    name, folder, _repo = stt_mlx()
+
     def hear(audio) -> str:
         # No vad_filter here: the clip is already cut to speech by Silero
         # (vad_listen) before it gets this far.
         out = mlx_whisper.transcribe(
             audio,
-            path_or_hf_repo=str(STT_MLX_DIR),
+            path_or_hf_repo=str(folder),
             language="en",
             condition_on_previous_text=False,
             verbose=None,
@@ -222,7 +251,7 @@ def _ears_mlx(conn, device: str, compute: str) -> None:
         ).strip()
 
     hear(np.zeros(16000, dtype=np.float32))  # load + compile now, not on the first question
-    conn.send((device, compute))
+    conn.send((device, f"{name}, {compute}"))
     while (audio := conn.recv()) is not None:
         conn.send(hear(audio))
 
@@ -259,7 +288,7 @@ class EnglishVoice:
         if not self._ready:
             device, compute = self._conn.recv()
             self._ready = True
-            print(f"Whisper small.en on {device} ({compute})")
+            print(f"Whisper on {device} ({compute})")
 
     def sleep_ears(self) -> None:
         """End the Whisper process: no CUDA left, the chip can power off."""

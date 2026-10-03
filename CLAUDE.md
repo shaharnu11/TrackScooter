@@ -31,7 +31,11 @@ Status 2026-10-03 (branch `mac-brain-port`, MacBook Pro M4 Max, 48 GB):
 - Steps 1-4 and 6 done. `talk_english.py --brain 4b-vl` runs end to end
   (mic, camera, owner face, voice). Whisper on the Mac GPU (mlx-whisper).
   Spotify play/next/pause/ducking via AppleScript.
-- Step 5: brain `8b-vl` (Qwen3-VL-8B) added and measured; see `mac/README.md`.
+- Step 5: brains `8b-vl` and `30b-vl` (Qwen3-VL-30B-A3B) added. Shahar chose
+  **`30b-vl` for the Mac** (Mac only, not offered on Windows; the Mac start
+  script uses it). The XPS stays on `4b-vl`. Times: `mac/README.md`.
+- Step 4: the Mac uses Whisper `large-v3-turbo` (mlx, 0.22 s, better in
+  noise); `WALLE_WHISPER=small` for small.en. The XPS keeps small.en on CUDA.
 - Open: a real spoken test with Shahar (loud music); Spotify playlists must
   be downloaded in the Mac app for offline; music files from Shahar.
 
