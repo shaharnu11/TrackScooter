@@ -269,6 +269,7 @@ class TalkCam:
         self.ok = False
         self._thread: threading.Thread | None = None
         self._paused = threading.Event()  # "go to sleep": no faces, no lips
+        self._slept_drawn = False
 
     def start(self) -> bool:
         if not self.cam.open():
@@ -295,7 +296,8 @@ class TalkCam:
             pass
 
     def pause(self) -> None:
-        """Stop face and lip tracking (the CPU cost). The camera stays open."""
+        """Stop face and lip tracking and close the camera (asleep: ~0% CPU
+        here instead of ~23% for a paused but open camera)."""
         self._paused.set()
         with self._mu:
             self.obs, self.speaker_id, self.mouth = [], None, False
@@ -344,9 +346,15 @@ class TalkCam:
         if frame is None:
             return True
         if self._paused.is_set():
-            frame = (frame * 0.25).astype(frame.dtype)
-            cv2.putText(frame, "SLEEPING - say wake up", (12, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (200, 200, 200), 2)
-            obs = []
+            # Asleep: draw the dimmed picture once, then only check for q.
+            # Redrawing it 10 times a second cost ~19% CPU.
+            if not self._slept_drawn:
+                dim = (frame * 0.25).astype(frame.dtype)
+                cv2.putText(dim, "SLEEPING - say wake up", (12, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (200, 200, 200), 2)
+                cv2.imshow("WALL-E speaker lock", dim)
+                self._slept_drawn = True
+            return (cv2.waitKey(1) & 0xFF) != ord("q")
+        self._slept_drawn = False
         for o in obs:
             x, y, w, h = o.box
             is_focus = sid is not None and o.track_id == sid
@@ -411,9 +419,20 @@ class TalkCam:
     def _loop(self) -> None:
         while not self._stop.is_set():
             if self._paused.is_set():
+                with self._mu:  # also undo a frame that landed after pause()
+                    self.obs, self.speaker_id, self.mouth = [], None, False
+                if self.cam.is_open:
+                    self.cam.close()  # here, in the thread that reads it
                 self._stop.wait(0.2)
                 continue
+            if not self.cam.is_open and not self.cam.reopen():
+                self._stop.wait(1.0)  # woken, camera not back yet: try again
+                continue
             obs, frame = self.cam.read()
+            # Faces and lips on every second frame: 15 a second is plenty,
+            # and it halves the CPU (detection + lips ~1.6 cores at 30 fps
+            # on the full frame before).
+            self.cam.skip()
             if frame is None:
                 if self._stop.wait(0.03):
                     break

@@ -48,6 +48,7 @@ LIPS_URL = (
     "face_landmarker/float16/latest/face_landmarker.task"
 )
 LIPS_TALK = 0.75
+DETECT_W = 640  # face detection runs on a copy this wide
 LIPS_WINDOW_S = 0.5
 
 
@@ -116,6 +117,23 @@ class UsbCamera:
         if self._cap is not None:
             self._cap.release()
             self._cap = None
+
+    @property
+    def is_open(self) -> bool:
+        return self._cap is not None
+
+    def reopen(self) -> bool:
+        """Open the camera again after close(); the face models stay loaded."""
+        import cv2
+
+        if self._cap is None:
+            self._cap = self._open_capture(cv2)
+        return self._cap is not None
+
+    def skip(self) -> None:
+        """Drop the next frame without decoding it (half the work per second)."""
+        if self._cap is not None:
+            self._cap.grab()
 
     def read(self) -> tuple[list[FaceObs], object | None]:
         """Return people and the BGR frame (frame is None if grab failed)."""
@@ -219,16 +237,21 @@ class UsbCamera:
     def _detect(self, cv2, frame) -> list[tuple[int, int, int, int, float]]:
         h, w = frame.shape[:2]
         if self._det is not None:
-            size = (w, h)
+            # YuNet on the full 1280x720 frame took ~1.7 CPU cores at 30 fps
+            # on the M4 Max. A 640-wide copy is ~4x less work, and a face
+            # 1-2 m away is still plenty of pixels. Boxes are scaled back.
+            k = min(1.0, DETECT_W / w)
+            small = frame if k == 1.0 else cv2.resize(frame, (int(w * k), int(h * k)), interpolation=cv2.INTER_AREA)
+            size = (small.shape[1], small.shape[0])
             if self._size != size:
                 self._det.setInputSize(size)
                 self._size = size
-            _ok, faces = self._det.detect(frame)
+            _ok, faces = self._det.detect(small)
             if faces is None:
                 return []
             out = []
             for row in faces:
-                x, y, bw, bh = [int(v) for v in row[:4]]
+                x, y, bw, bh = [int(v / k) for v in row[:4]]
                 score = float(row[-1])
                 if bw < 16 or bh < 16:
                     continue

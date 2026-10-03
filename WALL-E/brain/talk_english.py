@@ -367,24 +367,28 @@ class Sleeper:
         # "Go to sleep": brain off, camera paused, only the mic and Whisper
         # listen, and only "wake up" wakes him (a face does not).
         self.manual = False
+        # One sleep or wake at a time. "Wake up" and a face seen a moment
+        # later both woke him: two brains started, sleep stopped one, and
+        # the other kept its memory.
+        self._lock = threading.Lock()
 
     def touch(self) -> None:
         self.last = time.monotonic()
 
     def sleep_now(self) -> None:
+        self.manual = True  # first: no face can start a wake from here on
         if self._busy is not None:
             self._busy.join()
-        self.manual = True
-        print("(told to sleep: brain off, camera paused; say wake up)")
-        self.chat.sleep()
-        self.awake = False
+        with self._lock:
+            print("(told to sleep: brain off, camera paused; say wake up)")
+            self.chat.sleep()
+            self.awake = False
 
     def wake_now(self) -> None:
-        self.manual = False
         if self._busy is not None:
             self._busy.join()
-        if not self.awake:
-            self._wake()
+        self._wake()
+        self.manual = False  # last: no face-wake can run beside this one
 
     def tick(self, face: bool) -> None:
         if self.idle_s <= 0 or self.manual:
@@ -421,21 +425,27 @@ class Sleeper:
         self._busy.start()
 
     def _sleep(self) -> None:
-        print(f"(nobody for {self.idle_s:.0f} s: sleeping, models off the GPU)")
-        self.chat.sleep()
-        self.voice.sleep_ears()
-        self.awake = False
+        with self._lock:
+            if not self.awake:
+                return
+            print(f"(nobody for {self.idle_s:.0f} s: sleeping, models off the GPU)")
+            self.chat.sleep()
+            self.voice.sleep_ears()
+            self.awake = False
 
     def _wake(self) -> None:
-        t0 = time.monotonic()
-        print("(face! waking up…)")
-        wake_sound()
-        self.voice.wake_ears()  # Whisper's process loads while the brain does
-        self.chat.wake()
-        self.voice.wait_ears()
-        self.awake = True
-        self.touch()
-        print(f"(awake in {time.monotonic() - t0:.1f} s)")
+        with self._lock:
+            if self.awake:
+                return
+            t0 = time.monotonic()
+            print("(waking up…)")
+            wake_sound()
+            self.voice.wake_ears()  # Whisper's process loads while the brain does
+            self.chat.wake()
+            self.voice.wait_ears()
+            self.awake = True
+            self.touch()
+            print(f"(awake in {time.monotonic() - t0:.1f} s)")
 
 
 CLOUD_MODEL = "claude-opus-5"

@@ -80,6 +80,10 @@ with Windows (it lives in `brain/`). The table at the end lists what differs.
 - **"Wake up"**: back in ~1 s.
 - **"Shut down"** (or "bye"): WALL-E quits.
 - "I'm going to sleep" is about you, not a command.
+- Measured (M4 Max): WALL-E's main process awake ~60% of one core (camera,
+  faces, lips, mic), asleep ~3% (mic + speech detector only). The brain
+  (`llama-server`, ~19 GB with `30b-vl`) is gone while asleep; Whisper
+  (~1.7 GB) stays to hear "wake up".
 - Without a command he still sleeps by himself after `--sleep-after`
   seconds with nobody around, and a face wakes him.
 
