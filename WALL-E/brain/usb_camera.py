@@ -36,18 +36,24 @@ YUNET_URL = (
 )
 YUNET_PATH = Path(__file__).resolve().parent / "models" / "camera" / YUNET_NAME
 
-# Lip landmarks: MediaPipe Face Landmarker (CPU, ~7 ms a frame). Lip
-# activity = how much the inner-lip gap (points 13/14, over the eye distance)
-# varies in the last LIPS_WINDOW_S, x100. Measured on the Mac camera, Shahar
-# ~0.6 m away: quiet median 0.19 (max 0.67), talking median 3.1 (low 0.8).
-# OpenCV's Facemark LBF was tried: it jitters, quiet read 2.2-2.6 live, the
-# same as talking. MediaPipe 1.0.1 crashes on the Mac (Metal); 0.10.35 runs.
-LIPS_MODEL = YUNET_PATH.parent / "face_landmarker.task"
-LIPS_URL = (
+# Lip landmarks: Google's face landmark model (478 points, the one inside
+# MediaPipe's face_landmarker.task) run by the plain TFLite runtime
+# (ai-edge-litert) on the YuNet face box, ~2 ms a face. Lip activity = how
+# much the inner-lip gap (points 13/14, over the eye distance) varies in the
+# last LIPS_WINDOW_S, x100.
+# Not MediaPipe itself: 0.10.35 sends usage logs to Google (clearcut) and has
+# no off switch; 1.0.1 crashes on the Mac. Not OpenCV's Facemark LBF: it
+# jitters, a quiet face read like a talking one.
+LIPS_MODEL = YUNET_PATH.parent / "face_landmarks_detector.tflite"
+LIPS_TASK_URL = (
     "https://storage.googleapis.com/mediapipe-models/face_landmarker/"
     "face_landmarker/float16/latest/face_landmarker.task"
-)
-LIPS_TALK = 0.75
+)  # a zip; LIPS_MODEL is the file inside it
+LIPS_INPUT = 256
+# Set from the MediaPipe test; the TFLite model reads the same points but
+# without MediaPipe's smoothing: check with lips_test.py. WALLE_LIPS_TALK
+# overrides it without a code change.
+LIPS_TALK = float(os.environ.get("WALLE_LIPS_TALK", "0.75"))
 DETECT_W = 640  # face detection runs on a copy this wide
 LIPS_WINDOW_S = 0.5
 
@@ -85,7 +91,7 @@ class UsbCamera:
         self._size: tuple[int, int] | None = None
         self._prev_mouth: dict[int, np.ndarray] = {}
         self._motion: dict[int, float] = {}
-        self._lips_model = None  # MediaPipe Face Landmarker, when installed
+        self._lips_model = None  # TFLite face landmarks, when installed
         self._lips: dict[int, collections.deque] = {}
         self._t0 = time.monotonic()
         self._next_id = 1
@@ -155,7 +161,7 @@ class UsbCamera:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         obs = [self._observe(box, w, h) for box in boxes]
         self._assign_ids(obs)
-        gap = self._lip_gap(cv2, frame) if self._lips_model is not None and obs else None
+        gap = self._lip_gap(cv2, frame, obs[0].box) if self._lips_model is not None and obs else None
         for i, o in enumerate(obs):
             if self._lips_model is not None:
                 # One face measured: the biggest, which is obs[0].
@@ -312,33 +318,35 @@ class UsbCamera:
 
     def _load_lips(self, cv2) -> None:
         try:
-            from mediapipe.tasks.python import BaseOptions, vision
+            from ai_edge_litert.interpreter import Interpreter
         except ImportError:
-            log.warning("no lip landmarks (pip install mediapipe): mouth motion is a guess")
+            log.warning("no lip landmarks (pip install ai-edge-litert): mouth motion is a guess")
             return
         if not LIPS_MODEL.exists():
             log.warning("no lip landmarks: %s missing (download_english.py)", LIPS_MODEL)
             return
-        self._lips_model = vision.FaceLandmarker.create_from_options(
-            vision.FaceLandmarkerOptions(
-                base_options=BaseOptions(model_asset_path=str(LIPS_MODEL), delegate=BaseOptions.Delegate.CPU),
-                running_mode=vision.RunningMode.VIDEO,
-                num_faces=1,
-            )
-        )
+        it = Interpreter(model_path=str(LIPS_MODEL), num_threads=2)
+        it.allocate_tensors()
+        self._lips_in = it.get_input_details()[0]["index"]
+        self._lips_out = max(it.get_output_details(), key=lambda d: int(np.prod(d["shape"])))["index"]
+        self._lips_model = it
 
-    def _lip_gap(self, cv2, frame) -> float | None:
-        """Inner-lip gap over eye distance for the biggest face, or None."""
-        import mediapipe as mp
-
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        ms = int((time.monotonic() - self._t0) * 1000)
-        r = self._lips_model.detect_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb), ms)
-        if not r.face_landmarks:
+    def _lip_gap(self, cv2, frame, box) -> float | None:
+        """Inner-lip gap over eye distance for the face in box, or None."""
+        x, y, w, h = box
+        if w < 16 or h < 16:
             return None
-        p = r.face_landmarks[0]
-        eye = float(np.hypot(p[33].x - p[263].x, p[33].y - p[263].y))
-        return float(np.hypot(p[13].x - p[14].x, p[13].y - p[14].y)) / eye if eye > 0 else None
+        # A square 1.5x the face box, scaled to the model's 256x256 input.
+        s = 1.5 * max(w, h)
+        k = LIPS_INPUT / s
+        m = np.float32([[k, 0, LIPS_INPUT / 2 - (x + w / 2) * k], [0, k, LIPS_INPUT / 2 - (y + h / 2) * k]])
+        crop = cv2.warpAffine(frame, m, (LIPS_INPUT, LIPS_INPUT))
+        rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB).astype(np.float32)[None] / 255.0
+        self._lips_model.set_tensor(self._lips_in, rgb)
+        self._lips_model.invoke()
+        p = self._lips_model.get_tensor(self._lips_out).reshape(-1, 3)
+        eye = float(np.hypot(*(p[33, :2] - p[263, :2])))
+        return float(np.hypot(*(p[13, :2] - p[14, :2]))) / eye if eye > 0 else None
 
     def _lips_speaking(self, obs: FaceObs, gap: float | None) -> bool:
         hist = self._lips.setdefault(obs.track_id, collections.deque())

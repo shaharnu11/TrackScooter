@@ -1084,6 +1084,10 @@ def one_instance():
 
 def main() -> None:
     _lock = one_instance()  # noqa: F841 — kept open until WALL-E exits
+    import signal
+
+    # A plain kill (SIGTERM) quits like Ctrl+C: brain and Whisper closed too.
+    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--brain", choices=BRAINS, default="4b", help="Language model")
     parser.add_argument(

@@ -16,8 +16,9 @@ pycaw>=20240316; sys_platform == "win32"
 numpy>=1.26
 sounddevice>=0.5
 opencv-python>=4.8
-# Lip landmarks (usb_camera.py). 1.0.1 crashes on the Mac; 0.10.35 runs.
-mediapipe==0.10.35
+# Lip landmarks (usb_camera.py): Google's face landmark model on the plain
+# TFLite runtime. Not mediapipe: it uploads usage logs to Google.
+ai-edge-litert>=2.0
 # Apple Silicon only: chat on MLX.
 mlx>=0.32; sys_platform == "darwin"
 mlx-lm>=0.31; sys_platform == "darwin"

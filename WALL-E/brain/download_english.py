@@ -54,13 +54,17 @@ def main() -> None:
     from usb_camera import _ensure_yunet
 
     _ensure_yunet()
-    from usb_camera import LIPS_MODEL, LIPS_URL
+    from usb_camera import LIPS_MODEL, LIPS_TASK_URL
 
     if not LIPS_MODEL.exists():
+        import zipfile
+
         print("Camera: lip landmark model (~4 MB)")
-        tmp = LIPS_MODEL.with_suffix(".part")
-        urllib.request.urlretrieve(LIPS_URL, tmp)
-        tmp.rename(LIPS_MODEL)
+        task = LIPS_MODEL.with_suffix(".task.part")
+        urllib.request.urlretrieve(LIPS_TASK_URL, task)
+        with zipfile.ZipFile(task) as z:  # the .task file is a zip
+            LIPS_MODEL.write_bytes(z.read(LIPS_MODEL.name))
+        task.unlink()
     if not SFACE_PATH.exists():
         print("Camera: owner face model")
         SFACE_PATH.parent.mkdir(parents=True, exist_ok=True)

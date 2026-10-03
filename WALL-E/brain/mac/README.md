@@ -119,10 +119,12 @@ new sentence. The mic and the camera window never stop.
   does not cut him off.
 - Off: `--no-barge-in` (one thing at a time, as on Windows).
 - **Moving lips:** a voice counts only while the lips of the face in front
-  move (MediaPipe lip landmarks, `usb_camera.py`). A TV talking next to a
-  quiet face no longer starts a recording or cuts him off. Measured lip
-  activity: quiet 0.19 (max 0.67), talking 3.1 (low 0.8), threshold 0.75
-  (`LIPS_TALK`). OpenCV's LBF landmarks were tried first: too jittery.
+  move. A TV talking next to a quiet face no longer starts a recording or
+  cuts him off. Lips: Google's face landmark model (478 points) on the plain
+  TFLite runtime (`ai-edge-litert`), ~2 ms a face. Not MediaPipe: it sends
+  usage logs to Google and has no off switch. Threshold `LIPS_TALK` 0.75;
+  **check it with `.venv/bin/python lips_test.py`** (quiet 6 s, talk 6 s)
+  and set it with `WALLE_LIPS_TALK=<n> ./mac/start_walle.command`. Off: `--no-lips`.
   Off: `--no-lips`. The log line `speech … lips 3.2` shows the value.
 - Not cancelled: music and Spotify (they play on their own). They stay ducked.
 
