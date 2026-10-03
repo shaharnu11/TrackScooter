@@ -10,20 +10,23 @@ while online. Here, with no internet:
   - "what's playing" is the Spotify window title, "Artist - Song";
   - ducking sets Spotify's own volume in the Windows mixer (pycaw).
 
-Windows only. Needs the desktop app (the web player cannot play offline),
+On the Mac the same four go through AppleScript (osascript): play track,
+next track / playpause, the current track, and Spotify's own sound volume.
+The first use asks once to let the terminal control Spotify: allow it.
+
+Windows and Mac. Needs the desktop app (the web player cannot play offline),
 logged in, with the playlists downloaded.
 """
 
 from __future__ import annotations
 
-import ctypes
 import json
 import os
 import random
 import re
+import subprocess
 import sys
 import time
-from ctypes import wintypes
 from pathlib import Path
 
 LIBRARY = Path(__file__).resolve().parent / "spotify" / "library.json"
@@ -47,14 +50,73 @@ def _same(title: str, t: dict) -> bool:
     return bool(name) and name in title
 
 
+def _osa(script: str) -> str | None:
+    """Run one AppleScript; its output, or None if it failed."""
+    try:
+        r = subprocess.run(
+            ["osascript", "-e", script], capture_output=True, text=True, timeout=5
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def _mac_running() -> bool:
+    # Asking this does not start the app; "tell application" would.
+    return _osa('application "Spotify" is running') == "true"
+
+
+def _mac_tell(command: str) -> str | None:
+    if not _mac_running():
+        return None
+    return _osa(f'tell application "Spotify" to {command}')
+
+
+_MAC_KEYS = {VK_NEXT: "next track", VK_PREV: "previous track", VK_STOP: "pause", VK_PLAY_PAUSE: "playpause"}
+
+
 def _key(vk: int) -> None:
+    if sys.platform == "darwin":
+        _mac_tell(_MAC_KEYS[vk])
+        return
+    if sys.platform != "win32":
+        return
+    import ctypes
+
     user32 = ctypes.windll.user32
     user32.keybd_event(vk, 0, 0, 0)
     user32.keybd_event(vk, 0, 2, 0)  # KEYEVENTF_KEYUP
 
 
+def _open(uri: str, context: str | None) -> None:
+    """Hand one song to the app, inside its list when there is one."""
+    if sys.platform == "darwin":
+        _mac_tell(f'play track "{uri}"' + (f' in context "{context}"' if context else ""))
+    else:
+        os.startfile(uri + (f"?context={context}" if context else ""))
+
+
 def _spotify_title() -> str | None:
-    """The Spotify main window title, or None if the app is not running."""
+    """The Spotify main window title, or None if the app is not running.
+
+    The Mac has no such title: build the same "Artist - Song" from the
+    current track while it plays, and the idle "Spotify" when it does not.
+    """
+    if sys.platform == "darwin":
+        if not _mac_running():
+            return None
+        title = _osa(
+            'tell application "Spotify"\n'
+            'if player state is playing then return (artist of current track) & " - " & (name of current track)\n'
+            'return "Spotify"\n'
+            "end tell"
+        )
+        return title or "Spotify"
+    if sys.platform != "win32":
+        return None
+    import ctypes
+    from ctypes import wintypes
+
     user32, kernel32 = ctypes.windll.user32, ctypes.windll.kernel32
     titles: list[str] = []
 
@@ -95,11 +157,12 @@ class Spotify:
             self.synced = data.get("synced", "")
         self.active = False  # WALL-E started Spotify music this session
         self._volume = None  # Spotify's mixer level before ducking
+        self._jobs = None  # the Mac: ducking runs on its own thread
         self.bad: set[str] = set(json.loads(BAD.read_text(encoding="utf-8"))) if BAD.exists() else set()
 
     @property
     def ready(self) -> bool:
-        return sys.platform == "win32" and bool(self.tracks)
+        return sys.platform in ("win32", "darwin") and bool(self.tracks)
 
     def running(self) -> bool:
         return _spotify_title() is not None
@@ -188,7 +251,7 @@ class Spotify:
             _key(VK_PLAY_PAUSE)
             time.sleep(0.5)
         before = _spotify_title()
-        os.startfile(t["uri"] + (f"?context={context}" if context else ""))
+        _open(t["uri"], context)
         self.active = True
         pressed = False
         t0 = time.monotonic()
@@ -229,6 +292,10 @@ class Spotify:
     # ----- ducking -----------------------------------------------------------
     def duck(self, on: bool, level: float) -> None:
         """Lower Spotify in the Windows mixer while WALL-E listens or talks."""
+        if sys.platform == "darwin":
+            if self.active or not on:
+                self._duck_mac(on, level)
+            return
         if not self.active and self._volume is None:
             return  # nothing of ours playing, nothing to restore
         # (Restoring must work after a pause: "stop the music" is heard while
@@ -252,4 +319,54 @@ class Spotify:
             elif self._volume is not None:
                 vol.SetMasterVolume(self._volume, None)
         if not on:
+            self._volume = None
+
+    def _duck_mac(self, on: bool, level: float) -> None:
+        """The same on the Mac: Spotify's own volume, 0-100, by AppleScript.
+
+        On its own thread, in order: a call takes ~0.1-0.2 s, and that long a
+        stop inside the mic loop (ducking starts there) made it drop audio.
+        """
+        if self._jobs is None:
+            import queue
+            import threading
+
+            self._jobs = queue.Queue()
+            threading.Thread(target=self._duck_mac_worker, daemon=True).start()
+        self._jobs.put((on, level))
+        if not on:
+            self._jobs.join()  # restored for sure, also when WALL-E quits
+
+    def _duck_mac_worker(self) -> None:
+        while True:
+            on, level = self._jobs.get()
+            try:
+                self._duck_mac_now(on, level)
+            except Exception as exc:  # noqa: BLE001 — a hiccup must not end the thread
+                print(f"(spotify duck failed: {exc})")
+            finally:
+                self._jobs.task_done()
+
+    def _duck_mac_now(self, on: bool, level: float) -> None:
+        if on and self._volume is None:
+            if not _mac_running():
+                return
+            # Read and lower in one call. Below 30 is a duck left over from a
+            # run that ended mid-sentence, as on Windows.
+            now = _osa(
+                'tell application "Spotify"\n'
+                "set v to sound volume\n"
+                "if v < 30 then set v to 100\n"
+                f"set sound volume to round (v * {level})\n"
+                "return v\n"
+                "end tell"
+            )
+            if now is not None and now.isdigit():
+                self._volume = int(now)
+        elif on:
+            _mac_tell(f"set sound volume to {round(self._volume * level)}")
+        elif self._volume is not None:
+            # Spotify lands one below what it is told (48 reads back as 47),
+            # except at 100: ask for one more, or every duck costs a step.
+            _mac_tell(f"set sound volume to {min(100, self._volume + 1)}")
             self._volume = None

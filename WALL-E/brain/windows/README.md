@@ -32,6 +32,7 @@ not in this folder. This folder has only the Windows steps and the start script.
    python -m venv .venv
    .venv\Scripts\python.exe -m pip install -r requirements-voice.txt
    ```
+   Hebrew voice only (`talk_hebrew.py`): also `requirements-hebrew.txt`.
 5. Download the models (~4 GB for English; more if you take all brains):
    ```
    .venv\Scripts\python.exe download_english.py --brain 4b-vl

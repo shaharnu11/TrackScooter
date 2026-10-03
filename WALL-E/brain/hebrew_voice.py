@@ -20,7 +20,10 @@ TALK_WAV = ROOT / "hebrew_talk.wav"
 
 def need(path: Path, what: str) -> None:
     if not path.exists():
-        sys.exit(f"Missing {what}: {path}\nRun: python3 download_hebrew_voice.py")
+        sys.exit(
+            f"Missing {what}: {path}\n"
+            "Run: python3 download_english.py (English) or download_hebrew_voice.py (Hebrew)"
+        )
 
 
 def play(wav_path: Path) -> None:

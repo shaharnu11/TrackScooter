@@ -1,0 +1,6 @@
+# Hebrew voice (talk_hebrew.py) only. English (talk_english.py) does not need it.
+# Install after requirements-voice.txt:
+#   pip install -r requirements-hebrew.txt
+# PyPI has only the old blue-onnx 0.2.x API. BlueTTS 2.5 comes from GitHub:
+#   pip install --ignore-requires-python "blue-onnx @ git+https://github.com/maxmelichov/BlueTTS.git"
+renikud-plus>=0.5

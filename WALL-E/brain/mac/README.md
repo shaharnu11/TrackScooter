@@ -1,12 +1,11 @@
 # WALL-E talking — Mac (Apple Silicon)
 
-**Status: not tested on a Mac yet.** The code is shared with Windows (it lives
-in `brain/`). Most of it should run on a Mac as it is. The table at the end
-lists what is different or missing.
+**Status: works.** Tested 2026-10-03 on a MacBook Pro M4 Max, 48 GB, macOS 15.1:
+mic, camera, owner face, Whisper, brain, voice, Spotify. The code is shared
+with Windows (it lives in `brain/`). The table at the end lists what differs.
 
 - Needs an **M1 or newer** Mac. Intel Macs: do not use.
-- **16 GB RAM or more** to gain over the XPS (bigger brains fit). 8 GB is
-  about the same as the XPS.
+- **16 GB RAM or more** for the bigger brains (`8b`, `8b-vl`).
 
 ## Start
 
@@ -18,6 +17,7 @@ lists what is different or missing.
 - Stop: **Ctrl+C**, or close the window.
 - Options: the same as on Windows (`--brain`, `--mind cloud`, `--type`,
   `--no-camera`, `--sleep-after`). See `../windows/README.md`.
+- Mac only: `--brain 8b-vl` (Qwen3-VL-8B, sees, smarter, a bit slower).
 
 ## Setup (once)
 
@@ -35,12 +35,14 @@ lists what is different or missing.
    python3.12 -m venv .venv
    .venv/bin/python -m pip install -r requirements-voice.txt
    ```
-4. Models (~4 GB for `4b-vl`; the same files as on Windows):
+4. Models (~4.5 GB for `4b-vl`). Download them on the Mac; nothing comes
+   from the XPS:
    ```
    .venv/bin/python download_english.py --brain 4b-vl
    ```
-   Or copy `models/chat-gguf/`, `models/whisper-en/` and `models/tts-kokoro/`
-   from the XPS.
+   On the Mac this also gets Whisper for the Mac GPU (`models/whisper-en-mlx/`)
+   and the two camera face models. **Run it while online**: after that,
+   WALL-E needs no internet.
 5. **llama.cpp**: the code looks for it in `models/llama-cpp/`. Link the
    Homebrew one there:
    ```
@@ -54,29 +56,50 @@ lists what is different or missing.
    ```
 7. **Permissions:** the first start asks for **Microphone** and **Camera**
    for Terminal. Allow both (System Settings → Privacy & Security).
-8. **Owner** (face + secret word): `.venv/bin/python owner.py enroll`, or copy
-   `brain/owner/` from the XPS.
-9. Optional, **cloud brain**: add to `~/.zshrc`:
-   `export ANTHROPIC_API_KEY="sk-ant-..."`. Type it yourself. Do not paste it
-   in chat.
-10. Music files: put mp3s in `brain/music/`.
+   The first Spotify command asks to let Terminal **control Spotify**: allow.
+8. **Owner** (face + secret word) and **Spotify** (song list) are in git
+   (`brain/owner/`, `brain/spotify/`). Nothing to do. The XPS face matched on
+   the Mac camera. Only if it stops matching: `.venv/bin/python owner.py enroll`.
+9. **Spotify songs offline:** open the Spotify app on the Mac, log in, and
+   **download** the playlists (the green arrow). WALL-E can only play
+   downloaded songs without internet.
+10. Optional, **cloud brain**: add to `~/.zshrc`:
+    `export ANTHROPIC_API_KEY="sk-ant-..."`. Type it yourself. Do not paste it
+    in chat.
+11. Music files: put mp3s in `brain/music/`.
+
+## Measured on the M4 Max
+
+| Step | Mac (M4 Max) | XPS (3050 Ti) |
+|---|---|---|
+| Whisper, per question | **0.07 s** (Mac GPU) | ~0.5 s (GPU) |
+| Whisper on CPU (fallback) | 0.9 s | 2.5 s |
+| Brain `4b-vl`, first sentence | 0.2–0.4 s | — |
+| Brain `4b-vl`, a look through the camera | **0.6 s** | 5.9–6.5 s |
+| Brain `8b-vl`, first sentence | see `8b-vl` notes below | does not fit |
+| Wake from sleep (Whisper) | 0.9 s | ~6–7 s (all) |
 
 ## Differences from Windows
 
 | Part | Windows (XPS) | Mac |
 |---|---|---|
-| Brain (llama.cpp) | CUDA build, 4 GB GPU | Homebrew build, **Metal** GPU, uses the shared RAM. Should work as is |
-| Whisper (speech-to-text) | GPU, ~0.5 s per turn | **CPU only** (faster-whisper has no Mac GPU). Slower, maybe ~1–2 s. Falls back by itself |
-| Kokoro voice | CPU | CPU. Works |
-| Camera | works | works (Camera permission) |
-| Sleep mode | GPU fully off (D3) | Stops the brain to free memory. No GPU switch needed |
-| Spotify ducking | Windows mixer | **Not on Mac.** Spotify keeps its volume while WALL-E talks |
+| Brain (llama.cpp) | CUDA build, 4 GB GPU | Homebrew build, **Metal** GPU, shared RAM. All layers and the eye model on the GPU |
+| Whisper (speech-to-text) | faster-whisper, CUDA | **mlx-whisper** on the Mac GPU. Falls back to faster-whisper on the CPU if the MLX model is missing. `WALLE_WHISPER_DEVICE=cpu` forces the CPU |
+| Kokoro voice | CPU | CPU |
+| Camera | DirectShow | AVFoundation (Camera permission) |
+| Sleep mode | GPU fully off (D3) | Stops the brain and Whisper to free memory |
+| Spotify control | Windows media keys + window title | **AppleScript** (`osascript`) |
+| Spotify ducking | Windows mixer (pycaw) | Spotify's own volume, by AppleScript |
 | Cloud key | `setx` (Windows settings) | `export` in `~/.zshrc` |
 | Teensy / eyes / CP2102 | `COM3`, `COM4`… | `/dev/tty.usbmodem…`, `/dev/tty.usbserial…` |
 
-## To do, to make the Mac better
+## Known harmless messages
 
-- Whisper on the Mac GPU: switch to **mlx-whisper** or **whisper.cpp**
-  (back to ~0.5 s per turn).
-- With 16 GB+: try `--brain 8b`, or a bigger vision brain.
-- Spotify ducking: lower the volume with AppleScript.
+- `objc: Class AVFFrameReceiver is implemented in both …av… and …cv2…`:
+  two libraries bring the same video code. Ignore it.
+- `IMKClient subclass`: macOS text input, from the camera window. Ignore it.
+
+## Hebrew
+
+Not set up on the Mac. If needed: `pip install -r requirements-hebrew.txt`
+and `download_hebrew_voice.py` (~5 GB).

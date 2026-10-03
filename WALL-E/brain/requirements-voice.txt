@@ -1,14 +1,11 @@
-﻿# Voice try-out only. The robot control loop still needs only pyserial.
+# Voice try-out only. The robot control loop still needs only pyserial.
 # Install into the brain venv:
 #   python3 -m venv .venv && . .venv/bin/activate
 #   pip install -r requirements-voice.txt
 
 huggingface_hub>=0.24
 faster-whisper>=1.1
-blue-onnx>=2.5
-# PyPI 0.2.x is the old API. Install current BlueTTS 2.5 from GitHub:
-#   pip install --ignore-requires-python "blue-onnx @ git+https://github.com/maxmelichov/BlueTTS.git"
-renikud-plus>=0.5
+# Hebrew voice only (talk_hebrew.py): see requirements-hebrew.txt.
 soundfile>=0.12
 # English mode (talk_english.py): Kokoro TTS, CPU.
 kokoro-onnx>=0.6
@@ -22,6 +19,8 @@ opencv-python>=4.8
 # Apple Silicon only: chat on MLX.
 mlx>=0.32; sys_platform == "darwin"
 mlx-lm>=0.31; sys_platform == "darwin"
+# Apple Silicon only: Whisper on the Mac GPU (faster-whisper is CPU only there).
+mlx-whisper>=0.4; sys_platform == "darwin"
 # XPS / NVIDIA: cuBLAS + cuDNN 9 for Whisper on CUDA (CTranslate2).
 # The chat runs in llama.cpp's own CUDA build, fetched by download_hebrew_voice.py.
 nvidia-cublas-cu12; sys_platform != "darwin"

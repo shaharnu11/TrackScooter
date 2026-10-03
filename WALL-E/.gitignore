@@ -13,6 +13,8 @@ brain/models/**
 !brain/models/**/README.md
 !brain/models/**/README.html
 !brain/models/**/.gitattributes
+# Whisper for the Mac GPU: its README comes with the download.
+brain/models/whisper-en-mlx/
 hebrew_try.wav
 hebrew_talk.wav
 brain/hebrew_try.wav

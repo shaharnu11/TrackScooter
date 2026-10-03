@@ -4,12 +4,14 @@
     python3 download_english.py              # all three brains
     python3 download_english.py --brain 4b   # just one
 
-llama.cpp itself comes from download_hebrew_voice.py.
+llama.cpp itself: Windows gets it from download_hebrew_voice.py, the Mac
+from Homebrew (mac/README.md).
 """
 
 from __future__ import annotations
 
 import argparse
+import sys
 import urllib.request
 
 from huggingface_hub import hf_hub_download, snapshot_download
@@ -21,6 +23,8 @@ from english_voice import (
     KOKORO_FILES,
     KOKORO_URL,
     STT_DIR,
+    STT_MLX_DIR,
+    STT_MLX_REPO,
     STT_REPO,
 )
 
@@ -35,6 +39,26 @@ def main() -> None:
         snapshot_download(repo_id=STT_REPO, local_dir=str(STT_DIR))
     else:
         print(f"STT already at {STT_DIR}")
+
+    if sys.platform == "darwin":
+        # Whisper for the Mac GPU. The one above stays as the CPU fallback.
+        if not (STT_MLX_DIR / "config.json").exists():
+            print(f"STT (Mac GPU): {STT_MLX_REPO}  (~0.5 GB)")
+            snapshot_download(repo_id=STT_MLX_REPO, local_dir=str(STT_MLX_DIR))
+        else:
+            print(f"STT (Mac GPU) already at {STT_MLX_DIR}")
+
+    # The face models download on first use. Fetch them now: no internet later.
+    from owner import SFACE_PATH, SFACE_URL
+    from usb_camera import _ensure_yunet
+
+    _ensure_yunet()
+    if not SFACE_PATH.exists():
+        print("Camera: owner face model")
+        SFACE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = SFACE_PATH.with_suffix(".part")
+        urllib.request.urlretrieve(SFACE_URL, tmp)
+        tmp.rename(SFACE_PATH)
 
     KOKORO_DIR.mkdir(parents=True, exist_ok=True)
     for name in KOKORO_FILES:

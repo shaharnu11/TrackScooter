@@ -5,6 +5,7 @@
     python3 talk_english.py --brain 4b-q5   # Qwen3-4B Q5, a bit sharper
     python3 talk_english.py --brain 8b      # Qwen3-8B, smarter, slower
     python3 talk_english.py --brain 4b-vl   # Qwen3-VL-4B: sees the camera
+    python3 talk_english.py --brain 8b-vl   # Qwen3-VL-8B: sees, smarter (the Mac)
     python3 talk_english.py --brain 4b-vl --mind cloud   # Claude online,
         # Qwen3-VL-4B only if the connection fails. Needs ANTHROPIC_API_KEY.
 
@@ -111,6 +112,8 @@ CJK = re.compile(r"[\U00003000-\U00009fff\U0000ac00-\U0000d7af\U0000ff00-\U0000f
 
 
 def gpu_mem() -> str:
+    if sys.platform == "darwin":
+        return "Apple GPU (Metal), memory shared with the system"
     try:
         out = subprocess.run(
             ["nvidia-smi", "--query-gpu=memory.used,memory.total", "--format=csv,noheader"],
@@ -129,9 +132,12 @@ class EnglishChat:
         model = GGUF_DIR / brain.file
         if not model.exists():
             sys.exit(f"Missing {model}\nRun: python download_english.py")
-        print(f"Loading chat: {brain.note}")
+        # The notes and the GPU/CPU split in BRAINS are sized for the XPS's
+        # 4 GB card. The Mac's GPU uses the shared RAM: everything fits on it.
+        mac = sys.platform == "darwin"
+        print(f"Loading chat: {brain.file}, all on the Mac GPU" if mac else f"Loading chat: {brain.note}")
         extra = [
-            "-ngl", brain.gpu_layers,
+            "-ngl", "99" if mac else brain.gpu_layers,
             "--reasoning", "off",
             "--reasoning-format", "deepseek",
             # One talker, so one slot; 8-bit KV cache and a smaller batch.
@@ -154,8 +160,9 @@ class EnglishChat:
             extra += [
                 "--mmproj", str(GGUF_DIR / brain.mmproj),
                 "--image-max-tokens", "256",
-                "--no-mmproj-offload",
             ]
+            if not mac:
+                extra.append("--no-mmproj-offload")
         self._model, self._extra = model, extra
         self._server: subprocess.Popen | None = start_llama(model, extra)
 

@@ -17,6 +17,9 @@ ROOT = Path(__file__).resolve().parent
 MODELS = ROOT / "models"
 STT_DIR = MODELS / "whisper-en"
 STT_REPO = "Systran/faster-whisper-small.en"
+# The same small.en for the Mac GPU (MLX). faster-whisper is CPU only there.
+STT_MLX_DIR = MODELS / "whisper-en-mlx"
+STT_MLX_REPO = "mlx-community/whisper-small.en-mlx"
 KOKORO_DIR = MODELS / "tts-kokoro"
 KOKORO_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
 KOKORO_FILES = ("kokoro-v1.0.onnx", "voices-v1.0.bin")
@@ -53,7 +56,7 @@ def phantom(text: str) -> bool:
 class Brain:
     repo: str
     file: str
-    whisper: str  # "cuda" or "cpu": who gets the GPU memory
+    whisper: str  # "cuda" or "cpu": who gets the GPU memory (the Mac: always its GPU)
     gpu_layers: str  # llama-server -ngl: how many layers live on the GPU
     note: str
     mmproj: str = ""  # vision projector file: set = the brain can see
@@ -95,10 +98,36 @@ BRAINS = {
         "Qwen3-VL-4B Q4_K_M on GPU, vision on CPU, Whisper on GPU",
         mmproj="mmproj-Qwen3VL-4B-Instruct-Q8_0.gguf",
     ),
+    # The 8B with eyes, for the Mac: 5 GB model + 0.75 GB vision projector.
+    # Too big for the XPS's 4 GB card; the split below is the 8b's, untested.
+    "8b-vl": Brain(
+        "Qwen/Qwen3-VL-8B-Instruct-GGUF",
+        "Qwen3VL-8B-Instruct-Q4_K_M.gguf",
+        "cpu", "26",
+        "Qwen3-VL-8B Q4_K_M, split GPU/CPU, vision on CPU, Whisper on CPU",
+        mmproj="mmproj-Qwen3VL-8B-Instruct-Q8_0.gguf",
+    ),
 }
 
 
+def mlx_ready() -> bool:
+    """The Mac with mlx-whisper and its model: Whisper runs on the Mac GPU."""
+    if sys.platform != "darwin" or not (STT_MLX_DIR / "config.json").exists():
+        return False
+    import importlib.util
+
+    return importlib.util.find_spec("mlx_whisper") is not None
+
+
 def whisper_device(want: str) -> tuple[str, str]:
+    """WALLE_WHISPER_DEVICE=cpu forces the CPU, as in hebrew_voice."""
+    import os
+
+    if os.environ.get("WALLE_WHISPER_DEVICE") == "cpu":
+        return "cpu", "int8"
+    if mlx_ready():
+        # Memory is shared on the Mac: Whisper never has to give way to the brain.
+        return "mlx", "float16"
     if want == "cuda":
         _add_cuda_dlls()
         try:
@@ -151,9 +180,12 @@ def _ears(conn, want: str) -> None:
     and the NVIDIA chip stayed powered (D0) for as long as WALL-E ran; it
     only switched off (D3) once the process holding CUDA was gone.
     """
+    device, compute = whisper_device(want)
+    if device == "mlx":
+        _ears_mlx(conn, device, compute)
+        return
     from faster_whisper import WhisperModel
 
-    device, compute = whisper_device(want)
     model = WhisperModel(str(STT_DIR), device=device, compute_type=compute)
     conn.send((device, compute))
     while (audio := conn.recv()) is not None:
@@ -170,11 +202,37 @@ def _ears(conn, want: str) -> None:
         conn.send(" ".join(s.text.strip() for s in segments if s.no_speech_prob < 0.6).strip())
 
 
+def _ears_mlx(conn, device: str, compute: str) -> None:
+    """The same loop on the Mac GPU (mlx-whisper)."""
+    import mlx_whisper
+    import numpy as np
+
+    def hear(audio) -> str:
+        # No vad_filter here: the clip is already cut to speech by Silero
+        # (vad_listen) before it gets this far.
+        out = mlx_whisper.transcribe(
+            audio,
+            path_or_hf_repo=str(STT_MLX_DIR),
+            language="en",
+            condition_on_previous_text=False,
+            verbose=None,
+        )
+        return " ".join(
+            s["text"].strip() for s in out["segments"] if s["no_speech_prob"] < 0.6
+        ).strip()
+
+    hear(np.zeros(16000, dtype=np.float32))  # load + compile now, not on the first question
+    conn.send((device, compute))
+    while (audio := conn.recv()) is not None:
+        conn.send(hear(audio))
+
+
 class EnglishVoice:
     def __init__(self, whisper: str = "cuda") -> None:
         from kokoro_onnx import Kokoro
 
-        need(STT_DIR / "model.bin", "Whisper small.en")
+        if not mlx_ready():
+            need(STT_DIR / "model.bin", "Whisper small.en")
         for name in KOKORO_FILES:
             need(KOKORO_DIR / name, "Kokoro")
         print("Loading voice…")
