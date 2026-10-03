@@ -57,6 +57,11 @@ MIN_CLIP_SPEECH = 0.5
 RULES = (
     "Speak plain spoken English: one or two short, warm, simple sentences, "
     "under 25 words. No lists, no asterisks, no emojis, no code. "
+    # Midburn: most people are Israelis, English is not their first language.
+    "Most people you meet are not native English speakers. Use simple, common "
+    "words a learner knows (say tiring, not exhausting), short sentences, and "
+    "no idioms, slang or fancy words. Often end with one short, simple question "
+    "to the person, to keep the talk going. "
     # Whisper hears through festival music: half-heard lines will come in.
     # Worded softly: "it is loud around you" made him answer a clear
     # "what's up?" with "you're making noise, can you repeat that?".
@@ -313,7 +318,11 @@ class EnglishChat:
                         break
                     said.append(part)
                     yield part
-                    if len(said) == self.max_sentences:
+                    # A short opener ("Hello!", "Tel Aviv, huh?") does not use
+                    # up the limit: counting it cut off the question that came
+                    # after it, the one that keeps the talk going.
+                    full = sum(1 for x in said if len(x.split()) > 3)
+                    if full >= self.max_sentences or len(said) >= self.max_sentences + 2:
                         break
             if not said:
                 said.append(FALLBACK)
